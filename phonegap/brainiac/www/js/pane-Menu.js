@@ -31,7 +31,6 @@ function paneMenu() {
 					caption: 'browser',
 					imgClass: 'ws12-icon-head-unit-browser',
 					onclick: function() {
-						console.log(this.caption + ' clicked');
 						this.screen.container.push(paneBrowser);
 					}
 				},
@@ -39,14 +38,13 @@ function paneMenu() {
 					caption: 'phone',
 					imgClass: 'ws12-icon-head-unit-phone',
 					onclick: function() {
-						console.log(this.caption + ' clicked');
+						this.screen.container.push(panePhone);
 					}
 				},
 				{
 					caption: 'dashboard',
 					imgClass: 'ws12-icon-head-unit-dashboard',
 					onclick: function() {
-						console.log(this.caption + ' clicked');
 						this.screen.container.push(paneDashboard);
 					}
 				},

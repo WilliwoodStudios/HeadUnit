@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1611*/
+/* ws12 VERSION: 1.0.0.1688*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -45,7 +45,10 @@ var ws12 = {
 	TileFuel: {},
 	TileDistance: {},
 	MenuItem: {},
-	DataProvider: {},
+	DataProvider: {
+		ERR_OFFLINE: -5000,
+		ERR_INVALID_JSON: -5001
+	},
 	Spinner: {
 		LARGE: 'large',
 		MEDIUM: 'medium',
@@ -53,6 +56,12 @@ var ws12 = {
 		TINY: 'tiny'
 	},
 	CircleMenu: {},
+	SplitView: {},
+	List: {},
+	ListEvent: {},
+	GenericListItem: {
+		ONCLICK: 'onclick'
+	},
 
 	init: function(object, config) {	
 		// Set any config overrides
@@ -181,6 +190,12 @@ var ws12 = {
 			case ws12.Browser:
 				controlDom = new ws12_Browser(control,screen);
 				break;
+			case ws12.SplitView:
+				controlDom = new ws12_SplitView(control,screen);
+				break;
+			case ws12.List:
+				controlDom = new ws12_List(control,screen);
+				break;
 		}
 		return controlDom;
 	},
@@ -290,50 +305,7 @@ var ws12 = {
 		return true;
 	},
 
-	
-	// Asynchronously loads a JSON data source from a URL. 
-	// Callback should be a function that takes a response code and a result i.e. mycallback(code, result);
-	// for Fail callback, myfailcallback() will be enough. Usually no parameters are passend down to fail callback;
-	loadJSONDataSource: function(url, success, fail, parameters) {
-		if(navigator.onLine != true) {
-			fail();
-			return;
-		}
-		
-		var xhr = new XMLHttpRequest(),
-			data = undefined,
-			xhrTimeout = setTimeout(function(){ xhr.abort(); fail(); }, 10000);
 
-		if(parameters) {
-			//data = ws12.urlEncode(parameters);
-			data = paremeters;
-		}
-		xhr.onreadystatechange = function () {
-			/* On readyState is 4, Determine if the request was successful or not. */
-			if(xhr.readyState == 4) {
-				clearTimeout(xhrTimeout);
-				if (xhr.status == 200 && ws12.isJsonString(xhr.responseText) === true) {
-					try {
-						success(200, JSON.parse(xhr.responseText));
-					} catch (ex) {
-						// do nothing
-						console.log(ex + ' : ' + ex.message);
-						fail();
-					}
-				} else if(xhr.status != 0) {
-					fail();
-				}
-			}
-		}
-		
-		xhr.open('GET', data != undefined ? url + '?' + data : url, true);
-		xhr.setRequestHeader( "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" );
-		xhr.timeout = 0; // Infinite. Aborting will be handled by setTimeout.
-		xhr.send();
-
-		return xhr;
-	},
-	
 	// Determines if an element has the class specified in it's class name
 	hasClass: function(element, name){
 		var re = new RegExp('(^| )' + name + '( |$)');
@@ -1375,23 +1347,55 @@ function ws12_DataProvider(object, screen){
 		this._untouched = false;
 		this._url = url;
 		this._parameters = parameters;
- 		ws12.loadJSONDataSource(url,this._loadFromUrl,parameters);
+		// Make sure we are online
+		if(navigator.onLine != true) {
+			if (this.onerror) {
+				this.onerror(ws12.DataProvider.ERR_OFFLINE);
+			}
+			return;
+		}
+		this._xhr = new XMLHttpRequest();
+		this._xhr.model = this;
+		// Handle our state changes
+		this._xhr.onreadystatechange = function () {
+			/* On readyState is 4, Determine if the request was successful or not. */
+			if(this.readyState == 4) {
+				if (this.status == 200) {
+					try {
+						var result = JSON.parse(this.responseText);
+					} catch (ex) {
+						console.log(ex + ' : ' + ex.message);
+						if (this.onerror) {
+							this.onerror(ws12.DataProvider.ERR_INVALID_JSON);
+						}
+					}
+					// Load our data
+					this.model._loadFromUrl(result);
+				} else if(this.status != 0) {
+					if (this.onerror) {
+						this.onerror(this.status);
+					}
+				}
+			}
+		}
+		var data;
+		if(parameters) {
+			//data = ws12.urlEncode(parameters);
+			data = paremeters;
+		}
+		this._xhr.open('GET', data != undefined ? url + '?' + data : url, true);
+		this._xhr.setRequestHeader( "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" );
+		//this._xhr.timeout = 0;
+		this._xhr.send();
 	}
 	object.loadFromUrl = object.loadFromUrl.bind(object);
 	
 	// Private function to asynchronously load the data items from a URL source
-	object._loadFromUrl = function(code, result) {
-		if (code == 200) {
-			this.data = result;
-			this._raiseEvent();
-			if (this.onload) {
-				this.onload();
-			}
-		} else {
-			console.log('data load failure: ' + code);
-			if (this.onerror) {
-				this.onerror(code);
-			}
+	object._loadFromUrl = function(result) {
+		this.data = result;
+		this._raiseEvent();
+		if (this.onload) {
+			this.onload();
 		}
 	}
 	object._loadFromUrl = object._loadFromUrl.bind(object);
@@ -1421,6 +1425,79 @@ function ws12_DataProvider(object, screen){
 }
 
 
+function ws12_GenericListItem(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom, 'ws12-generic-list-item');
+	
+	// Create the image
+	object.dom.img = document.createElement('div');
+	ws12.addClass(object.dom.img,'img');
+	object.dom.appendChild(object.dom.img);
+	
+	if(object.img != undefined && object.img != null && object.img != '') {
+		// Image Loader
+		object._loader = new Image();
+		object._loader.model = object;
+		object._loader.onload = function() {
+			this.model.dom.img.style.backgroundImage = 'url("'+ this.model.img + '")';
+			this.model.dom.img.style.opacity = '1.0';
+			this.model._loader = undefined;
+		}
+		object._loader.onerror = function() {
+			this.model.dom.img.style.backgroundImage = '';
+			this.model.dom.img.style.opacity = '1.0';
+			this.model._loader = undefined;
+		}
+		object._loader.src = object.img;
+	} else {
+		object.dom.img.style.opacity = '1.0';
+		object.dom.loader = undefined;
+	}
+	
+	// Details section
+	object.dom.details = document.createElement('div');
+	ws12.addClass(object.dom.details,'details');
+	object.dom.appendChild(object.dom.details);
+	
+	// Title
+	object.dom.titleArea = document.createElement('div');
+	ws12.addClass(object.dom.titleArea,'title');
+	object.dom.titleArea.textContent = object.title;
+	object.dom.details.appendChild(object.dom.titleArea);
+
+	// Caption
+	object.dom.captionDiv = document.createElement('div');
+	ws12.addClass(object.dom.captionDiv,'caption');
+	object.dom.details.appendChild(object.dom.captionDiv);
+	if (object.caption) {
+		object.dom.captionDiv.textContent = object.caption;
+	} else {
+		ws12.addClass(object.dom, 'no-caption');
+	}
+	
+	// Accent
+	object.dom.accent = document.createElement('div');
+	ws12.addClass(object.dom.accent,'accent');
+	object.dom.details.appendChild(object.dom.accent);
+	if (ws12.config.inHeadUnit === true) {
+		object.dom.accent.style.color = ws12.config.brandColor;
+	}
+	if(object.accent != undefined) {
+		object.dom.accent.textContent = object.accent;
+		ws12.addClass(object.dom, 'has-accent');
+	} 
+	
+	// Pass the onclick back to the list
+	object.dom.addEventListener('click', function() {
+		if (this.model.parent.onaction == undefined) return;
+		var event = new ws12_ListEvent(this.model, ws12.GenericListItem.ONCLICK);
+		this.model.parent._onaction(this.model, event);
+	},false);
+
+	return object.dom;
+}
+
+ws12_GenericListItem.prototype = new ws12_CoreComponent();
 function ws12_HeadUnitChrome(object, data) {
 	ws12_CoreScreen.call(this, object);
 	
@@ -1727,6 +1804,208 @@ function ws12_Window(object, screen) {
 }
 
 ws12_Window.prototype = new ws12_CoreComponent();
+function ws12_List(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-list');
+	
+	// Set our initial properties that can be modified
+	if (object.items) {
+		object._original.items = [];
+		for (var i = 0; i < object.items.length; i++) {
+			object._original.items.push(object.items[i]);
+		}
+	}
+
+	// Private function to handle clean-up
+	object._destroy = function(value) {
+		// See if there was an overflow added to the dom
+		if (this.dom.menuOverflow != undefined) {
+			this.dom.menuOverflow.postListItem = undefined;
+			this.dom.menuOverflow._destroy();
+			if (this.dom.menuOverflow.parentNode == this.screen.dom) {
+				this.screen.dom.removeChild(this.dom.menuOverflow);
+			}
+		}
+		if (this._original.items) {
+			this.items = [];
+			for (var i = 0; i < this._original.items.length; i++) {
+				this.items.push(this._original.items[i]);
+			}
+		}
+	}
+	object._destroy = object._destroy.bind(object);
+	
+	// Broker the onaction from a list item
+	object._onaction = function(item, event) {
+		if (this.onaction) {
+			this.selected = item;
+			this.onaction(event);
+		}
+	}
+	object._onaction = object._onaction.bind(object);
+	
+	// Create the DOM for a list item depending on the list type
+	object._createItemDom = function(item) {
+		var itemDom = undefined;
+		switch (this.style) {
+			case ws12.GenericListItem:
+				itemDom = new ws12_GenericListItem(item, this.screen);
+				break;
+		}
+		return itemDom;
+	}
+	object._createItemDom = object._createItemDom.bind(object);
+	
+	// Private function to add a new item to the list
+	object._addItem = function(item) {
+		item.parent = this;
+		itemDom = this._createItemDom(item);
+		if (itemDom) {
+			this.dom.appendChild(itemDom);
+			if (item._onafterinsert) {
+				item._onafterinsert();
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+	object._addItem = object._addItem.bind(object);
+	
+	// Public function to add a new item to the list
+	object.addItem = function(item) {
+		if (this._addItem(item)) {
+			this.items.push(item);
+			// if there is data provider, add the item to provider
+			if (this._providerItems != undefined) {
+				this._providerItems.push(item);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+	object.addItem = object.addItem.bind(object);
+	
+	// Public function to remove an existing item from the list
+	object.removeItem = function(item) {
+		if (item == undefined) return false;
+		var index = this.items.indexOf(item);
+		if (index < 0) return false;
+		try {
+			this.dom.removeChild(item.dom);
+		} catch (ex) {
+			console.log('ws12.List: ' + ex);
+		}
+		this.items.splice(index, 1);
+		// See if we have items on a provider that we should remove
+		if (this._providerItems != undefined) {
+			this._providerItems.splice(index, 1);
+		}
+		if (item._destroy) {
+			item._destroy();
+		}
+	}
+	object.removeItem = object.removeItem.bind(object);
+	
+	// Public function to insert a new item into the list
+	object.insertItem = function(item, index) {
+		item.parent = this;
+		if (index < 0) {
+			return false;
+		} else if (this.items.length == 0) {
+			this.addItem(item);
+			return true;
+		} else if (index > this.items.length - 1) {
+			this.addItem(item);
+			return true;
+		} else { // Insert it at the index
+			var existingItem = this.items[index],
+				itemDom = this._createItemDom(item);
+			this.items.splice(index, 0, item);
+			this.dom.insertBefore(itemDom, existingItem.dom);
+			// if there is data provider, insert the item to provider
+			if (this._providerItems != undefined) {
+				this._providerItems.splice(index, 0, item);
+			}
+			return true;
+		} 
+		return false;
+	}
+	object.insertItem = object.insertItem.bind(object);
+	
+	// Refresh all the items in the list
+	object.refreshItems = function(itemArray) {
+		if (itemArray == undefined) return; // No data provided
+		var i,
+			item;
+		if (this.items) {
+			// Remove all existing items first
+			for (i = this.items.length - 1; i >= 0; i--) {
+				item = this.items[i];
+				try {
+					this.dom.removeChild(item.dom);
+				} catch (ex) {
+					console.log('ws12.List: ' + ex);
+				}
+				this.items.pop();
+				if (item._destroy) {
+					item._destroy();
+				}
+			}
+			// See if there is data from provider, and make it blank.
+			if (this._providerItems != undefined) {
+				this._providerItems = [];
+			}
+		}
+		this.addItemBatch(itemArray);
+	}
+	object.refreshItems = object.refreshItems.bind(object);
+	
+	// Add a batch of items to the end of a list
+	object.addItemBatch = function(itemArray) {
+		var i,
+			item;
+		if (!this.items) {
+			this.items = [];
+		}
+		// Add all new items into the list
+		for (i = 0; i < itemArray.length; i++) {
+			item = itemArray[i];
+			this.addItem(item);
+		}
+	}
+	object.addItemBatch = object.addItemBatch.bind(object);
+	
+	// Private function to handle provider updates
+	object._providerUpdate = function(value) {
+		this.refreshItems(value);
+		this._providerItems = value;
+	}
+	object._providerUpdate = object._providerUpdate.bind(object);
+	
+	// Cycle through list items
+	var i,
+		item,
+		index;
+	if (object.items) {
+		for (i = 0; i < object.items.length; i++) {
+			item = object.items[i];
+			object._addItem(item);
+		}
+	} else {
+		object.items = [];
+	}
+	
+	return object.dom;
+}
+
+ws12_List.prototype = new ws12_CoreComponent();
+function ws12_ListEvent(target, eventType, data) {
+	this.target = target;
+	this.eventType = eventType;
+	this.data = data;
+}
 /**
  * @preserve FastClick: polyfill to remove click delays on browsers with touch UIs.
  *
@@ -2652,6 +2931,53 @@ function ws12_Spinner(object, screen){
 }
 
 ws12_Spinner.prototype = new ws12_CoreComponent();
+function ws12_SplitView(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-split-view');
+	
+	var i,
+		control,
+		controlDom;
+	
+	// Create our left column
+	object.dom.leftCol = document.createElement('div');
+	ws12.addClass(object.dom.leftCol, 'col');
+	ws12.addClass(object.dom.leftCol, 'left');
+	object.dom.leftCol.style.borderRightColor = ws12.config.brandColor;
+	object.dom.appendChild(object.dom.leftCol);
+	
+	// Load our left column
+	if (object.left) {
+		for (i = 0; i < object.left.length; i++) {
+			control = object.left[i];
+			controlDom = ws12.createControl(control, screen);
+			if (controlDom) {
+				object.dom.leftCol.appendChild(controlDom);
+			}
+		}
+	}
+	
+	// Create our right column
+	object.dom.rightCol = document.createElement('div');
+	ws12.addClass(object.dom.rightCol, 'col');
+	ws12.addClass(object.dom.rightCol, 'right');
+	object.dom.appendChild(object.dom.rightCol);
+	
+	// Load our right column
+	if (object.right) {
+		for (i = 0; i < object.right.length; i++) {
+			control = object.right[i];
+			controlDom = ws12.createControl(control, screen);
+			if (controlDom) {
+				object.dom.leftCol.appendChild(controlDom);
+			}
+		}
+	}
+	
+	return object.dom;
+}
+
+ws12_SplitView.prototype = new ws12_CoreComponent();
 function ws12_TileAcceleration(object, screen) {
 	ws12_CoreTileGauge.call(this, object, screen);
 	ws12.addClass(object.dom,'ws12-tile-acceleration');
@@ -3024,8 +3350,6 @@ function ws12_TileGroup(object, screen) {
 	// Set our default tile size
 	object._tileSize = 256;
 	object._thresholdWidth = 1024;
-	//object._is3Columns = (window.innerWidth <= object._thresholdWidth);
-	object._is3Columns = false;
 	
 	// Create the inner area for the tiles
 	object.dom.inner = document.createElement('div');
@@ -3034,12 +3358,7 @@ function ws12_TileGroup(object, screen) {
 	
 	// Create a matrix for keeping track of open slots
 	object.matrix = [];
-/*	if (object._is3Columns == true) {
-		object.matrix.push([0,0,0]);
-	} else {
-		object.matrix.push([0,0,0,0]);
-	}*/
-	
+
 	// From the row and column number set the top left of the tile
 	object._setTileTopLeft = function(tile, rowNum, colNum) {
 		tile.dom.style.top = ((rowNum  * this._tileSize) + 'px');
@@ -3144,7 +3463,6 @@ function ws12_TileGroup(object, screen) {
 	}
 	object._recalculateHeight = object._recalculateHeight.bind(object);
 	
-	
 	// Cycle through content
 	if (object.tiles) {
 		var i,
@@ -3155,38 +3473,47 @@ function ws12_TileGroup(object, screen) {
 			controlDom = ws12.createControl(control, screen);
 			if (controlDom) {
 				object.dom.inner.appendChild(controlDom);
-				//object._positionTile(control);
 			}
 		}
 		object._recalculateHeight();
 	}
 	
-	// Handle resize of screen
-	object._onresize = function() {
-		var neeToRecalculate = false;
-		if ((this._is3Columns == true) && (this.dom.offsetWidth >= this._thresholdWidth)) {
-			this._is3Columns = false;
+	// Layout all the tiles
+	object._layoutTiles = function() {
+		var i;
+		if (this._is3Columns == false) {
 			this.matrix = [];
 			this.matrix.push([0,0,0,0]);
-			neeToRecalculate = true;
-		} else if ((this._is3Columns == false) && (this.dom.offsetWidth <= this._thresholdWidth)){
-			this._is3Columns = true;
+		} else {
 			this.matrix = [];
 			this.matrix.push([0,0,0]);
-			neeToRecalculate = true;
 		}
-		// Cycle through our tiles and re-position them
-		if (neeToRecalculate == true) {
-			var i,
-				control;
-			for (i = 0; i < this.tiles.length; i++) {
-				this._positionTile(this.tiles[i]);
-			}
-			this._recalculateHeight();
+		// Cycle through our tiles and position them
+		for (i = 0; i < this.tiles.length; i++) {
+			this._positionTile(this.tiles[i]);
+		}
+		this._recalculateHeight();
+	}
+	object._layoutTiles = object._layoutTiles.bind(object);
+	
+	// Handle resize of screen
+	object._onresize = function() {
+		if ((this._is3Columns == true) && (this.dom.offsetWidth >= this._thresholdWidth)) {
+			this._layoutTiles();
+		} else if ((this._is3Columns == false) && (this.dom.offsetWidth < this._thresholdWidth)){
+			this._layoutTiles();
 		}
 	}
 	object._onresize = object._onresize.bind(object);
-	window.setTimeout(object._onresize,0);
+	
+	// Properly layout the control once animation ends
+	object._onshow = function() {
+		this._is3Columns = (this.dom.offsetWidth < this._thresholdWidth);
+		console.log(this.dom.offsetWidth);
+		this._layoutTiles();
+		this.dom.style.visibility = 'visible';
+	}
+	object._onshow = object._onshow.bind(object);
 	
 	return object.dom;
 }

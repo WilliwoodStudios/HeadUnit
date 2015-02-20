@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1611*/
+/* ws12 VERSION: 1.0.0.1688*/
 body,
 html {
   padding: 0px;
@@ -395,6 +395,121 @@ div {
   right: 0px;
   bottom: 0px;
 }
+/* Generic List Item */
+.ws12-generic-list-item {
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+  border-bottom-style: solid;
+  border-bottom-color: #d4d4d4;
+  border-bottom-width: 1px;
+  height: 60px;
+  padding: 5px;
+  background-color: white;
+  overflow: hidden;
+  color: #222222;
+  cursor: pointer;
+}
+.ws12-generic-list-item.in-head-unit {
+  background-color: #000000;
+  border-bottom-color: #747474;
+  color: #ffffff;
+  height: 100px;
+}
+.ws12-generic-list-item > .img {
+  height: 56px;
+  width: 56px;
+  border-radius: 40px;
+  margin-left: -1px;
+  margin-top: 0px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #d4d4d4;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.0s linear;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+.ws12-generic-list-item.in-head-unit > .img {
+  border-style: none;
+  height: 90px;
+  width: 90px;
+  border-radius: 46px;
+  margin-top: 5px;
+}
+.ws12-generic-list-item > .details {
+  position: absolute;
+  top: 0px;
+  left: 70px;
+  bottom: 0px;
+  right: 0px;
+  font-size: 15px;
+}
+.ws12-generic-list-item.in-head-unit > .details {
+  left: 110px;
+}
+.ws12-generic-list-item > .details > .title {
+  margin-top: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  font-size: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-overflow: -blackberry-fade;
+}
+.ws12-generic-list-item.in-head-unit > .details > .title {
+  font-size: 30px;
+}
+.ws12-generic-list-item.has-accent > .details > .title {
+  margin-top: 6px;
+}
+.ws12-generic-list-item.no-caption > .details > .title {
+  margin-top: 20px;
+}
+.ws12-generic-list-item.no-caption.has-accent > .details > .title {
+  margin-top: 15px;
+}
+.ws12-generic-list-item > .details > .accent {
+  font-size: 10px;
+  height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-overflow: -blackberry-fade;
+  color: #747474;
+  display: none;
+  margin-top: 0px;
+}
+.ws12-generic-list-item.in-head-unit > .details > .accent {
+  color: #ffffff;
+  font-size: 15px;
+  height: 20px;
+}
+.ws12-generic-list-item.has-accent > .details > .accent {
+  display: inherit;
+}
+.ws12-generic-list-item > .details > .caption {
+  font-size: 15px;
+  height: 20px;
+  padding-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-overflow: -blackberry-fade;
+  color: #747474;
+  margin-top: -3px;
+}
+.ws12-generic-list-item.in-head-unit > .details > .caption {
+  color: #ffffff;
+  font-size: 24px;
+  height: 34px;
+}
+.ws12-generic-list-item.no-caption > .details > .caption {
+  display: none;
+}
 /* Navigation Bar for Head Unit */
 .ws12-head-unit-chrome > .navigation {
   position: absolute;
@@ -486,6 +601,10 @@ div {
   top: 0px;
   bottom: 0px;
   left: 150px;
+}
+/* List Component */
+.ws12-list {
+  clear: both;
 }
 @font-face {
   font-family: 'Open Sans';
@@ -649,6 +768,34 @@ div {
   height: 20px;
   margin-top: 5px;
   margin-bottom: 5px;
+}
+/* Split View styling */
+.ws12-split-view {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  overflow: hidden;
+}
+.ws12-split-view > .col {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: -blackberry-touch;
+}
+.ws12-split-view > .col.left {
+  left: 0px;
+  right: 50%;
+  border-right: 2px solid;
+}
+.ws12-split-view > .right {
+  right: 0px;
+  left: 50%;
 }
 /* Acceleration Tile styling */
 .ws12-tile-acceleration {
@@ -821,6 +968,7 @@ div {
   -webkit-user-select: none;
   margin-top: 20px;
   margin-bottom: 20px;
+  visibility: hidden;
 }
 .ws12-tile-group.in-head-unit {
   width: 768px;
