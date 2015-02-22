@@ -17,7 +17,9 @@ function panePhone() {
 				}
 			],
 			right: [
-			
+				{
+					component: ws12.DialPad,
+				}
 			]
 		}
 	];

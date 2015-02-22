@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1688*/
+/* ws12 VERSION: 1.0.0.1723*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -62,6 +62,7 @@ var ws12 = {
 	GenericListItem: {
 		ONCLICK: 'onclick'
 	},
+	DialPad: {},
 
 	init: function(object, config) {	
 		// Set any config overrides
@@ -195,6 +196,9 @@ var ws12 = {
 				break;
 			case ws12.List:
 				controlDom = new ws12_List(control,screen);
+				break;
+			case ws12.DialPad:
+				controlDom = new ws12_DialPad(control,screen);
 				break;
 		}
 		return controlDom;
@@ -657,6 +661,7 @@ function ws12_CircleMenuItem(object, screen) {
 	if (!ws12.isMobileDevice()) {
 		object.dom.inner.onmousedown = object.dom.inner.ontouchstart;
 		object.dom.inner.onmouseup = object.dom.inner.ontouchend;
+		object.dom.inner.onmouseleave = object.dom.inner.ontouchend;
 	}
 	
 	// Set the image
@@ -1425,6 +1430,177 @@ function ws12_DataProvider(object, screen){
 }
 
 
+function ws12_DialPadButton(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'circle-button');
+	
+	// Set our brand color
+	object.dom.style.borderColor = ws12.config.brandColor;
+	
+	// Create the number
+	object.dom.captionDiv = document.createElement('div');
+	ws12.addClass(object.dom.captionDiv,'caption');
+	object.dom.captionDiv.textContent = object.caption;
+	object.dom.appendChild(object.dom.captionDiv);
+	
+	// See if we need to center the number
+	if (object.center === true) {
+		ws12.addClass(object.dom.captionDiv, 'centered');
+	}
+	
+	// Create extra letters
+	object.dom.letters = document.createElement('div');
+	ws12.addClass(object.dom.letters,'letters');
+	object.dom.appendChild(object.dom.letters);
+	if (object.letters) {
+		object.dom.letters.textContent = object.letters;
+	}
+	// Set our touch interaction
+	object.dom.ontouchstart = function() {
+		this.style.backgroundColor = ws12.config.brandColor;
+	}
+	object.dom.ontouchend = function() {
+		this.style.backgroundColor = '';
+	}
+	object.dom.ontouchcancel = object.dom.ontouchend;
+	if (!ws12.isMobileDevice()) {
+		object.dom.onmousedown = object.dom.ontouchstart;
+		object.dom.onmouseup = object.dom.ontouchend;
+		object.dom.onmouseleave = object.dom.ontouchend;
+	}
+	
+	return object.dom;
+}
+
+ws12_DialPadButton.prototype = new ws12_CoreComponent();
+function ws12_DialPad(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-dial-pad');
+	
+	object._buttons = [
+		{	
+			caption: '1',
+		},
+		{
+			caption: '2',
+			letters: 'ABC'
+		},
+		{
+			caption: '3',
+			letters: 'DEF'
+		},
+		{
+			caption: '4',
+			letters: 'GHI'
+		},
+		{
+			caption: '5',
+			letters: 'JKL'
+		},
+		{
+			caption: '6',
+			letters: 'MNO'
+		},
+		{
+			caption: '7',
+			letters: 'PQRS'
+		},
+		{
+			caption: '8',
+			letters: 'TUV'
+		},
+		{
+			caption: '9',
+			letters: 'WXYZ'
+		},
+		{
+			caption: '*',
+			center: true
+		},
+		{
+			caption: '0',
+			letters: '+'
+		},
+		{
+			caption: '#',
+			center: true
+		}
+	];
+	
+	var i,
+		button,
+		dom,
+		top,
+		left,
+		rowNum = 0,
+		colNum = 0,
+		dialPadWidth = 350,
+		dialPadHeight = 500,
+		buttonWidth = 104,
+		rowHeight = Math.floor(dialPadHeight/4),
+		colWidth = Math.floor(dialPadWidth/3),
+		offsetLeft = Math.floor((colWidth/2) - (buttonWidth/2)),
+		offsetTop = Math.floor((rowHeight/2) - (buttonWidth/2));
+	for (i = 0; i < object._buttons.length; i++) {
+		button = object._buttons[i];
+		dom = new ws12_DialPadButton(button,screen);
+		object.dom.appendChild(dom);
+		// Determine button position
+		top = (rowNum * rowHeight) + offsetTop;
+		left = (colNum * colWidth) + offsetLeft;
+		// Set the position
+		dom.style.top = top + 'px';
+		dom.style.left = left + 'px';
+		// Calculate the next Row & Col number
+		if (((i+1)%3) === 0) {
+			rowNum++;
+			colNum = 0;
+		} else {
+			colNum++;
+		}
+	}
+	
+	/*
+	if (ws12.config.inHeadUnit == true) {
+		object.dom.style.borderColor = ws12.config.brandColor;
+	}
+	
+	// See if a style was defined
+	if (object.style) {
+		ws12.addClass(object.dom, object.style);
+	}
+	
+	// Create our loading area
+	object.dom.loadingDiv = document.createElement('div');
+	ws12.addClass(object.dom.loadingDiv, 'loading');
+	object.dom.appendChild(object.dom.loadingDiv);
+	object.dom.spinner = new ws12_Spinner({component: ws12.Spinner, size: ws12.Spinner.SMALL},screen);
+	object.dom.loadingDiv.appendChild(object.dom.spinner);
+	
+	// Create our content area
+	object.dom.contentDiv = document.createElement('div');
+	ws12.addClass(object.dom.contentDiv, 'content');
+	object.dom.appendChild(object.dom.contentDiv);	
+	
+	// Public function to toggle the display of content
+	object.showContent = function(value) {
+		if (value == this._contentShowing) return;
+		if (value) {
+			this.dom.loadingDiv.style.display = 'none';
+			this.dom.contentDiv.style.display = 'inherit';
+		} else {
+			this.dom.loadingDiv.style.display = 'inline';
+			this.dom.contentDiv.style.display = 'none';
+		}
+		this._contentShowing = value;
+	}
+	object.showContent = object.showContent.bind(object);
+	
+	*/
+	return object.dom;
+}
+
+ws12_DialPad.prototype = new ws12_CoreComponent();
 function ws12_GenericListItem(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom, 'ws12-generic-list-item');
@@ -2969,7 +3145,7 @@ function ws12_SplitView(object, screen) {
 			control = object.right[i];
 			controlDom = ws12.createControl(control, screen);
 			if (controlDom) {
-				object.dom.leftCol.appendChild(controlDom);
+				object.dom.rightCol.appendChild(controlDom);
 			}
 		}
 	}

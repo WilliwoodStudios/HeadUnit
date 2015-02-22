@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1688*/
+/* ws12 VERSION: 1.0.0.1723*/
 body,
 html {
   padding: 0px;
@@ -394,6 +394,46 @@ div {
   left: 0px;
   right: 0px;
   bottom: 0px;
+}
+/* Phone Dial Pad styling */
+.ws12-dial-pad {
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+  height: 500px;
+  width: 350px;
+  overflow: hidden;
+  margin-right: auto;
+  margin-left: auto;
+}
+.ws12-dial-pad > .circle-button {
+  position: absolute;
+  height: 100px;
+  width: 100px;
+  border-radius: 51px;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+}
+.ws12-dial-pad > .circle-button > .caption {
+  font-size: 45px;
+  padding-top: 5px;
+  text-align: center;
+  color: #ffffff;
+}
+.ws12-dial-pad > .circle-button > .caption.centered {
+  padding-top: 0px;
+  height: 100px;
+  line-height: 100px;
+}
+.ws12-dial-pad > .circle-button > .letters {
+  position: absolute;
+  text-align: center;
+  font-size: 18px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  height: 40px;
+  color: #ffffff;
 }
 /* Generic List Item */
 .ws12-generic-list-item {
