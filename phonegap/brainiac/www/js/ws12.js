@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1723*/
+/* ws12 VERSION: 1.0.0.1726*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -1663,6 +1663,26 @@ function ws12_GenericListItem(object, screen) {
 		ws12.addClass(object.dom, 'has-accent');
 	} 
 	
+	// Handle our touch events
+	object.dom.ontouchstart = function() {
+		this.style.backgroundColor = ws12.config.brandColor;
+		if (ws12.config.inHeadUnit === true) {
+			object.dom.accent.style.color = '';
+		}
+	}
+	object.dom.ontouchend = function() {
+		this.style.backgroundColor = '';
+		if (ws12.config.inHeadUnit === true) {
+			object.dom.accent.style.color = ws12.config.brandColor;
+		}
+	}
+	object.dom.ontouchcancel = object.dom.ontouchend;
+	if (!ws12.isMobileDevice()) {
+		object.dom.onmousedown = object.dom.ontouchstart;
+		object.dom.onmouseup = object.dom.ontouchend;
+		object.dom.onmouseleave = object.dom.ontouchend;
+	}
+
 	// Pass the onclick back to the list
 	object.dom.addEventListener('click', function() {
 		if (this.model.parent.onaction == undefined) return;
