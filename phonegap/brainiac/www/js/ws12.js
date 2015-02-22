@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1727*/
+/* ws12 VERSION: 1.0.0.1729*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
