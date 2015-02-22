@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1726*/
+/* ws12 VERSION: 1.0.0.1727*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -1865,7 +1865,11 @@ function ws12_NavigationBar(object, screen) {
 		if (this.dom.centerBtn._windowPane == windowPane) return;
 		this.dom.centerBtn._hidden = false;
 		this.dom.centerBtn.style.opacity = '1.0';
+		if (this._menuImgClass != undefined) {
+			ws12.removeClass(this.dom.centerBtn,this._menuImgClass);
+		}
 		// Set our icon
+		this._menuImgClass = windowPane.menuImgClass;
 		ws12.addClass(this.dom.centerBtn, windowPane.menuImgClass); 
 		this.dom.centerLine.style.opacity = '0';
 		this._selectedButton = this.dom.centerBtn
