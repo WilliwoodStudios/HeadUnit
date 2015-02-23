@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1729*/
+/* ws12 VERSION: 1.0.0.1806*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -62,7 +62,20 @@ var ws12 = {
 	GenericListItem: {
 		ONCLICK: 'onclick'
 	},
+	PhoneLogListItem: {
+		ONCLICK: 'onclick',
+		INCOMING: 'incoming',
+		OUTGOING: 'outgoing',
+		MISSED: 'missed'
+	},
 	DialPad: {},
+	TabbedPane: {},
+	Tab: {},
+	SegmentedControl: {},
+	DockLayout: {
+		TOP: 'top',
+		BOTTOM: 'bottom'
+	},
 
 	init: function(object, config) {	
 		// Set any config overrides
@@ -199,6 +212,18 @@ var ws12 = {
 				break;
 			case ws12.DialPad:
 				controlDom = new ws12_DialPad(control,screen);
+				break;
+			case ws12.TabbedPane:
+				controlDom = new ws12_TabbedPane(control,screen);
+				break;
+			case ws12.Tab:
+				controlDom = new ws12_Tab(control,screen);
+				break;
+			case ws12.SegmentedControl:
+				controlDom = new ws12_SegmentedControl(control,screen);
+				break;
+			case ws12.DockLayout:
+				controlDom = new ws12_DockLayout(control,screen);
 				break;
 		}
 		return controlDom;
@@ -707,10 +732,25 @@ function ws12_CoreComponent(object, screen) {
 		// Create our base container for the control 
 		object.dom = document.createElement('div');
 		object.dom.model = object;
+		ws12.addClass(object.dom, 'ws12-core-component');
 		
 		// See if it is running in the head unit
 		if (ws12.config.inHeadUnit === true) {
 			ws12.addClass(object.dom,'in-head-unit');
+		}
+		
+		// Check for our margins
+		if (object.marginTop === true) {
+			ws12.addClass(object.dom,'marginTop');
+		}
+		if (object.marginBottom === true) {
+			ws12.addClass(object.dom,'marginBottom');
+		}
+		if (object.marginLeft === true) {
+			ws12.addClass(object.dom,'marginLeft');
+		}
+		if (object.marginRight === true) {
+			ws12.addClass(object.dom,'marginRight');
 		}
 		
 		// Set default enabled state
@@ -1469,6 +1509,17 @@ function ws12_DialPadButton(object, screen) {
 		object.dom.onmouseleave = object.dom.ontouchend;
 	}
 	
+	// Handle the click event
+	object.dom.onclick = function() {
+		var key = {
+			caption: this.model.caption,
+			letters: this.model.letters
+		}
+		if ((this.model.parent != undefined) && (this.model.parent.onkeypadpress)) {
+			this.model.parent.onkeypadpress(key);
+		}
+	}
+	
 	return object.dom;
 }
 
@@ -1543,6 +1594,7 @@ function ws12_DialPad(object, screen) {
 		offsetTop = Math.floor((rowHeight/2) - (buttonWidth/2));
 	for (i = 0; i < object._buttons.length; i++) {
 		button = object._buttons[i];
+		button.parent = object;
 		dom = new ws12_DialPadButton(button,screen);
 		object.dom.appendChild(dom);
 		// Determine button position
@@ -1601,6 +1653,57 @@ function ws12_DialPad(object, screen) {
 }
 
 ws12_DialPad.prototype = new ws12_CoreComponent();
+function ws12_DockLayout(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-dock-layout');
+	
+	var i,
+		control,
+		controlDom;
+	
+	// Create our dock area
+	object.dom.dock = document.createElement('div');
+	ws12.addClass(object.dom.dock, 'dock');
+	
+	// Load our dock
+	if (object.dock) {
+		for (i = 0; i < object.dock.length; i++) {
+			control = object.dock[i];
+			controlDom = ws12.createControl(control, screen);
+			if (controlDom) {
+				object.dom.dock.appendChild(controlDom);
+			}
+		}
+	}
+	
+	// Create our contents area
+	object.dom.contentDiv = document.createElement('div');
+	ws12.addClass(object.dom.contentDiv, 'contents');
+	
+	// Load our contents
+	if (object.content) {
+		for (i = 0; i < object.content.length; i++) {
+			control = object.content[i];
+			controlDom = ws12.createControl(control, screen);
+			if (controlDom) {
+				object.dom.contentDiv.appendChild(controlDom);
+			}
+		}
+	}
+	
+	// Check our dock location
+	if (object.location === ws12.DockLayout.BOTTOM) {
+		object.dom.appendChild(object.dom.contentDiv);
+		object.dom.appendChild(object.dom.dock)
+	} else {
+		object.dom.appendChild(object.dom.dock)
+		object.dom.appendChild(object.dom.contentDiv);
+	}
+	
+	return object.dom;
+}
+
+ws12_DockLayout.prototype = new ws12_CoreComponent();
 function ws12_GenericListItem(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom, 'ws12-generic-list-item');
@@ -2050,6 +2153,9 @@ function ws12_List(object, screen) {
 		switch (this.style) {
 			case ws12.GenericListItem:
 				itemDom = new ws12_GenericListItem(item, this.screen);
+				break;
+			case ws12.PhoneLogListItem:
+				itemDom = new ws12_PhoneLogListItem(item, this.screen);
 				break;
 		}
 		return itemDom;
@@ -3061,6 +3167,66 @@ function ws12_MenuItem(object, screen) {
 }
 
 ws12_MenuItem.prototype = new ws12_CoreComponent();
+function ws12_PhoneLogListItem(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom, 'ws12-phone-log-list-item');
+	
+	// See if the style is defined
+	if (object.style == undefined) {
+		object.style = ws12.PhoneLogListItem.INCOMING;
+	}
+	ws12.addClass(object.dom, object.style);
+	
+	// Details section
+	object.dom.details = document.createElement('div');
+	ws12.addClass(object.dom.details,'details');
+	object.dom.appendChild(object.dom.details);
+	
+	// Title
+	object.dom.titleArea = document.createElement('div');
+	ws12.addClass(object.dom.titleArea,'title');
+	object.dom.titleArea.textContent = object.title;
+	object.dom.details.appendChild(object.dom.titleArea);
+	if (object.style === ws12.PhoneLogListItem.MISSED) {
+		object.dom.titleArea.style.color = ws12.config.brandColor;
+	}
+
+	// Caption
+	object.dom.captionDiv = document.createElement('div');
+	ws12.addClass(object.dom.captionDiv,'caption');
+	object.dom.captionDiv.style.color = ws12.config.brandColor;
+	object.dom.details.appendChild(object.dom.captionDiv);
+	if (object.caption) {
+		object.dom.captionDiv.textContent = object.caption;
+	} else {
+		ws12.addClass(object.dom, 'no-caption');
+	}
+	
+	// Handle our touch events
+	object.dom.ontouchstart = function() {
+		this.style.backgroundColor = ws12.config.brandColor;
+	}
+	object.dom.ontouchend = function() {
+		this.style.backgroundColor = '';
+	}
+	object.dom.ontouchcancel = object.dom.ontouchend;
+	if (!ws12.isMobileDevice()) {
+		object.dom.onmousedown = object.dom.ontouchstart;
+		object.dom.onmouseup = object.dom.ontouchend;
+		object.dom.onmouseleave = object.dom.ontouchend;
+	}
+
+	// Pass the onclick back to the list
+	object.dom.addEventListener('click', function() {
+		if (this.model.parent.onaction == undefined) return;
+		var event = new ws12_ListEvent(this.model, ws12.PhoneLogListItem.ONCLICK);
+		this.model.parent._onaction(this.model, event);
+	},false);
+
+	return object.dom;
+}
+
+ws12_PhoneLogListItem.prototype = new ws12_CoreComponent();
 function ws12_Screen(object, data) {
 	ws12_CoreScreen.call(this, object);
 	
@@ -3104,6 +3270,97 @@ function ws12_Screen(object, data) {
 ws12_Screen.prototype = new ws12_CoreScreen();
 
 
+function ws12_SegmentedControl(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-segmented-control');	
+	object.domOptions = [];
+	
+	// Public function to set the selected index for the control
+	object.setSelectedIndex = function(index) {
+		if (this.selectedIndex != index) {
+			this.selectedIndex = index;
+			// Trigger the onclick
+			if (this.onclick) {
+				this.onclick(); 
+			}
+		} 
+		this._setSelectedIndex(index);
+	}
+	object.setSelectedIndex = object.setSelectedIndex.bind(object);
+	
+	// Private function to set the selected index for the control
+	object._setSelectedIndex = function(index) {
+		if (this.options) {
+			var i,
+				option;
+			for (i = 0; i < this.domOptions.length; i++) {
+				option = this.domOptions[i];
+				if (i == index) {
+					option._setSelected(true);
+				} else {
+					option._setSelected(false);
+				}
+			}
+		}
+	}
+	object._setSelectedIndex = object._setSelectedIndex.bind(object);
+	
+	// Go through our options
+	if (object.options) {
+		var i,
+			option, 
+			percentage = 100/object.options.length;
+		
+		for (i = 0; i < object.options.length; i++) {
+			option = document.createElement('div');
+			ws12.addClass(option,'button');
+			if (i == 0) {
+				ws12.addClass(option,'left');
+			} else if (i == object.options.length -1) {
+				ws12.addClass(option,'right');
+			}
+			option.model = object;
+			option.index = i;
+			option.selected = false;
+			option.style.width = percentage + '%';
+			option.style.left = (i * percentage) + '%';
+			option.textContent = object.options[i];
+			object.domOptions.push(option);
+			object.dom.appendChild(option);
+			
+			// Pass the onclick back to the list
+			option.addEventListener('click', function() {
+				if (this.model.enabled == false) return;
+				if (this.selected) return;
+				this.model.setSelectedIndex(this.index);
+			},false);
+			
+			// Change the selected state for the button
+			option._setSelected = function(value) {
+				this.selected = value;
+				if (value == true) {
+					ws12.addClass(this,'selected');
+					this.style.backgroundColor = ws12.config.brandColor;
+				} else {
+					ws12.removeClass(this,'selected');
+					this.style.backgroundColor = '';
+				}
+			}
+			option._setSelected = option._setSelected.bind(option);
+		}
+	}
+	// Set our selected index
+	if (object.selectedIndex) {
+		object._setSelectedIndex(object.selectedIndex);
+	} else {
+		object.selectedIndex = 0;
+		object._setSelectedIndex(0);
+	}
+	
+	return object.dom;
+}
+
+ws12_SegmentedControl.prototype = new ws12_CoreComponent();
 function ws12_Spinner(object, screen){
 	ws12_CoreComponent.call(this, object, screen);
 	object.size = (object.size) ? object.size : ws12.Spinner.MEDIUM;
@@ -3178,6 +3435,102 @@ function ws12_SplitView(object, screen) {
 }
 
 ws12_SplitView.prototype = new ws12_CoreComponent();
+function ws12_Tab(object, screen) {
+	// All tabs are invisible by default
+	object.visible = false;
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-tab');
+	// Set our default
+	if (object.selected != true) {
+		object.selected = false;
+	}
+	
+	var i,
+		control,
+		controlDom;
+	// Load our contents
+	if (object.content) {
+		for (i = 0; i < object.content.length; i++) {
+			control = object.content[i];
+			controlDom = ws12.createControl(control, screen);
+			if (controlDom) {
+				object.dom.appendChild(controlDom);
+			}
+		}
+	}
+	
+	return object.dom;
+}
+
+ws12_Tab.prototype = new ws12_CoreComponent();
+function ws12_TabbedPane(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-tabbed-pane');
+	// Set our default selected tab
+	object._selectedTab = undefined;
+	
+	var i,
+		control,
+		controlDom,
+		selectedTab;
+	// Load our tabs
+	if (object.tabs) {
+		for (i = 0; i < object.tabs.length; i++) {
+			control = object.tabs[i];
+			if (control.component != ws12.Tab) continue;
+			control.parent = object;
+			controlDom = ws12.createControl(control, screen);
+			if (controlDom) {
+				object.dom.appendChild(controlDom);
+			}
+			// See if it is the selected tab
+			if ((control.selected === true) && (object._selectedTab == undefined)) {
+				object._selectedTab = control;
+			}
+		}
+	}
+	
+	// Public function to select a tab
+	object.selectTab = function(tab) {
+		if (tab == undefined) return;
+		if (tab.component != ws12.Tab) return;
+		if (tab === this._selectedTab) return;
+		// Unselect all tabs
+		var i,
+			item;
+		for (i = 0; i < this.tabs.length; i++) {
+			item = this.tabs[i];
+			item.selected = false;
+			item.setVisible(false);
+		}
+		// Now select the desired tab
+		this._selectTab(tab);
+	}
+	object.selectTab = object.selectTab.bind(object);
+	
+	// Private function to select a tab
+	object._selectTab = function(tab) {
+		if (tab == undefined) return;
+		if (tab.component != ws12.Tab) return;
+		object._selectedTab = tab;
+		tab.selected = true;
+		tab.setVisible(true);
+	}
+	object._selectTab = object._selectTab.bind(object);
+	
+	// Set our selected tab
+	if ((object._selectedTab == undefined) && (object.tabs.length > 0)){
+		object._selectedTab = object.tabs[0];
+	}
+	if (object._selectedTab != undefined) {
+		object._selectTab(object._selectedTab);
+	}
+	
+	
+	return object.dom;
+}
+
+ws12_TabbedPane.prototype = new ws12_CoreComponent();
 function ws12_TileAcceleration(object, screen) {
 	ws12_CoreTileGauge.call(this, object, screen);
 	ws12.addClass(object.dom,'ws12-tile-acceleration');
