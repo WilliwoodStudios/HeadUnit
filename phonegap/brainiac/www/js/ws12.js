@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1806*/
+/* ws12 VERSION: 1.0.0.1936*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -44,6 +44,10 @@ var ws12 = {
 	TileBraking: {},
 	TileFuel: {},
 	TileDistance: {},
+	TileZeroToSixty: {},
+	TileZeroToSixtyHistory: {},
+	TileRecord: {},
+	TileTimer: {},
 	MenuItem: {},
 	DataProvider: {
 		ERR_OFFLINE: -5000,
@@ -192,6 +196,18 @@ var ws12 = {
 			case ws12.TileDistance:
 				controlDom = new ws12_TileDistance(control, screen);
 				break;		
+			case ws12.TileZeroToSixty:
+				controlDom = new ws12_TileZeroToSixty(control, screen);
+				break;		
+			case ws12.TileZeroToSixtyHistory:
+				controlDom = new ws12_TileZeroToSixtyHistory(control, screen);
+				break;	
+			case ws12.TileRecord:
+				controlDom = new ws12_TileRecord(control, screen);
+				break;	
+			case ws12.TileTimer:
+				controlDom = new ws12_TileTimer(control, screen);
+				break;
 			case ws12.MenuItem:
 				controlDom = new ws12_MenuItem(control, screen);
 				break;
@@ -4062,7 +4078,6 @@ function ws12_TileGroup(object, screen) {
 	// Properly layout the control once animation ends
 	object._onshow = function() {
 		this._is3Columns = (this.dom.offsetWidth < this._thresholdWidth);
-		console.log(this.dom.offsetWidth);
 		this._layoutTiles();
 		this.dom.style.visibility = 'visible';
 	}
@@ -4551,6 +4566,221 @@ function ws12_TileProfile(object, screen) {
 }
 
 ws12_TileProfile.prototype = new ws12_CoreTile();
+function ws12_TileRecord(object, screen) {
+	// This tile is 1 x 1
+	object.style = undefined;
+	ws12_CoreTile.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-tile-record');
+	
+	// Create our stage 1 area
+	object.dom.stage1 = document.createElement('div');
+	ws12.addClass(object.dom.stage1,'stage-1');
+	object.dom.contentDiv.appendChild(object.dom.stage1);
+	
+	// Create our record button
+	object.dom.recordButton = document.createElement('div');
+	object.dom.recordButton.model = object;
+	ws12.addClass(object.dom.recordButton,'record-button');
+	object.dom.recordButton.style.backgroundColor = ws12.config.brandColor;
+	object.dom.stage1.appendChild(object.dom.recordButton);
+	object.dom.recordButton.textContent = 'Start';
+	object.dom.recordButton.onclick = function() {
+		var model = this.model;
+		ws12.playTouchSound();
+		// See if there is a countdown
+		if (model.countdown === true) {
+			model.dom.stage1.style.display = 'none';
+			model.dom.stage2.style.display = 'inline';
+			model._countDownNum = 3;
+			model._interval = window.setInterval(model._countDownInterval, 1000);
+			return;
+		}
+		// Fire the recording if no countdown
+		if (model.onrecord) {
+			model.onrecord();
+		}
+	}
+	object.dom.recordButton.ontouchstart = function() {
+		this.style.opacity = '0.7';
+	}
+	object.dom.recordButton.ontouchend = function() {
+		this.style.opacity = '1.0';
+	}
+	object.dom.recordButton.ontouchcancel = object.dom.recordButton.ontouchend;
+	if (!ws12.isMobileDevice()) {
+		object.dom.recordButton.onmousedown = object.dom.recordButton.ontouchstart;
+		object.dom.recordButton.onmouseup = object.dom.recordButton.ontouchend;
+		object.dom.recordButton.onmouseleave = object.dom.recordButton.ontouchend;
+	}
+	
+	// Create our caption
+	object.dom.captionDiv = document.createElement('div');
+	ws12.addClass(object.dom.captionDiv,'caption');
+	object.dom.stage1.appendChild(object.dom.captionDiv);
+	if (object.caption) {
+		object.dom.captionDiv.textContent = object.caption;
+	}
+	
+	// Create our Stage 2 area
+	object.dom.stage2 = document.createElement('div');
+	ws12.addClass(object.dom.stage2,'stage-2');
+	object.dom.contentDiv.appendChild(object.dom.stage2);
+	
+	// Add our stage 2 number
+	object.dom.number = document.createElement('div');
+	ws12.addClass(object.dom.number,'number');
+	object.dom.stage2.appendChild(object.dom.number);
+	object.dom.number.textContent = '3';
+	
+	// Private function to handle count down
+	object._countDownInterval = function(value) {
+		this._countDownNum--;
+		if (this._countDownNum === 0) {
+			window.clearInterval(this._interval);
+			this._interval = undefined;
+			this.dom.number.textContent = 'GO!';
+			this.dom.number.style.backgroundColor = ws12.config.brandColor;
+			ws12.addClass(this.dom.number,'animation');
+			// Fire the onrecord event
+			if (this.onrecord) {
+				this.onrecord();
+			}
+			return;
+		}
+		this.dom.number.textContent = this._countDownNum;
+	}
+	object._countDownInterval = object._countDownInterval.bind(object);
+	
+	// Private function to handle clean-up
+	object._providerUpdate = function(value) {
+		if (this._interval != undefined) {
+			window.clearInterval(this._interval);
+			this._interval = undefined;
+		}
+	}
+	object._providerUpdate = object._providerUpdate.bind(object);
+	
+	// Public function to reset the control
+	object.reset = function() {
+		if (this._interval != undefined) {
+			window.clearInterval(this._interval);
+			this._interval = undefined;
+		}
+		this.dom.number.style.backgroundColor = '';
+		this.dom.number.textContent = '3';
+		ws12.removeClass(this.dom.number,'animation');
+		this.dom.stage2.style.display = 'none';
+		this.dom.stage1.style.display = '';
+	}
+	object.reset = object.reset.bind(object);
+	
+	return object.dom;
+}
+
+ws12_TileRecord.prototype = new ws12_CoreTile();
+function ws12_TileTimer(object, screen) {
+	// This tile is 1 x 2
+	object.style = ws12.Tile.WIDE;
+	ws12_CoreTile.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-tile-timer');
+	
+	// Add our numbers area
+	object.dom.numbers = document.createElement('div');
+	ws12.addClass(object.dom.numbers,'numbers');
+	object.dom.contentDiv.appendChild(object.dom.numbers);
+	object.dom.numbers.textContent = '00:00:00';
+	
+	// Private function to handle the interval
+	object._doInterval = function() {
+		var now = new Date();
+		this._milliseconds = now - this._startTime;
+		var minutes = Math.floor(this._milliseconds/60000),
+			seconds = Math.floor(this._milliseconds/1000),
+			time = this._milliseconds,
+			tenths;
+		// Calculate our tenths
+		time = time % (60 * 60 * 1000);
+		time = time % (60 * 1000);
+		tenths = time % 100;
+			
+		// Format leading zeros
+		minutes = (minutes >= 10) ? minutes : '0'+ minutes;
+		seconds = (seconds >= 10) ? seconds : '0'+ seconds;
+		tenths = (tenths >= 10) ? tenths : '0'+ tenths;
+		
+		object.dom.numbers.textContent = minutes + ':'+seconds+':'+tenths;	
+	}
+	object._doInterval = object._doInterval.bind(object);
+	
+	// Public function to reset the control
+	object.reset = function() {
+		if (this._interval != undefined) {
+			window.clearInterval(this._interval);
+			this._milliseconds = 0;
+			this._interval = undefined;
+			this.dom.numbers.textContent = '00:00:00';
+			if (this.onreset) {
+				this.onreset();
+			}
+		}
+	}
+	object.reset = object.reset.bind(object);
+	
+	// Public function to start the control
+	object.start = function() {
+		if (this._interval != undefined) return; // Already running
+		this._startTime = new Date();
+		this._milliseconds = 0;
+		this._interval = window.setInterval(this._doInterval,10);
+		if (this.onstart) {
+			this.onstart();
+		}
+	}
+	object.start = object.start.bind(object);
+	
+	// Public function to stop the control
+	object.stop = function() {
+		if (this._interval != undefined) {
+			window.clearInterval(this._interval);
+			this._interval = undefined;
+			if (this.onstop) {
+				this.onstop();
+			}
+		}
+	}
+	object.stop = object.stop.bind(object);
+	
+	// Public function to get the time in milliseconds
+	object.getMilliseconds = function() {
+		return this._milliseconds;
+	}
+	object.getMilliseconds = object.getMilliseconds.bind(object);
+	
+	// Public function to get the time in seconds
+	object.getSeconds = function() {
+		return (this._milliseconds/1000).toFixed(1);
+	}
+	object.getSeconds = object.getSeconds.bind(object);
+	
+	// Public function to get the time in minutes
+	object.getMinutes = function() {
+		return (this._milliseconds/60000).toFixed(2);
+	}
+	object.getMinutes = object.getMinutes.bind(object);
+	
+	// Private function to clean up
+	object._destroy = function() {
+		if (this._interval != undefined) {
+			window.clearInterval(this._interval);
+			this._interval = undefined;
+		}
+	}
+	object._destroy = object._destroy.bind(object);
+	
+	return object.dom;
+}
+
+ws12_TileTimer.prototype = new ws12_CoreTile();
 function ws12_TileWeeksActivity(object, screen) {
 	// This tile is wide 1 x 2
 	object.style = ws12.Tile.WIDE;
@@ -4563,6 +4793,148 @@ function ws12_TileWeeksActivity(object, screen) {
 }
 
 ws12_TileWeeksActivity.prototype = new ws12_CoreTile();
+function ws12_TileZeroToSixty(object, screen) {
+	object.style = undefined;
+	ws12_CoreTileDonutChart.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-tile-zero-to-sixty');
+	
+	// Figure out the data array for this chart
+	object._calculateData = function() {
+		var data;
+		if (this.target != undefined && this.value != undefined) {
+			var colorValue,
+				percent;
+			// Check for errors in data
+			if (this.value < 0) this.value = 0;
+			if (this.value < this.target) {
+				percent = 100;	
+			} else {
+				percent = Math.ceil((this.target / this.value)*100);
+			}
+			// Determine Color
+			switch (true) {
+				case (percent > 90):
+					colorValue = (ws12.config.inHeadUnit == true) ? ws12.config.brandColor : ws12.color_GREAT;
+					break;
+				case (percent > 50):
+					colorValue = (ws12.config.inHeadUnit == true) ? ws12.config.brandColor : ws12.color_GOOD;
+					break;
+				default:
+					colorValue = (ws12.config.inHeadUnit == true) ? ws12.config.brandColor : ws12.color_OK;
+					break;
+			}
+			// Create our chart data object
+			data = [
+				{
+					value: percent,
+					color: colorValue,
+				},
+				{
+					value: (100-percent),
+					color: (ws12.config.inHeadUnit == true) ? ws12.color_DARK : ws12.color_LIGHT
+				}
+			];	
+		} 
+		return data;
+	}
+	object._calculateData = object._calculateData.bind(object);
+	
+
+	// Private function to handle provider updates
+	object._providerUpdate = function(value) {
+		if (value != undefined) {
+			this.value = value.value;
+			this.target = value.target;
+		} else {
+			this.value = 0;
+			this.target = 0;
+		}
+		// Populate our chart with data
+		var data = this._calculateData();
+		if (data != undefined) {
+			this._setData(data);
+			this._setCaption('<span class="tall">'+this.value + '</span>&nbsp;sec 0-60');
+		}
+		this.showContent(true);
+	}
+	object._providerUpdate = object._providerUpdate.bind(object);	
+	
+	// Load our control if no provider is connected
+	if (object.provider == undefined) {
+		object._providerUpdate({value: object.value, target: object.target })
+	}
+	
+	
+	return object.dom;
+}
+
+ws12_TileZeroToSixty.prototype = new ws12_CoreTileDonutChart();
+function ws12_TileZeroToSixtyHistory(object, screen) {
+	// This tile is 1 x 1
+	object.style = ws12.Tile.WIDE;
+	ws12_CoreTile.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-tile-zero-to-sixty-history');
+	
+	// Create the caption area
+	object.dom.caption = document.createElement('div');
+	ws12.addClass(object.dom.caption,'caption');
+	object.dom.contentDiv.appendChild(object.dom.caption);
+	object.dom.caption.textContent = 'Recorded 0-60 times (sec)';
+	
+	// Create our chart area
+	object.dom.canvas = document.createElement('canvas');
+	ws12.addClass(object.dom.canvas, 'chart');
+	object.dom.canvas.height = 190;
+	object.dom.canvas.width = 490;
+	object.dom.contentDiv.appendChild(object.dom.canvas);
+	object.dom.ctx = object.dom.canvas.getContext('2d');
+	object.dom.chart = new Chart(object.dom.ctx);
+	
+	// Private function to handle provider updates
+	object._providerUpdate = function(value) {
+		var i,
+			_labels = [];
+			
+		// Assign our values
+		if (value != undefined) {
+			this.data = value.data;
+			this.labels = value.labels
+		} else {
+			this.data = undefined;
+			this.labels = undefined;
+		}
+
+		// Get our root color
+		var graphColor = (ws12.config.inHeadUnit == true) ? ws12.config.brandColor : ws12.color_OK,
+			R = parseInt((ws12._cutHex(graphColor)).substring(0,2),16),
+			G = parseInt((ws12._cutHex(graphColor)).substring(2,4),16),
+			B = parseInt((ws12._cutHex(graphColor)).substring(4,6),16);	
+		// Load our data
+		var data = {
+			labels: this.labels,
+			datasets: [
+				{
+					fillColor: 'rgba('+R+','+G+','+B+',0.5)',
+					strokeColor: 'rgba('+R+','+G+','+B+',1)',
+					data: this.data
+				}
+			]
+		}
+		this.dom.chart.Line(data,{scaleShowGridLines: true,showTooltips: false,scaleFontColor: ws12.config.tileFontColor});
+		this.showContent(true);
+	}
+	object._providerUpdate = object._providerUpdate.bind(object);	
+	
+	// Load our control if no provider is connected
+	if (object.provider == undefined) {
+		object._providerUpdate({data: object.data})
+	}
+	
+	
+	return object.dom;
+}
+
+ws12_TileZeroToSixtyHistory.prototype = new ws12_CoreTile();
 function ws12_TitleBar(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom,'ws12-title-bar');

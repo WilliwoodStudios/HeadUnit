@@ -28,10 +28,10 @@ function paneMenu() {
 					}
 				},
 				{
-					caption: 'browser',
-					imgClass: 'ws12-icon-head-unit-browser',
+					caption: 'data logger',
+					imgClass: 'ws12-icon-head-unit-logging',
 					onclick: function() {
-						this.screen.container.push(paneBrowser);
+						this.screen.container.push(paneLoggingMenu);
 					}
 				},
 				{
@@ -47,12 +47,12 @@ function paneMenu() {
 					onclick: function() {
 						this.screen.container.push(paneDashboard);
 					}
-				},
+				},				
 				{
-					caption: 'logging',
-					imgClass: 'ws12-icon-head-unit-logging',
+					caption: 'browser',
+					imgClass: 'ws12-icon-head-unit-browser',
 					onclick: function() {
-						console.log(this.caption + ' clicked');
+						this.screen.container.push(paneBrowser);
 					}
 				}
 				
