@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1936*/
+/* ws12 VERSION: 1.0.0.1942*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -4593,6 +4593,9 @@ function ws12_TileRecord(object, screen) {
 			model.dom.stage2.style.display = 'inline';
 			model._countDownNum = 3;
 			model._interval = window.setInterval(model._countDownInterval, 1000);
+			if (model.oncountdown) {
+				model.oncountdown();
+			}
 			return;
 		}
 		// Fire the recording if no countdown
@@ -4648,6 +4651,9 @@ function ws12_TileRecord(object, screen) {
 			return;
 		}
 		this.dom.number.textContent = this._countDownNum;
+		if (this.oncountdown) {
+			this.oncountdown();
+		}
 	}
 	object._countDownInterval = object._countDownInterval.bind(object);
 	
@@ -4696,18 +4702,15 @@ function ws12_TileTimer(object, screen) {
 		this._milliseconds = now - this._startTime;
 		var minutes = Math.floor(this._milliseconds/60000),
 			seconds = Math.floor(this._milliseconds/1000),
-			time = this._milliseconds,
 			tenths;
 		// Calculate our tenths
-		time = time % (60 * 60 * 1000);
-		time = time % (60 * 1000);
-		tenths = time % 100;
-			
+		tenths = (this._milliseconds/1000).toFixed(2) - Math.floor(this._milliseconds/1000);
+		tenths = Math.floor(tenths * 100);	
 		// Format leading zeros
 		minutes = (minutes >= 10) ? minutes : '0'+ minutes;
 		seconds = (seconds >= 10) ? seconds : '0'+ seconds;
 		tenths = (tenths >= 10) ? tenths : '0'+ tenths;
-		
+		// Set our text
 		object.dom.numbers.textContent = minutes + ':'+seconds+':'+tenths;	
 	}
 	object._doInterval = object._doInterval.bind(object);
