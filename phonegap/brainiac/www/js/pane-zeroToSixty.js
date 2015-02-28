@@ -26,6 +26,9 @@ function paneZeroToSixty() {
 					id: 'recordTile',
 					caption: 'Record 0-60 Time',
 					countdown: true,
+					onstartclick: function() {
+						this.screen.timerTile.reset();
+					},
 					onrecord: function() {
 						this.screen.timerTile.start();
 						window.setTimeout(this.screen.timerTile.stop,3900);

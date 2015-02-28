@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1942*/
+/* ws12 VERSION: 1.0.0.1946*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -4587,6 +4587,10 @@ function ws12_TileRecord(object, screen) {
 	object.dom.recordButton.onclick = function() {
 		var model = this.model;
 		ws12.playTouchSound();
+		// Fire the start click
+		if (model.onstartclick) {
+			model.onstartclick();
+		}
 		// See if there is a countdown
 		if (model.countdown === true) {
 			model.dom.stage1.style.display = 'none';
@@ -4706,6 +4710,7 @@ function ws12_TileTimer(object, screen) {
 		// Calculate our tenths
 		tenths = (this._milliseconds/1000).toFixed(2) - Math.floor(this._milliseconds/1000);
 		tenths = Math.floor(tenths * 100);	
+		tenths = (tenths >= 100) ? 0 : tenths;
 		// Format leading zeros
 		minutes = (minutes >= 10) ? minutes : '0'+ minutes;
 		seconds = (seconds >= 10) ? seconds : '0'+ seconds;
@@ -4721,10 +4726,10 @@ function ws12_TileTimer(object, screen) {
 			window.clearInterval(this._interval);
 			this._milliseconds = 0;
 			this._interval = undefined;
-			this.dom.numbers.textContent = '00:00:00';
-			if (this.onreset) {
-				this.onreset();
-			}
+		}
+		this.dom.numbers.textContent = '00:00:00';
+		if (this.onreset) {
+			this.onreset();
 		}
 	}
 	object.reset = object.reset.bind(object);
