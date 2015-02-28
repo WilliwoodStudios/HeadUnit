@@ -32,12 +32,10 @@ function paneZeroToSixty() {
 					onrecord: function() {
 						this.screen.timerTile.start();
 						window.setTimeout(this.screen.timerTile.stop,3900);
-						var audio = new Audio('sounds/go.mp3');
-						audio.play();
+						audioManager.playSound(audioManager.Sounds.HORN);
 					},
 					oncountdown: function() {
-						var audio = new Audio('sounds/countdown.mp3');
-						audio.play();
+						audioManager.playSound(audioManager.Sounds.BLIP);
 					}
 				},
 				{
