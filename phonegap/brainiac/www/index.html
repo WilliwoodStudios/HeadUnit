@@ -24,12 +24,14 @@
         <title>Brainiac</title>
 		
 		<script>
+			var audioManager;
+			
 			function onDeviceReady() {
 				// Initialize
-				audioManager.init({demo: true});
+				audioManager = new AudioManager({demo: true});
 				//var config = {inHeadUnit: true, tileFontColor: '#FFFFFF', brandColor: '#23A084'}; // Jeep Color
 				var config = {inHeadUnit: true, tileFontColor: '#FFFFFF', touchSound: 'sounds/Touch.ogg'};
-				ws12.init(screenChrome,config);
+				ws12.init(screenChrome,config);	
 			}
 			
 			// Initialize our toolkit

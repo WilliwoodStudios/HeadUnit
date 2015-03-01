@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1946*/
+/* ws12 VERSION: 1.0.0.1971*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -8,12 +8,21 @@ var ws12 = {
 		tileFontColor: '#747474',
 		touchSound: undefined
 	},
+	eventBroker: new SystemEventBroker(),
 	inScreenTransition: false,
 	isApple: (navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false ),
 	// Global events
 	ONSHOW: 'onshow',
 	ONHIDE: 'onhide',
 	ONLOAD: 'onload',
+	// System events
+	EventType: {
+		ONSUBSCRIBE: 'onsubscribe',
+		ONUNSUBSCRIBE: 'onunsubscribe',
+		ONSPEEDCHANGE: 'onspeedchange',
+		ONFUELCHANGE: 'onfuelchange',
+		ONRPMCHANGE: 'onrpmchange'
+	},
 	
 	// Graph Colors
 	color_LIGHT: '#F0F0F0',
@@ -337,6 +346,8 @@ var ws12 = {
 	_removeScreen: function(screen) {
 		screen.dom.style.display = 'none';
 		document.body.removeChild(screen.dom);
+		// Remove any global event listeners
+		this.eventBroker.removeEventListenersForScreen(screen);
 		screen.destroy();
 	},
 
@@ -1214,6 +1225,27 @@ function ws12_CoreTileDonutChart(object, screen) {
 			this.dom.caption.innerHTML = value;
 		}
 		object._setCaption = object._setCaption.bind(object);
+		
+		// Create the accent area
+		object.dom.accent = document.createElement('div');
+		ws12.addClass(object.dom.accent,'accent');
+		object.dom.contentDiv.appendChild(object.dom.accent);
+		var color = (ws12.config.inHeadUnit == true) ? ws12.color_DARK : ws12.color_LIGHT
+		object.dom.accent.style.color = color;
+		
+		// Set the accent text for the chart
+		object._setAccent = function(value) {
+			if (value == undefined) {
+				ws12.removeClass(this.dom.contentDiv, 'has-accent');
+				this.dom.accent.textContent = '';
+				this.accent = value;
+				return;
+			}
+			this.accent = value;
+			ws12.addClass(this.dom.contentDiv, 'has-accent');
+			this.dom.accent.textContent = value;
+		}
+		object._setAccent = object._setAccent.bind(object);
 	}
 }
 
@@ -1720,6 +1752,91 @@ function ws12_DockLayout(object, screen) {
 }
 
 ws12_DockLayout.prototype = new ws12_CoreComponent();
+// Create a system event object
+function SystemEvent(eventType, data) {
+	var object = {
+		eventType: eventType,
+		data: data
+	}
+	return object;
+}
+
+// The event broker manages event subscription and distribution
+function SystemEventBroker() {
+	var object = {
+		list: []
+	};
+	
+	// Add an event listener
+	object.addEventListener = function(eventType, callback, screen) {
+		var item = {
+			eventType: eventType,
+			callback: callback,
+			screen: screen
+		}
+		this.list.push(item);
+		// Raise the onsubscribe event
+		var systemEvent = new SystemEvent(ws12.EventType.ONSUBSCRIBE, {eventType: eventType});
+		this.raiseEvent(systemEvent);
+	}
+	object.addEventListener = object.addEventListener.bind(object);
+	
+	// Remove an event listener
+	object.removeEventListener = function(eventType, callback) {
+		var i,
+			item,
+			systemEvent;
+		for (i = 0; i < this.list.length; i++) {
+			item = this.list[i];
+			if (item.eventType == eventType && item.callback == callback) {
+				this.list.splice(i, 1);
+				// Raise the onunsubscribe event
+				systemEvent = new SystemEvent(ws12.EventType.ONUNSUBSCRIBE, {eventType: eventType});
+				this.raiseEvent(systemEvent);
+				return;
+			}
+		}
+	}
+	object.removeEventListener = object.removeEventListener.bind(object);
+	
+	// Remove all event listeners for a screen
+	object.removeEventListenersForScreen = function(screen) {
+		var i,
+			item,
+			systemEvent;
+		for (i = this.list.length - 1; i >= 0; i--) {
+			if (this.list.length === 0) return;
+			item = this.list[i];
+			if (item && (item.screen == screen)) {
+				this.list.splice(i, 1);
+				// Raise the onunsubscribe event
+				systemEvent = new SystemEvent(ws12.EventType.ONUNSUBSCRIBE, {eventType: item.eventType});
+				this.raiseEvent(systemEvent);
+			}
+		}
+	}
+	object.removeEventListenersForScreen = object.removeEventListenersForScreen.bind(object);
+	
+	// Raise an event
+	object.raiseEvent = function(systemEvent) {
+		var i,
+			item;
+		for (i = 0; i < this.list.length; i++) {
+			item = this.list[i];
+			if (item.eventType == systemEvent.eventType) {
+				try {
+					item.callback(systemEvent.data)
+				} catch (e) {
+					console.log('ERROR: raiseEvent - ' + e.message);
+				}
+			}
+		}
+	}
+	object.raiseEvent = object.raiseEvent.bind(object);
+	
+	return object;
+}
+
 function ws12_GenericListItem(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom, 'ws12-generic-list-item');
@@ -2038,6 +2155,8 @@ function ws12_Window(object, screen) {
 			if (screen._onbeforepop) {
 				screen._onbeforepop();
 			}
+			// Remove any global event listeners
+			ws12.eventBroker.removeEventListenersForScreen(screen);
 		}
 		setTimeout(this._popToHome, 0);
 	}
@@ -2079,22 +2198,7 @@ function ws12_Window(object, screen) {
 	}
 	object._removeScreen = object._removeScreen.bind(object);
 	
-	/*
-	screen.dom.style['-webkit-animation-delay'] = '';
-		screen.dom.style['-webkit-animation-name'] = 'slide-right';
-		screen.dom.style.animationDelay = ''; // Firefox
-		screen.dom.style.animationName = 'slide-right'; // Firefox
-		screen.dom.style['animation-delay'] = ''; // IE
-		screen.dom.style['animation-name'] = 'slide-right'; // IE
-		screen.dom.addEventListener('webkitAnimationEnd', function(e) {
-			ws12._removeScreen(this.model);
-			ws12.inScreenTransition = false;
-			//ws12.blockAllTapEvent(false);
-		}, false);
-		*/
-	
-	
-	
+
 	// Dispatch the resize event to nested screens
 	object._resizeListener = function() {
 		// Fire any screen resize events needed
@@ -4705,7 +4809,7 @@ function ws12_TileTimer(object, screen) {
 		var now = new Date();
 		this._milliseconds = now - this._startTime;
 		var minutes = Math.floor(this._milliseconds/60000),
-			seconds = Math.floor(this._milliseconds/1000),
+			seconds = Math.floor(this._milliseconds/1000) % 60,
 			tenths;
 		// Calculate our tenths
 		tenths = (this._milliseconds/1000).toFixed(2) - Math.floor(this._milliseconds/1000);
@@ -4785,6 +4889,12 @@ function ws12_TileTimer(object, screen) {
 	}
 	object._destroy = object._destroy.bind(object);
 	
+	// Stop the timer if the screen is about to pop
+	object._onbeforepop = function() {
+		this.stop();
+	}
+	object._onbeforepop = object._onbeforepop.bind(object);
+	
 	return object.dom;
 }
 
@@ -4853,15 +4963,18 @@ function ws12_TileZeroToSixty(object, screen) {
 		if (value != undefined) {
 			this.value = value.value;
 			this.target = value.target;
+			this.accent = value.accent;
 		} else {
 			this.value = 0;
 			this.target = 0;
+			this.accent = undefined;
 		}
 		// Populate our chart with data
 		var data = this._calculateData();
 		if (data != undefined) {
 			this._setData(data);
 			this._setCaption('<span class="tall">'+this.value + '</span>&nbsp;sec 0-60');
+			this._setAccent(this.accent);
 		}
 		this.showContent(true);
 	}
@@ -4869,7 +4982,7 @@ function ws12_TileZeroToSixty(object, screen) {
 	
 	// Load our control if no provider is connected
 	if (object.provider == undefined) {
-		object._providerUpdate({value: object.value, target: object.target })
+		object._providerUpdate({value: object.value, target: object.target, accent: object.accent })
 	}
 	
 	

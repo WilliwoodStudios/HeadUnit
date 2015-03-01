@@ -10,14 +10,14 @@ function paneZeroToSixty() {
 				{
 					component: ws12.TileZeroToSixty,
 					provider: {
-						id: 'dashboardProvider',
+						id: 'zeroToSixtyProvider',
 						property: 'zeroToSixty'
 					}
 				},
 				{
 					component: ws12.TileZeroToSixtyHistory,
 					provider: {
-						id: 'dashboardProvider',
+						id: 'zeroToSixtyProvider',
 						property: 'zeroToSixtyHistory'
 					}
 				},
@@ -31,43 +31,26 @@ function paneZeroToSixty() {
 					},
 					onrecord: function() {
 						this.screen.timerTile.start();
-						window.setTimeout(this.screen.timerTile.stop,3900);
-						audioManager.playSound(audioManager.Sounds.HORN);
+						audioManager.playSoundEffect(SoundEffect.HORN);
+						// Fake out reaching 60 mph in 4.9 seconds
+						window.setTimeout(function() {
+							var systemEvent = new SystemEvent(ws12.EventType.ONSPEEDCHANGE, {speed: 60});
+							ws12.eventBroker.raiseEvent(systemEvent);
+						},4900);
 					},
 					oncountdown: function() {
-						audioManager.playSound(audioManager.Sounds.BLIP);
+						audioManager.playSoundEffect(SoundEffect.BLIP);
 					}
 				},
 				{
 					component: ws12.TileTimer,
-					id: 'timerTile',
-					onstop: function() {
-						this.screen.recordTile.reset();
-						var date = new Date(),
-							months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-							formattedDate = months[date.getMonth()] +' ' + date.getDate() + '/' + (date.getFullYear() - 2000),
-							data;
-						
-						// Set our data
-						data = {
-							zeroToSixty: {
-								target: 3.8,
-								value: this.getSeconds()
-							},
-							zeroToSixtyHistory: {
-								labels: ['Apr 10/14','May 12/14','Jul 18/14','Aug 22/14',formattedDate],
-								data: [5.2,6.3,4.2,4.5,this.getSeconds()]
-							}
-						}
-						// Populate the dashboard data provider
-						this.screen.dashboardProvider.setData(data); 
-					}
+					id: 'timerTile'
 				}
 			],
 			attachedObjects: [
 				{
 					component: ws12.DataProvider,
-					id: 'dashboardProvider'
+					id: 'zeroToSixtyProvider'
 				}
 			]
 		}	
@@ -77,15 +60,43 @@ function paneZeroToSixty() {
 		// Set the screen data
 		var data = {
 			zeroToSixty: {
-				target: 3.8,
-				value: 4.2
+				target: 4.7,
+				value: 5.2,
+				accent: 'Your Best Time'
 			},
 			zeroToSixtyHistory: {
 				labels: ['Apr 10/14','May 12/14','Jul 18/14','Aug 22/14'],
-				data: [5.2,6.3,4.2,4.5]
+				data: [6.2,6.3,5.2,5.5]
 			}
 		}
-		// Populate the dashboard data provider
-		this.dashboardProvider.setData(data); 
+		// Populate the data provider
+		this.zeroToSixtyProvider.setData(data); 
+		// Set our speed change listener
+		ws12.eventBroker.addEventListener(ws12.EventType.ONSPEEDCHANGE, this.onspeedchange, this);
+	};
+	
+	// Handle any speed change events
+	this.onspeedchange = function(data) {
+		if (data && (data.speed >= 60)) {
+			// Stop and reset our tiles
+			this.timerTile.stop();
+			this.recordTile.reset();
+			var date = new Date(),
+				months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+				formattedDate = months[date.getMonth()] +' ' + date.getDate() + '/' + (date.getFullYear() - 2000),
+				data = this.zeroToSixtyProvider.data,
+				time = this.timerTile.getSeconds();
+			// Add new data to the grid
+			data.zeroToSixtyHistory.labels.push(formattedDate);
+			data.zeroToSixtyHistory.data.push(time);
+			// See if our new time is the fastest
+			if (time < data.zeroToSixty.value) {
+				data.zeroToSixty.value = time;
+			}
+			// Re-populate the data provider
+			this.zeroToSixtyProvider.setData(data); 
+		}
 	}
+	this.onspeedchange = this.onspeedchange.bind(this);
 }
+
