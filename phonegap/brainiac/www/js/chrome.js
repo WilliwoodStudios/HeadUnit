@@ -6,15 +6,19 @@ function screenChrome() {
 	this.hvac = {
 		visible: false,
 		driver: {
-			temperature: 75,
-			ontemperatureclick: function() {
-				ws12.push(wedgeDriverTemperature, {temperature: this.temperature})
+			temperature: {
+				value: 75,
+				onclick: function() {
+					ws12.push(wedgeDriverTemperature, {temperature: this.temperature})
+				}
 			}
 		},
 		passenger: {
-			temperature: 73,
-			ontemperatureclick: function() {
-				ws12.push(wedgePassengerTemperature, {temperature: this.temperature})
+			temperature: {
+				value: 73,
+				onclick: function() {
+					ws12.push(wedgePassengerTemperature, {temperature: this.temperature})
+				}
 			}
 		},
 		

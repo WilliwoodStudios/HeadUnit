@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.2161*/
+/* ws12 VERSION: 1.0.0.2162*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -2109,20 +2109,44 @@ function ws12_HVACBar(object, screen) {
 	
 	// Create driver heat settings
 	if (object.driver == undefined) {
-		object.driver = {temperature: 0, side: 'left', visible: false};
+		object.driver = {
+				temperature: {
+					value: 0, 
+					side: 'left', 
+					visible: false
+				}
+			};
 	} else {
-		object.driver.side = 'left';
+		if (object.driver.temperature == undefined) {
+			object.driver.temperature = {
+					value: 0, 
+					visible: false
+				}
+		}
+		object.driver.temperature.side = 'left';
 	}
-	dom = new ws12_TemperatureButton(object.driver, screen);
+	dom = new ws12_TemperatureButton(object.driver.temperature, screen);
 	object.dom.appendChild(dom);
 	
 	// Create passenger heat settings
 	if (object.passenger == undefined) {
-		object.passenger = {temperature: 0, side: 'right', visible: false};
+		object.passenger = {
+				temperature: {
+					value: 0, 
+					side: 'right', 
+					visible: false
+				}
+			};
 	} else {
-		object.passenger.side = 'right';
+		if (object.passenger.temperature == undefined) {
+			object.passenger.temperature = {
+					value: 0, 
+					visible: false
+				}
+		} 
+		object.passenger.temperature.side = 'right';
 	}
-	dom = new ws12_TemperatureButton(object.passenger, screen);
+	dom = new ws12_TemperatureButton(object.passenger.temperature, screen);
 	object.dom.appendChild(dom);
 	
 	
@@ -2320,8 +2344,8 @@ function ws12_TemperatureButton(object, screen) {
 	// Handle our clicks
 	object.dom.onclick = function() {
 		ws12.playTouchSound();
-		if (this.model.ontemperatureclick) {
-			this.model.ontemperatureclick();
+		if (this.model.onclick) {
+			this.model.onclick();
 		}
 	}
 	object.dom.ontouchstart = function() {
@@ -2341,15 +2365,15 @@ function ws12_TemperatureButton(object, screen) {
 	
 	// Set the temperature
 	object.setTemperature = function(value) {
-		this.temperature = value;
+		this.value = value;
 		var degree = (ws12.config.celsius == true) ? 'C' : 'F';
 		this.dom.innerHTML = value+'<span class="small">&deg;'+degree+'</span>';
 	}
 	object.setTemperature = object.setTemperature.bind(object);
 	
 	// Driver control decisions
-	if (object.temperature) {
-		object.setTemperature(object.temperature);	
+	if (object.value) {
+		object.setTemperature(object.value);	
 	}
 	
 	return object.dom;
