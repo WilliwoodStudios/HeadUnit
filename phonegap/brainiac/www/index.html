@@ -31,7 +31,7 @@
 			
 			function onDeviceReady() {
 				// Initialize
-				audioManager = undefined;//new AudioManager({demo: true});
+				audioManager = new AudioManager({demo: true});
 				//var config = {inHeadUnit: true, tileFontColor: '#FFFFFF', brandColor: '#23A084'}; // Jeep Color
 				var config = {inHeadUnit: true, tileFontColor: '#FFFFFF', audioManager: audioManager};
 				ws12.init(screenChrome,config);	
