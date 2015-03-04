@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.2071*/
+/* ws12 VERSION: 1.0.0.2161*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -36,6 +36,10 @@ var ws12 = {
 	Browser: {},
 	TitleBar: {},
 	Screen: {},
+	WedgeScreen: {
+		RIGHT: 'right',
+		LEFT: 'left'
+	},
 	WedgeTemperature: {},
 	HeadUnitChrome: {},
 	TileGroup: {},
@@ -281,8 +285,6 @@ var ws12 = {
 			} else if (screen.component == ws12.WedgeTemperature) {
 				dom = new ws12_CoreWedgeScreen(screen, data);
 			}
-			
-			
 			ws12.screens.push(screen);
 			dom.style['z-index'] = ws12.screens.length+1;
 			document.body.appendChild(dom);
@@ -293,63 +295,42 @@ var ws12 = {
 	},
 	
 	// Pop a screen off the stack
-	pop: function(amount) {
+	pop: function() {
 		// Return if the screen is in transition.
 		if (ws12.inScreenTransition === true) {
 			setTimeout(function() {
-				ws12.pop(amount);
+				ws12.pop();
 			}, 100);
 		} else {
-			// Return if the amount is less zero, or amount value is greater than current numbers of screens.
-			if(amount != undefined && ((amount <= 0) || (amount > ws12.screens.length))) return;
-			//ws12.blockAllTapEvent(true);
+			ws12.blockAllTapEvent(true);
 			ws12.inScreenTransition = true;
-			// if the amount is greater than 1, clear out the pages in between first.
-			if(amount == undefined || amount > 1) {
-				var removingStartIndex = ws12.screens.length - amount;
-				// Remove From DOM first
-				for(var i = removingStartIndex; i < ws12.screens.length - 1; i++) {
-					ws12._removeScreen(ws12.screens[i]);
-				}
-				// DOM is clear. Now splice out nicely
-				ws12.screens.splice(removingStartIndex, amount - 1);
-			}
-			// Take out the very last screen with nice animation.
+			// Remove the top most screen
 			var screen = ws12.screens[ws12.screens.length-1];
-			var previousScreen = ws12.screens[ws12.screens.length-2];
-			previousScreen.dom.style.display = 'block';
-			setTimeout(this.animatePop(screen, previousScreen), 0);
+			if (screen.disableAnimation == true) {
+				ws12._removeScreen(screen);
+				
+			} else {
+				screen.dom.addEventListener('webkitAnimationEnd', function(e) {
+					ws12._removeScreen(this.model);
+				}, false);
+			}
 		}
-	},
-
-	animatePop: function(screen, previousScreen) {
-		screen.dom.style['-webkit-animation-delay'] = '';
-		screen.dom.style['-webkit-animation-name'] = 'slide-right';
-		screen.dom.style.animationDelay = ''; // Firefox
-		screen.dom.style.animationName = 'slide-right'; // Firefox
-		screen.dom.style['animation-delay'] = ''; // IE
-		screen.dom.style['animation-name'] = 'slide-right'; // IE
-		screen.dom.addEventListener('webkitAnimationEnd', function(e) {
-			ws12._removeScreen(this.model);
-			ws12.inScreenTransition = false;
-			//ws12.blockAllTapEvent(false);
-		}, false);
-		screen.dom.addEventListener('animationend', function(e) { // Firefox & IE
-			ws12._removeScreen(this.model);
-			ws12.inScreenTransition = false;
-			//ws12.blockAllTapEvent(false);
-		}, false);
-		
-		ws12.screens.pop();
 	},
 
 	// Remove a screen from the stack
 	_removeScreen: function(screen) {
+		if (screen._onbeforepop) {
+			screen._onbeforepop();
+		}
 		screen.dom.style.display = 'none';
 		document.body.removeChild(screen.dom);
 		// Remove any global event listeners
 		this.eventBroker.removeEventListenersForScreen(screen);
 		screen.destroy();
+		// Handle finalization
+		ws12.inScreenTransition = false;
+		ws12.blockAllTapEvent(false);
+		ws12.screens.pop();
 	},
 
 	// Determines if a string is infact valid JSON
@@ -361,7 +342,6 @@ var ws12 = {
 		}
 		return true;
 	},
-
 
 	// Determines if an element has the class specified in it's class name
 	hasClass: function(element, name){
@@ -382,7 +362,6 @@ var ws12 = {
 		element.className = element.className.replace(re, ' ').replace(/^\s+|\s+$/g, "");
 	},
 	
-	
 	_cutHex : function(h) {
 		return (h.charAt(0)=="#") ? h.substring(1,7):h
 	},
@@ -394,7 +373,6 @@ var ws12 = {
 	_guidS4: function() {
 	   return (((1 + Math.random()) * 0x10000)|0).toString(16).substring(1);
 	}
-	
 }
 
 Function.prototype.bind = function(object){ 
@@ -1410,24 +1388,98 @@ function ws12_CoreWedgeScreen(object, data) {
 		ws12.addClass(object.dom,'ws12-core-wedge-screen');
 		object.dom.style.backgroundColor = 'transparent';
 		
+		if (object.direction == undefined) {
+			object.direction = ws12.WedgeScreen.LEFT;
+		}
+		
+		if (object.direction == ws12.WedgeScreen.RIGHT) {
+			object._isRightToLeft = true;
+		} else {
+			object._isRightToLeft = false;
+		}
+		
 		// Create our wedge
 		object.dom.wedge = document.createElement('div');
 		ws12.addClass(object.dom.wedge, 'wedge');
 		object.dom.appendChild(object.dom.wedge);
 		
 		// Set our wedge dimensions and angle
-		var wedgeWidth = Math.floor(window.innerWidth/3),
+		var wedgeWidth = (window.innerWidth > window.innerHeight) ? Math.floor(window.innerWidth/3) : Math.floor(window.innerHeight/3),
+			buttonWidth = Math.floor(wedgeWidth/2),
+			buttonBottom = 20,
 			opposite = window.innerHeight,
 		    adjacent = window.innerWidth,
 			hypotenuse = Math.sqrt(Math.pow(opposite,2) + Math.pow(adjacent,2)),
 			degrees = 90 - Math.asin(opposite/hypotenuse)*(180/Math.PI);
 			
-		// Set our style values
+		// Set our wedge values
 		object.dom.wedge.style.width = wedgeWidth + 'px';
-		object.dom.wedge.style.left = Math.floor(wedgeWidth/2) + 'px';
-		object.dom.wedge.style.backgroundColor = ws12.config.brandColor;
+		object.dom.wedge.style.backgroundColor = ws12.config.brandColor;	
+		if (object._isRightToLeft == true) {
+			degrees = '-' + degrees;
+			object.dom.wedge.style.right = (window.innerWidth > window.innerHeight) ? Math.floor(wedgeWidth/2) + 'px' : '-'+Math.floor(wedgeWidth/2) + 'px';
+		} else {
+			object.dom.wedge.style.left = (window.innerWidth > window.innerHeight) ? Math.floor(wedgeWidth/2) + 'px' : '-'+Math.floor(wedgeWidth/2) + 'px';
+		}
 		object.dom.wedge.style['-webkit-transform'] = 'rotate('+degrees+'deg)';
-		window.setTimeout(function() { object.dom.wedge.style.opacity = '1.0';},0);
+		
+		// Create our back button
+		object.dom.back = document.createElement('div');
+		ws12.addClass(object.dom.back,'back');
+		object.dom.appendChild(object.dom.back);
+		object.dom.back.style.bottom = '-' + buttonWidth + 'px';
+		object.dom.back.style.width = buttonWidth + 'px';
+		object.dom.back.style.height = buttonWidth + 'px';
+		object.dom.back.style.borderRadius = (Math.floor(buttonWidth/2) + 1) + 'px';
+		object.dom.back.textDiv = document.createElement('div');
+		ws12.addClass(object.dom.back.textDiv, 'back-text');
+		object.dom.back.appendChild(object.dom.back.textDiv);
+		if (object._isRightToLeft == true) {
+			object.dom.back.style.right = Math.floor(buttonWidth/3)+ 'px';
+			ws12.addClass(object.dom.back.textDiv,'right-to-left');
+		} else {
+			object.dom.back.style.left = Math.floor(buttonWidth/3)+ 'px';
+		}
+		
+		// See if we have back button customization
+		if (object.backButton && object.backButton.caption) {
+				object.dom.back.textDiv.textContent = object.backButton.caption;
+		} else {
+			object.dom.back.textDiv.textContent = 'Back';
+		}
+		if (object.backButton && object.backButton.icon) {
+			ws12.addClass(object.dom.back,object.backButton.icon);
+		} else {
+			ws12.addClass(object.dom.back,'ws12-icon-back-white');
+		}
+		
+		// Handle our back click
+		object.dom.back.onclick = function() {
+			ws12.playTouchSound();
+			ws12.pop();
+		}
+		object.dom.back.ontouchstart = function() {
+			this.style.backgroundColor = 'rgba(0,0,0,0.3)';
+		}
+		object.dom.back.ontouchend = function() {
+			this.style.backgroundColor = '';
+		}
+		object.dom.back.ontouchcancel = object.dom.back.ontouchend;
+		if (!ws12.isMobileDevice()) {
+			object.dom.back.onmousedown = object.dom.back.ontouchstart;
+			object.dom.back.onmouseup = object.dom.back.ontouchend;
+			object.dom.back.onmouseleave = object.dom.back.ontouchend;
+		}
+		
+		// Trigger our animations
+		window.setTimeout(function() {object.dom.wedge.style.opacity = '1.0';},0);
+		window.setTimeout(function() { 
+			object.dom.back.style.transform = 'translateY(-'+(buttonWidth + buttonBottom) + 'px)';
+			object.dom.back.addEventListener('webkitTransitionEnd', function(e) {
+					this.textDiv.style.opacity = '1.0';
+				}, false);
+		},200);
+		
 		
 		return object.dom;
 	}

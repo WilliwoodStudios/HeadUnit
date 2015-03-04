@@ -8,19 +8,15 @@ function screenChrome() {
 		driver: {
 			temperature: 75,
 			ontemperatureclick: function() {
-				console.log('driver temp clicked');
 				ws12.push(wedgeDriverTemperature, {temperature: this.temperature})
 			}
 		},
 		passenger: {
 			temperature: 73,
 			ontemperatureclick: function() {
-				console.log('passenger temp clicked');
+				ws12.push(wedgePassengerTemperature, {temperature: this.temperature})
 			}
 		},
-		air: {
-			showDefrost: false,
-		}
 		
 		//showDefrostOnBar: true
 	};
