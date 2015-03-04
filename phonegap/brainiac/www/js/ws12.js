@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1971*/
+/* ws12 VERSION: 1.0.0.2071*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -6,7 +6,8 @@ var ws12 = {
 		inHeadUnit: false,
 		brandColor: '#D94646',
 		tileFontColor: '#747474',
-		touchSound: undefined
+		celsius: false,
+		audioManager: undefined
 	},
 	eventBroker: new SystemEventBroker(),
 	inScreenTransition: false,
@@ -35,6 +36,7 @@ var ws12 = {
 	Browser: {},
 	TitleBar: {},
 	Screen: {},
+	WedgeTemperature: {},
 	HeadUnitChrome: {},
 	TileGroup: {},
 	Tile: {
@@ -96,7 +98,7 @@ var ws12 = {
 			this.config.inHeadUnit = (config.inHeadUnit != undefined) ? config.inHeadUnit : this.config.inHeadUnit;
 			this.config.brandColor = (config.brandColor != undefined) ? config.brandColor : this.config.brandColor;
 			this.config.tileFontColor = (config.tileFontColor != undefined) ? config.tileFontColor : this.config.tileFontColor;
-			this.config.touchSound = (config.touchSound != undefined) ? config.touchSound : this.config.touchSound;
+			this.config.audioManager = (config.audioManager != undefined) ? config.audioManager : this.config.audioManager;
 		}
 		
 		// before push the initial page, add blockAllTapEvent function to body
@@ -130,17 +132,12 @@ var ws12 = {
 		if (this.isApple === true) {
 			FastClick.attach(document.body);	
 		}
-		
-		// Setup our touch sound
-		if (this.config.touchSound != undefined) {
-			this._touchSoundPlayer = new Audio(this.config.touchSound);
-		}
 	},
 	
 	// Play the touch sound
 	playTouchSound: function() {
-		if (this._touchSoundPlayer) {
-			//this._touchSoundPlayer.play();
+		if (this.config.audioManager) {
+			this.config.audioManager.playSoundEffect(SoundEffect.TOUCH);
 		}
 	},
 	
@@ -281,7 +278,11 @@ var ws12 = {
 				dom = new ws12_Screen(screen, data);
 			} else if (screen.component == ws12.HeadUnitChrome) {
 				dom = new ws12_HeadUnitChrome(screen, data);
+			} else if (screen.component == ws12.WedgeTemperature) {
+				dom = new ws12_CoreWedgeScreen(screen, data);
 			}
+			
+			
 			ws12.screens.push(screen);
 			dom.style['z-index'] = ws12.screens.length+1;
 			document.body.appendChild(dom);
@@ -1397,6 +1398,44 @@ function ws12_CoreTileGauge(object, screen) {
 }
 
 ws12_CoreTileGauge.prototype = new ws12_CoreTile();
+function ws12_CoreWedgeScreen(object, data) {
+	// Default disable some core screen features
+	if (object) {
+		object.disableAnimation = true;
+		object.background = undefined;
+	}
+	ws12_CoreScreen.call(this, object);
+	
+	if (object) {
+		ws12.addClass(object.dom,'ws12-core-wedge-screen');
+		object.dom.style.backgroundColor = 'transparent';
+		
+		// Create our wedge
+		object.dom.wedge = document.createElement('div');
+		ws12.addClass(object.dom.wedge, 'wedge');
+		object.dom.appendChild(object.dom.wedge);
+		
+		// Set our wedge dimensions and angle
+		var wedgeWidth = Math.floor(window.innerWidth/3),
+			opposite = window.innerHeight,
+		    adjacent = window.innerWidth,
+			hypotenuse = Math.sqrt(Math.pow(opposite,2) + Math.pow(adjacent,2)),
+			degrees = 90 - Math.asin(opposite/hypotenuse)*(180/Math.PI);
+			
+		// Set our style values
+		object.dom.wedge.style.width = wedgeWidth + 'px';
+		object.dom.wedge.style.left = Math.floor(wedgeWidth/2) + 'px';
+		object.dom.wedge.style.backgroundColor = ws12.config.brandColor;
+		object.dom.wedge.style['-webkit-transform'] = 'rotate('+degrees+'deg)';
+		window.setTimeout(function() { object.dom.wedge.style.opacity = '1.0';},0);
+		
+		return object.dom;
+	}
+}
+
+ws12_CoreWedgeScreen.prototype = new ws12_CoreScreen();
+
+
 function ws12_DataProvider(object, screen){
 	object.screen = screen;
 	object._url = undefined;
@@ -1948,6 +1987,12 @@ function ws12_HeadUnitChrome(object, data) {
 		dom = new ws12_NavigationBar(object._navigation,object);
 		object.dom.appendChild(dom);
 
+		// See if we have HVAC
+		if (object.hvac) {
+			dom = new ws12_HVACBar(object.hvac,object);
+			object.dom.appendChild(dom);
+		}
+		
 		// Get our home window pane
 		if (object.home) {
 			// We open on another thread so that the root HeadUnitChrome has been inserted into the DOM
@@ -1967,6 +2012,97 @@ function ws12_HeadUnitChrome(object, data) {
 ws12_Screen.prototype = new ws12_CoreScreen();
 
 
+function ws12_DefrostButton(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'defrost-button');
+	ws12.addClass(object.dom,'off');
+	object.dom.style.backgroundColor = ws12.config.brandColor;
+	
+	object.dom.onclick = function() {
+		ws12.playTouchSound();
+		/*if (this.model.onclick) {
+			this.model.onclick();
+		}*/
+	}
+	object.dom.ontouchstart = function() {
+		ws12.addClass(this,'selected');
+		//this.style.backgroundColor = ws12.config.brandColor;
+		//this.style.color = 'white';
+	}
+	object.dom.ontouchend = function() {
+		ws12.removeClass(this,'selected');
+		//this.style.backgroundColor = '';
+		//this.style.color = ws12.config.brandColor;
+	}
+	object.dom.ontouchcancel = object.dom.ontouchend;
+	if (!ws12.isMobileDevice()) {
+		object.dom.onmousedown = object.dom.ontouchstart;
+		object.dom.onmouseup = object.dom.ontouchend;
+		object.dom.onmouseleave = object.dom.ontouchend;
+	}
+	
+	
+	
+	return object.dom;
+}
+
+ws12_DefrostButton.prototype = new ws12_CoreComponent();
+function ws12_HVACBar(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'hvac');
+	var dom;
+	
+	// Set our brand color
+	object.dom.style.borderTopColor = ws12.config.brandColor;
+	
+	// Create driver heat settings
+	if (object.driver == undefined) {
+		object.driver = {temperature: 0, side: 'left', visible: false};
+	} else {
+		object.driver.side = 'left';
+	}
+	dom = new ws12_TemperatureButton(object.driver, screen);
+	object.dom.appendChild(dom);
+	
+	// Create passenger heat settings
+	if (object.passenger == undefined) {
+		object.passenger = {temperature: 0, side: 'right', visible: false};
+	} else {
+		object.passenger.side = 'right';
+	}
+	dom = new ws12_TemperatureButton(object.passenger, screen);
+	object.dom.appendChild(dom);
+	
+	
+	// Create the rear defrost button
+	if (object.showDefrostOnBar == true) {
+		object._rearDefrost = {parent: object};
+	} else {
+		object._rearDefrost = {parent: object, visible: false};
+	}
+	dom = new ws12_DefrostButton(object._rearDefrost, screen);
+	object.dom.appendChild(dom);
+	
+	// If this is visible then make the primary window bottom align with the
+	// top of this control
+	object._setVisible = function(value) {
+		if (this.screen._primaryWindow && this.screen._primaryWindow.dom) {
+			if (value == true) {
+				this.screen._primaryWindow.dom.style.bottom = '150px';
+			} else {
+				this.screen._primaryWindow.dom.style.bottom = '';
+			}
+		}
+	}
+	object._setVisible = object._setVisible.bind(object);
+	object._setVisible(object.visible);
+	
+	
+	
+	return object.dom;
+}
+
+ws12_HVACBar.prototype = new ws12_CoreComponent();
 function ws12_NavigationBar(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom,'navigation');
@@ -2119,6 +2255,55 @@ function ws12_NavigationBar(object, screen) {
 }
 
 ws12_NavigationBar.prototype = new ws12_CoreComponent();
+function ws12_TemperatureButton(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'temperature');
+	object.dom.style.color = ws12.config.brandColor;
+	
+	// Set the side of the display
+	if (object.side != undefined) {
+		ws12.addClass(object.dom,object.side);
+	}
+	
+	// Handle our clicks
+	object.dom.onclick = function() {
+		ws12.playTouchSound();
+		if (this.model.ontemperatureclick) {
+			this.model.ontemperatureclick();
+		}
+	}
+	object.dom.ontouchstart = function() {
+		this.style.backgroundColor = ws12.config.brandColor;
+		this.style.color = 'white';
+	}
+	object.dom.ontouchend = function() {
+		this.style.backgroundColor = '';
+		this.style.color = ws12.config.brandColor;
+	}
+	object.dom.ontouchcancel = object.dom.ontouchend;
+	if (!ws12.isMobileDevice()) {
+		object.dom.onmousedown = object.dom.ontouchstart;
+		object.dom.onmouseup = object.dom.ontouchend;
+		object.dom.onmouseleave = object.dom.ontouchend;
+	}
+	
+	// Set the temperature
+	object.setTemperature = function(value) {
+		this.temperature = value;
+		var degree = (ws12.config.celsius == true) ? 'C' : 'F';
+		this.dom.innerHTML = value+'<span class="small">&deg;'+degree+'</span>';
+	}
+	object.setTemperature = object.setTemperature.bind(object);
+	
+	// Driver control decisions
+	if (object.temperature) {
+		object.setTemperature(object.temperature);	
+	}
+	
+	return object.dom;
+}
+
+ws12_TemperatureButton.prototype = new ws12_CoreComponent();
 function ws12_Window(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom,'ws12-window');

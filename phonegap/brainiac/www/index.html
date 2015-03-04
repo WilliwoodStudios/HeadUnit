@@ -17,6 +17,8 @@
 		<script type="text/javascript" src="js/pane-LoggingMenu.js"></script>
 		<script type="text/javascript" src="js/pane-zeroToSixty.js"></script>
 		
+		<script type="text/javascript" src="js/wedge-DriverTemperature.js"></script>
+		
 		<!-- viewport -->
 		<meta name="viewport" content="initial-scale=1.0,user-scalable=no">
 		<meta name="mobile-web-app-capable" content="yes">
@@ -30,7 +32,7 @@
 				// Initialize
 				audioManager = new AudioManager({demo: true});
 				//var config = {inHeadUnit: true, tileFontColor: '#FFFFFF', brandColor: '#23A084'}; // Jeep Color
-				var config = {inHeadUnit: true, tileFontColor: '#FFFFFF', touchSound: 'sounds/Touch.ogg'};
+				var config = {inHeadUnit: true, tileFontColor: '#FFFFFF', audioManager: audioManager};
 				ws12.init(screenChrome,config);	
 			}
 			

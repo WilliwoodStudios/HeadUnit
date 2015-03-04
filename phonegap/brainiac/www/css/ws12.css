@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.1971*/
+/* ws12 VERSION: 1.0.0.2071*/
 body,
 html {
   padding: 0px;
@@ -19,6 +19,12 @@ html {
 div {
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   -webkit-tap-highlight-color: transparent;
+}
+.ws12-black-translucent {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gIBFAgWAb7XDwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAADUlEQVQI12NgYGCoBwAAhACAxkwJbwAAAABJRU5ErkJggg==");
+}
+.ws12-black-dark-translucent {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gwBECUL+qv3hAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAADUlEQVQI12NgYGA4DgAAzADICAU7QQAAAABJRU5ErkJggg==");
 }
 .ws12-icon-fuel-pump {
   background-image: url("data:image/png;base64,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");
@@ -458,6 +464,60 @@ div {
   right: 0px;
   bottom: 0px;
 }
+/* Our main class for wedge screens */
+.ws12-core-wedge-screen {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gwBECUL+qv3hAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAADUlEQVQI12NgYGA4DgAAzADICAU7QQAAAABJRU5ErkJggg==");
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+}
+.ws12-core-wedge-screen > .wedge {
+  position: absolute;
+  height: 300%;
+  margin-top: -50%;
+  opacity: 0;
+  -webkit-transition: opacity 0.5s linear;
+}
+.ws12-core-wedge-screen > .wedge.left {
+  -webkit-transform: rotate(45deg);
+}
+.ws12-core-wedge-screen > .wedge.right {
+  -webkit-transform: rotate(-45deg);
+}
+/*
+@-webkit-keyframes pane-slide-left 
+{ 
+    0% { left: 100%; } 
+    100% { left: 0%;} 
+}
+
+@-webkit-keyframes pane-slide-right 
+{ 
+    0% { left: 0%; } 
+    100% { left: 100%; } 
+}
+
+.ws12-window-pane.animation {
+	-webkit-animation-name: pane-slide-left;
+    -webkit-animation-duration: 0.3s;
+    -webkit-animation-timing-function: ease;
+     -webkit-backface-visibility: hidden;
+}
+
+.ws12-window-pane > .inner {
+	position: absolute;
+	top:0px;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	-webkit-overflow-scrolling : touch;
+    -webkit-overflow-scrolling : -blackberry-touch;
+}
+*/
 /* Phone Dial Pad styling */
 .ws12-dial-pad {
   user-select: none;
@@ -635,6 +695,56 @@ div {
 }
 .ws12-generic-list-item.no-caption > .details > .caption {
   display: none;
+}
+/* HVAC Bar for Head Unit */
+.ws12-head-unit-chrome > .hvac {
+  position: absolute;
+  left: 150px;
+  right: 0px;
+  bottom: 0px;
+  height: 150px;
+  box-sizing: border-box;
+  border-top-width: 2px;
+  border-top-style: solid;
+  background-color: #000000;
+}
+.ws12-head-unit-chrome > .hvac > .temperature {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  width: 200px;
+  font-weight: 100;
+  font-size: 100px;
+  text-align: center;
+  cursor: pointer;
+}
+.ws12-head-unit-chrome > .hvac > .temperature.left {
+  left: 0px;
+}
+.ws12-head-unit-chrome > .hvac > .temperature.right {
+  right: 0px;
+}
+.ws12-head-unit-chrome > .hvac > .temperature > .small {
+  font-size: 50px;
+  vertical-align: top;
+}
+.ws12-head-unit-chrome > .hvac > .defrost-button {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
+  width: 150px;
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.ws12-head-unit-chrome > .hvac > .defrost-button.off {
+  background-image: url("http://localhost/ws12/img/defrost-black.png");
+  background-blend-mode: hard-light;
+}
+.ws12-head-unit-chrome > .hvac > .defrost-button.off.selected {
+  background-image: url("http://localhost/ws12/img/defrost-white.png");
+  background-blend-mode: none;
 }
 /* Navigation Bar for Head Unit */
 .ws12-head-unit-chrome > .navigation {

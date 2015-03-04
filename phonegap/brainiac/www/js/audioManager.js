@@ -1,6 +1,7 @@
 var SoundEffect = {
 	BLIP: 0,
-	HORN: 1
+	HORN: 1,
+	TOUCH: 2
 }
 
 // The Audio Manager provides the interface to the audio services
@@ -18,6 +19,7 @@ function AudioManager(options) {
 		object._sounds = {};
 		object._sounds.BLIP = new Audio('sounds/blip.mp3');
 		object._sounds.HORN = new Audio('sounds/horn.mp3');
+		object._sounds.TOUCH = new Audio('sounds/Touch.ogg');
 	}
 	
 	// Play's the sound based on the SoundEffect value
@@ -29,6 +31,9 @@ function AudioManager(options) {
 					break;
 				case SoundEffect.HORN:
 					this._sounds.HORN.play();
+					break;
+				case SoundEffect.TOUCH:
+					this._sounds.TOUCH.play();
 					break;
 			}
 		} else {
