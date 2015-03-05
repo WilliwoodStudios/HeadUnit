@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.2163*/
+/* ws12 VERSION: 1.0.0.2268*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -34,6 +34,8 @@ var ws12 = {
 	
 	// Component Definitions
 	Browser: {},
+	Map: {},
+	MediaPlayer: {},
 	TitleBar: {},
 	Screen: {},
 	WedgeScreen: {
@@ -141,7 +143,7 @@ var ws12 = {
 	// Play the touch sound
 	playTouchSound: function() {
 		if (this.config.audioManager) {
-			this.config.audioManager.playSoundEffect(SoundEffect.TOUCH);
+			//this.config.audioManager.playSoundEffect(SoundEffect.TOUCH);
 		}
 	},
 	
@@ -251,6 +253,12 @@ var ws12 = {
 			case ws12.DockLayout:
 				controlDom = new ws12_DockLayout(control,screen);
 				break;
+			case ws12.Map:
+				controlDom = new ws12_Map(control,screen);
+				break;
+			case ws12.MediaPlayer:
+				controlDom = new ws12_MediaPlayer(control,screen);
+				break;
 		}
 		return controlDom;
 	},
@@ -283,7 +291,7 @@ var ws12 = {
 			} else if (screen.component == ws12.HeadUnitChrome) {
 				dom = new ws12_HeadUnitChrome(screen, data);
 			} else if (screen.component == ws12.WedgeTemperature) {
-				dom = new ws12_CoreWedgeScreen(screen, data);
+				dom = new ws12_WedgeTemperature(screen, data);
 			}
 			ws12.screens.push(screen);
 			dom.style['z-index'] = ws12.screens.length+1;
@@ -580,18 +588,25 @@ function ws12_CircleMenu(object, screen) {
 	// Re layout the menu items
 	object._recalculateLayout = function() {
 		if (this.items.length === 0) return;
-		
 		var i,
 			x,
 			y,
 			item,
 			coord,
-			numItems = this.items.length,
-			size = this.items[0].getSize(),
+			visibleItems = [],
 			offsetHeight = this.dom.offsetHeight,
 			offsetWidth = this.dom.offsetWidth,
 			coordinates = [];
-			
+		// Gather only our visible items
+		for (i = 0; i < this.items.length; i++) {
+			item = this.items[i];
+			if (item.visible == true) {
+				visibleItems.push(item);
+			}
+		}
+		var numItems = visibleItems.length,
+			size = visibleItems[0].getSize();
+		// Determine our layout
 		switch (true) {
 			case (numItems <= 3):
 				var buffer = (numItems === 2) ? Math.floor(size/2) : 0, // This provides some spacing on the left/right
@@ -633,8 +648,8 @@ function ws12_CircleMenu(object, screen) {
 				break;
 		}
 		// Set our coordinates
-		for (i = 0; i < this.items.length; i++) {
-			item = this.items[i];
+		for (i = 0; i < visibleItems.length; i++) {
+			item = visibleItems[i];
 			coord = coordinates[i];
 			item.dom.style['-webkit-transform'] = 'translate('+coord.X+'px,'+coord.Y+'px)';
 		}
@@ -648,6 +663,7 @@ function ws12_CircleMenu(object, screen) {
 			controlDom;
 		for (i = 0; i < object.items.length; i++) {
 			control = object.items[i];
+			control.parent = object;
 			controlDom = new ws12_CircleMenuItem(control, screen);
 			if (controlDom) {
 				object.dom.appendChild(controlDom);
@@ -713,6 +729,14 @@ function ws12_CircleMenuItem(object, screen) {
 		return this.dom.offsetWidth;
 	}
 	object.getSize = object.getSize.bind(object);
+	
+	// Handle Visibility change
+	object._setVisible = function(value) {
+		if (this.parent) {
+			this.parent._recalculateLayout();
+		}
+	}
+	object._setVisible = object._setVisible.bind(object);
 	
 	return object.dom;
 }
@@ -2026,12 +2050,41 @@ function ws12_HeadUnitChrome(object, data) {
 	
 	if (object) {
 		ws12.addClass(object.dom,'ws12-head-unit-chrome');
+
+		// Determine if we are a stacked dual view
+		object.isDualView = window.innerHeight > window.innerWidth;
+		if (object.isDualView == true) {
+			ws12.addClass(object.dom,'portrait');
+		}
+		// Recalculate the layout of the different views
+		object._recalculateLayout = function() {			
+			// Make adjustments for HVAC
+			if (this.hvac) {
+				if (this.hvac.visible == true) {
+					if (this.isDualView == false) {
+						this._primaryWindow.dom.style.bottom = this.hvac._getHeight()+'px';
+					} else if (this._secondaryWindow) {
+						this._secondaryWindow.dom.style.bottom = this.hvac._getHeight()+'px';
+					}
+				}
+			} 
+		}
+		object._recalculateLayout = object._recalculateLayout.bind(object);
 		
 		// Create our primary window area
-		object._primaryWindow = {};
+		object._primaryWindow = {parent: object};
 		var dom = new ws12_Window(object._primaryWindow,object);
 		ws12.addClass(dom,'primary');
+		dom.style.borderBottomColor = ws12.config.brandColor;
 		object.dom.appendChild(dom);
+		
+		// Create our secondary view area
+		if (object.isDualView == true) {
+			object._secondaryWindow = {parent: object};
+			dom = new ws12_Window(object._secondaryWindow,object);
+			ws12.addClass(dom,'secondary');
+			object.dom.appendChild(dom);
+		}
 		
 		// Create our navigation bar
 		object._navigation = {};
@@ -2046,10 +2099,18 @@ function ws12_HeadUnitChrome(object, data) {
 		}
 		
 		// Get our home window pane
-		if (object.home) {
+		if (object.homeWindowPane) {
 			// We open on another thread so that the root HeadUnitChrome has been inserted into the DOM
 			setTimeout(function() {
-				object._primaryWindow.push(object.home);
+				object._primaryWindow.push(object.homeWindowPane);
+			},0);
+		}
+		
+		// Get our secondary window pane
+		if (object.secondaryWindowPane && (object.isDualView == true)) {
+			// We open on another thread so that the root HeadUnitChrome has been inserted into the DOM
+			setTimeout(function() {
+				object._secondaryWindow.push(object.secondaryWindowPane);
 			},0);
 		}
 		
@@ -2159,20 +2220,21 @@ function ws12_HVACBar(object, screen) {
 	dom = new ws12_DefrostButton(object._rearDefrost, screen);
 	object.dom.appendChild(dom);
 	
+	// Get the height of the control
+	object._getHeight = function() {
+		return 120;
+	}
+	object._getHeight = object._getHeight.bind(object);
+	
 	// If this is visible then make the primary window bottom align with the
 	// top of this control
 	object._setVisible = function(value) {
-		if (this.screen._primaryWindow && this.screen._primaryWindow.dom) {
-			if (value == true) {
-				this.screen._primaryWindow.dom.style.bottom = '150px';
-			} else {
-				this.screen._primaryWindow.dom.style.bottom = '';
-			}
-		}
+		this.screen._recalculateLayout();
 	}
 	object._setVisible = object._setVisible.bind(object);
 	object._setVisible(object.visible);
 	
+
 	
 	
 	return object.dom;
@@ -2185,6 +2247,7 @@ function ws12_NavigationBar(object, screen) {
 	
 	// Set our brand color
 	object.dom.style.borderRightColor = ws12.config.brandColor;
+	object.dom.style.borderBottomColor = ws12.config.brandColor;
 	
 	// Add our clock
 	object.dom.clock = document.createElement('div');
@@ -2238,7 +2301,11 @@ function ws12_NavigationBar(object, screen) {
 	object.dom.homeBtn.onclick = function() {
 		if (this.model._selectedButton == this) return;
 		this.model._selectedButton = this;
-		this.model.dom.dot.style['-webkit-transform'] = 'translateY(0px)';
+		if (this.model._chrome.isDualView) {
+			this.model.dom.dot.style['-webkit-transform'] = 'translateX(0px)';
+		} else {
+			this.model.dom.dot.style['-webkit-transform'] = 'translateY(0px)';
+		}
 		this.model.dom.centerBtn._hide();
 		// Clear out existing screens in the primary display
 		this.model._chrome._primaryWindow.popToHome();
@@ -2256,7 +2323,11 @@ function ws12_NavigationBar(object, screen) {
 		if (this._hidden === true) return;
 		if (this.model._selectedButton == this) return;
 		this.model._selectedButton = this;
-		this.model.dom.dot.style['-webkit-transform'] = 'translateY('+(this.offsetTop - this.model.dom.homeBtn.offsetTop)+'px)';
+		if (this.model._chrome.isDualView) {
+			this.model.dom.dot.style['-webkit-transform'] = 'translateX('+(this.offsetLeft - this.model.dom.homeBtn.offsetLeft)+'px)';
+		} else {
+			this.model.dom.dot.style['-webkit-transform'] = 'translateY('+(this.offsetTop - this.model.dom.homeBtn.offsetTop)+'px)';
+		}
 		ws12.playTouchSound();
 	}
 	object.dom.centerBtn._hide = function() {
@@ -2281,24 +2352,43 @@ function ws12_NavigationBar(object, screen) {
 	object.dom.moreBtn.onclick = function() {
 		if (this.model._selectedButton == this) return;
 		this.model._selectedButton = this;
-		this.model.dom.dot.style['-webkit-transform'] = 'translateY('+(this.offsetTop - this.model.dom.homeBtn.offsetTop)+'px)';
+		if (this.model._chrome.isDualView) {
+			this.model.dom.dot.style['-webkit-transform'] = 'translateX('+(this.offsetLeft - this.model.dom.homeBtn.offsetLeft)+'px)';
+		} else {
+			this.model.dom.dot.style['-webkit-transform'] = 'translateY('+(this.offsetTop - this.model.dom.homeBtn.offsetTop)+'px)';
+		}
 		ws12.playTouchSound();
 	}
 	
 	// This will re-layout the control based on screen dimensions
 	object._recalculateLayout = function() {
-		var topThreshold = this.dom.homeBtn.offsetTop + this.dom.homeBtn.offsetHeight,
-			bottomThreshold = this.dom.moreBtn.offsetTop,
-			center = Math.floor((bottomThreshold - topThreshold)/2),
-			centerTop;
-		// Adjust our center button
-		centerTop = (bottomThreshold - center - Math.floor(this.dom.centerBtn.offsetHeight/2));
-		this.dom.centerBtn.style.top = centerTop + 'px';
-		// Adjust our lines
-		this.dom.homeLine.style.height = (centerTop - topThreshold) + 'px';
-		this.dom.moreLine.style.height = (bottomThreshold - centerTop - this.dom.centerBtn.offsetHeight) + 'px';
-		// Update our dot position
-		this.dom.dot.style['-webkit-transform'] = 'translateY('+(this._selectedButton.offsetTop - this.dom.homeBtn.offsetTop)+'px)';
+		if (this._chrome.isDualView) {
+			var leftThreshold = this.dom.homeBtn.offsetLeft + this.dom.homeBtn.offsetWidth,
+				rightThreshold = this.dom.moreBtn.offsetLeft,
+				center = Math.floor((rightThreshold - leftThreshold)/2),
+				centerLeft;
+			// Adjust our center button
+			centerLeft = (rightThreshold - center - Math.floor(this.dom.centerBtn.offsetWidth/2));
+			this.dom.centerBtn.style.left = centerLeft + 'px';
+			// Adjust our lines
+			this.dom.homeLine.style.width = (centerLeft - leftThreshold + 2) + 'px';
+			this.dom.moreLine.style.width = (rightThreshold - centerLeft - this.dom.centerBtn.offsetHeight + 2) + 'px';
+			// Update our dot position
+			this.dom.dot.style['-webkit-transform'] = 'translateX('+(this._selectedButton.offsetLeft - this.dom.homeBtn.offsetLeft)+'px)';	
+		} else {
+			var topThreshold = this.dom.homeBtn.offsetTop + this.dom.homeBtn.offsetHeight,
+				bottomThreshold = this.dom.moreBtn.offsetTop,
+				center = Math.floor((bottomThreshold - topThreshold)/2),
+				centerTop;
+			// Adjust our center button
+			centerTop = (bottomThreshold - center - Math.floor(this.dom.centerBtn.offsetHeight/2));
+			this.dom.centerBtn.style.top = centerTop + 'px';
+			// Adjust our lines
+			this.dom.homeLine.style.height = (centerTop - topThreshold) + 'px';
+			this.dom.moreLine.style.height = (bottomThreshold - centerTop - this.dom.centerBtn.offsetHeight) + 'px';
+			// Update our dot position
+			this.dom.dot.style['-webkit-transform'] = 'translateY('+(this._selectedButton.offsetTop - this.dom.homeBtn.offsetTop)+'px)';
+		}
 	}
 	object._recalculateLayout = object._recalculateLayout.bind(object);
 	
@@ -2307,6 +2397,13 @@ function ws12_NavigationBar(object, screen) {
 		this._recalculateLayout();
 	}
 	object._onresize = object._onresize.bind(object);
+	
+	// Get the height of the control
+	object._getHeight = function() {
+		if (window.innerHeight > window.innerWidth) return 126;
+		return 150;
+	}
+	object._getHeight = object._getHeight.bind(object);
 	
 	// Assign the middle navigation menu to the window pane provided
 	object._setNavigationMenu = function(windowPane) {
@@ -2321,7 +2418,11 @@ function ws12_NavigationBar(object, screen) {
 		ws12.addClass(this.dom.centerBtn, windowPane.menuImgClass); 
 		this.dom.centerLine.style.opacity = '0';
 		this._selectedButton = this.dom.centerBtn
-		this.dom.dot.style['-webkit-transform'] = 'translateY('+(this.dom.centerBtn.offsetTop - this.dom.homeBtn.offsetTop)+'px)';
+		if (this._chrome.isDualView) {
+			this.dom.dot.style['-webkit-transform'] = 'translateX('+(this.dom.centerBtn.offsetLeft - this.dom.homeBtn.offsetLeft)+'px)';
+		} else {
+			this.dom.dot.style['-webkit-transform'] = 'translateY('+(this.dom.centerBtn.offsetTop - this.dom.homeBtn.offsetTop)+'px)';
+		}
 	}
 	object._setNavigationMenu = object._setNavigationMenu.bind(object);
 
@@ -2384,12 +2485,14 @@ function ws12_Window(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom,'ws12-window');
 	
+	
 	object.screens = [];
 	
 	// Push a screen into this window
 	object.push = function(screen, data) {
 		screen = new screen();
 		screen.container = this;
+		screen.chrome = this.parent;
 		var dom = new ws12_WindowPane(screen, data);
 		this.screens.push(screen);
 		// See if we have an icon to set
@@ -3497,6 +3600,88 @@ if (typeof define !== 'undefined' && define.amd) {
 } else {
 	window.FastClick = FastClick;
 }
+function ws12_Map(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-map');
+	
+	// Create our map display area
+	object.dom.mapDiv = document.createElement('div');
+	ws12.addClass(object.dom.mapDiv,'mapDiv');
+	object.dom.appendChild(object.dom.mapDiv);
+	
+	// Create the iframe
+	object.dom.iframe = document.createElement('iframe');
+	object.dom.mapDiv.appendChild(object.dom.iframe);
+
+	// Handle clearing the UI before the pop animation
+	object._onbeforepop = function() {
+		//this.dom.iframe.style.display = 'none';
+	}
+	object._onbeforepop = object._onbeforepop.bind(object);
+	
+	// Handle loading on show
+	object._onshow = function() {
+		// Wait for show to load the URL
+		if (this.src) {
+			this.dom.iframe.src = this.src;
+		}
+		// Need to add detection here. If added to the iframe before inserted into
+		// the DOM, it will fire twice
+		this.dom.iframe.style.display = 'inline';		
+	}
+	object._onshow = object._onshow.bind(object);
+
+
+	return object.dom;
+}
+
+ws12_Browser.prototype = new ws12_CoreComponent();
+function ws12_MediaPlayer(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'ws12-media-player');
+	
+	// Create our cover art display area
+	object.dom.coverArt = document.createElement('div');
+	ws12.addClass(object.dom.coverArt,'cover-art');
+	object.dom.appendChild(object.dom.coverArt);
+	object.dom.coverArt.loader = new Image();
+	object.dom.coverArt.loader.model = object;
+	object.dom.coverArt.loader.onload = function() {
+		this.model.dom.coverArt.style.backgroundImage = 'url("'+this.model.coverArt+'")';
+		this.model.dom.coverArt.style.opacity = '0.3';
+	}
+	
+	// Public function to set cover art
+	object.setCoverArt = function(value) {
+		this.coverArt = value;
+		this.dom.coverArt.style.opacity = '0';
+		// Now load the new image
+		if (value != undefined) {
+			this.dom.coverArt.loader.src = value;
+		}
+	}
+	object.setCoverArt = object.setCoverArt.bind(object);
+	
+	// Private function to handle provider updates
+	object._providerUpdate = function(value) {
+		if (value) {
+			this.coverArt = value.coverArt
+		} else {
+			this.coverArt = undefined;
+		}
+		this.setCoverArt(this.coverArt);
+	}
+	object._providerUpdate = object._providerUpdate.bind(object);
+	
+	// Load our control if no provider is connected
+	if (object.provider == undefined) {
+		object._providerUpdate(object)
+	}
+	
+	return object.dom;
+}
+
+ws12_Browser.prototype = new ws12_CoreComponent();
 function ws12_MenuItem(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom,'ws12-menu-item');
@@ -5382,6 +5567,16 @@ function ws12_TitleBar(object, screen) {
 }
 
 ws12_TitleBar.prototype = new ws12_CoreComponent();
+function ws12_WedgeTemperature(object, data) {
+	ws12_CoreWedgeScreen.call(this, object);
+	ws12.addClass(object.dom,'ws12-wedge-temperature');
+		
+	return object.dom;
+}
+
+ws12_WedgeTemperature.prototype = new ws12_CoreWedgeScreen();
+
+
 function ws12_WindowPane(object, data) {
 	ws12_CoreScreen.call(this, object);
 	

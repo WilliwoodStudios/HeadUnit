@@ -15,16 +15,17 @@ function paneMenu() {
 			items: [
 				{
 					caption: 'music',
+					visible: window.innerHeight < window.innerWidth,
 					imgClass: 'ws12-icon-head-unit-music',
 					onclick: function() {
-						console.log(this.caption + ' clicked');
+						this.screen.container.push(paneMediaPlayer);
 					}
 				},
 				{
 					caption: 'maps',
 					imgClass: 'ws12-icon-head-unit-map',
 					onclick: function() {
-						console.log(this.caption + ' clicked');
+						this.screen.container.push(paneMap);
 					}
 				},
 				{
@@ -62,6 +63,5 @@ function paneMenu() {
 	];
 	
 	this.onshow = function() {
-		
 	}
 }
