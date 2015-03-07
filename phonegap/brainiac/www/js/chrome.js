@@ -11,6 +11,13 @@ function screenChrome() {
 				onclick: function() {
 					ws12.push(wedgeDriverTemperature, {temperature: this.temperature})
 				}
+			},
+			seat: {
+				level: 0,
+				maxLevel: 1,
+				onclick: function() {
+					console.log('driver seat level: ' + this.level);
+				}
 			}
 		},
 		passenger: {
@@ -18,6 +25,13 @@ function screenChrome() {
 				value: 73,
 				onclick: function() {
 					ws12.push(wedgePassengerTemperature, {temperature: this.temperature})
+				}
+			},
+			seat: {
+				level: 0,
+				maxLevel: 1,
+				onclick: function() {
+					console.log('passenger seat level: ' + this.level);
 				}
 			}
 		},

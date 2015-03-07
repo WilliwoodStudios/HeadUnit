@@ -8,7 +8,10 @@ function paneMediaPlayer() {
 	this.content = [
 		{
 			component: ws12.MediaPlayer,
-			coverArt: 'spec/img/coverart/licensed_to_ill.jpg'
+			coverArt: 'spec/img/coverart/licensed_to_ill.jpg',
+			artist: 'Beastie Boys',
+			song: 'So What Cha Want',
+			album: 'License To Ill'
 		}	
 	];
 	

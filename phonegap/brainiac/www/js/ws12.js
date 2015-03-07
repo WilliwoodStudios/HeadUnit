@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.2268*/
+/* ws12 VERSION: 1.0.0.2372*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -2168,15 +2168,20 @@ function ws12_HVACBar(object, screen) {
 	// Set our brand color
 	object.dom.style.borderTopColor = ws12.config.brandColor;
 	
-	// Create driver heat settings
+	// Set driver defaults driver heat settings
 	if (object.driver == undefined) {
 		object.driver = {
-				temperature: {
-					value: 0, 
-					side: 'left', 
-					visible: false
-				}
-			};
+			temperature: {
+				value: 0, 
+				side: 'left', 
+				visible: false
+			},
+			seat: {
+				level: 0,
+				side: 'left',
+				visible: false
+			}
+		}
 	} else {
 		if (object.driver.temperature == undefined) {
 			object.driver.temperature = {
@@ -2184,20 +2189,36 @@ function ws12_HVACBar(object, screen) {
 					visible: false
 				}
 		}
+		if (object.driver.seat == undefined) {
+			object.driver.seat = {
+					level: 0, 
+					visible: false
+				}
+		}
 		object.driver.temperature.side = 'left';
+		object.driver.seat.side = 'left';
 	}
+	// Create the driver temperature button
 	dom = new ws12_TemperatureButton(object.driver.temperature, screen);
+	object.dom.appendChild(dom);
+	// Create the driver seat button
+	dom = new ws12_SeatButton(object.driver.seat, screen);
 	object.dom.appendChild(dom);
 	
 	// Create passenger heat settings
 	if (object.passenger == undefined) {
 		object.passenger = {
-				temperature: {
-					value: 0, 
-					side: 'right', 
-					visible: false
-				}
-			};
+			temperature: {
+				value: 0, 
+				side: 'right', 
+				visible: false
+			},
+			seat: {
+				level: 0,
+				side: 'right',
+				visible: false
+			}
+		}
 	} else {
 		if (object.passenger.temperature == undefined) {
 			object.passenger.temperature = {
@@ -2205,11 +2226,21 @@ function ws12_HVACBar(object, screen) {
 					visible: false
 				}
 		} 
+		if (object.passenger.seat == undefined) {
+			object.passenger.seat = {
+					level: 0, 
+					visible: false
+				}
+		} 
 		object.passenger.temperature.side = 'right';
+		object.passenger.seat.side = 'right';
 	}
+	// Create passenger temperature button
 	dom = new ws12_TemperatureButton(object.passenger.temperature, screen);
 	object.dom.appendChild(dom);
-	
+	// Create the passenger seat button
+	dom = new ws12_SeatButton(object.passenger.seat, screen);
+	object.dom.appendChild(dom);
 	
 	// Create the rear defrost button
 	if (object.showDefrostOnBar == true) {
@@ -2432,6 +2463,79 @@ function ws12_NavigationBar(object, screen) {
 }
 
 ws12_NavigationBar.prototype = new ws12_CoreComponent();
+function ws12_SeatButton(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'seat');
+	object.dom.style.backgroundColor = ws12.config.brandColor;
+	
+	// Set the side of the display
+	if (object.side != undefined) {
+		ws12.addClass(object.dom,object.side);
+	}
+	
+	// Make sure we have a default max levels
+	if (object.maxLevel == undefined) {
+		object.maxLevel = 0;
+	}
+	
+	// Handle our clicks
+	object.dom.onclick = function() {
+		if (this.model.level == this.model.maxLevel) {
+			this.model.setLevel(0);
+		} else {
+			this.model.setLevel(this.model.level + 1);
+		}
+		ws12.playTouchSound();
+		if (this.model.onclick) {
+			this.model.onclick();
+		}
+	}
+	object.dom.ontouchstart = function() {
+		ws12.addClass(this,'selected');
+	}
+	object.dom.ontouchend = function() {
+		ws12.removeClass(this,'selected');
+	}
+	object.dom.ontouchcancel = object.dom.ontouchend;
+	if (!ws12.isMobileDevice()) {
+		object.dom.onmousedown = object.dom.ontouchstart;
+		object.dom.onmouseup = object.dom.ontouchend;
+		object.dom.onmouseleave = object.dom.ontouchend;
+	}
+	
+	// Set the level
+	object.setLevel = function(value) {
+		var prevLevel = (this.level == undefined) ? 0 : this.level;
+		if (value == undefined) value = 0;
+		this.level = value;
+		// Remove previous level styling
+		ws12.removeClass(this.dom,'level-'+prevLevel);
+		ws12.addClass(this.dom,'level-'+this.level);
+	}
+	object.setLevel = object.setLevel.bind(object);
+	
+	// Driver control decisions
+	if (object.level != undefined) {
+		object.setLevel(object.level);	
+	}
+	
+	// We need to make the opacity show up based on a delay because
+	// opacity can't animate when display changes from a previous state of none
+	object._onshow = function(value) {
+		setTimeout(this._timedOpacity,500);
+	}
+	object._onshow = object._onshow.bind(object);
+	
+	// Make the button visible
+	object._timedOpacity = function(value) {
+		this.dom.style.opacity = '1.0';
+	}
+	object._timedOpacity = object._timedOpacity.bind(object);
+	
+	return object.dom;
+}
+
+ws12_SeatButton.prototype = new ws12_CoreComponent();
 function ws12_TemperatureButton(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom,'temperature');
@@ -3651,6 +3755,93 @@ function ws12_MediaPlayer(object, screen) {
 		this.model.dom.coverArt.style.opacity = '0.3';
 	}
 	
+	// Create our controls area
+	object.dom.controls = document.createElement('div');
+	ws12.addClass(object.dom.controls, 'controls');
+	object.dom.appendChild(object.dom.controls);
+	object.dom.artist = document.createElement('div');
+	ws12.addClass(object.dom.artist,'artist');
+	object.dom.controls.appendChild(object.dom.artist);
+	object.dom.song = document.createElement('div');
+	ws12.addClass(object.dom.song,'song');
+	object.dom.controls.appendChild(object.dom.song);
+	object.dom.album = document.createElement('div');
+	ws12.addClass(object.dom.album,'album');
+	object.dom.controls.appendChild(object.dom.album);
+	
+	// Create our player buttons
+	object.dom.playbox = document.createElement('div');
+	ws12.addClass(object.dom.playbox, 'playbox');
+	object.dom.controls.appendChild(object.dom.playbox);
+	object.dom.skipBack = document.createElement('div');
+	ws12.addClass(object.dom.skipBack,'button');
+	ws12.addClass(object.dom.skipBack,'skip-back');
+	object.dom.playbox.appendChild(object.dom.skipBack);
+	object.dom.skipForward = document.createElement('div');
+	ws12.addClass(object.dom.skipForward,'button');
+	ws12.addClass(object.dom.skipForward,'skip-forward');
+	object.dom.playbox.appendChild(object.dom.skipForward);
+	object.dom.play = document.createElement('div');
+	ws12.addClass(object.dom.play,'button');
+	ws12.addClass(object.dom.play,'play');
+	object.dom.playbox.appendChild(object.dom.play);
+	
+	// Create our text buttons
+	object.dom.textButtonBox = document.createElement('div');
+	ws12.addClass(object.dom.textButtonBox, 'textButtonBox');
+	object.dom.appendChild(object.dom.textButtonBox);
+	object.dom.buttonRepeat = document.createElement('div');
+	ws12.addClass(object.dom.buttonRepeat, 'text-button');
+	ws12.addClass(object.dom.buttonRepeat, 'left');
+	object.dom.buttonRepeat.textContent = 'Repeat Off';
+	object.dom.textButtonBox.appendChild(object.dom.buttonRepeat);
+	object.dom.buttonSource = document.createElement('div');
+	ws12.addClass(object.dom.buttonSource, 'text-button');
+	ws12.addClass(object.dom.buttonSource, 'center');
+	object.dom.buttonSource.textContent = 'Source';
+	object.dom.textButtonBox.appendChild(object.dom.buttonSource);
+	object.dom.buttonShuffle = document.createElement('div');
+	ws12.addClass(object.dom.buttonShuffle, 'text-button');
+	ws12.addClass(object.dom.buttonShuffle, 'right');
+	object.dom.buttonShuffle.textContent = 'Shuffle Off';
+	object.dom.textButtonBox.appendChild(object.dom.buttonShuffle);
+	
+	// Public function to set the album
+	object.setAlbum = function(value) {
+		this.album = value;
+		// Now load the new image
+		if (value != undefined) {
+			this.dom.album.textContent = value;
+		} else {
+			this.dom.album.textContent = '';
+		}
+	}
+	object.setAlbum = object.setAlbum.bind(object);
+	
+	// Public function to set the song
+	object.setSong = function(value) {
+		this.song = value;
+		// Now load the new image
+		if (value != undefined) {
+			this.dom.song.textContent = value;
+		} else {
+			this.dom.song.textContent = '';
+		}
+	}
+	object.setSong = object.setSong.bind(object);
+	
+	// Public function to set the artist
+	object.setArtist = function(value) {
+		this.artist = value;
+		// Now load the new image
+		if (value != undefined) {
+			this.dom.artist.textContent = value;
+		} else {
+			this.dom.artist.textContent = '';
+		}
+	}
+	object.setArtist = object.setArtist.bind(object);
+	
 	// Public function to set cover art
 	object.setCoverArt = function(value) {
 		this.coverArt = value;
@@ -3670,6 +3861,9 @@ function ws12_MediaPlayer(object, screen) {
 			this.coverArt = undefined;
 		}
 		this.setCoverArt(this.coverArt);
+		this.setArtist(this.artist);
+		this.setSong(this.song);
+		this.setAlbum(this.album);
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);
 	
