@@ -35,7 +35,12 @@ function screenChrome() {
 				}
 			}
 		},
-		
+		fans: {
+			value: ws12.Fans.AUTO,
+			onclick: function() {
+				console.log('fans click');
+			}
+		}
 		//showDefrostOnBar: true
 	};
 	

@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.2372*/
+/* ws12 VERSION: 1.0.0.2379*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -36,6 +36,9 @@ var ws12 = {
 	Browser: {},
 	Map: {},
 	MediaPlayer: {},
+	Fans: {
+		AUTO: 0
+	},
 	TitleBar: {},
 	Screen: {},
 	WedgeScreen: {
@@ -2160,6 +2163,69 @@ function ws12_DefrostButton(object, screen) {
 }
 
 ws12_DefrostButton.prototype = new ws12_CoreComponent();
+function ws12_FansButton(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'fans');
+	object.dom.style.backgroundColor = ws12.config.brandColor;
+	
+	// Set defaults
+	if (object.value == undefined) {
+		object.value = ws12.Fans.AUTO;
+	}
+	
+	// Handle touch interaction
+	object.dom.onclick = function() {
+		ws12.playTouchSound();
+		if (this.model.onclick) {
+			this.model.onclick();
+		}
+	}
+	object.dom.ontouchstart = function() {
+		ws12.addClass(this,'selected');
+	}
+	object.dom.ontouchend = function() {
+		ws12.removeClass(this,'selected');
+	}
+	object.dom.ontouchcancel = object.dom.ontouchend;
+	if (!ws12.isMobileDevice()) {
+		object.dom.onmousedown = object.dom.ontouchstart;
+		object.dom.onmouseup = object.dom.ontouchend;
+		object.dom.onmouseleave = object.dom.ontouchend;
+	}
+	
+	// Set the current fan setting
+	object.setValue = function(value) {
+		var prevValue = (this.value == undefined) ? ws12.Fans.AUTO : this.value;
+		if (value == undefined) value = ws12.Fans.AUTO;
+		this.value = value;
+		// Remove previous setting styling
+		ws12.removeClass(this.dom,'ws12-icon-head-unit-fans-setting-'+prevValue);
+		ws12.addClass(this.dom,'ws12-icon-head-unit-fans-setting-'+this.value);
+	}
+	object.setValue = object.setValue.bind(object);
+	
+	// Check for defined fan setting
+	if (object.value != undefined) {
+		object.setValue(object.value);	
+	}
+	
+	// We need to make the opacity show up based on a delay because
+	// opacity can't animate when display changes from a previous state of none
+	object._onshow = function(value) {
+		setTimeout(this._timedOpacity,500);
+	}
+	object._onshow = object._onshow.bind(object);
+	
+	// Make the button visible
+	object._timedOpacity = function(value) {
+		this.dom.style.opacity = '1.0';
+	}
+	object._timedOpacity = object._timedOpacity.bind(object);
+	
+	return object.dom;
+}
+
+ws12_FansButton.prototype = new ws12_CoreComponent();
 function ws12_HVACBar(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom,'hvac');
@@ -2177,7 +2243,7 @@ function ws12_HVACBar(object, screen) {
 				visible: false
 			},
 			seat: {
-				level: 0,
+				value: 0,
 				side: 'left',
 				visible: false
 			}
@@ -2191,7 +2257,7 @@ function ws12_HVACBar(object, screen) {
 		}
 		if (object.driver.seat == undefined) {
 			object.driver.seat = {
-					level: 0, 
+					value: 0, 
 					visible: false
 				}
 		}
@@ -2214,7 +2280,7 @@ function ws12_HVACBar(object, screen) {
 				visible: false
 			},
 			seat: {
-				level: 0,
+				value: 0,
 				side: 'right',
 				visible: false
 			}
@@ -2228,7 +2294,7 @@ function ws12_HVACBar(object, screen) {
 		} 
 		if (object.passenger.seat == undefined) {
 			object.passenger.seat = {
-					level: 0, 
+					value: 0, 
 					visible: false
 				}
 		} 
@@ -2249,6 +2315,15 @@ function ws12_HVACBar(object, screen) {
 		object._rearDefrost = {parent: object, visible: false};
 	}
 	dom = new ws12_DefrostButton(object._rearDefrost, screen);
+	object.dom.appendChild(dom);
+	
+	// Create fan settings button
+	if (object.fans) {
+		object.fans.parent = object;
+	} else {
+		object.fans = {parent: object, visible: false};
+	}
+	dom = new ws12_FansButton(object.fans, screen);
 	object.dom.appendChild(dom);
 	
 	// Get the height of the control
@@ -2514,7 +2589,7 @@ function ws12_SeatButton(object, screen) {
 	}
 	object.setLevel = object.setLevel.bind(object);
 	
-	// Driver control decisions
+	// Check for defined seat level
 	if (object.level != undefined) {
 		object.setLevel(object.level);	
 	}
