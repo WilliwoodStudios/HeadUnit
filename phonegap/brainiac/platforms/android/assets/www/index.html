@@ -1,0 +1,54 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+		
+        <!-- UI Toolkit -->
+		<script type="text/javascript" src="js/ws12.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/ws12.css"></link>
+		
+		<!-- App Code -->
+		<script type="text/javascript" src="js/audioManager.js"></script>
+		<script type="text/javascript" src="js/chrome.js"></script>
+		<script type="text/javascript" src="js/pane-Menu.js"></script>
+		<script type="text/javascript" src="js/pane-Browser.js"></script>
+		<script type="text/javascript" src="js/pane-Dashboard.js"></script>
+		<script type="text/javascript" src="js/pane-Phone.js"></script>
+		<script type="text/javascript" src="js/pane-LoggingMenu.js"></script>
+		<script type="text/javascript" src="js/pane-zeroToSixty.js"></script>
+		<script type="text/javascript" src="js/pane-MediaPlayer.js"></script>
+		<script type="text/javascript" src="js/pane-MediaMenu.js"></script>
+		<script type="text/javascript" src="js/pane-Map.js"></script>
+		
+		<script type="text/javascript" src="js/wedge-DriverTemperature.js"></script>
+		<script type="text/javascript" src="js/wedge-PassengerTemperature.js"></script>
+		
+		<!-- viewport -->
+		<meta name="viewport" content="initial-scale=1.0,user-scalable=no">
+		<meta name="mobile-web-app-capable" content="yes">
+        
+        <title>Brainiac</title>
+		
+		<script>
+			var audioManager;
+			
+			function onDeviceReady() {
+				// Initialize
+				audioManager = new AudioManager({demo: true});
+				//var config = {inHeadUnit: true, tileFontColor: '#FFFFFF', brandColor: '#23A084'}; // Jeep Color
+				var config = {inHeadUnit: true, tileFontColor: '#FFFFFF', audioManager: audioManager};
+				ws12.init(screenChrome,config);	
+			}
+			
+			// Initialize our toolkit
+			window.onload = function() {
+				//document.addEventListener('deviceready', onDeviceReady, false);
+				onDeviceReady();
+			}
+			
+			
+		</script>
+    </head>
+    <body>
+    </body>
+</html>

@@ -9,7 +9,7 @@ function screenChrome() {
 			temperature: {
 				value: 75,
 				onclick: function() {
-					ws12.push(wedgeDriverTemperature, {temperature: this.temperature})
+					ws12.push(wedgeDriverTemperature, {temperature: this.value})
 				}
 			},
 			seat: {
@@ -24,7 +24,7 @@ function screenChrome() {
 			temperature: {
 				value: 73,
 				onclick: function() {
-					ws12.push(wedgePassengerTemperature, {temperature: this.temperature})
+					ws12.push(wedgePassengerTemperature, {temperature: this.value})
 				}
 			},
 			seat: {
@@ -45,8 +45,23 @@ function screenChrome() {
 	};
 	
 	this.onshow = function() {
-		if (true) {
+		if (window.innerHeight > 700) {
 			this.hvac.setVisible(true);
+			// Set our temperature change listeners
+			ws12.eventBroker.addEventListener(ws12.EventType.ONDRIVERTEMPCHANGE, this.ondrivertempchange, this);
+			ws12.eventBroker.addEventListener(ws12.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);
 		}
 	}
+	
+	// Update the driver temperature setting
+	this.ondrivertempchange = function(data) {
+		this.hvac.driver.temperature.setTemperature(data.temperature);
+	}
+	this.ondrivertempchange = this.ondrivertempchange.bind(this);
+	
+	// Update the passenger temperature setting
+	this.onpassengertempchange = function(data) {
+		this.hvac.passenger.temperature.setTemperature(data.temperature);
+	}
+	this.onpassengertempchange = this.onpassengertempchange.bind(this);
 }

@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.2379*/
+/* ws12 VERSION: 1.0.0.2511*/
 body,
 html {
   padding: 0px;
@@ -300,6 +300,7 @@ div {
   margin: 0px;
   left: 0px;
   right: 0px;
+  overflow: hidden;
 }
 .ws12-core-screen > .background {
   position: absolute;
@@ -852,6 +853,7 @@ div {
 }
 .ws12-head-unit-chrome.portrait > .navigation > .clock {
   float: right;
+  font-size: 25px;
 }
 .ws12-head-unit-chrome > .navigation > .dot {
   position: absolute;
@@ -1067,16 +1069,31 @@ div {
   background-size: cover;
   background-repeat: no-repeat;
   -webkit-transition: opacity 0.5s linear;
+  z-index: 0;
+}
+.ws12-media-player > .menu {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  height: 70px;
+  width: 70px;
+  border-radius: 36px;
+  border: solid 2px #ffffff;
+  background-position: center center;
+  background-size: 45px 45px;
+  background-repeat: no-repeat;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3wMIDwQY0fRMCgAAAelJREFUeNrt3LGOTFEcx/Hf34YoRCXRaxcvIWxlXkKCB/AcCNF5CxKLp1AQjWYrhW4bYSdHMZMN1dzdGdk5ez6femaK/zm55869yTcBAAAAAAAAAAAAAAB6VSf9QmttN8mDJPeSXE9yzRjP1I8k35N8TPK6qr78lw3QWruU5GmSx0l2zH0rzZO8SvKkqn5vbAMsF/9tkrtm3IX3SWZV9WvVBy9M/MEXFr8re0mebeQK0Fq7meTTCTYL23Mc3F51TzBlUR9Z/C7tJHm4iSPgjll2a+XaTTkCDpNcMcsuHVbV1XWvAGWO59eUDXBgTN062MQG2DfHbr3bxD3A7vJvoKd/fTlKcquqvq51Baiqz0lemmd3nq9a/Mk3eK21i0neZPGEie23n+R+VR1t4h4gyxcLsyxeNMzNd2vNs3hsP5uy+Kf6i/fX6+C9JDeSXDb3M/UzybckH3KK18EAAAAAAAAAwPmjD9A/fQCO6QOQRB9gePoA6AOMTh8AfYDR6QOw/hGgD9AvfYDB6QMMTB9gcPoAA9MHGJQ+wID0AQAAAAAAAACAf+gD9E8fgGP6ACTRBxiePgD6AKPTB0AfYHT6AKx/BOgD9EsfYHD6AAPTBxicPsDA9AEGpQ8wIH0AAAAAAAAAAAAAAAAY1B948cikbP34RAAAAABJRU5ErkJggg==");
+  cursor: pointer;
 }
 .ws12-media-player > .controls {
-  position: relative;
+  position: absolute;
   width: 700px;
   height: 300px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 20px;
+  top: 50%;
+  left: 50%;
+  margin-left: -350px;
+  margin-top: -190px;
   color: #ffffff;
-  z-index: 2;
 }
 .ws12-media-player > .controls > .artist {
   position: relative;
@@ -1634,8 +1651,8 @@ div {
 .ws12-tile-group {
   user-select: none;
   -webkit-user-select: none;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   visibility: hidden;
 }
 .ws12-tile-group.in-head-unit {
@@ -2048,12 +2065,88 @@ div {
   cursor: default;
 }
 /* The temperature adjustment wedge */
+.ws12-wedge-temperature > .wedge > .box {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  top: 36%;
+  left: 50%;
+  margin-left: -150px;
+  margin-top: -150px;
+}
+.ws12-wedge-temperature.portrait > .wedge > .box {
+  top: 25%;
+}
+.ws12-wedge-temperature > .wedge > .box > .temperature {
+  position: absolute;
+  top: 70px;
+  bottom: 70px;
+  right: 0px;
+  left: 0px;
+  line-height: 160px;
+  font-weight: 100;
+  font-size: 100px;
+  text-align: center;
+  color: #ffffff;
+  cursor: default;
+}
+.ws12-wedge-temperature > .wedge > .box > .button {
+  position: absolute;
+  height: 70px;
+  left: 0px;
+  right: 0px;
+  cursor: pointer;
+}
+.ws12-wedge-temperature > .wedge > .box > .button .arrow {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAACNvAAAjbwE1/Af7AAAAB3RJTUUH3wITEwYKvz/8+gAAAhRJREFUeNrt3S2OFGEARdHXaBRqltAWjyHBwLpYCJsYMCRj8FiWgELhCwMJmWTICH6auee5TkpU+p58qUqLPh3HMevuka8AAAPAADAADAAD4CJ23na97YlEPQDnbTfbXm17D0ELwI/4V98/P4WgA+B2/EHQAXBXfAgiAF7/Ij4Ef3CnC/kx6PG2d9ue3ePaj9tebPsi38M5Ab5ue7ntwz2udRI80IdACLwGQlAHAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAQRwBAHAEAcQQAxBEAEEcAQBwBAHEEAMQRABBHAEB8APy+/Zf/ewRAOD4A8fgAxOMDEI8PQDw+APH4AMTjAxCPD0A8PgDx+ADE4wMQjw9APD4A8fgAxOMDEI8PQDw+APH4AMTj1wHk45cBiB8GIH4YgPhhAOKHAYgfBiB+GID4YQDihwGIHwYgfhiA+GEA4ocBiB8GIH4YgPhhAOKHAYgfBiB+GID4YQDihwGIHwYgfhiA+GEA4ocBiB8GIH4YgPhhAOKHAYgfB/BG/H+z03Ecl3Af5203267Eb54An7Y93/ZZ/O5D4F0IxA+9Bt5GIH4MwM8I3orfeQg0J4ABYAAYAAaAAWB/Zd8A4KlbZ9Ql0/QAAAAASUVORK5CYII=");
+  position: relative;
+  height: 70px;
+  width: 70px;
+  margin-left: auto;
+  margin-right: auto;
+  background-position: center center;
+  background-size: cover;
+}
+.ws12-wedge-temperature > .wedge > .box > .button.up {
+  top: 0px;
+}
+.ws12-wedge-temperature > .wedge > .box > .button.up .arrow {
+  -webkit-transform: rotate(-90deg);
+}
+.ws12-wedge-temperature > .wedge > .box > .button.down {
+  bottom: 0px;
+}
+.ws12-wedge-temperature > .wedge > .box > .button.down .arrow {
+  -webkit-transform: rotate(90deg);
+}
 /* Our main class for window panes */
 .ws12-window-pane {
   position: absolute;
   top: 0px;
   bottom: 0px;
   left: 0px;
+}
+.ws12-window-pane > .back-bar {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAACNvAAAjbwE1/Af7AAAAB3RJTUUH3wITEwU3zHrjKAAAAfNJREFUeNrt3SFOQ0EARdH30SgUS8Dia0gwsC4WwiYA0wSDx7IEFAo/GASyogwT3nmuScVP78l0kopuY4xY7058BAAYAAaAAWAAGAB25J0leUhyAUBn/H2S2yTPKyIA4PfjX36/Pl8RAQBz4mdVBADMi78kAgDmxv+J4G6FB978GDQ9fpK8JLlJ8ukEEB8A8QEQHwDxARAfAPEBEB8A8QEQHwDxARAfAPEBEB8A8QEQHwDxARAfAPEBEB8A8QEQHwDxARAfAPEBEB8A8QEQHwDxARC/GoD4xQDELwYgfjEA8YsBiF8MQPxiAOIXAxC/GID4xQDELwYgfjEA8YsBiF8MQPxiAOIXAxC/GID4xQDELwYgfjEA8YsBiO8EsGYAH0muk7we8N5dkqckp9L9rxMAAl8BELgDQOASCAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEA9QgAKEcAQDkCAMoRAFCOAIByBACUIwCgHAEA5QgA+DsE9ys89DbGkO64O+RPsN6TXCV5cwL0nQTLxAdgPoKl4gMwF8Fy8QGYh+BxxfgugeYEAMAAMAAMAAPA6vYFjINbZz6islsAAAAASUVORK5CYII=");
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  top: 0px;
+  height: 58px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  background-color: #000000;
+  background-position: 10px center;
+  background-size: 38px 38px;
+  background-repeat: no-repeat;
+}
+.ws12-window-pane > .back-bar > .caption {
+  color: #ffffff;
+  line-height: 58px;
+  padding-left: 58px;
+  font-size: 35px;
+  font-weight: 100;
+  cursor: pointer;
 }
 @-webkit-keyframes pane-slide-left {
   0% {
@@ -2087,6 +2180,9 @@ div {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   -webkit-overflow-scrolling: -blackberry-touch;
+}
+.ws12-window-pane.has-back > .inner {
+  top: 60px;
 }
 /* If the screen is short then don't squish the navigation */
 @media screen and (max-height: 475px) {

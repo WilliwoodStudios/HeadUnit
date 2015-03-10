@@ -11,7 +11,10 @@ function paneMediaPlayer() {
 			coverArt: 'spec/img/coverart/licensed_to_ill.jpg',
 			artist: 'Beastie Boys',
 			song: 'So What Cha Want',
-			album: 'License To Ill'
+			album: 'License To Ill',
+			onmenuclick: function() {
+				//this.screen.container.push(paneMediaMenu);
+			}
 		}	
 	];
 	

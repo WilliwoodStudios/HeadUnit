@@ -8,7 +8,14 @@ function wedgeDriverTemperature() {
 		caption: 'Done'
 	};
 	
+	this.onchange = function() {
+		var systemEvent = new SystemEvent(ws12.EventType.ONDRIVERTEMPCHANGE, {temperature: this.temperature});
+		ws12.eventBroker.raiseEvent(systemEvent);
+	};
+	
 	this.onshow = function(data) {
-		//console.log('Driver temperature:' + data.temperature);
-	}
+		if (data && data.temperature) {
+			this.setTemperature(data.temperature);
+		}
+	};
 }

@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.2379*/
+/* ws12 VERSION: 1.0.0.2511*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -22,7 +22,9 @@ var ws12 = {
 		ONUNSUBSCRIBE: 'onunsubscribe',
 		ONSPEEDCHANGE: 'onspeedchange',
 		ONFUELCHANGE: 'onfuelchange',
-		ONRPMCHANGE: 'onrpmchange'
+		ONRPMCHANGE: 'onrpmchange',
+		ONDRIVERTEMPCHANGE: 'ondrivertempchange',
+		ONPASSENGERTEMPCHANGE: 'onpassengertempchange'
 	},
 	
 	// Graph Colors
@@ -1022,7 +1024,7 @@ function ws12_CoreComponent(object, screen) {
 function ws12_CoreScreen(object, data) {
 	ws12_CoreComponent.call(this, object);
 	if (object) {
-		object.dom.data = data;
+		object.data = data;
 		object.guid = ws12.guid();
 		object.children = []; // Contains all child controls in the screen
 		ws12.addClass(object.dom,'ws12-core-screen');
@@ -1093,7 +1095,7 @@ function ws12_CoreScreen(object, data) {
 			e.preventDefault();
 			
 			if (this.model.onshow) {
-				this.model.onshow(this.data);
+				this.model.onshow(this.model.data);
 			}
 			
 			// Fire the _onshow for all the controls
@@ -1409,11 +1411,15 @@ function ws12_CoreWedgeScreen(object, data) {
 		object.disableAnimation = true;
 		object.background = undefined;
 	}
-	ws12_CoreScreen.call(this, object);
+	ws12_CoreScreen.call(this, object, data);
 	
 	if (object) {
 		ws12.addClass(object.dom,'ws12-core-wedge-screen');
 		object.dom.style.backgroundColor = 'transparent';
+		
+		if (window.innerHeight > window.innerWidth) {
+			ws12.addClass(object.dom,'portrait');
+		}
 		
 		if (object.direction == undefined) {
 			object.direction = ws12.WedgeScreen.LEFT;
@@ -1438,15 +1444,15 @@ function ws12_CoreWedgeScreen(object, data) {
 		    adjacent = window.innerWidth,
 			hypotenuse = Math.sqrt(Math.pow(opposite,2) + Math.pow(adjacent,2)),
 			degrees = 90 - Math.asin(opposite/hypotenuse)*(180/Math.PI);
-			
+		object._degrees	= degrees;
 		// Set our wedge values
 		object.dom.wedge.style.width = wedgeWidth + 'px';
 		object.dom.wedge.style.backgroundColor = ws12.config.brandColor;	
 		if (object._isRightToLeft == true) {
 			degrees = '-' + degrees;
-			object.dom.wedge.style.right = (window.innerWidth > window.innerHeight) ? Math.floor(wedgeWidth/2) + 'px' : '-'+Math.floor(wedgeWidth/2) + 'px';
+			object.dom.wedge.style.right = (window.innerWidth > window.innerHeight) ? Math.floor(wedgeWidth/2) + 'px' : '-'+Math.floor(wedgeWidth/1.5) + 'px';
 		} else {
-			object.dom.wedge.style.left = (window.innerWidth > window.innerHeight) ? Math.floor(wedgeWidth/2) + 'px' : '-'+Math.floor(wedgeWidth/2) + 'px';
+			object.dom.wedge.style.left = (window.innerWidth > window.innerHeight) ? Math.floor(wedgeWidth/2) + 'px' : '-'+Math.floor(wedgeWidth/1.5) + 'px';
 		}
 		object.dom.wedge.style['-webkit-transform'] = 'rotate('+degrees+'deg)';
 		
@@ -1462,10 +1468,10 @@ function ws12_CoreWedgeScreen(object, data) {
 		ws12.addClass(object.dom.back.textDiv, 'back-text');
 		object.dom.back.appendChild(object.dom.back.textDiv);
 		if (object._isRightToLeft == true) {
-			object.dom.back.style.right = Math.floor(buttonWidth/3)+ 'px';
+			object.dom.back.style.right = (window.innerWidth > window.innerHeight) ? Math.floor(buttonWidth/3)+ 'px' : '20px';
 			ws12.addClass(object.dom.back.textDiv,'right-to-left');
 		} else {
-			object.dom.back.style.left = Math.floor(buttonWidth/3)+ 'px';
+			object.dom.back.style.left = (window.innerWidth > window.innerHeight) ? Math.floor(buttonWidth/3)+ 'px' : '20px';
 		}
 		
 		// See if we have back button customization
@@ -2691,7 +2697,7 @@ function ws12_Window(object, screen) {
 		if (this.screens.length <= 1) return;
 		ws12.inScreenTransition = true;
 		ws12.blockAllTapEvent(true);
-		this.screens[0].dom.style.display = '';
+		this.screens[0].dom.style.visibility = '';
 		if (this.screens.length > 1) {
 			var screen = this.screens[this.screens.length - 1];
 			// Let the top most screen know it is going to be popped
@@ -2720,7 +2726,7 @@ function ws12_Window(object, screen) {
 			screen.dom.style['-webkit-animation-delay'] = '';
 			screen.dom.style['-webkit-animation-name'] = 'pane-slide-right';
 			screen.dom.addEventListener('webkitAnimationEnd', function(e) {
-				screen.container._removeScreen(this.model);
+				this.model.container._removeScreen(this.model);
 				ws12.inScreenTransition = false;
 				ws12.blockAllTapEvent(false);
 			}, false);
@@ -2732,10 +2738,48 @@ function ws12_Window(object, screen) {
 	}
 	object._popToHome = object._popToHome.bind(object);
 	
+	// Public function to pop the top most screen
+	object.pop = function() {
+		if (this.screens.length <= 1) return;
+		ws12.inScreenTransition = true;
+		ws12.blockAllTapEvent(true);
+		var screenBelow = this.screens[this.screens.length-2];
+		screenBelow.dom.style.visibility = '';
+		// See if we have an icon to set
+		if (screenBelow.menuImgClass) {
+			this.screen._setNavigationMenu(screenBelow); // this.screen is the HeadUnitChrome
+		}
+		if (this.screens.length > 1) {
+			var screen = this.screens[this.screens.length - 1];
+			// Let the top most screen know it is going to be popped
+			if (screen._onbeforepop) {
+				screen._onbeforepop();
+			}
+			// Clear the screen
+			if (screen.disableAnimation === true) {
+				this._removeScreen(screen);
+				ws12.inScreenTransition = false;
+				ws12.blockAllTapEvent(false);
+			} else {
+				screen.dom.style['-webkit-animation-delay'] = '';
+				screen.dom.style['-webkit-animation-name'] = 'pane-slide-right';
+				screen.dom.addEventListener('webkitAnimationEnd', function(e) {
+					this.model.container._removeScreen(this.model);
+					ws12.inScreenTransition = false;
+					ws12.blockAllTapEvent(false);
+				}, false);
+			}
+		}
+		
+	}
+	object.pop = object.pop.bind(object);
+	
 	// Remove the screen from the dom and the array
 	object._removeScreen = function(screen) {
 		screen.dom.style.display = 'none';
 		this.dom.removeChild(screen.dom);
+		// Remove any global event listeners
+		ws12.eventBroker.removeEventListenersForScreen(screen);
 		screen.destroy();
 		this.screens.pop();
 	}
@@ -3828,6 +3872,30 @@ function ws12_MediaPlayer(object, screen) {
 	object.dom.coverArt.loader.onload = function() {
 		this.model.dom.coverArt.style.backgroundImage = 'url("'+this.model.coverArt+'")';
 		this.model.dom.coverArt.style.opacity = '0.3';
+	}
+	
+	// Create our menu
+	object.dom.menu = document.createElement('div');
+	object.dom.menu.model = object;
+	ws12.addClass(object.dom.menu,'menu');
+	object.dom.appendChild(object.dom.menu);
+	object.dom.menu.onclick = function() {
+		ws12.playTouchSound();
+		if (this.model.onmenuclick) {
+			this.model.onmenuclick();
+		}
+	}
+	object.dom.menu.ontouchstart = function() {
+		this.style.backgroundColor = ws12.config.brandColor;
+	}
+	object.dom.menu.ontouchend = function() {
+		this.style.backgroundColor = '';
+	}
+	object.dom.menu.ontouchcancel = object.dom.ontouchend;
+	if (!ws12.isMobileDevice()) {
+		object.dom.menu.onmousedown = object.dom.menu.ontouchstart;
+		object.dom.menu.onmouseup = object.dom.menu.ontouchend;
+		object.dom.menu.onmouseleave = object.dom.menu.ontouchend;
 	}
 	
 	// Create our controls area
@@ -5837,23 +5905,144 @@ function ws12_TitleBar(object, screen) {
 
 ws12_TitleBar.prototype = new ws12_CoreComponent();
 function ws12_WedgeTemperature(object, data) {
-	ws12_CoreWedgeScreen.call(this, object);
+	ws12_CoreWedgeScreen.call(this, object, data);
 	ws12.addClass(object.dom,'ws12-wedge-temperature');
+	
+	// Set our max and min
+	object._max = 85;
+	object._min = 55;
+	
+	// Create our temperature box
+	object.dom.box = document.createElement('div');
+	ws12.addClass(object.dom.box,'box');
+	object.dom.wedge.appendChild(object.dom.box);
+	
+	var dom,
+		degrees = object._degrees;
+	if (object._isRightToLeft != true) {
+		degrees = '-' + degrees;
+	}
+	object.dom.box.style['-webkit-transform'] = 'rotate('+degrees+'deg)'
 		
+	// Increase Temperature
+	object._increaseTemperature = function() {
+		if (this.temperature < this._max) {
+			this.setTemperature(this.temperature + 1);
+			if (this.onchange) {
+				this.onchange();
+			}
+		}
+	}
+	object._increaseTemperature = object._increaseTemperature.bind(object);	
+		
+	// Decrease Temperature
+	object._decreaseTemperature = function() {
+		if (this.temperature > this._min) {
+			this.setTemperature(this.temperature - 1);
+			if (this.onchange) {
+				this.onchange();
+			}
+		}
+	}
+	object._decreaseTemperature = object._decreaseTemperature.bind(object);	
+		
+	// Create the up button
+	object._upButton = {direction: 'up', onclick: object._increaseTemperature};
+	dom = new ws12_WedgeTemperatureButton(object._upButton, object);
+	object.dom.box.appendChild(dom);
+	
+	// Create the down button
+	object._downButton = {direction: 'down', onclick: object._decreaseTemperature};
+	dom = new ws12_WedgeTemperatureButton(object._downButton, object);
+	object.dom.box.appendChild(dom);
+	
+	// Create the temperature display area
+	object.dom.temperature = document.createElement('div');
+	ws12.addClass(object.dom.temperature, 'temperature');
+	object.dom.box.appendChild(object.dom.temperature);
+	
+	// Set the temperature
+	object.setTemperature = function(value) {
+		this.temperature = value;
+		this.dom.temperature.textContent = value;
+	}
+	object.setTemperature = object.setTemperature.bind(object);
+	
+	// Set our temperature if defined
+	if (object.temperature) {
+		object.setTemperature(object.temperature);
+	}
 	return object.dom;
 }
 
 ws12_WedgeTemperature.prototype = new ws12_CoreWedgeScreen();
 
 
+function ws12_WedgeTemperatureButton(object, screen) {
+	ws12_CoreComponent.call(this, object, screen);
+	ws12.addClass(object.dom,'button');
+	
+	// Set the side of the display
+	if (object.direction != undefined) {
+		ws12.addClass(object.dom,object.direction);
+	} else {
+		ws12.addClass(object.dom,'up');
+	}
+	
+	// Add our arrow
+	object.dom.arrow = document.createElement('div');
+	ws12.addClass(object.dom.arrow,'arrow');
+	object.dom.appendChild(object.dom.arrow);
+	
+	// Handle our clicks
+	object.dom.onclick = function() {
+		ws12.playTouchSound();
+		if (this.model.onclick) {
+			this.model.onclick();
+		}
+	}
+	object.dom.ontouchstart = function() {
+		this.style.opacity = '0.5';
+	}
+	object.dom.ontouchend = function() {
+		this.style.opacity = '';
+	}
+	object.dom.ontouchcancel = object.dom.ontouchend;
+	if (!ws12.isMobileDevice()) {
+		object.dom.onmousedown = object.dom.ontouchstart;
+		object.dom.onmouseup = object.dom.ontouchend;
+		object.dom.onmouseleave = object.dom.ontouchend;
+	}
+	
+	return object.dom;
+}
+
+ws12_WedgeTemperatureButton.prototype = new ws12_CoreComponent();
 function ws12_WindowPane(object, data) {
-	ws12_CoreScreen.call(this, object);
+	ws12_CoreScreen.call(this, object, data);
 	
 	if (object) {
 		ws12.addClass(object.dom,'ws12-window-pane');
 		
 		// Set our width to that of our parent
 		object.dom.style.width = object.container.dom.offsetWidth + 'px';
+		
+		if (object.backCaption) {
+			object.dom.backBar = document.createElement('div');
+			ws12.addClass(object.dom.backBar,'back-bar');
+			ws12.addClass(object.dom,'has-back');
+			object.dom.backBar.style.borderBottomColor = ws12.config.brandColor;
+			object.dom.appendChild(object.dom.backBar);
+			object.dom.backCaption = document.createElement('span');
+			object.dom.backCaption.textContent = object.backCaption;
+			object.dom.backCaption.model = object;
+			ws12.addClass(object.dom.backCaption,'caption');
+			object.dom.backBar.appendChild(object.dom.backCaption);
+			object.dom.backCaption.onclick = function() {
+				ws12.playTouchSound();
+				this.model.container.pop();
+			}
+		}
 		
 		// Create our content div for the controls
 		object.dom.contentDiv = document.createElement('div');
@@ -5886,10 +6075,11 @@ function ws12_WindowPane(object, data) {
 			   so we will want to hide the previously displayed screen in the stack */
 			var container = this.container;
 			if (container.screens.length > 1) {
-				container.screens[container.screens.length - 2].dom.style.display = 'none';
+				container.screens[container.screens.length - 2].dom.style.visibility = 'hidden';
 			}
 		}
 		object._initialize = object._initialize.bind(object);
+		
 		
 		return object.dom;
 	}

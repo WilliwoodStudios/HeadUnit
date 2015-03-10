@@ -3,6 +3,8 @@ function paneZeroToSixty() {
 	
 	this.menuImgClass = 'ws12-icon-head-unit-zero-to-sixty';
 	
+	this.backCaption = 'Back';
+	
 	this.content = [
 		{
 			component: ws12.TileGroup,
