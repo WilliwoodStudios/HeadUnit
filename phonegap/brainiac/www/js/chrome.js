@@ -1,10 +1,10 @@
 function screenChrome() {
 	this.disableAnimation = true;
 	this.component = ws12.HeadUnitChrome;
-	this.homeWindowPane = paneMenu;
+	this.homeWindowPane = 'apps/core.mainmenu/index.html';
 	this.secondaryWindowPane = paneMediaPlayer;
 	this.hvac = {
-		visible: false,
+		visible: true,
 		driver: {
 			temperature: {
 				value: 75,
@@ -46,7 +46,6 @@ function screenChrome() {
 	
 	this.onshow = function() {
 		if (window.innerHeight > 700) {
-			this.hvac.setVisible(true);
 			// Set our temperature change listeners
 			ws12.eventBroker.addEventListener(ws12.EventType.ONDRIVERTEMPCHANGE, this.ondrivertempchange, this);
 			ws12.eventBroker.addEventListener(ws12.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);

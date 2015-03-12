@@ -1,0 +1,38 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+		
+        <!-- UI Toolkit -->
+		<script type="text/javascript" src="../../js/ws12.js"></script>
+		<link rel="stylesheet" type="text/css" href="../../css/ws12.css"></link>
+		
+		<!-- App Code -->
+		<script type="text/javascript" src="js/menu.js"></script>
+		
+		<!-- viewport -->
+		<meta name="viewport" content="initial-scale=1.0,user-scalable=no">
+
+		<script>
+			
+			
+			function onDeviceReady() {
+				// Initialize
+				var config = {inHeadUnit: true, tileFontColor: '#FFFFFF'};
+				if (window.innerWidth > window.innerHeight) {
+					config.brandColor = '#23A084'; // Jeep Color					
+				}
+				ws12.init(mainMenu,config);	
+			}
+			
+			// Initialize our toolkit
+			window.onload = function() {
+				onDeviceReady();
+			}
+			
+			
+		</script>
+    </head>
+    <body style="background-color:black">
+    </body>
+</html>

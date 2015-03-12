@@ -1,4 +1,4 @@
-function paneMenu() {
+function mainMenu() {
 	this.component = ws12.WindowPane;
 	
 	this.disableAnimation = true;
@@ -32,7 +32,7 @@ function paneMenu() {
 					caption: 'data logger',
 					imgClass: 'ws12-icon-head-unit-logging',
 					onclick: function() {
-						this.screen.container.push(paneLoggingMenu);
+						ws12.openApp('apps/core.datalogger/index.html');
 					}
 				},
 				{

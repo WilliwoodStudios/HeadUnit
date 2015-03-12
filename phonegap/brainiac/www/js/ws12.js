@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.2511*/
+/* ws12 VERSION: 1.0.0.2576*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -35,6 +35,8 @@ var ws12 = {
 	color_GREAT: '#A3D525',
 	
 	// Component Definitions
+	WindowPane: {},
+	AppContainer: {},
 	Browser: {},
 	Map: {},
 	MediaPlayer: {},
@@ -279,6 +281,23 @@ var ws12 = {
 		}
 	},
 	
+	// Open up a new app
+	openApp: function(path) {
+		// If we are in an app window then ask the parent to open the new app
+		if (window.location !== window.parent.location) {
+			window.parent.ws12.openApp(path);
+			return;
+		} 
+		if (this.screens.length == 0) return;
+		var chrome = this.screens[0];
+		// Create the app viewer for the app path
+		var app = function() {
+			this.component = ws12.AppContainer;
+		};
+		app.prototype.src = path;
+		// Open the app
+		chrome._primaryWindow.push(app);
+	},
 	
 	// Push a new screen onto the stack
 	push: function(screen, data) {
@@ -297,6 +316,8 @@ var ws12 = {
 				dom = new ws12_HeadUnitChrome(screen, data);
 			} else if (screen.component == ws12.WedgeTemperature) {
 				dom = new ws12_WedgeTemperature(screen, data);
+			} else if (screen.component == ws12.WindowPane) {
+				dom = new ws12_WindowPane(screen, data);
 			}
 			ws12.screens.push(screen);
 			dom.style['z-index'] = ws12.screens.length+1;
@@ -394,6 +415,50 @@ Function.prototype.bind = function(object){
     return fn.apply(object, arguments); 
   }; 
 }; 
+function ws12_AppContainer(object, data) {
+	ws12_CoreScreen.call(this, object, data);
+	
+	if (object) {
+		ws12.addClass(object.dom,'ws12-app-container');
+		
+		// Set the width
+		object.dom.style.width = (object.width == undefined) ? window.innerWidth + 'px' : object.width + 'px';
+
+		// Create our content div for the controls
+		object.dom.contentDiv = document.createElement('div');
+		ws12.addClass(object.dom.contentDiv, 'inner');
+		object.dom.appendChild(object.dom.contentDiv);
+		
+		// Delay the visibilty so we don't get a white flash
+		object._delayedVisibility = function(screen, data) {
+			this.dom.iframe.style.visibility = 'visible';
+		}
+		object._delayedVisibility = object._delayedVisibility.bind(object);
+		
+		// Make the iframe area visible on load
+		object._iframeLoad = function(screen, data) {
+			setTimeout(this._delayedVisibility, 500);
+		}
+		object._iframeLoad = object._iframeLoad.bind(object);
+		
+		// Create our iframe for the app
+		object.dom.iframe = document.createElement('iframe');
+		object.dom.contentDiv.appendChild(object.dom.iframe);
+		object.dom.iframe.onload = object._iframeLoad;
+		
+		// This function fires when this App Container has been successfully displayed
+		object._initialize = function(screen, data) {	
+			this.dom.iframe.src = this.src;
+		}
+		object._initialize = object._initialize.bind(object);
+
+		return object.dom;
+	}
+}
+
+ws12_AppContainer.prototype = new ws12_CoreScreen();
+
+
 function ws12_BrowserButton(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom,'button');
@@ -2109,17 +2174,32 @@ function ws12_HeadUnitChrome(object, data) {
 		
 		// Get our home window pane
 		if (object.homeWindowPane) {
+			// Create the app viewer for the defined home pane
+			var app = function() {
+				this.component = ws12.AppContainer;
+				this.disableAnimation = true;
+			};
+			app.prototype.src = object.homeWindowPane;
+			
 			// We open on another thread so that the root HeadUnitChrome has been inserted into the DOM
 			setTimeout(function() {
-				object._primaryWindow.push(object.homeWindowPane);
+				app.prototype.width = object._primaryWindow.dom.offsetWidth;
+				object._primaryWindow.push(app);
 			},0);
 		}
 		
 		// Get our secondary window pane
 		if (object.secondaryWindowPane && (object.isDualView == true)) {
+			// Create the app viewer for the defined secondary pane
+			var app = function() {
+				this.component = ws12.AppContainer;
+				this.disableAnimation = true;
+			};
+			app.prototype.src = object.secondaryWindowPane;
 			// We open on another thread so that the root HeadUnitChrome has been inserted into the DOM
 			setTimeout(function() {
-				object._secondaryWindow.push(object.secondaryWindowPane);
+				app.prototype.width = object._secondaryWindow.dom.offsetWidth;
+				object._secondaryWindow.push(app);
 			},0);
 		}
 		
@@ -2670,7 +2750,6 @@ function ws12_Window(object, screen) {
 	ws12_CoreComponent.call(this, object, screen);
 	ws12.addClass(object.dom,'ws12-window');
 	
-	
 	object.screens = [];
 	
 	// Push a screen into this window
@@ -2678,7 +2757,14 @@ function ws12_Window(object, screen) {
 		screen = new screen();
 		screen.container = this;
 		screen.chrome = this.parent;
-		var dom = new ws12_WindowPane(screen, data);
+		if (screen.component == ws12.AppContainer) {
+			if (!screen.width) {
+				screen.width = this.dom.offsetWidth;
+			}
+			var dom = new ws12_AppContainer(screen, data);
+		} else {
+			return;
+		}
 		this.screens.push(screen);
 		// See if we have an icon to set
 		if (screen.menuImgClass) {
@@ -6025,7 +6111,7 @@ function ws12_WindowPane(object, data) {
 		ws12.addClass(object.dom,'ws12-window-pane');
 		
 		// Set our width to that of our parent
-		object.dom.style.width = object.container.dom.offsetWidth + 'px';
+		object.dom.style.width = window.innerWidth + 'px';
 		
 		if (object.backCaption) {
 			object.dom.backBar = document.createElement('div');
@@ -6070,16 +6156,15 @@ function ws12_WindowPane(object, data) {
 		object._onwindowpaneresize = object._onwindowpaneresize.bind(object);
 		
 		// Handle Any internal initialization
-		object._initialize = function(screen, data) {
-			/* This function fires when this WindowPane has been successfully displayed
-			   so we will want to hide the previously displayed screen in the stack */
-			var container = this.container;
-			if (container.screens.length > 1) {
-				container.screens[container.screens.length - 2].dom.style.visibility = 'hidden';
+	/*	object._initialize = function(screen, data) {
+			// This function fires when this WindowPane has been successfully displayed
+			 //  so we will want to hide the previously displayed screen in the stack 
+			if (ws12.screens.length > 1) {
+				ws12.screens[ws12.screens.length - 2].dom.style.visibility = 'hidden';
 			}
 		}
 		object._initialize = object._initialize.bind(object);
-		
+		*/
 		
 		return object.dom;
 	}

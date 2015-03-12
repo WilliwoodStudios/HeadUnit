@@ -1,5 +1,7 @@
-function paneLoggingMenu() {
+function mainMenu() {
 	this.component = ws12.WindowPane;
+	
+	this.disableAnimation = true;
 	
 	this.menuImgClass = 'ws12-icon-head-unit-logging';
 	
@@ -17,7 +19,8 @@ function paneLoggingMenu() {
 					caption: '0-60',
 					imgClass: 'ws12-icon-head-unit-zero-to-sixty',
 					onclick: function() {
-						this.screen.container.push(paneZeroToSixty);
+						console.log('zero to sixty');
+						ws12.push(zeroToSixty);
 					}
 				},
 				{

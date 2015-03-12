@@ -1,4 +1,4 @@
-function paneZeroToSixty() {
+function zeroToSixty() {
 	this.component = ws12.WindowPane;
 	
 	this.menuImgClass = 'ws12-icon-head-unit-zero-to-sixty';
