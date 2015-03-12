@@ -1,30 +1,28 @@
 function zeroToSixty() {
-	this.component = ws12.WindowPane;
-	
-	this.menuImgClass = 'ws12-icon-head-unit-zero-to-sixty';
-	
+	this.component = $ui.WindowPane;
+
 	this.backCaption = 'Back';
 	
 	this.content = [
 		{
-			component: ws12.TileGroup,
+			component: $ui.TileGroup,
 			tiles: [
 				{
-					component: ws12.TileZeroToSixty,
+					component: $ui.TileZeroToSixty,
 					provider: {
 						id: 'zeroToSixtyProvider',
 						property: 'zeroToSixty'
 					}
 				},
 				{
-					component: ws12.TileZeroToSixtyHistory,
+					component: $ui.TileZeroToSixtyHistory,
 					provider: {
 						id: 'zeroToSixtyProvider',
 						property: 'zeroToSixtyHistory'
 					}
 				},
 				{
-					component: ws12.TileRecord,
+					component: $ui.TileRecord,
 					id: 'recordTile',
 					caption: 'Record 0-60 Time',
 					countdown: true,
@@ -36,8 +34,8 @@ function zeroToSixty() {
 						audioManager.playSoundEffect(SoundEffect.HORN);
 						// Fake out reaching 60 mph in 4.9 seconds
 						window.setTimeout(function() {
-							var systemEvent = new SystemEvent(ws12.EventType.ONSPEEDCHANGE, {speed: 60});
-							ws12.eventBroker.raiseEvent(systemEvent);
+							var systemEvent = new SystemEvent($ui.EventType.ONSPEEDCHANGE, {speed: 60});
+							$ui.eventBroker.raiseEvent(systemEvent);
 						},4900);
 					},
 					oncountdown: function() {
@@ -45,13 +43,13 @@ function zeroToSixty() {
 					}
 				},
 				{
-					component: ws12.TileTimer,
+					component: $ui.TileTimer,
 					id: 'timerTile'
 				}
 			],
 			attachedObjects: [
 				{
-					component: ws12.DataProvider,
+					component: $ui.DataProvider,
 					id: 'zeroToSixtyProvider'
 				}
 			]
@@ -74,7 +72,7 @@ function zeroToSixty() {
 		// Populate the data provider
 		this.zeroToSixtyProvider.setData(data); 
 		// Set our speed change listener
-		ws12.eventBroker.addEventListener(ws12.EventType.ONSPEEDCHANGE, this.onspeedchange, this);
+		$ui.eventBroker.addEventListener($ui.EventType.ONSPEEDCHANGE, this.onspeedchange, this);
 	};
 	
 	// Handle any speed change events

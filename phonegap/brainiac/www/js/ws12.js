@@ -1,4 +1,4 @@
-/* ws12 VERSION: 1.0.0.2576*/
+/* ws12 VERSION: 1.0.0.2605*/
 
 var ws12 = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -282,21 +282,53 @@ var ws12 = {
 	},
 	
 	// Open up a new app
-	openApp: function(path) {
+	openApp: function(identifier) {
 		// If we are in an app window then ask the parent to open the new app
 		if (window.location !== window.parent.location) {
-			window.parent.ws12.openApp(path);
+			window.parent.ws12.openApp(identifier);
 			return;
 		} 
 		if (this.screens.length == 0) return;
-		var chrome = this.screens[0];
-		// Create the app viewer for the app path
-		var app = function() {
-			this.component = ws12.AppContainer;
-		};
-		app.prototype.src = path;
-		// Open the app
-		chrome._primaryWindow.push(app);
+		// Retrieve our manifest
+		var xhr = new XMLHttpRequest(),
+			manifestPath = 'apps/' + identifier+ '/manifest.json';
+		xhr.chrome = this.screens[0];
+		xhr.identifier = identifier;
+		// Open the manifest	
+		xhr.onreadystatechange = function () {
+			/* On readyState is 4, Determine if the request was successful or not. */
+			if(this.readyState == 4) {
+				if (this.status == 200) {
+					try {
+						var appPath = 'apps/' + this.identifier +'/',
+							manifest = JSON.parse(this.responseText);
+					} catch (ex) {
+						console.log('JSON Parsing Error: ' + ex + ' : ' + this.identifier);
+						return;
+					}
+					if (manifest.content == undefined) {
+						console.log('Undefined "content" for manifest: ' + this.identifier);
+						return;
+					}
+					// Create the app viewer for the app path
+					var app = function() {
+						this.component = ws12.AppContainer;
+					};
+					// Get our information for this app
+					app.prototype.src = appPath + manifest.content;
+					if (manifest.icon) {
+						app.prototype.icon = appPath + manifest.icon;
+					}
+					if (manifest.iconSplash) {
+						app.prototype.iconSplash = appPath + manifest.iconSplash;
+					}
+					// Open the app
+					this.chrome._primaryWindow.push(app);
+				} 
+			}
+		}
+		xhr.open('GET', manifestPath, true);
+		xhr.send();
 	},
 	
 	// Push a new screen onto the stack
@@ -428,6 +460,9 @@ function ws12_AppContainer(object, data) {
 		object.dom.contentDiv = document.createElement('div');
 		ws12.addClass(object.dom.contentDiv, 'inner');
 		object.dom.appendChild(object.dom.contentDiv);
+		if (object.iconSplash) {
+			object.dom.contentDiv.style.backgroundImage = 'url("' + object.iconSplash + '")';
+		}
 		
 		// Delay the visibilty so we don't get a white flash
 		object._delayedVisibility = function(screen, data) {
@@ -784,6 +819,9 @@ function ws12_CircleMenuItem(object, screen) {
 	// Set the image
 	if (object.imgClass) {
 		ws12.addClass(object.dom.inner,object.imgClass);
+	}
+	if (object.icon) {
+		object.dom.inner.style.backgroundImage = 'url("'+ object.icon + '")';
 	}
 	
 	// Add our caption
@@ -2174,17 +2212,9 @@ function ws12_HeadUnitChrome(object, data) {
 		
 		// Get our home window pane
 		if (object.homeWindowPane) {
-			// Create the app viewer for the defined home pane
-			var app = function() {
-				this.component = ws12.AppContainer;
-				this.disableAnimation = true;
-			};
-			app.prototype.src = object.homeWindowPane;
-			
 			// We open on another thread so that the root HeadUnitChrome has been inserted into the DOM
 			setTimeout(function() {
-				app.prototype.width = object._primaryWindow.dom.offsetWidth;
-				object._primaryWindow.push(app);
+				ws12.openApp(object.homeWindowPane);
 			},0);
 		}
 		
@@ -2598,16 +2628,13 @@ function ws12_NavigationBar(object, screen) {
 	object._getHeight = object._getHeight.bind(object);
 	
 	// Assign the middle navigation menu to the window pane provided
-	object._setNavigationMenu = function(windowPane) {
-		if (this.dom.centerBtn._windowPane == windowPane) return;
+	object._setNavigationMenu = function(appContainer) {
+		if (this.dom.centerBtn._appContainer == appContainer) return;
 		this.dom.centerBtn._hidden = false;
 		this.dom.centerBtn.style.opacity = '1.0';
-		if (this._menuImgClass != undefined) {
-			ws12.removeClass(this.dom.centerBtn,this._menuImgClass);
-		}
+		this.dom.centerBtn._appContainer = appContainer;
 		// Set our icon
-		this._menuImgClass = windowPane.menuImgClass;
-		ws12.addClass(this.dom.centerBtn, windowPane.menuImgClass); 
+		this.dom.centerBtn.style.backgroundImage = 'url("'+appContainer.icon+'")'; 
 		this.dom.centerLine.style.opacity = '0';
 		this._selectedButton = this.dom.centerBtn
 		if (this._chrome.isDualView) {
@@ -2767,7 +2794,7 @@ function ws12_Window(object, screen) {
 		}
 		this.screens.push(screen);
 		// See if we have an icon to set
-		if (screen.menuImgClass) {
+		if (screen.icon) {
 			this.screen._setNavigationMenu(screen); // this.screen is the HeadUnitChrome
 		}
 		this.dom.appendChild(dom);

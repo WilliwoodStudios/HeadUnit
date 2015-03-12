@@ -1,8 +1,8 @@
 function screenChrome() {
 	this.disableAnimation = true;
 	this.component = ws12.HeadUnitChrome;
-	this.homeWindowPane = 'apps/core.mainmenu/index.html';
-	this.secondaryWindowPane = paneMediaPlayer;
+	this.homeWindowPane = 'core.mainmenu';
+	//this.secondaryWindowPane = 'core.media.player';
 	this.hvac = {
 		visible: true,
 		driver: {
