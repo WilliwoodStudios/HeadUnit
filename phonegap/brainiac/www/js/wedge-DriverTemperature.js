@@ -1,16 +1,16 @@
 function wedgeDriverTemperature() {
-	this.component = ws12.WedgeTemperature;
+	this.component = $ui.WedgeTemperature;
 	
-	this.direction = ws12.WedgeScreen.LEFT;
+	this.direction = $ui.WedgeTemperature.LEFT;
 	
 	this.backButton = {
-		icon: 'ws12-icon-head-unit-temperature',
+		icon: 'emulator-icon-head-unit-temperature',
 		caption: 'Done'
 	};
 	
 	this.onchange = function() {
-		var systemEvent = new SystemEvent(ws12.EventType.ONDRIVERTEMPCHANGE, {temperature: this.temperature});
-		ws12.eventBroker.raiseEvent(systemEvent);
+		//var systemEvent = new SystemEvent($ui.EventType.ONDRIVERTEMPCHANGE, {temperature: this.temperature});
+		//$ui.eventBroker.raiseEvent(systemEvent);
 	};
 	
 	this.onshow = function(data) {

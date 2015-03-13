@@ -1,7 +1,8 @@
-/* $ui VERSION: 1.0.0.9*/
+/* $ui VERSION: 1.0.0.31*/
 
 var $ui = {
 	screens : [],  // Holds all of the current screens on the stack;
+	definitions: [],
 	config: {
 		inHeadUnit: false,
 		brandColor: '#D94646',
@@ -13,8 +14,6 @@ var $ui = {
 	inScreenTransition: false,
 	// Global events
 	ONSHOW: 'onshow',
-	ONHIDE: 'onhide',
-	ONLOAD: 'onload',
 	// System events
 	EventType: {
 		ONSUBSCRIBE: 'onsubscribe',
@@ -32,64 +31,55 @@ var $ui = {
 	color_GOOD: '#FDBF2F',
 	color_GREAT: '#A3D525',
 	// Component Definitions
-	TitleBar: {},
-	WindowPane: {},
-	TileGroup: {},
+	ExtensionType: {
+		CONTROL: 'control',
+		SCREEN: 'screen',
+		LISTITEM: 'listitem'
+	},
 	Tile: {
 		WIDE: 'wide',
 		TALL: 'tall'
 	},
-	TileDonutChart: {},
-	DataProvider: {
-		ERR_OFFLINE: -5000,
-		ERR_INVALID_JSON: -5001
-	},
-	Spinner: {
-		LARGE: 'large',
-		MEDIUM: 'medium',
-		SMALL: 'small',
-		TINY: 'tiny'
-	},
-	CircleMenu: {},
-	SplitView: {},
-	List: {},
-	ListEvent: {},
-	GenericListItem: {
-		ONCLICK: 'onclick'
-	},
-	TabbedPane: {},
-	Tab: {},
-	SegmentedControl: {},
-	DockLayout: {
-		TOP: 'top',
-		BOTTOM: 'bottom'
-	},
-
-	init: function(object) {	
 	
+	init: function(object, config) {	
 		// Inherit any config overrides
 		if (window.location !== window.parent.location) {
-			var config = window.parent.ws12.config;
-			this.config.inHeadUnit = config.inHeadUnit;
-			this.config.brandColor = config.brandColor;
-			this.config.tileFontColor = config.tileFontColor;
-			this.config.audioManager = config.audioManager;
-		} 
-	
-		
-		if (config != undefined) {
-			
+			if (window.parent.$emulator) {
+				var config = window.parent.$emulator.config;
+				this.config.inHeadUnit = config.inHeadUnit;
+				this.config.brandColor = config.brandColor;
+				this.config.tileFontColor = config.tileFontColor;
+				this.config.audioManager = config.audioManager;
+			}
+		} else {
+			this.config.inHeadUnit = (config.inHeadUnit) ? config.inHeadUnit : this.config.inHeadUnit;
+			this.config.brandColor = (config.brandColor) ? config.brandColor : this.config.brandColor;
+			this.config.tileFontColor = (config.tileFontColor) ? config.tileFontColor : this.config.tileFontColor;
+			this.config.audioManager = (config.audioManager) ? config.audioManager : this.config.audioManger;
 		}
-		
 		// before push the initial page, add blockAllTapEvent function to body
 		document.body.blockAllTapEvent = function(e) {
 			e.preventDefault();
 			e.stopPropagation();
 		}
 		document.body.blockAllTapEvent = document.body.blockAllTapEvent.bind(document.body);
+		// Add our control extensions
+		this.addExtension({name:'DockLayout',definition:{TOP: 'top',BOTTOM: 'bottom'},constructor:$ui_DockLayout});
+		this.addExtension({name:'SegmentedControl',definition:{},constructor:$ui_SegmentedControl});
+		this.addExtension({name:'Tab',definition:{},constructor:$ui_Tab});
+		this.addExtension({name:'TabbedPane',definition:{},constructor:$ui_TabbedPane});
+		this.addExtension({name:'List',definition:{},constructor:$ui_List});
+		this.addExtension({name:'SplitView',definition:{},constructor:$ui_SplitView});
+		this.addExtension({name:'Spinner',definition:{LARGE: 'large', MEDIUM: 'medium', SMALL: 'small', TINY: 'tiny'},constructor:$ui_Spinner});
+		this.addExtension({name:'TileGroup',definition:{},constructor:$ui_TileGroup});
+		this.addExtension({name:'DataProvider',definition:{ERR_OFFLINE: -5000,ERR_INVALID_JSON: -5001},constructor:$ui_DataProvider});
+		this.addExtension({name:'CircleMenu',definition:{},constructor:$ui_CircleMenu});
+		// Add our screen extensions
+		this.addExtension({name:'WindowPane',definition:{},type:$ui.ExtensionType.SCREEN, constructor:$ui_WindowPane});
+		// Add our list item extensions
+		this.addExtension({name:'GenericListItem',definition:{ONCLICK:'onclick'},type:$ui.ExtensionType.LISTITEM, constructor:$ui_GenericListItem});
 		// Push the first screen
 		this.push(object);
-		
 		// Handle window resize
 		window.addEventListener('resize', function() {
 			// Fire any screen resize events needed
@@ -109,6 +99,39 @@ var $ui = {
 		}, false);
 	},
 	
+	// Adds a new control to the framework
+	addExtension: function(extension) {
+		if (extension.type == undefined) extension.type = $ui.ExtensionType.CONTROL;
+		if (extension.definition == undefined) extension.definition = {};
+		$ui[extension.name] = extension.definition;
+		extension.component = $ui[extension.name];
+		if (extension.type == undefined) extension.type = $ui.ExtensionType.CONTROL;
+		this.definitions.push(extension);
+	},	
+	
+	// Create any control that is passed in and return the DOM
+	createControl: function(control, screen) {
+		if (control == undefined) {
+			throw '$ui.createControl: "control" is not defined';
+		} 
+		if (screen == undefined) {
+			throw '$ui.createControl: "screen" is not defined';
+		}
+		// Find and create the component
+		var i,
+			extension,
+			controlDom = undefined;
+		for (i = 0; i < this.definitions.length; i++) {
+			extension = this.definitions[i];
+			if (extension.type != $ui.ExtensionType.CONTROL) continue;
+			if (extension.component == control.component) {
+				controlDom = new extension.constructor(control,screen);
+				break;
+			}
+		}
+		return controlDom;
+	},
+	
 	// Play the touch sound
 	playTouchSound: function() {
 		if (this.config.audioManager) {
@@ -121,52 +144,6 @@ var $ui = {
 		var check = false;
 		(function(a,b){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|android|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4)))check = true})(navigator.userAgent||navigator.vendor||window.opera);
 		return check;
-	},
-	
-	
-	// Create any control that is passed in and return the DOM
-	createControl: function(control, screen) {
-		if (control == undefined) {
-			throw '$ui.createControl: "control" is not defined';
-		} 
-		if (screen == undefined) {
-			throw '$ui.createControl: "screen" is not defined';
-		}
-		// Now create the component
-		var controlDom = undefined;
-		switch (control.component) {
-			case $ui.DataProvider:
-				controlDom = new $ui_DataProvider(control, screen);
-				break;
-			case $ui.TileGroup:
-				controlDom = new $ui_TileGroup(control, screen);
-				break;
-			case $ui.Spinner:
-				controlDom = new $ui_Spinner(control,screen);
-				break;
-			case $ui.CircleMenu:
-				controlDom = new $ui_CircleMenu(control,screen);
-				break;
-			case $ui.SplitView:
-				controlDom = new $ui_SplitView(control,screen);
-				break;
-			case $ui.List:
-				controlDom = new $ui_List(control,screen);
-				break;
-			case $ui.TabbedPane:
-				controlDom = new $ui_TabbedPane(control,screen);
-				break;
-			case $ui.Tab:
-				controlDom = new $ui_Tab(control,screen);
-				break;
-			case $ui.SegmentedControl:
-				controlDom = new $ui_SegmentedControl(control,screen);
-				break;
-			case $ui.DockLayout:
-				controlDom = new $ui_DockLayout(control,screen);
-				break;
-		}
-		return controlDom;
 	},
 
 	blockAllTapEvent: function(value) {
@@ -184,50 +161,11 @@ var $ui = {
 	openApp: function(identifier) {
 		// If we are in an app window then ask the parent to open the new app
 		if (window.location !== window.parent.location) {
-			window.parent.ws12.openApp(identifier);
+			if (window.parent.$emulator) {
+				window.parent.$emulator.openApp(identifier);
+			}
 			return;
 		} 
-		if (this.screens.length == 0) return;
-		// Retrieve our manifest
-		var xhr = new XMLHttpRequest(),
-			manifestPath = 'apps/' + identifier+ '/manifest.json';
-		xhr.chrome = this.screens[0];
-		xhr.identifier = identifier;
-		// Open the manifest	
-		xhr.onreadystatechange = function () {
-			/* On readyState is 4, Determine if the request was successful or not. */
-			if(this.readyState == 4) {
-				if (this.status == 200) {
-					try {
-						var appPath = 'apps/' + this.identifier +'/',
-							manifest = JSON.parse(this.responseText);
-					} catch (ex) {
-						console.log('JSON Parsing Error: ' + ex + ' : ' + this.identifier);
-						return;
-					}
-					if (manifest.content == undefined) {
-						console.log('Undefined "content" for manifest: ' + this.identifier);
-						return;
-					}
-					// Create the app viewer for the app path
-					var app = function() {
-						this.component = $ui.AppContainer;
-					};
-					// Get our information for this app
-					app.prototype.src = appPath + manifest.content;
-					if (manifest.icon) {
-						app.prototype.icon = appPath + manifest.icon;
-					}
-					if (manifest.iconSplash) {
-						app.prototype.iconSplash = appPath + manifest.iconSplash;
-					}
-					// Open the app
-					this.chrome._primaryWindow.push(app);
-				} 
-			}
-		}
-		xhr.open('GET', manifestPath, true);
-		xhr.send();
 	},
 	
 	// Push a new screen onto the stack
@@ -238,12 +176,19 @@ var $ui = {
 			}, 100);
 		} else {
 			screen = new screen();
-			var dom;
-			if (screen.component == $ui.WindowPane)  {
-				dom = new $ui_WindowPane(screen, data);
-			} else {
-				return;
+			// Find and create the screen
+			var dom,
+				i,
+				extension;
+			for (i = 0; i < this.definitions.length; i++) {
+				extension = this.definitions[i];
+				if (extension.type != $ui.ExtensionType.SCREEN) continue;
+				if (extension.component == screen.component) {
+					dom = new extension.constructor(screen,data);
+					break;
+				}
 			}
+			if (dom == undefined) return;
 			$ui.blockAllTapEvent(true);
 			$ui.inScreenTransition = true;
 			$ui.screens.push(screen);
@@ -1567,16 +1512,19 @@ function $ui_List(object, screen) {
 	
 	// Create the DOM for a list item depending on the list type
 	object._createItemDom = function(item) {
-		var itemDom = undefined;
-		switch (this.style) {
-			case $ui.GenericListItem:
-				itemDom = new $ui_GenericListItem(item, this.screen);
+		// Find and create the list item
+		var i,
+			extension,
+			dom;
+		for (i = 0; i < this.definitions.length; i++) {
+			extension = this.definitions[i];
+			if (extension.type != $ui.ExtensionType.LISTITEM) continue;
+			if (extension.component == control.component) {
+				dom = new extension.constructor(item,this.screen);
 				break;
-			case $ui.PhoneLogListItem:
-				itemDom = new $ui_PhoneLogListItem(item, this.screen);
-				break;
+			}
 		}
-		return itemDom;
+		return dom;
 	}
 	object._createItemDom = object._createItemDom.bind(object);
 	

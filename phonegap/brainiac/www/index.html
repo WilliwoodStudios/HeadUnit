@@ -3,9 +3,13 @@
         <meta charset="utf-8" />
         <meta name="format-detection" content="telephone=no" />
 		
+		<!-- UI Toolkit -->
+		<script type="text/javascript" src="$ui/$ui.js"></script>
+		<link rel="stylesheet" type="text/css" href="$ui/$ui.css"></link>
+		
         <!-- UI Toolkit -->
-		<script type="text/javascript" src="js/ws12.js"></script>
-		<link rel="stylesheet" type="text/css" href="css/ws12.css"></link>
+		<script type="text/javascript" src="js/emulator.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/emulator.css"></link>
 		
 		<!-- Chrome Code -->
 		<script type="text/javascript" src="js/audioManager.js"></script>
@@ -20,27 +24,27 @@
         <title>Brainiac</title>
 		
 		<script>
-			var audioManager;
-			
 			function onDeviceReady() {
-				// Initialize
-				audioManager = new AudioManager({demo: true});
-				var config = {inHeadUnit: true, tileFontColor: '#FFFFFF', audioManager: audioManager};
+				// Register our custom controls/screens
+				$ui.addExtension({name:'HeadUnitChrome',definition:{Fans : {AUTO: 0}},type:$ui.ExtensionType.SCREEN,constructor:emulator_HeadUnitChrome});
+				$ui.addExtension({name:'WedgeTemperature',definition:{RIGHT:'right',LEFT:'left'},type:$ui.ExtensionType.SCREEN,constructor:emulator_WedgeTemperature});
+				$ui.addExtension({name:'AppContainer',definition:{},type:$ui.ExtensionType.SCREEN,constructor:emulator_AppContainer});
+				
+				// Initialize the emulator object
+				var audioManager = new AudioManager({demo: true}),
+					config = {inHeadUnit: true, tileFontColor: '#FFFFFF', audioManager: audioManager};
 				if (window.innerWidth > window.innerHeight) {
 					config.brandColor = '#23A084'; // Jeep Color
-					//config.brandColor = '#d26900'; // BMW Color
-					
 				}
-				ws12.init(screenChrome,config);	
+				$emulator.init(screenChrome, config);
+				
+				// Initialize UI
+				$ui.init(screenChrome,config);	
 			}
-			
 			// Initialize our toolkit
 			window.onload = function() {
-				//document.addEventListener('deviceready', onDeviceReady, false);
 				onDeviceReady();
 			}
-			
-			
 		</script>
     </head>
     <body>
