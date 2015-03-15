@@ -1,4 +1,4 @@
-/* $ui VERSION: 1.0.0.49*/
+/* $ui VERSION: 1.0.0.50*/
 
 var $system;
 
@@ -212,7 +212,7 @@ var $ui = {
 		document.body.removeChild(screen.dom);
 		// Remove any global event listeners
 		if ($system) {
-			system.removeEventListenersForScreen(screen);
+			$system.removeEventListenersForScreen(screen);
 		}
 		screen.destroy();
 		// Handle finalization

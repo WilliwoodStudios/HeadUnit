@@ -46,8 +46,8 @@ function screenChrome() {
 	this.onshow = function() {
 		if (window.innerHeight > 700) {
 			// Set our temperature change listeners
-			//$ui.eventBroker.addEventListener($ui.EventType.ONDRIVERTEMPCHANGE, this.ondrivertempchange, this);
-			//$ui.eventBroker.addEventListener($ui.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);
+			$system.addEventListener($system.EventType.ONDRIVERTEMPCHANGE, this.ondrivertempchange, this);
+			$system.addEventListener($system.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);
 		}
 	}
 	

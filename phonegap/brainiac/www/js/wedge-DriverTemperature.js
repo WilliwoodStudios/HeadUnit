@@ -9,8 +9,8 @@ function wedgeDriverTemperature() {
 	};
 	
 	this.onchange = function() {
-		//var systemEvent = new SystemEvent($ui.EventType.ONDRIVERTEMPCHANGE, {temperature: this.temperature});
-		//$ui.eventBroker.raiseEvent(systemEvent);
+		var systemEvent = new $system.SystemEvent($system.EventType.ONDRIVERTEMPCHANGE, {temperature: this.temperature});
+		$emulator.raiseEvent(systemEvent);
 	};
 	
 	this.onshow = function(data) {
