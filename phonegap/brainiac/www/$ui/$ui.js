@@ -1,4 +1,4 @@
-/* $ui VERSION: 1.0.0.35*/
+/* $ui VERSION: 1.0.0.36*/
 
 var $ui = {
 	screens : [],  // Holds all of the current screens on the stack;
