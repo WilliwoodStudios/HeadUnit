@@ -1,20 +1,9 @@
-/* $emulator VERSION: 1.0.0.2654*/
+/* $emulator VERSION: 1.0.0.2658*/
 
 var $emulator = {
-	config: {
-		inHeadUnit: false,
-		brandColor: '#D94646',
-		tileFontColor: '#747474',
-		celsius: false,
-		audioManager: undefined
-	},
-	
-	init: function(chrome, config) {
+	// Initialize the emulator
+	init: function(chrome) {
 		$emulator.chrome = chrome;
-		this.config.inHeadUnit = (config.inHeadUnit) ? config.inHeadUnit : this.config.inHeadUnit;
-		this.config.brandColor = (config.brandColor) ? config.brandColor : this.config.brandColor;
-		this.config.tileFontColor = (config.tileFontColor) ? config.tileFontColor : this.config.tileFontColor;
-		this.config.audioManager = (config.audioManager) ? config.audioManager : this.config.audioManger;
 		// Register our custom controls/screens
 		$ui.addExtension({name:'HeadUnitChrome',definition:{Fans : {AUTO: 0}},type:$ui.ExtensionType.SCREEN,constructor:emulator_HeadUnitChrome});
 		$ui.addExtension({name:'WedgeTemperature',definition:{RIGHT:'right',LEFT:'left'},type:$ui.ExtensionType.SCREEN,constructor:emulator_WedgeTemperature});
@@ -64,6 +53,22 @@ var $emulator = {
 		}
 		xhr.open('GET', manifestPath, true);
 		xhr.send();
+	},
+	
+	// Raise an event
+	raiseEvent: function(systemEvent) {
+		var i,
+			item;
+		for (i = 0; i < $system._events.length; i++) {
+			item = $system._events[i];
+			if (item.eventType == systemEvent.eventType) {
+				try {
+					item.callback(systemEvent.data)
+				} catch (e) {
+					console.log('ERROR: raiseEvent - ' + e.message);
+				}
+			}
+		}
 	}
 	
 }
@@ -1006,7 +1011,7 @@ function emulator_Window(object, screen) {
 				screen._onbeforepop();
 			}
 			// Remove any global event listeners
-			$ui.eventBroker.removeEventListenersForScreen(screen);
+			$system.removeEventListenersForScreen(screen);
 		}
 		setTimeout(this._popToHome, 0);
 	}
@@ -1080,7 +1085,7 @@ function emulator_Window(object, screen) {
 		screen.dom.style.display = 'none';
 		this.dom.removeChild(screen.dom);
 		// Remove any global event listeners
-		$ui.eventBroker.removeEventListenersForScreen(screen);
+		$system.removeEventListenersForScreen(screen);
 		screen.destroy();
 		this.screens.pop();
 	}

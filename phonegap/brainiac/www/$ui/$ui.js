@@ -1,4 +1,6 @@
-/* $ui VERSION: 1.0.0.36*/
+/* $ui VERSION: 1.0.0.49*/
+
+var $system;
 
 var $ui = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -8,22 +10,10 @@ var $ui = {
 		brandColor: '#D94646',
 		tileFontColor: '#747474',
 		celsius: false,
-		audioManager: undefined
 	},
-	eventBroker: new SystemEventBroker(),
 	inScreenTransition: false,
 	// Global events
 	ONSHOW: 'onshow',
-	// System events
-	EventType: {
-		ONSUBSCRIBE: 'onsubscribe',
-		ONUNSUBSCRIBE: 'onunsubscribe',
-		ONSPEEDCHANGE: 'onspeedchange',
-		ONFUELCHANGE: 'onfuelchange',
-		ONRPMCHANGE: 'onrpmchange',
-		ONDRIVERTEMPCHANGE: 'ondrivertempchange',
-		ONPASSENGERTEMPCHANGE: 'onpassengertempchange'
-	},
 	// Graph Colors
 	color_LIGHT: '#F0F0F0',
 	color_DARK: '#747474',
@@ -41,21 +31,22 @@ var $ui = {
 		TALL: 'tall'
 	},
 	
-	init: function(object, config) {	
-		// Inherit any config overrides
-		if (window.location !== window.parent.location) {
-			if (window.parent.$emulator) {
-				var config = window.parent.$emulator.config;
-				this.config.inHeadUnit = config.inHeadUnit;
-				this.config.brandColor = config.brandColor;
-				this.config.tileFontColor = config.tileFontColor;
-				this.config.audioManager = config.audioManager;
+	init: function(object) {	
+		// Find the $system object
+		if (!$system) {
+			if (window.location !== window.parent.location) {
+				// We are in the emulator
+				$system = window.parent.$system;
+			} else {
+				console.log('WARNING: $system not defined');
 			}
-		} else {
-			this.config.inHeadUnit = (config.inHeadUnit) ? config.inHeadUnit : this.config.inHeadUnit;
-			this.config.brandColor = (config.brandColor) ? config.brandColor : this.config.brandColor;
-			this.config.tileFontColor = (config.tileFontColor) ? config.tileFontColor : this.config.tileFontColor;
-			this.config.audioManager = (config.audioManager) ? config.audioManager : this.config.audioManger;
+		} 
+		// If $system object exists, read it's configuration
+		if ($system) {
+			var config = window.parent.$system.config;
+			this.config.inHeadUnit = config.inHeadUnit;
+			this.config.brandColor = config.brandColor;
+			this.config.tileFontColor = config.tileFontColor;
 		}
 		// before push the initial page, add blockAllTapEvent function to body
 		document.body.blockAllTapEvent = function(e) {
@@ -134,8 +125,8 @@ var $ui = {
 	
 	// Play the touch sound
 	playTouchSound: function() {
-		if (this.config.audioManager) {
-			//this.config.audioManager.playSoundEffect(SoundEffect.TOUCH);
+		if ($system && $system.audioManager) {
+			$system.audioManager.playSoundEffect($system.SoundEffect.TOUCH);
 		}
 	},
 	
@@ -220,7 +211,9 @@ var $ui = {
 		screen.dom.style.display = 'none';
 		document.body.removeChild(screen.dom);
 		// Remove any global event listeners
-		this.eventBroker.removeEventListenersForScreen(screen);
+		if ($system) {
+			system.removeEventListenersForScreen(screen);
+		}
 		screen.destroy();
 		// Handle finalization
 		$ui.inScreenTransition = false;
@@ -1281,91 +1274,6 @@ function $ui_DockLayout(object, screen) {
 }
 
 $ui_DockLayout.prototype = new $ui_CoreComponent();
-// Create a system event object
-function SystemEvent(eventType, data) {
-	var object = {
-		eventType: eventType,
-		data: data
-	}
-	return object;
-}
-
-// The event broker manages event subscription and distribution
-function SystemEventBroker() {
-	var object = {
-		list: []
-	};
-	
-	// Add an event listener
-	object.addEventListener = function(eventType, callback, screen) {
-		var item = {
-			eventType: eventType,
-			callback: callback,
-			screen: screen
-		}
-		this.list.push(item);
-		// Raise the onsubscribe event
-		var systemEvent = new SystemEvent($ui.EventType.ONSUBSCRIBE, {eventType: eventType});
-		this.raiseEvent(systemEvent);
-	}
-	object.addEventListener = object.addEventListener.bind(object);
-	
-	// Remove an event listener
-	object.removeEventListener = function(eventType, callback) {
-		var i,
-			item,
-			systemEvent;
-		for (i = 0; i < this.list.length; i++) {
-			item = this.list[i];
-			if (item.eventType == eventType && item.callback == callback) {
-				this.list.splice(i, 1);
-				// Raise the onunsubscribe event
-				systemEvent = new SystemEvent($ui.EventType.ONUNSUBSCRIBE, {eventType: eventType});
-				this.raiseEvent(systemEvent);
-				return;
-			}
-		}
-	}
-	object.removeEventListener = object.removeEventListener.bind(object);
-	
-	// Remove all event listeners for a screen
-	object.removeEventListenersForScreen = function(screen) {
-		var i,
-			item,
-			systemEvent;
-		for (i = this.list.length - 1; i >= 0; i--) {
-			if (this.list.length === 0) return;
-			item = this.list[i];
-			if (item && (item.screen == screen)) {
-				this.list.splice(i, 1);
-				// Raise the onunsubscribe event
-				systemEvent = new SystemEvent($ui.EventType.ONUNSUBSCRIBE, {eventType: item.eventType});
-				this.raiseEvent(systemEvent);
-			}
-		}
-	}
-	object.removeEventListenersForScreen = object.removeEventListenersForScreen.bind(object);
-	
-	// Raise an event
-	object.raiseEvent = function(systemEvent) {
-		var i,
-			item;
-		for (i = 0; i < this.list.length; i++) {
-			item = this.list[i];
-			if (item.eventType == systemEvent.eventType) {
-				try {
-					item.callback(systemEvent.data)
-				} catch (e) {
-					console.log('ERROR: raiseEvent - ' + e.message);
-				}
-			}
-		}
-	}
-	object.raiseEvent = object.raiseEvent.bind(object);
-	
-	return object;
-}
-
 function $ui_GenericListItem(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom, 'ui-generic-list-item');

@@ -31,15 +31,17 @@ function zeroToSixty() {
 					},
 					onrecord: function() {
 						this.screen.timerTile.start();
-						audioManager.playSoundEffect(SoundEffect.HORN);
+						$system.audioManager.playSoundEffect($system.SoundEffect.HORN);
 						// Fake out reaching 60 mph in 4.9 seconds
 						window.setTimeout(function() {
-							var systemEvent = new SystemEvent($ui.EventType.ONSPEEDCHANGE, {speed: 60});
-							$ui.eventBroker.raiseEvent(systemEvent);
+							if (window.parent.$emulator) {
+								var systemEvent = new $system.SystemEvent($system.EventType.ONSPEEDCHANGE, {speed: 60});
+								window.parent.$emulator.raiseEvent(systemEvent);
+							}
 						},4900);
 					},
 					oncountdown: function() {
-						audioManager.playSoundEffect(SoundEffect.BLIP);
+						$system.audioManager.playSoundEffect($system.SoundEffect.BLIP);
 					}
 				},
 				{
@@ -72,7 +74,7 @@ function zeroToSixty() {
 		// Populate the data provider
 		this.zeroToSixtyProvider.setData(data); 
 		// Set our speed change listener
-		$ui.eventBroker.addEventListener($ui.EventType.ONSPEEDCHANGE, this.onspeedchange, this);
+		$system.addEventListener($system.EventType.ONSPEEDCHANGE, this.onspeedchange, this);
 	};
 	
 	// Handle any speed change events
