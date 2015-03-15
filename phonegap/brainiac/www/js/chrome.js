@@ -1,7 +1,7 @@
 function screenChrome() {
 	this.disableAnimation = true;
 	this.component = $ui.HeadUnitChrome;
-	this.homeWindowPane = 'core.mainmenu';
+	this.homeWindowPane = mainMenu;
 	//this.secondaryWindowPane = 'core.media.player';
 	this.hvac = {
 		visible: true,

@@ -1,4 +1,4 @@
-/* emulator VERSION: 1.0.0.2639*/
+/* $emulator VERSION: 1.0.0.2654*/
 
 var $emulator = {
 	config: {
@@ -15,6 +15,10 @@ var $emulator = {
 		this.config.brandColor = (config.brandColor) ? config.brandColor : this.config.brandColor;
 		this.config.tileFontColor = (config.tileFontColor) ? config.tileFontColor : this.config.tileFontColor;
 		this.config.audioManager = (config.audioManager) ? config.audioManager : this.config.audioManger;
+		// Register our custom controls/screens
+		$ui.addExtension({name:'HeadUnitChrome',definition:{Fans : {AUTO: 0}},type:$ui.ExtensionType.SCREEN,constructor:emulator_HeadUnitChrome});
+		$ui.addExtension({name:'WedgeTemperature',definition:{RIGHT:'right',LEFT:'left'},type:$ui.ExtensionType.SCREEN,constructor:emulator_WedgeTemperature});
+		$ui.addExtension({name:'AppContainer',definition:{},type:$ui.ExtensionType.SCREEN,constructor:emulator_AppContainer});
 	},
 	
 	// Open up a new app
@@ -282,8 +286,9 @@ function emulator_HeadUnitChrome(object, data) {
 		// Get our home window pane
 		if (object.homeWindowPane) {
 			// We open on another thread so that the root HeadUnitChrome has been inserted into the DOM
-			setTimeout(function() {
-				$emulator.openApp(object.homeWindowPane);
+			setTimeout(function(){
+				//object.homeWindowPane.width = object._primaryWindow.dom.offsetWidth;
+				object._primaryWindow.push(object.homeWindowPane);
 			},0);
 		}
 		
@@ -965,11 +970,13 @@ function emulator_Window(object, screen) {
 		screen = new screen();
 		screen.container = this;
 		screen.chrome = this.parent;
+		if (!screen.width) {
+			screen.width = this.dom.offsetWidth;
+		}
 		if (screen.component == $ui.AppContainer) {
-			if (!screen.width) {
-				screen.width = this.dom.offsetWidth;
-			}
 			var dom = new emulator_AppContainer(screen, data);
+		} else if (screen.component == $ui.WindowPane) {
+			var dom = new $ui_WindowPane(screen, data);
 		} else {
 			return;
 		}

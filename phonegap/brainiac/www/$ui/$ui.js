@@ -1,4 +1,4 @@
-/* $ui VERSION: 1.0.0.31*/
+/* $ui VERSION: 1.0.0.35*/
 
 var $ui = {
 	screens : [],  // Holds all of the current screens on the stack;
@@ -155,17 +155,6 @@ var $ui = {
 			document.body.removeEventListener('click', document.body.blockAllTapEvent, true);
 			document.body.removeEventListener('touchstart', document.body.blockAllTapEvent, true);
 		}
-	},
-	
-	// Open up a new app
-	openApp: function(identifier) {
-		// If we are in an app window then ask the parent to open the new app
-		if (window.location !== window.parent.location) {
-			if (window.parent.$emulator) {
-				window.parent.$emulator.openApp(identifier);
-			}
-			return;
-		} 
 	},
 	
 	// Push a new screen onto the stack
@@ -1516,10 +1505,10 @@ function $ui_List(object, screen) {
 		var i,
 			extension,
 			dom;
-		for (i = 0; i < this.definitions.length; i++) {
-			extension = this.definitions[i];
+		for (i = 0; i < $ui.definitions.length; i++) {
+			extension = $ui.definitions[i];
 			if (extension.type != $ui.ExtensionType.LISTITEM) continue;
-			if (extension.component == control.component) {
+			if (extension.component == this.style) {
 				dom = new extension.constructor(item,this.screen);
 				break;
 			}
@@ -2121,7 +2110,11 @@ function $ui_WindowPane(object, data) {
 		$ui.addClass(object.dom,'ui-window-pane');
 		
 		// Set our width to that of our parent
-		object.dom.style.width = window.innerWidth + 'px';
+		if (!object.width) {
+			object.dom.style.width = window.innerWidth + 'px'; // default
+		} else {
+			object.dom.style.width = object.width + 'px';
+		}
 		
 		if (object.backCaption) {
 			object.dom.backBar = document.createElement('div');

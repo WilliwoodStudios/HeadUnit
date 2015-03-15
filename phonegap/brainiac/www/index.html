@@ -8,10 +8,11 @@
 		<link rel="stylesheet" type="text/css" href="$ui/$ui.css"></link>
 		
         <!-- UI Toolkit -->
-		<script type="text/javascript" src="js/emulator.js"></script>
-		<link rel="stylesheet" type="text/css" href="css/emulator.css"></link>
+		<script type="text/javascript" src="$emulator/$emulator.js"></script>
+		<link rel="stylesheet" type="text/css" href="$emulator/$emulator.css"></link>
 		
 		<!-- Chrome Code -->
+		<script type="text/javascript" src="js/mainMenu.js"></script>
 		<script type="text/javascript" src="js/audioManager.js"></script>
 		<script type="text/javascript" src="js/chrome.js"></script>
 		<script type="text/javascript" src="js/wedge-DriverTemperature.js"></script>
@@ -25,11 +26,6 @@
 		
 		<script>
 			function onDeviceReady() {
-				// Register our custom controls/screens
-				$ui.addExtension({name:'HeadUnitChrome',definition:{Fans : {AUTO: 0}},type:$ui.ExtensionType.SCREEN,constructor:emulator_HeadUnitChrome});
-				$ui.addExtension({name:'WedgeTemperature',definition:{RIGHT:'right',LEFT:'left'},type:$ui.ExtensionType.SCREEN,constructor:emulator_WedgeTemperature});
-				$ui.addExtension({name:'AppContainer',definition:{},type:$ui.ExtensionType.SCREEN,constructor:emulator_AppContainer});
-				
 				// Initialize the emulator object
 				var audioManager = new AudioManager({demo: true}),
 					config = {inHeadUnit: true, tileFontColor: '#FFFFFF', audioManager: audioManager};
@@ -37,7 +33,7 @@
 					config.brandColor = '#23A084'; // Jeep Color
 				}
 				$emulator.init(screenChrome, config);
-				
+				console.log('here');
 				// Initialize UI
 				$ui.init(screenChrome,config);	
 			}
