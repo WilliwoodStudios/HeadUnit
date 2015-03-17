@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.2752*/
+/* $emulator VERSION: 1.0.0.2754*/
 .no-select {
   user-select: none;
   -webkit-user-select: none;
@@ -157,19 +157,12 @@
   background-size: cover;
   background-repeat: no-repeat;
 }
-.emulator-head-unit-chrome > .hvac > .defrost-button.off {
-  background-blend-mode: hard-light;
-}
-.emulator-head-unit-chrome > .hvac > .defrost-button.off.selected {
-  background-blend-mode: none;
-}
 /************************** SEATS **************************/
 .emulator-head-unit-chrome > .hvac > .seat {
   position: absolute;
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;
-  background-blend-mode: hard-light;
   height: 120px;
   width: 120px;
   opacity: 0;

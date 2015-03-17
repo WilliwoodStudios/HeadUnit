@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.2752*/
+/* $emulator VERSION: 1.0.0.2754*/
 
 var $emulator = {
 	
@@ -308,7 +308,6 @@ emulator_DefrostButton.prototype = new $ui_CoreComponent();
 function emulator_FansButton(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'fans');
-	object.dom.style.backgroundColor = $ui.config.brandColor;
 	
 	// Set defaults
 	if (object.value == undefined) {
@@ -324,11 +323,9 @@ function emulator_FansButton(object, screen) {
 	}
 	object.dom.ontouchstart = function() {
 		$ui.addClass(this,'selected');
-		this.style.backgroundColor = '';
 	}
 	object.dom.ontouchend = function() {
 		$ui.removeClass(this,'selected');
-		this.style.backgroundColor = $ui.config.brandColor;
 	}
 	object.dom.ontouchcancel = object.dom.ontouchend;
 	if (!$ui.isMobileDevice()) {
@@ -495,7 +492,6 @@ emulator_HVACBar.prototype = new $ui_CoreComponent();
 function emulator_SeatButton(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'seat');
-	object.dom.style.backgroundColor = $ui.config.brandColor;
 	
 	// Set the side of the display
 	if (object.side != undefined) {
@@ -521,11 +517,9 @@ function emulator_SeatButton(object, screen) {
 	}
 	object.dom.ontouchstart = function() {
 		$ui.addClass(this,'selected');
-		this.style.backgroundColor = '';
 	}
 	object.dom.ontouchend = function() {
 		$ui.removeClass(this,'selected');
-		this.style.backgroundColor = $ui.config.brandColor;
 	}
 	object.dom.ontouchcancel = object.dom.ontouchend;
 	if (!$ui.isMobileDevice()) {

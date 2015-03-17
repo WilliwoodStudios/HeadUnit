@@ -17,7 +17,7 @@ function mainMenu() {
 				property: 'items'
 			},
 			onclick: function(item) {
-				$core.openApp(item.appIdentifier);
+				$core.openApp(item);
 			}
 		}
 	];
@@ -32,6 +32,8 @@ function mainMenu() {
 				// Only show the media menu option in landscape
 				for (i = 0; i < this.data.items.length; i++) {
 					item = this.data.items[i];
+					item.caption = item.name;
+					item.img = 'apps/'+item.id+'/'+item.icon;
 					if ($system.isClientDevice == true) {
 						item.visible = (item.availability.driversDevice == true);
 					} else if (item.appIdentifier == 'core.media.player') {

@@ -47,48 +47,22 @@ var $core = {
 	},
 	
 	// Open up a new app
-	openApp: function(identifier) {
+	openApp: function(manifest) {
 		if ($ui.screens.length == 0) return;
-		// Retrieve our manifest
-		var xhr = new XMLHttpRequest(),
-			manifestPath = 'apps/' + identifier+ '/manifest.json';
-		xhr.chrome = $ui.screens[0];
-		xhr.identifier = identifier;
-		// Open the manifest	
-		xhr.onreadystatechange = function () {
-			/* On readyState is 4, Determine if the request was successful or not. */
-			if(this.readyState == 4) {
-				if (this.status == 200) {
-					try {
-						var appPath = 'apps/' + this.identifier +'/',
-							manifest = JSON.parse(this.responseText);
-					} catch (ex) {
-						console.log('JSON Parsing Error: ' + ex + ' : ' + this.identifier);
-						return;
-					}
-					if (manifest.content == undefined) {
-						console.log('Undefined "content" for manifest: ' + this.identifier);
-						return;
-					}
-					// Create the app viewer for the app path
-					var app = function() {
-						this.component = $ui.AppContainer;
-					};
-					// Get our information for this app
-					app.prototype.src = appPath + manifest.content;
-					if (manifest.icon) {
-						app.prototype.icon = appPath + manifest.icon;
-					}
-					if (manifest.iconSplash) {
-						app.prototype.iconSplash = appPath + manifest.iconSplash;
-					}
-					// Open the app
-					this.chrome._primaryWindow.push(app);
-				} 
-			}
+		// Create the app viewer for the app path
+		var chrome = $ui.screens[0],
+			app = function() {this.component = $ui.AppContainer;},
+			appPath = 'apps/' + manifest.id +'/';
+		// Get our information for this app
+		app.prototype.src = appPath + manifest.content;
+		if (manifest.icon) {
+			app.prototype.icon = appPath + manifest.icon;
 		}
-		xhr.open('GET', manifestPath, true);
-		xhr.send();
+		if (manifest.iconSplash) {
+			app.prototype.iconSplash = appPath + manifest.iconSplash;
+		}
+		// Open the app
+		chrome._primaryWindow.push(app);
 	},
 	
 	// Refreshes the list of installed apps and when finished calls the callback function

@@ -1,54 +1,66 @@
 {
 	"apps": [
 		{
-			"caption": "music",
-			"img": "apps/core.media.player/img/icon-128x128.png",
-			"appIdentifier": "core.media.player",
+			"id": "core.media.player",
+			"name": "music",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
 			"availability": {
 				"headUnit": true,
 				"driversDevice": true
 			}
 		},
 		{
-			"caption": "maps",
-			"img": "apps/core.maps/img/icon-128x128.png",
-			"appIdentifier": "core.maps",
+			"id": "core.maps",
+			"name": "maps",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
 			"availability": {
 				"headUnit": true,
 				"driversDevice": false
 			}
 		},
 		{
-			"caption": "data logger",
-			"img": "apps/core.datalogger/img/icon-128x128.png",
-			"appIdentifier": "core.datalogger",
+			"id": "core.datalogger",
+			"name": "data logger",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
 			"availability": {
 				"headUnit": true,
 				"driversDevice": true
 			}
 		},
 		{
-			"caption": "phone",
-			"img": "apps/core.phone/img/icon-128x128.png",
-			"appIdentifier": "core.phone",
+			"id": "core.phone",
+			"name": "phone",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
 			"availability": {
 				"headUnit": true,
 				"driversDevice": false
 			}
 		},
 		{
-			"caption": "dashboard",
-			"img": "apps/core.dashboard/img/icon-128x128.png",
-			"appIdentifier": "core.dashboard",
+			"id": "core.dashboard",
+			"name": "dashboard",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
 			"availability": {
 				"headUnit": true,
 				"driversDevice": true
 			}
 		},				
 		{
-			"caption": "browser",
-			"img": "apps/core.browser/img/icon-128x128.png",
-			"appIdentifier": "core.browser",
+			"id":"core.browser",
+			"name": "browser",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
 			"availability": {
 				"headUnit": true,
 				"driversDevice": false

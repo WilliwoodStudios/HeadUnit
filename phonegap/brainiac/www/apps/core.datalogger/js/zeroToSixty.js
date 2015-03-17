@@ -34,9 +34,9 @@ function zeroToSixty() {
 						$system.audio.playSoundEffect($system.SoundEffect.HORN);
 						// Fake out reaching 60 mph in 4.9 seconds
 						window.setTimeout(function() {
-							if (window.parent.$emulator) {
+							if (window.parent.$core) {
 								var systemEvent = new $system.SystemEvent($system.EventType.ONSPEEDCHANGE, {speed: 60});
-								window.parent.$emulator.raiseEvent(systemEvent);
+								window.parent.$core.raiseEvent(systemEvent);
 							}
 						},4900);
 					},

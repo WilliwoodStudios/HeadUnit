@@ -1,4 +1,5 @@
 {
+	"id": "core.maps",
 	"name": "maps",
 	"icon": "img/icon-128x128.png",
 	"iconSplash": "img/icon-256x256.png",
