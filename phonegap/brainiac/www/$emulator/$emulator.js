@@ -1,6 +1,7 @@
-/* $emulator VERSION: 1.0.0.2658*/
+/* $emulator VERSION: 1.0.0.2674*/
 
 var $emulator = {
+	apps: [],
 	// Initialize the emulator
 	init: function(chrome) {
 		$emulator.chrome = chrome;
@@ -69,6 +70,42 @@ var $emulator = {
 				}
 			}
 		}
+	},
+	
+	// Refreshes the list of installed apps and when finished calls the callback function
+	refreshAppsList: function(callback) {
+		this.loadJSONFromUrl('data/data-installed-aps.json',function(data) {
+			if (data) {
+				$emulator.apps = data.apps;
+			} else {
+				$emulator.apps = [];
+			}
+			callback();
+		});
+	},
+	
+	// Public function to load the data from a JSON URL
+	loadJSONFromUrl: function(url, callback) {
+		var xhr = new XMLHttpRequest();
+		xhr.callback = callback;
+		// Handle our state changes
+		xhr.onreadystatechange = function () {
+			/* On readyState is 4, Determine if the request was successful or not. */
+			if(this.readyState == 4) {
+				if (this.status == 200) {
+					try {
+						var result = JSON.parse(this.responseText);
+					} catch (ex) {
+						console.log('$emulator.loadJSONFromUrl: ' + ex);
+						return;
+					}
+					// Load our data
+					this.callback(result);
+				} 
+			}
+		}
+		xhr.open('GET', url, true);
+		xhr.send();
 	}
 	
 }
@@ -375,9 +412,11 @@ function emulator_FansButton(object, screen) {
 	}
 	object.dom.ontouchstart = function() {
 		$ui.addClass(this,'selected');
+		this.style.backgroundColor = '';
 	}
 	object.dom.ontouchend = function() {
 		$ui.removeClass(this,'selected');
+		this.style.backgroundColor = $ui.config.brandColor;
 	}
 	object.dom.ontouchcancel = object.dom.ontouchend;
 	if (!$ui.isMobileDevice()) {
@@ -569,9 +608,11 @@ function emulator_SeatButton(object, screen) {
 	}
 	object.dom.ontouchstart = function() {
 		$ui.addClass(this,'selected');
+		this.style.backgroundColor = '';
 	}
 	object.dom.ontouchend = function() {
 		$ui.removeClass(this,'selected');
+		this.style.backgroundColor = $ui.config.brandColor;
 	}
 	object.dom.ontouchcancel = object.dom.ontouchend;
 	if (!$ui.isMobileDevice()) {
@@ -631,11 +672,9 @@ function emulator_TemperatureButton(object, screen) {
 		}
 	}
 	object.dom.ontouchstart = function() {
-		this.style.backgroundColor = $ui.config.brandColor;
 		this.style.color = 'white';
 	}
 	object.dom.ontouchend = function() {
-		this.style.backgroundColor = '';
 		this.style.color = $ui.config.brandColor;
 	}
 	object.dom.ontouchcancel = object.dom.ontouchend;

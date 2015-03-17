@@ -1,4 +1,4 @@
-/* $ui VERSION: 1.0.0.50*/
+/* $ui VERSION: 1.0.0.63*/
 
 var $system;
 
@@ -125,8 +125,8 @@ var $ui = {
 	
 	// Play the touch sound
 	playTouchSound: function() {
-		if ($system && $system.audioManager) {
-			$system.audioManager.playSoundEffect($system.SoundEffect.TOUCH);
+		if ($system && $system.audio) {
+			$system.audio.playSoundEffect($system.SoundEffect.TOUCH);
 		}
 	},
 	
@@ -194,8 +194,9 @@ var $ui = {
 			var screen = $ui.screens[$ui.screens.length-1];
 			if (screen.disableAnimation == true) {
 				$ui._removeScreen(screen);
-				
 			} else {
+				screen.dom.style['-webkit-animation-delay'] = '';
+				screen.dom.style['-webkit-animation-name'] = 'ui-pane-slide-right';
 				screen.dom.addEventListener('webkitAnimationEnd', function(e) {
 					$ui._removeScreen(this.model);
 				}, false);
@@ -355,20 +356,102 @@ function $ui_CircleMenu(object, screen) {
 	}
 	object._recalculateLayout = object._recalculateLayout.bind(object);
 	
-	// Cycle through content
-	if (object.items) {
-		var i,
-			control,
-			controlDom;
-		for (i = 0; i < object.items.length; i++) {
-			control = object.items[i];
-			control.parent = object;
-			controlDom = new $ui_CircleMenuItem(control, screen);
-			if (controlDom) {
-				object.dom.appendChild(controlDom);
-			}
+	// Private function to add a new item to the list
+	object._addItem = function(item) {
+		item.parent = this;
+		itemDom = new $ui_CircleMenuItem(item, this.screen);
+		if (itemDom) {
+			object.dom.appendChild(itemDom);
+			return true;
+		} else {
+			return false;
 		}
 	}
+	object._addItem = object._addItem.bind(object);
+	
+	// Public function to add a new item to the list
+	object.addItem = function(item) {
+		if (this._addItem(item)) {
+			this.items.push(item);
+			return true;
+		} else {
+			return false;
+		}
+		this._recalculateLayout();
+	}
+	object.addItem = object.addItem.bind(object);
+	
+	// Refresh all the items in the list
+	object.refreshItems = function(itemArray) {
+		if (itemArray == undefined) return; // No data provided
+		var i,
+			item;
+		if (this.items) {
+			// Remove all existing items first
+			for (i = this.items.length - 1; i >= 0; i--) {
+				item = this.items[i];
+				try {
+					if (item.dom) {
+						this.dom.removeChild(item.dom);
+					}
+				} catch (ex) {
+					console.log('$ui.List: ' + ex);
+				}
+				this.items.pop();
+				if (item._destroy) {
+					item._destroy();
+				}
+			}
+		}
+		this.addItemBatch(itemArray);
+	}
+	object.refreshItems = object.refreshItems.bind(object);
+	
+	// Add a batch of items to the end of a list
+	object.addItemBatch = function(itemArray) {
+		var i,
+			item;
+		if (!this.items) {
+			this.items = [];
+		}
+		// Add all new items into the list
+		for (i = 0; i < itemArray.length; i++) {
+			item = itemArray[i];
+			if (this._addItem(item)) {
+				this.items.push(item);
+			}
+		}
+		this._recalculateLayout();
+	}
+	object.addItemBatch = object.addItemBatch.bind(object);
+	
+	// Public function to insert a new item into the list
+	object.insertItem = function(item, index) {
+		item.parent = this;
+		if (index < 0) {
+			return false;
+		} else if (this.items.length == 0) {
+			this.addItem(item);
+			return true;
+		} else if (index > this.items.length - 1) {
+			this.addItem(item);
+			return true;
+		} else { // Insert it at the index
+			var existingItem = this.items[index],
+				itemDom = new $ui_CircleMenuItem(item, this.screen);
+			this.items.splice(index, 0, item);
+			this.dom.insertBefore(itemDom, existingItem.dom);
+			return true;
+		} 
+		return false;
+	}
+	object.insertItem = object.insertItem.bind(object);
+	
+	// Private function to handle provider updates
+	object._providerUpdate = function(value) {
+		this.refreshItems(value);
+	}
+	object._providerUpdate = object._providerUpdate.bind(object);
 	
 	// Handle resize of screen
 	object._onresize = function() {
@@ -376,7 +459,18 @@ function $ui_CircleMenu(object, screen) {
 	}
 	object._onresize = object._onresize.bind(object);
 	
-	setTimeout(object._onresize,0);
+	// If there is no data provider then just create the items
+	if (!object.provider) {
+		var i,
+			item,
+			itemDom;
+		for (i = 0; i < object.items.length; i++) {
+			item = object.items[i];
+			object._addItem(item);
+		}
+		// Re-calculate once the screen dimensions have been calculated
+		setTimeout(object._onresize,0); 
+	}	
 	
 	return object.dom;
 }
@@ -393,8 +487,8 @@ function $ui_CircleMenuItem(object, screen) {
 	object.dom.appendChild(object.dom.inner);
 	object.dom.inner.onclick = function() {
 		$ui.playTouchSound();
-		if (this.model.onclick) {
-			this.model.onclick();
+		if (this.model.parent.onclick) {
+			this.model.parent.onclick(this.model);
 		}
 	}
 	object.dom.inner.ontouchstart = function() {
@@ -411,11 +505,8 @@ function $ui_CircleMenuItem(object, screen) {
 	}
 	
 	// Set the image
-	if (object.imgClass) {
-		$ui.addClass(object.dom.inner,object.imgClass);
-	}
-	if (object.icon) {
-		object.dom.inner.style.backgroundImage = 'url("'+ object.icon + '")';
+	if (object.img) {
+		object.dom.inner.style.backgroundImage = 'url("'+ object.img + '")';
 	}
 	
 	// Add our caption
@@ -1117,6 +1208,9 @@ function $ui_DataProvider(object, screen){
 	object.setData = function(value) {
  		this._untouched = false;
 		this.data = value;
+		if (this.onbeforeupdate) {
+			this.onbeforeupdate();
+		}
 		this._raiseEvent();
 		if (value == undefined) return;
 		if (this.onload) {
@@ -1142,9 +1236,6 @@ function $ui_DataProvider(object, screen){
 	
 	// Public function to load the data from a JSON URL
 	object.loadFromUrl = function(url,parameters) {
-		this._untouched = false;
-		this._url = url;
-		this._parameters = parameters;
 		// Make sure we are online
 		if(navigator.onLine != true) {
 			if (this.onerror) {
@@ -1191,6 +1282,9 @@ function $ui_DataProvider(object, screen){
 	// Private function to asynchronously load the data items from a URL source
 	object._loadFromUrl = function(result) {
 		this.data = result;
+		if (this.onbeforeupdate) {
+			this.onbeforeupdate();
+		}
 		this._raiseEvent();
 		if (this.onload) {
 			this.onload();
@@ -1214,6 +1308,9 @@ function $ui_DataProvider(object, screen){
 	
 	// See if the data was pre-defined
 	if (object.data != undefined) {
+		if (object.onbeforeupdate) {
+			object.onbeforeupdate();
+		}
 		if (object.onload) {
 			object.onload();
 		}
@@ -2037,7 +2134,7 @@ function $ui_WindowPane(object, data) {
 			object.dom.backBar.appendChild(object.dom.backCaption);
 			object.dom.backCaption.onclick = function() {
 				$ui.playTouchSound();
-				this.model.container.pop();
+				$ui.pop();
 			}
 		}
 		

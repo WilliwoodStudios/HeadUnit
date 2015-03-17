@@ -23,6 +23,9 @@ function main() {
 									this.screen.tabbedPane.selectTab(this.screen.contactListTab);
 								} else {
 									this.screen.tabbedPane.selectTab(this.screen.recentCallsTab);
+									if (this.screen.callsProvider.data == undefined) {
+										$system.phone.getCallList(this.screen.updateCallsList);
+									}
 								}
 							}
 						}
@@ -61,26 +64,10 @@ function main() {
 										{
 											component: $ui.List,
 											style: $ui.PhoneLogListItem,
-											items: [
-												{
-													title: 'Anzor',
-													caption: 'Mobile: (555) 659-9874'
-												},
-												{
-													title: 'Anzor',
-													caption: 'Home: (555) 659-1212',
-													style: $ui.PhoneLogListItem.OUTGOING
-												},
-												{
-													title: '(555) 659-9874',
-													caption: 'Toronto, ON',
-												},
-												{
-													title: 'Unknown',
-													caption: 'Toronto, ON',
-													style: $ui.PhoneLogListItem.MISSED
-												}
-											]
+											provider: {
+												id: 'callsProvider',
+												property: 'calls'
+											}
 										}
 									]
 								}
@@ -93,7 +80,44 @@ function main() {
 				{
 					component: $ui.DialPad,
 					onkeypadpress: function(key) {
-						// TODO: Handle key presses
+						switch (key.caption) {
+							case '0':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE0);
+								break;
+							case '1':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE1);
+								break;
+							case '2':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE2);
+								break;
+							case '3':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE3);
+								break;
+							case '4':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE4);
+								break;
+							case '5':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE5);
+								break;
+							case '6':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE6);
+								break;
+							case '7':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE7);
+								break;
+							case '8':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE8);
+								break;
+							case '9':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE9);
+								break;
+							case '#':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE_POUND);
+								break;
+							case '*':
+								$system.audio.playSoundEffect($system.SoundEffect.TONE_ASTERIK);
+								break;
+						}
 					}
 				}
 			]
@@ -108,11 +132,27 @@ function main() {
 				this.screen.listSpinner.setVisible(false);
 				this.screen.contactList.setVisible(true);
 			}
+		},
+		{
+			component: $ui.DataProvider,
+			id: 'callsProvider'
 		}
 	];
 	
 	this.onshow = function() {
 		this.listSpinner.setVisible(true);
-		this.contactProvider.loadFromUrl('spec/data/data-contactList.json');
+		$system.contacts.getContactList(this.updateContactList);
 	}
+	
+	// Populate the contacts list provider
+	this.updateContactList = function(data) {
+		this.contactProvider.setData(data);
+	}
+	this.updateContactList = this.updateContactList.bind(this);
+	
+	// Populate the calls list provider
+	this.updateCallsList = function(data) {
+		this.callsProvider.setData(data);
+	}
+	this.updateCallsList = this.updateCallsList.bind(this);
 }

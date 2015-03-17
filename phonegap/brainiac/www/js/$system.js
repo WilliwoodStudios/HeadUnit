@@ -1,5 +1,14 @@
 var $system = {
-	audioManager: new AudioManager(),
+	audio: new AudioManager(),
+	contacts: new ContactsManager(),
+	phone: new PhoneManager(),
+	isClientDevice: screen.width < 400,
+	version: {
+		major: 1,
+		minor: 0,
+		revision: 0,
+		build: 1
+	},
 	_events: [],
 	config: {
 		inHeadUnit: true,
@@ -20,7 +29,19 @@ var $system = {
 	SoundEffect: {
 		BLIP: 0,
 		HORN: 1,
-		TOUCH: 2
+		TOUCH: 2,
+		TONE0: 3,
+		TONE1: 4,
+		TONE2: 5,
+		TONE3: 6,
+		TONE4: 7,
+		TONE5: 8,
+		TONE6: 9,
+		TONE7: 10,
+		TONE8: 11,
+		TONE9: 12,
+		TONE_POUND: 13,
+		TONE_ASTERIK: 14		
 	},
 	
 	// Initialize the system object
@@ -85,7 +106,7 @@ var $system = {
 				this._events.splice(i, 1);
 				// Raise the onunsubscribe event
 				systemEvent = new $system.SystemEvent($system.EventType.ONUNSUBSCRIBE, {eventType: item.eventType});
-				this.raiseEvent(systemEvent);
+				$emulator.raiseEvent(systemEvent);
 			}
 		}
 	}

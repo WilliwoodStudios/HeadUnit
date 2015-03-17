@@ -1,0 +1,34 @@
+{
+	"apps": [
+		{
+			"caption": "music",
+			"img": "apps/core.media.player/img/icon-128x128.png",
+			"appIdentifier": "core.media.player"
+		},
+		{
+			"caption": "maps",
+			"img": "apps/core.maps/img/icon-128x128.png",
+			"appIdentifier": "core.maps"
+		},
+		{
+			"caption": "data logger",
+			"img": "apps/core.datalogger/img/icon-128x128.png",
+			"appIdentifier": "core.datalogger"
+		},
+		{
+			"caption": "phone",
+			"img": "apps/core.phone/img/icon-128x128.png",
+			"appIdentifier": "core.phone"
+		},
+		{
+			"caption": "dashboard",
+			"img": "apps/core.dashboard/img/icon-128x128.png",
+			"appIdentifier": "core.dashboard"
+		},				
+		{
+			"caption": "browser",
+			"img": "apps/core.browser/img/icon-128x128.png",
+			"appIdentifier": "core.browser"
+		}
+	]
+}

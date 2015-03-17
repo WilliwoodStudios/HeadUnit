@@ -31,7 +31,7 @@ function zeroToSixty() {
 					},
 					onrecord: function() {
 						this.screen.timerTile.start();
-						$system.audioManager.playSoundEffect($system.SoundEffect.HORN);
+						$system.audio.playSoundEffect($system.SoundEffect.HORN);
 						// Fake out reaching 60 mph in 4.9 seconds
 						window.setTimeout(function() {
 							if (window.parent.$emulator) {
@@ -41,7 +41,7 @@ function zeroToSixty() {
 						},4900);
 					},
 					oncountdown: function() {
-						$system.audioManager.playSoundEffect($system.SoundEffect.BLIP);
+						$system.audio.playSoundEffect($system.SoundEffect.BLIP);
 					}
 				},
 				{

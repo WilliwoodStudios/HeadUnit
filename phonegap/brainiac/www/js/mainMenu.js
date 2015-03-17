@@ -12,56 +12,46 @@ function mainMenu() {
 	this.content = [
 		{
 			component: $ui.CircleMenu,
-			items: [
-				{
-					caption: 'music',
-					visible: window.innerHeight < window.innerWidth,
-					icon: '../../apps/core.media.player/img/icon-128x128.png',
-					onclick: function() {
-						$emulator.openApp('core.media.player');
-					}
-				},
-				{
-					caption: 'maps',
-					icon: '../../apps/core.maps/img/icon-128x128.png',
-					onclick: function() {
-						$emulator.openApp('core.maps');
-					}
-				},
-				{
-					caption: 'data logger',
-					icon: '../../apps/core.datalogger/img/icon-128x128.png',
-					onclick: function() {
-						$emulator.openApp('core.datalogger');
-					}
-				},
-				{
-					caption: 'phone',
-					icon: '../../apps/core.phone/img/icon-128x128.png',
-					onclick: function() {
-						$emulator.openApp('core.phone');
-					}
-				},
-				{
-					caption: 'dashboard',
-					icon: '../../apps/core.dashboard/img/icon-128x128.png',
-					onclick: function() {
-						$emulator.openApp('core.dashboard');
-					}
-				},				
-				{
-					caption: 'browser',
-					icon: '../../apps/core.browser/img/icon-128x128.png',
-					onclick: function() {
-						$emulator.openApp('core.browser');
-					}
-				}
-				
-			]
+			provider: {
+				id: 'mainMenuProvider',
+				property: 'items'
+			},
+			onclick: function(item) {
+				$emulator.openApp(item.appIdentifier);
+			}
 		}
-	
 	];
 	
+	this.attachedObjects = [
+		{
+			component: $ui.DataProvider,
+			id: 'mainMenuProvider',
+			onbeforeupdate: function() {
+				var i,
+					item;
+				// Only show the media menu option in landscape
+				for (i = 0; i < this.data.items.length; i++) {
+					item = this.data.items[i];
+					if (item.appIdentifier == 'core.media.player') {
+						item.visible = window.innerWidth > window.innerHeight;
+						break;
+					}
+				}
+			}
+		}
+	];
+	
+	// Load the menu
 	this.onshow = function() {
+		$emulator.refreshAppsList(this.onapplistrefresh);
+	};
+	
+	// Refresh the list of apps
+	this.onapplistrefresh = function() {
+		var data = {
+			items: $emulator.apps
+		}
+		this.mainMenuProvider.setData(data);
 	}
+	this.onapplistrefresh = this.onapplistrefresh.bind(this);
 }
