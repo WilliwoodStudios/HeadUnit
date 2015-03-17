@@ -3,32 +3,56 @@
 		{
 			"caption": "music",
 			"img": "apps/core.media.player/img/icon-128x128.png",
-			"appIdentifier": "core.media.player"
+			"appIdentifier": "core.media.player",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": true
+			}
 		},
 		{
 			"caption": "maps",
 			"img": "apps/core.maps/img/icon-128x128.png",
-			"appIdentifier": "core.maps"
+			"appIdentifier": "core.maps",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": false
+			}
 		},
 		{
 			"caption": "data logger",
 			"img": "apps/core.datalogger/img/icon-128x128.png",
-			"appIdentifier": "core.datalogger"
+			"appIdentifier": "core.datalogger",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": true
+			}
 		},
 		{
 			"caption": "phone",
 			"img": "apps/core.phone/img/icon-128x128.png",
-			"appIdentifier": "core.phone"
+			"appIdentifier": "core.phone",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": false
+			}
 		},
 		{
 			"caption": "dashboard",
 			"img": "apps/core.dashboard/img/icon-128x128.png",
-			"appIdentifier": "core.dashboard"
+			"appIdentifier": "core.dashboard",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": true
+			}
 		},				
 		{
 			"caption": "browser",
 			"img": "apps/core.browser/img/icon-128x128.png",
-			"appIdentifier": "core.browser"
+			"appIdentifier": "core.browser",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": false
+			}
 		}
 	]
 }

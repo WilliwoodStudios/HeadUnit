@@ -32,10 +32,11 @@ function mainMenu() {
 				// Only show the media menu option in landscape
 				for (i = 0; i < this.data.items.length; i++) {
 					item = this.data.items[i];
-					if (item.appIdentifier == 'core.media.player') {
+					if ($system.isClientDevice == true) {
+						item.visible = (item.availability.driversDevice == true);
+					} else if (item.appIdentifier == 'core.media.player') {
 						item.visible = window.innerWidth > window.innerHeight;
-						break;
-					}
+					} 
 				}
 			}
 		}
