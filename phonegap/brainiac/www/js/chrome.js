@@ -44,7 +44,7 @@ function screenChrome() {
 	};
 	
 	this.onshow = function() {
-		if (window.innerHeight > 700) {
+		if (this.hvac) {
 			// Set our temperature change listeners
 			$system.addEventListener($system.EventType.ONDRIVERTEMPCHANGE, this.ondrivertempchange, this);
 			$system.addEventListener($system.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);

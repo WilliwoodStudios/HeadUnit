@@ -1,8 +1,4 @@
 var $system = {
-	audio: new AudioManager(),
-	contacts: new ContactsManager(),
-	phone: new PhoneManager(),
-	isClientDevice: screen.width < 400,
 	version: {
 		major: 1,
 		minor: 0,
@@ -46,9 +42,15 @@ var $system = {
 	
 	// Initialize the system object
 	init: function(config) {
+		this.isClientDevice = (window.innerWidth < 400);
+		// Grab the configuration
 		this.config.inHeadUnit = (config.inHeadUnit) ? config.inHeadUnit : this.config.inHeadUnit;
 		this.config.brandColor = (config.brandColor) ? config.brandColor : this.config.brandColor;
 		this.config.tileFontColor = (config.tileFontColor) ? config.tileFontColor : this.config.tileFontColor;
+		// Create our services
+		this.audio = new AudioManager(this.isClientDevice);
+		this.contacts = new ContactsManager();
+		this.phone = new PhoneManager();
 	},
 	
 	// Create a system event object

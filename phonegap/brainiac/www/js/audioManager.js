@@ -5,7 +5,7 @@ function AudioManager() {
 	
 	// Load our sounds
 	object._sounds = {};
-	if (!$emulator.isClientDevice) {
+	if ($system.isClientDevice == false) {
 		object._sounds.BLIP = new Audio('sounds/blip.mp3');
 		object._sounds.HORN = new Audio('sounds/horn.mp3');
 		object._sounds.TOUCH = new Audio('sounds/Touch.ogg');
@@ -26,7 +26,7 @@ function AudioManager() {
 	
 	// Play's the sound based on the SoundEffect value
 	object.playSoundEffect = function(soundEffect) {
-		if ($emulator.isClientDevice == true) return;
+		if ($system.isClientDevice == true) return;
 		switch(soundEffect) {
 			case $system.SoundEffect.BLIP:
 				this._sounds.BLIP.play();

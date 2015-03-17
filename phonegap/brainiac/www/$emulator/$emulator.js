@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.2674*/
+/* $emulator VERSION: 1.0.0.2747*/
 
 var $emulator = {
 	apps: [],
@@ -219,10 +219,18 @@ function emulator_CoreWedgeScreen(object, data) {
 		$ui.addClass(object.dom.back.textDiv, 'back-text');
 		object.dom.back.appendChild(object.dom.back.textDiv);
 		if (object._isRightToLeft == true) {
-			object.dom.back.style.right = (window.innerWidth > window.innerHeight) ? Math.floor(buttonWidth/3)+ 'px' : '20px';
+			if ($system && ($system.isClientDevice == true)) {
+				object.dom.back.style.right = '10px';
+			} else {
+				object.dom.back.style.right = (window.innerWidth > window.innerHeight) ? Math.floor(buttonWidth/3)+ 'px' : '20px';
+			}
 			$ui.addClass(object.dom.back.textDiv,'right-to-left');
 		} else {
-			object.dom.back.style.left = (window.innerWidth > window.innerHeight) ? Math.floor(buttonWidth/3)+ 'px' : '20px';
+			if ($system && ($system.isClientDevice == true)) {
+				object.dom.back.style.left = '10px';
+			} else {
+				object.dom.back.style.left = (window.innerWidth > window.innerHeight) ? Math.floor(buttonWidth/3)+ 'px' : '20px';
+			}
 		}
 		
 		// See if we have back button customization
@@ -258,7 +266,7 @@ function emulator_CoreWedgeScreen(object, data) {
 		// Trigger our animations
 		window.setTimeout(function() {object.dom.wedge.style.opacity = '1.0';},0);
 		window.setTimeout(function() { 
-			object.dom.back.style.transform = 'translateY(-'+(buttonWidth + buttonBottom) + 'px)';
+			object.dom.back.style['-webkit-transform'] = 'translateY(-'+(buttonWidth + buttonBottom) + 'px)';
 			object.dom.back.addEventListener('webkitTransitionEnd', function(e) {
 					this.textDiv.style.opacity = '1.0';
 				}, false);
@@ -279,17 +287,19 @@ function emulator_HeadUnitChrome(object, data) {
 		$ui.addClass(object.dom,'emulator-head-unit-chrome');
 
 		// Determine if we are a stacked dual view
-		object.isDualView = window.innerHeight > window.innerWidth;
-		if (object.isDualView == true) {
+		object.isDualView = (window.innerHeight > window.innerWidth) && ($system.isClientDevice == false);
+		if ((object.isDualView == true) || ($system.isClientDevice == true)) {
 			$ui.addClass(object.dom,'portrait');
 		}
+		
 		// Recalculate the layout of the different views
 		object._recalculateLayout = function() {			
 			// Make adjustments for HVAC
 			if (this.hvac) {
 				if (this.hvac.visible == true) {
-					if (this.isDualView == false) {
+					if ((this.isDualView == false) || ($system.isClientDevice == true)) {
 						this._primaryWindow.dom.style.bottom = this.hvac._getHeight()+'px';
+						this._primaryWindow.dom.style.height = 'inherit';
 					} else if (this._secondaryWindow) {
 						this._secondaryWindow.dom.style.bottom = this.hvac._getHeight()+'px';
 					}
@@ -560,6 +570,7 @@ function emulator_HVACBar(object, screen) {
 	
 	// Get the height of the control
 	object._getHeight = function() {
+		if ($system.isClientDevice == true) return 60;
 		return 120;
 	}
 	object._getHeight = object._getHeight.bind(object);
@@ -761,7 +772,7 @@ function emulator_NavigationBar(object, screen) {
 	object.dom.homeBtn.onclick = function() {
 		if (this.model._selectedButton == this) return;
 		this.model._selectedButton = this;
-		if (this.model._chrome.isDualView) {
+		if (this.model._chrome.isDualView || ($system.isClientDevice == true)) {
 			this.model.dom.dot.style['-webkit-transform'] = 'translateX(0px)';
 		} else {
 			this.model.dom.dot.style['-webkit-transform'] = 'translateY(0px)';
@@ -783,7 +794,7 @@ function emulator_NavigationBar(object, screen) {
 		if (this._hidden === true) return;
 		if (this.model._selectedButton == this) return;
 		this.model._selectedButton = this;
-		if (this.model._chrome.isDualView) {
+		if (this.model._chrome.isDualView || ($system.isClientDevice == true)) {
 			this.model.dom.dot.style['-webkit-transform'] = 'translateX('+(this.offsetLeft - this.model.dom.homeBtn.offsetLeft)+'px)';
 		} else {
 			this.model.dom.dot.style['-webkit-transform'] = 'translateY('+(this.offsetTop - this.model.dom.homeBtn.offsetTop)+'px)';
@@ -812,7 +823,7 @@ function emulator_NavigationBar(object, screen) {
 	object.dom.moreBtn.onclick = function() {
 		if (this.model._selectedButton == this) return;
 		this.model._selectedButton = this;
-		if (this.model._chrome.isDualView) {
+		if (this.model._chrome.isDualView || ($system.isClientDevice == true)) {
 			this.model.dom.dot.style['-webkit-transform'] = 'translateX('+(this.offsetLeft - this.model.dom.homeBtn.offsetLeft)+'px)';
 		} else {
 			this.model.dom.dot.style['-webkit-transform'] = 'translateY('+(this.offsetTop - this.model.dom.homeBtn.offsetTop)+'px)';
@@ -822,7 +833,7 @@ function emulator_NavigationBar(object, screen) {
 	
 	// This will re-layout the control based on screen dimensions
 	object._recalculateLayout = function() {
-		if (this._chrome.isDualView) {
+		if (this._chrome.isDualView || ($system.isClientDevice == true)) {
 			var leftThreshold = this.dom.homeBtn.offsetLeft + this.dom.homeBtn.offsetWidth,
 				rightThreshold = this.dom.moreBtn.offsetLeft,
 				center = Math.floor((rightThreshold - leftThreshold)/2),
@@ -860,7 +871,11 @@ function emulator_NavigationBar(object, screen) {
 	
 	// Get the height of the control
 	object._getHeight = function() {
-		if (window.innerHeight > window.innerWidth) return 126;
+		if ($system.isClientDevice == true) {
+			return 86
+		} else if (window.innerHeight > window.innerWidth) {
+			return 126;
+		}
 		return 150;
 	}
 	object._getHeight = object._getHeight.bind(object);
@@ -875,7 +890,7 @@ function emulator_NavigationBar(object, screen) {
 		this.dom.centerBtn.style.backgroundImage = 'url("'+appContainer.icon+'")'; 
 		this.dom.centerLine.style.opacity = '0';
 		this._selectedButton = this.dom.centerBtn
-		if (this._chrome.isDualView) {
+		if (this._chrome.isDualView || ($system.isClientDevice == true)) {
 			this.dom.dot.style['-webkit-transform'] = 'translateX('+(this.dom.centerBtn.offsetLeft - this.dom.homeBtn.offsetLeft)+'px)';
 		} else {
 			this.dom.dot.style['-webkit-transform'] = 'translateY('+(this.dom.centerBtn.offsetTop - this.dom.homeBtn.offsetTop)+'px)';

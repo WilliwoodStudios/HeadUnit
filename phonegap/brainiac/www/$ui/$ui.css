@@ -1,4 +1,4 @@
-/* $ui VERSION: 1.0.0.63*/
+/* $ui VERSION: 1.0.0.83*/
 body,
 html {
   padding: 0px;
@@ -725,22 +725,37 @@ div {
 .ui-window-pane.has-back > .inner {
   top: 60px;
 }
-/* If the screen is short then don't squish the navigation */
-@media screen and (max-height: 475px) {
-  .ws12-head-unit-chrome > .navigation > .dot,
-  .ws12-head-unit-chrome > .navigation > .circle-button.center,
-  .ws12-head-unit-chrome > .navigation > .circle-button.more,
-  .ws12-head-unit-chrome > .navigation > .line {
-    display: none;
+/* Portrait Smartphone */
+@media screen and (max-width: 400px) {
+  /* Circle Menu */
+  .ui-circle-menu > .menu-item {
+    width: 120px;
+    height: 120px;
   }
-}
-/* Portrait Tablet Display */
-@media screen and (max-width: 850px) {
-  .ws12-screen > .inner > .content {
-    width: 768px;
+  .ui-circle-menu > .menu-item > .circle {
+    height: 100px;
+    width: 100px;
+    border-radius: 51px;
+    background-size: 70px 70px;
   }
-  .ws12-title-bar .inner-title {
-    width: 768px;
+  .ui-circle-menu > .menu-item > .caption {
+    height: 20px;
+    line-height: 20px;
+    font-size: 15px;
+  }
+  /* Window Pane */
+  .ui-window-pane > .back-bar {
+    height: 50px;
+    background-position: 5px center;
+    background-size: 30px 30px;
+  }
+  .ui-window-pane > .back-bar > .caption {
+    line-height: 48px;
+    padding-left: 38px;
+    font-size: 24px;
+  }
+  .ui-window-pane.has-back > .inner {
+    top: 52px;
   }
 }
 
