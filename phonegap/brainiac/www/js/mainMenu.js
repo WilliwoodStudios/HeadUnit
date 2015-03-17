@@ -17,7 +17,7 @@ function mainMenu() {
 				property: 'items'
 			},
 			onclick: function(item) {
-				$emulator.openApp(item.appIdentifier);
+				$core.openApp(item.appIdentifier);
 			}
 		}
 	];
@@ -44,13 +44,13 @@ function mainMenu() {
 	
 	// Load the menu
 	this.onshow = function() {
-		$emulator.refreshAppsList(this.onapplistrefresh);
+		$core.getAppsList(this.onapplistrefresh);
 	};
 	
 	// Refresh the list of apps
-	this.onapplistrefresh = function() {
+	this.onapplistrefresh = function(apps) {
 		var data = {
-			items: $emulator.apps
+			items: apps
 		}
 		this.mainMenuProvider.setData(data);
 	}

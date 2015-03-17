@@ -71,9 +71,9 @@ var $system = {
 		}
 		this._events.push(item);
 		// Raise the onsubscribe event
-		if ($emulator) {
+		if ($core) {
 			var systemEvent = new $system.SystemEvent($system.EventType.ONSUBSCRIBE, {eventType: eventType});
-			$emulator.raiseEvent(systemEvent);
+			$core.raiseEvent(systemEvent);
 		}
 	},
 	
@@ -87,9 +87,9 @@ var $system = {
 			if (item.eventType == eventType && item.callback == callback) {
 				this._events.splice(i, 1);
 				// Raise the onunsubscribe event
-				if ($emulator) {
+				if ($core) {
 					systemEvent = new $system.SystemEvent($system.EventType.ONUNSUBSCRIBE, {eventType: eventType});
-					$emulator.raiseEvent(systemEvent);
+					$core.raiseEvent(systemEvent);
 				}
 				return;
 			}
@@ -107,8 +107,10 @@ var $system = {
 			if (item && (item.screen == screen)) {
 				this._events.splice(i, 1);
 				// Raise the onunsubscribe event
-				systemEvent = new $system.SystemEvent($system.EventType.ONUNSUBSCRIBE, {eventType: item.eventType});
-				$emulator.raiseEvent(systemEvent);
+				if ($core) {
+					systemEvent = new $system.SystemEvent($system.EventType.ONUNSUBSCRIBE, {eventType: item.eventType});
+					$core.raiseEvent(systemEvent);
+				}
 			}
 		}
 	}
