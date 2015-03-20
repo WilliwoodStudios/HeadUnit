@@ -1,4 +1,4 @@
-/* $ws12 VERSION: 1.0.0.22*/
+/* $ws12 VERSION: 1.0.0.23*/
 
 var $ws12 = {
 	// Initialize the toolkit extensions
