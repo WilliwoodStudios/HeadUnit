@@ -1,4 +1,4 @@
-/* $ws12 VERSION: 1.0.0.23*/
+/* $ws12 VERSION: 1.0.0.24*/
 
 var $ws12 = {
 	// Initialize the toolkit extensions
@@ -104,7 +104,7 @@ function ws12_Browser(object, screen) {
 	object.dom.icon = document.createElement('div');
 	$ui.addClass(object.dom.icon,'icon');
 	object.dom.inputDiv.appendChild(object.dom.icon);
-	object.dom.spinner = new $ui_Spinner({component: $ui.Spinner, size: $ui.Spinner.TINY, forceColor:'dark'},screen);
+	object.dom.spinner = new $ui_Spinner({component: $ui.Spinner, size: $ui.Spinner.SpinnerSize.TINY, forceColor:'dark'},screen);
 	object.dom.spinner.style.display = 'none';
 	object.dom.icon.appendChild(object.dom.spinner);
 	
