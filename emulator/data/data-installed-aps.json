@@ -1,0 +1,72 @@
+{
+	"apps": [
+		{
+			"id": "core.media.player",
+			"name": "music",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": true
+			}
+		},
+		{
+			"id": "core.maps",
+			"name": "maps",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": false
+			}
+		},
+		{
+			"id": "core.datalogger",
+			"name": "data logger",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": true
+			}
+		},
+		{
+			"id": "core.phone",
+			"name": "phone",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": false
+			}
+		},
+		{
+			"id": "core.dashboard",
+			"name": "dashboard",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": true
+			}
+		},				
+		{
+			"id":"core.browser",
+			"name": "browser",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": false
+			}
+		}
+	]
+}
+
+		
