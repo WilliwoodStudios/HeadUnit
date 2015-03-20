@@ -74,6 +74,15 @@ var $core = {
 			} 
 			callback(apps);
 		});
+	},
+	
+	// Create a system event object
+	SystemEvent: function(eventType, data) {
+		var object = {
+			eventType: eventType,
+			data: data
+		}
+		return object;
 	}
 	
 }

@@ -9,7 +9,7 @@ function wedgePassengerTemperature() {
 	};
 	
 	this.onchange = function() {
-		var systemEvent = new $system.SystemEvent($system.EventType.ONPASSENGERTEMPCHANGE, {temperature: this.temperature});
+		var systemEvent = new $core.SystemEvent($system.EventType.ONPASSENGERTEMPCHANGE, {temperature: this.temperature});
 		$core.raiseEvent(systemEvent);
 	};
 	

@@ -14,8 +14,6 @@ var $system = {
 	},
 	// System events
 	EventType: {
-		ONSUBSCRIBE: 'onsubscribe',
-		ONUNSUBSCRIBE: 'onunsubscribe',
 		ONSPEEDCHANGE: 'onspeedchange',
 		ONFUELCHANGE: 'onfuelchange',
 		ONRPMCHANGE: 'onrpmchange',
@@ -53,15 +51,6 @@ var $system = {
 		this.phone = new PhoneManager();
 	},
 	
-	// Create a system event object
-	SystemEvent: function(eventType, data) {
-		var object = {
-			eventType: eventType,
-			data: data
-		}
-		return object;
-	},
-
 	// Add an event listener
 	addEventListener: function(eventType, callback, screen) {
 		var item = {
@@ -70,11 +59,6 @@ var $system = {
 			screen: screen
 		}
 		this._events.push(item);
-		// Raise the onsubscribe event
-		if ($core) {
-			var systemEvent = new $system.SystemEvent($system.EventType.ONSUBSCRIBE, {eventType: eventType});
-			$core.raiseEvent(systemEvent);
-		}
 	},
 	
 	// Remove an event listener
@@ -86,11 +70,6 @@ var $system = {
 			item = this._events[i];
 			if (item.eventType == eventType && item.callback == callback) {
 				this._events.splice(i, 1);
-				// Raise the onunsubscribe event
-				if ($core) {
-					systemEvent = new $system.SystemEvent($system.EventType.ONUNSUBSCRIBE, {eventType: eventType});
-					$core.raiseEvent(systemEvent);
-				}
 				return;
 			}
 		}
@@ -106,11 +85,6 @@ var $system = {
 			item = this._events[i];
 			if (item && (item.screen == screen)) {
 				this._events.splice(i, 1);
-				// Raise the onunsubscribe event
-				if ($core) {
-					systemEvent = new $system.SystemEvent($system.EventType.ONUNSUBSCRIBE, {eventType: item.eventType});
-					$core.raiseEvent(systemEvent);
-				}
 			}
 		}
 	}
