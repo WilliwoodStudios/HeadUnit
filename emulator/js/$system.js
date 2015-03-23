@@ -10,9 +10,14 @@ var $system = {
 		inHeadUnit: true,
 		brandColor: '#D94646',
 		tileFontColor: '#747474',
-		celsius: false
+		celsius: false,
+		lightTheme: true
 	},
-	// System events
+	MediaSourceType: {
+		PLAYER: 0,
+		AMFM: 1,
+		XM: 2
+	},
 	EventType: {
 		ONSPEEDCHANGE: 'onspeedchange',
 		ONFUELCHANGE: 'onfuelchange',
@@ -45,6 +50,7 @@ var $system = {
 		this.config.inHeadUnit = (config.inHeadUnit) ? config.inHeadUnit : this.config.inHeadUnit;
 		this.config.brandColor = (config.brandColor) ? config.brandColor : this.config.brandColor;
 		this.config.tileFontColor = (config.tileFontColor) ? config.tileFontColor : this.config.tileFontColor;
+		this.config.lightTheme = (config.lightTheme) ? config.lightTheme : this.config.lightTheme;
 		// Create our services
 		this.audio = new AudioManager(this.isClientDevice);
 		this.contacts = new ContactsManager();

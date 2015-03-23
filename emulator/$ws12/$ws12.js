@@ -1,4 +1,4 @@
-/* $ws12 VERSION: 1.0.0.24*/
+/* $ws12 VERSION: 1.0.0.40*/
 
 var $ws12 = {
 	// Initialize the toolkit extensions
@@ -394,6 +394,11 @@ function ws12_MediaPlayer(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ws12-media-player');
 	
+	// Set our initial play state
+	if (object.paused == undefined) {
+		object.paused = false;
+	}
+	
 	// Create our cover art display area
 	object.dom.coverArt = document.createElement('div');
 	$ui.addClass(object.dom.coverArt,'cover-art');
@@ -456,9 +461,30 @@ function ws12_MediaPlayer(object, screen) {
 	$ui.addClass(object.dom.skipForward,'skip-forward');
 	object.dom.playbox.appendChild(object.dom.skipForward);
 	object.dom.play = document.createElement('div');
+	object.dom.play.model = object;
 	$ui.addClass(object.dom.play,'button');
 	$ui.addClass(object.dom.play,'play');
 	object.dom.playbox.appendChild(object.dom.play);
+	object.dom.play.onclick = function() {
+		$ui.playTouchSound();
+		if (this.model.paused == true) {
+			this.model.play();
+		} else {
+			this.model.pause();
+		}
+	}
+	object.dom.play.ontouchstart = function() {
+		this.style.opacity = '0.7';
+	}
+	object.dom.play.ontouchend = function() {
+		this.style.opacity = '1.0';
+	}
+	object.dom.play.ontouchcancel = object.dom.ontouchend;
+	if (!$ui.isMobileDevice()) {
+		object.dom.play.onmousedown = object.dom.play.ontouchstart;
+		object.dom.play.onmouseup = object.dom.play.ontouchend;
+		object.dom.play.onmouseleave = object.dom.play.ontouchend;
+	}
 	
 	// Create our text buttons
 	object.dom.textButtonBox = document.createElement('div');
@@ -527,17 +553,59 @@ function ws12_MediaPlayer(object, screen) {
 	}
 	object.setCoverArt = object.setCoverArt.bind(object);
 	
+	// Public function to set duration
+	object.setDuration = function(value) {
+		this.duration = value;
+		// Now load the new image
+		if (value != undefined) {
+			// Do something
+		}
+	}
+	object.setDuration = object.setDuration.bind(object);
+	
+	// Private function to render the play state of the control
+	object._renderPlayState = function(value) {
+		if (this.paused == true) {
+			$ui.removeClass(this.dom.play,'pause');
+		} else {
+			$ui.addClass(this.dom.play,'pause');
+		}
+	}
+	object._renderPlayState = object._renderPlayState.bind(object);
+	
+	// Public function to play the current song
+	object.play = function(value) {
+		if (this.paused == false) return;
+		this.paused = false;
+		this._renderPlayState();
+		if (this.onplay) {
+			this.onplay();
+		}
+	}
+	object.play = object.play.bind(object);
+	
+	// Public function to pause the current song
+	object.pause = function(value) {
+		if (this.paused == true) return;
+		this.paused = true;
+		this._renderPlayState();
+		if (this.onpause) {
+			this.onpause();
+		}
+	}
+	object.pause = object.pause.bind(object);
+	
 	// Private function to handle provider updates
 	object._providerUpdate = function(value) {
-		if (value) {
-			this.coverArt = value.coverArt
-		} else {
-			this.coverArt = undefined;
-		}
-		this.setCoverArt(this.coverArt);
-		this.setArtist(this.artist);
-		this.setSong(this.song);
-		this.setAlbum(this.album);
+		if (value == undefined) {
+			value = {}
+		} 
+		this.setCoverArt(value.coverArt);
+		this.setArtist(value.artist);
+		this.setSong(value.song);
+		this.setAlbum(value.album);
+		this.paused = value.paused;
+		this._renderPlayState();
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);
 	

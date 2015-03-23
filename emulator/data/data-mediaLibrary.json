@@ -1,0 +1,40 @@
+{
+	"currentSong": {
+		"uid": "skdjhfiweurw97"
+	},
+	
+	"albums": [
+		{
+			"uid": "u3459ijf983u",
+			"name": "License To Ill",
+			"artistUid": "s09wdfu09jeopj",
+			"year": 1992,
+			"artwork": "../../data/img/coverart/licensed_to_ill.jpg"
+		}	
+	],
+	
+	"songs": [
+		{
+			"uid": "skdjhfiweurw97",
+			"name": "So What Cha Want",
+			"duration": 217,
+			"albumUid": "u3459ijf983u",
+			"path": "data/media/Beastie%20Boys/License%20To%20Ill/SoWhatChaWant.mp3"
+		}
+	],
+	
+	"artists": [
+		{
+			"uid": "s09wdfu09jeopj",
+			"name": "Beastie Boys",
+			"genreUid": "28937549023hkjdh"
+		}
+	],
+	
+	"genres": [
+		{
+			"uid": "28937549023hkjdh",
+			"name": "Hip Hop/Rap"
+		}
+	]
+}

@@ -1,7 +1,12 @@
 // The Audio Manager provides the interface to the audio services of Brainiac 
 function AudioManager() {
 	// Initialize the return object
-	var object = {}
+	var object = {
+		_mediaSources: [new PlayerMediaSource()], 
+	}
+	
+	// Set our current media source
+	object._currentMediaSource = object._mediaSources[0];
 	
 	// Load our sounds
 	object._sounds = {};
@@ -22,7 +27,6 @@ function AudioManager() {
 		object._sounds.TONE_POUND = new Audio('sounds/tones/p.wav');
 		object._sounds.TONE_ASTERIK = new Audio('sounds/tones/s.wav');
 	}
-	
 	
 	// Play's the sound based on the SoundEffect value
 	object.playSoundEffect = function(soundEffect) {
@@ -76,6 +80,18 @@ function AudioManager() {
 		}
 	}
 	object.playSoundEffect = object.playSoundEffect.bind(object);
+	
+	// Returns the list of available media sources
+	object.getMediaSources = function() {
+		return this._mediaSources;
+	}
+	object.getMediaSources = object.getMediaSources.bind(object);
+	
+	// Returns the currently active media sources
+	object.getActiveMediaSource = function() {
+		return this._currentMediaSource;
+	}
+	object.getActiveMediaSource = object.getActiveMediaSource.bind(object);
 	
 	return object;
 }
