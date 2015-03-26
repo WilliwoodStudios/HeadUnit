@@ -36,9 +36,9 @@
 		<script>
 			function onDeviceReady() {
 				// Initialize the system
-				var config = {inHeadUnit: true, tileFontColor: '#FFFFFF'};
+				var config = {};
 				if (window.innerWidth > window.innerHeight) {
-					config.brandColor = '#23A084'; // Jeep Color
+					config.themeColor = $system.Color.GREEN_SEA.value; 
 				}
 				$system.init(config);
 				// Initialize UI

@@ -1,4 +1,4 @@
-/* $ws12 VERSION: 1.0.0.40*/
+/* $ws12 VERSION: 1.0.0.52*/
 
 var $ws12 = {
 	// Initialize the toolkit extensions
@@ -46,7 +46,7 @@ function ws12_BrowserButton(object, screen) {
 	}
 	object.dom.ontouchstart = function() {
 		if (this.model.enabled === false) return;
-		this.style.backgroundColor = $ui.config.brandColor;
+		this.style.backgroundColor = $ui.getThemeColor();
 	}
 	object.dom.ontouchend = function() {
 		if (this.model.enabled === false) return;
@@ -82,13 +82,13 @@ function ws12_Browser(object, screen) {
 	object.dom.chrome = document.createElement('div');
 	$ui.addClass(object.dom.chrome,'chrome');
 	object.dom.appendChild(object.dom.chrome);
-	object.dom.chrome.style.borderBottomColor = $ui.config.brandColor;
+	object.dom.chrome.style.borderBottomColor = $ui.getThemeColor();
 	
 	// URL input
 	object.dom.inputDiv = document.createElement('div');
 	$ui.addClass(object.dom.inputDiv,'inputDiv');
 	object.dom.chrome.appendChild(object.dom.inputDiv);
-	object.dom.inputDiv.style.borderColor = $ui.config.brandColor;
+	object.dom.inputDiv.style.borderColor = $ui.getThemeColor();
 	object.dom.input = document.createElement('input');
 	object.dom.input.model = object;
 	object.dom.input.setAttribute('spellcheck','false');
@@ -213,7 +213,7 @@ function ws12_DialPadButton(object, screen) {
 	$ui.addClass(object.dom,'circle-button');
 	
 	// Set our brand color
-	object.dom.style.borderColor = $ui.config.brandColor;
+	object.dom.style.borderColor = $ui.getThemeColor();
 	
 	// Create the number
 	object.dom.captionDiv = document.createElement('div');
@@ -235,7 +235,7 @@ function ws12_DialPadButton(object, screen) {
 	}
 	// Set our touch interaction
 	object.dom.ontouchstart = function() {
-		this.style.backgroundColor = $ui.config.brandColor;
+		this.style.backgroundColor = $ui.getThemeColor();
 	}
 	object.dom.ontouchend = function() {
 		this.style.backgroundColor = '';
@@ -422,7 +422,7 @@ function ws12_MediaPlayer(object, screen) {
 		}
 	}
 	object.dom.menu.ontouchstart = function() {
-		this.style.backgroundColor = $ui.config.brandColor;
+		this.style.backgroundColor = $ui.getThemeColor();
 	}
 	object.dom.menu.ontouchend = function() {
 		this.style.backgroundColor = '';
@@ -639,13 +639,13 @@ function ws12_PhoneLogListItem(object, screen) {
 	object.dom.titleArea.textContent = object.title;
 	object.dom.details.appendChild(object.dom.titleArea);
 	if (object.style === $ui.PhoneLogListItem.MISSED) {
-		object.dom.titleArea.style.color = $ui.config.brandColor;
+		object.dom.titleArea.style.color = $ui.getThemeColor();
 	}
 
 	// Caption
 	object.dom.captionDiv = document.createElement('div');
 	$ui.addClass(object.dom.captionDiv,'caption');
-	object.dom.captionDiv.style.color = $ui.config.brandColor;
+	object.dom.captionDiv.style.color = $ui.getThemeColor();
 	object.dom.details.appendChild(object.dom.captionDiv);
 	if (object.caption) {
 		object.dom.captionDiv.textContent = object.caption;
@@ -655,7 +655,7 @@ function ws12_PhoneLogListItem(object, screen) {
 	
 	// Handle our touch events
 	object.dom.ontouchstart = function() {
-		this.style.backgroundColor = $ui.config.brandColor;
+		this.style.backgroundColor = $ui.getThemeColor();
 	}
 	object.dom.ontouchend = function() {
 		this.style.backgroundColor = '';
@@ -864,9 +864,9 @@ function ws12_TileDistance(object, screen) {
 		// Set our caption
 		this.dom.caption.innerHTML = '<span class="tall distance">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="tall">'+this._value+'</span> '+this.units;
 		// Get our root color
-		var R = parseInt(($ui._cutHex($ui.config.brandColor)).substring(0,2),16),
-			G = parseInt(($ui._cutHex($ui.config.brandColor)).substring(2,4),16),
-			B = parseInt(($ui._cutHex($ui.config.brandColor)).substring(4,6),16);	
+		var R = parseInt(($ui._cutHex($ui.getThemeColor())).substring(0,2),16),
+			G = parseInt(($ui._cutHex($ui.getThemeColor())).substring(2,4),16),
+			B = parseInt(($ui._cutHex($ui.getThemeColor())).substring(4,6),16);	
 		// Load our data
 		var data = {
 			labels: _labels,
@@ -891,7 +891,7 @@ function ws12_TileDistance(object, screen) {
 				}
 			]
 		}
-		this.dom.chart.Line(data,{scaleShowGridLines: false,showTooltips: false,scaleFontColor: $ui.config.tileFontColor});
+		this.dom.chart.Line(data,{scaleShowGridLines: false,showTooltips: false,scaleFontColor: window.getComputedStyle(this.dom).color});
 		this.showContent(true);
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);	
@@ -989,10 +989,10 @@ function ws12_TileFuel(object, screen) {
 			G = 187, 
 			B = 205,
 			fontColor;
-		if ($ui.config.inHeadUnit === true) {
-			R = parseInt(($ui._cutHex($ui.config.brandColor)).substring(0,2),16),
-			G = parseInt(($ui._cutHex($ui.config.brandColor)).substring(2,4),16),
-			B = parseInt(($ui._cutHex($ui.config.brandColor)).substring(4,6),16);
+		if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+			R = parseInt(($ui._cutHex($ui.getThemeColor())).substring(0,2),16),
+			G = parseInt(($ui._cutHex($ui.getThemeColor())).substring(2,4),16),
+			B = parseInt(($ui._cutHex($ui.getThemeColor())).substring(4,6),16);
 		} 
 		// Load our data
 		var data = {
@@ -1018,7 +1018,7 @@ function ws12_TileFuel(object, screen) {
 				}
 			]
 		}
-		this.dom.chart.Line(data,{scaleShowGridLines: false,showTooltips: false, scaleFontColor: $ui.config.tileFontColor});	
+		this.dom.chart.Line(data,{scaleShowGridLines: false,showTooltips: false, scaleFontColor: window.getComputedStyle(this.dom).color});	
 		this.showContent(true);
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);	
@@ -1049,13 +1049,13 @@ function ws12_TileIdle(object, screen) {
 			// Determine color
 			switch (true) {
 				case (this.value >= 70):
-					colorValue = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_GREAT;
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GREAT;
 					break;
 				case (this.value >= 50):
-					colorValue = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_GOOD;
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GOOD;
 					break;
 				default:
-					colorValue = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_OK;
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_OK;
 					break;
 			}		
 			// Create our chart data object
@@ -1066,7 +1066,7 @@ function ws12_TileIdle(object, screen) {
 				},
 				{
 					value: (100 - this.value),
-					color: ($ui.config.inHeadUnit == true) ? $ui.color_DARK : $ui.color_LIGHT
+					color: ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.color_DARK : $ui.color_LIGHT
 				}				
 			];	
 		} 
@@ -1123,11 +1123,6 @@ function ws12_TileIdleDetails(object, screen) {
 	
 	// Private function to handle provider updates
 	object._providerUpdate = function(value) {
-		/*var i,
-			_labels = [],
-			_transparentData = [],
-			_noData = false;*/
-		// Assign our values
 		if (value != undefined) {
 			this.data = value.data;
 			this.labels = value.labels;
@@ -1135,20 +1130,8 @@ function ws12_TileIdleDetails(object, screen) {
 			this.data = undefined;
 			this.labels = undefined;
 		}
-		// Make any corrections
-		/*if ((this.data == undefined) || (this.data && this.data.length == 0)) {
-			this.data = [0];
-			_noData = true;
-		} else if (this.data.length == 1) {
-			this.data = [0,this.data[0]];
-		}
-		
-		// Set our caption
-		this.dom.caption.innerHTML = '<span class="tall distance">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="tall">'+this._value+'</span> '+this.units;
-		*/
-		
 		// Get our root color
-		var graphColor = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_OK,
+		var graphColor = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_OK,
 			R = parseInt(($ui._cutHex(graphColor)).substring(0,2),16),
 			G = parseInt(($ui._cutHex(graphColor)).substring(2,4),16),
 			B = parseInt(($ui._cutHex(graphColor)).substring(4,6),16);	
@@ -1163,7 +1146,7 @@ function ws12_TileIdleDetails(object, screen) {
 				}
 			]
 		}
-		this.dom.chart.Bar(data,{scaleShowGridLines: true,showTooltips: false,scaleFontColor: $ui.config.tileFontColor});
+		this.dom.chart.Bar(data,{scaleShowGridLines: true,showTooltips: false,scaleFontColor: window.getComputedStyle(this.dom).color});
 		this.showContent(true);
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);	
@@ -1199,13 +1182,13 @@ function ws12_TileMPG(object, screen) {
 			// Determine Color
 			switch (true) {
 				case (percent > 90):
-					colorValue = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_GREAT;
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GREAT;
 					break;
 				case (percent > 50):
-					colorValue = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_GOOD;
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GOOD;
 					break;
 				default:
-					colorValue = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_OK;
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_OK;
 					break;
 			}
 			// Create our chart data object
@@ -1216,7 +1199,7 @@ function ws12_TileMPG(object, screen) {
 				},
 				{
 					value: (100-percent),
-					color: ($ui.config.inHeadUnit == true) ? $ui.color_DARK : $ui.color_LIGHT
+					color: ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.color_DARK : $ui.color_LIGHT
 				}
 			];	
 		} 
@@ -1269,8 +1252,8 @@ function ws12_TileProfile(object, screen) {
 	$ui.addClass(object.dom.wedge, 'wedge');
 	object.dom.contentDiv.appendChild(object.dom.wedge);
 	// Set our coloring
-	if ($ui.config.inHeadUnit == true) {
-		object.dom.wedge.style.backgroundColor = $ui.config.brandColor;
+	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+		object.dom.wedge.style.backgroundColor = $ui.getThemeColor();
 	} else {
 		object.dom.wedge.style.backgroundColor = profileTileColor;
 	}
@@ -1331,8 +1314,8 @@ function ws12_TileProfile(object, screen) {
 	object.dom.stats = document.createElement('div');
 	$ui.addClass(object.dom.stats, 'stats');
 	object.dom.contentDiv.appendChild(object.dom.stats);
-	if ($ui.config.inHeadUnit == true) {
-		object.dom.stats.style.borderColor = $ui.config.brandColor;
+	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+		object.dom.stats.style.borderColor = $ui.getThemeColor();
 	}
 	
 	// Add score box
@@ -1347,9 +1330,9 @@ function ws12_TileProfile(object, screen) {
 	$ui.addClass(object.dom.score.number, 'number');
 	object.dom.score.appendChild(object.dom.score.number);
 	// Set our coloring
-	if ($ui.config.inHeadUnit == true) {
-		object.dom.score.style.borderColor = $ui.config.brandColor;
-		object.dom.score.number.style.color = $ui.config.brandColor;
+	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+		object.dom.score.style.borderColor = $ui.getThemeColor();
+		object.dom.score.number.style.color = $ui.getThemeColor();
 	} else {
 		object.dom.score.number.style.color = profileTileColor;
 	}
@@ -1367,9 +1350,9 @@ function ws12_TileProfile(object, screen) {
 	$ui.addClass(object.dom.friends.number, 'number');
 	object.dom.friends.appendChild(object.dom.friends.number);
 	// Set our coloring
-	if ($ui.config.inHeadUnit == true) {
-		object.dom.friends.style.borderColor = $ui.config.brandColor;
-		object.dom.friends.number.style.color = $ui.config.brandColor;
+	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+		object.dom.friends.style.borderColor = $ui.getThemeColor();
+		object.dom.friends.number.style.color = $ui.getThemeColor();
 	} else {
 		object.dom.friends.number.style.color = profileTileColor;
 	}
@@ -1387,9 +1370,9 @@ function ws12_TileProfile(object, screen) {
 	$ui.addClass(object.dom.groups.number, 'number');
 	object.dom.groups.appendChild(object.dom.groups.number);
 	// Set our coloring
-	if ($ui.config.inHeadUnit == true) {
-		object.dom.groups.style.borderColor = $ui.config.brandColor;
-		object.dom.groups.number.style.color = $ui.config.brandColor;
+	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+		object.dom.groups.style.borderColor = $ui.getThemeColor();
+		object.dom.groups.number.style.color = $ui.getThemeColor();
 	} else {
 		object.dom.groups.number.style.color = profileTileColor;
 	}
@@ -1399,8 +1382,8 @@ function ws12_TileProfile(object, screen) {
 	$ui.addClass(object.dom.avatar, 'avatar');
 	object.dom.contentDiv.appendChild(object.dom.avatar);
 	// Set our coloring
-	if ($ui.config.inHeadUnit == true) {
-		object.dom.avatar.style.borderColor = $ui.config.brandColor;
+	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+		object.dom.avatar.style.borderColor = $ui.getThemeColor();
 	}
 	
 	// Add our rank text
@@ -1414,8 +1397,8 @@ function ws12_TileProfile(object, screen) {
 	$ui.addClass(object.dom.rank, 'rank');
 	object.dom.contentDiv.appendChild(object.dom.rank);
 	// Set our coloring
-	if ($ui.config.inHeadUnit == true) {
-		object.dom.rank.style.backgroundColor = $ui.config.brandColor;
+	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+		object.dom.rank.style.backgroundColor = $ui.getThemeColor();
 	} else {
 		object.dom.rank.style.backgroundColor = profileTileColor;
 	}
@@ -1427,8 +1410,8 @@ function ws12_TileProfile(object, screen) {
 	object.dom.findFriend.textContent = 'Find a Friend';
 	object.dom.contentDiv.appendChild(object.dom.findFriend);
 	// Set our coloring
-	if ($ui.config.inHeadUnit == true) {
-		object.dom.findFriend.style.backgroundColor = $ui.config.brandColor;
+	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+		object.dom.findFriend.style.backgroundColor = $ui.getThemeColor();
 	} else {
 		object.dom.findFriend.style.backgroundColor = profileTileColor;
 	}
@@ -1440,8 +1423,8 @@ function ws12_TileProfile(object, screen) {
 	object.dom.findGroup.textContent = 'Join a Group';
 	object.dom.contentDiv.appendChild(object.dom.findGroup);
 	// Set our coloring
-	if ($ui.config.inHeadUnit == true) {
-		object.dom.findGroup.style.backgroundColor = $ui.config.brandColor;
+	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+		object.dom.findGroup.style.backgroundColor = $ui.getThemeColor();
 	} else {
 		object.dom.findGroup.style.backgroundColor = profileTileColor;
 	}
@@ -1526,7 +1509,7 @@ function ws12_TileRecord(object, screen) {
 	object.dom.recordButton = document.createElement('div');
 	object.dom.recordButton.model = object;
 	$ui.addClass(object.dom.recordButton,'record-button');
-	object.dom.recordButton.style.backgroundColor = $ui.config.brandColor;
+	object.dom.recordButton.style.backgroundColor = $ui.getThemeColor();
 	object.dom.stage1.appendChild(object.dom.recordButton);
 	object.dom.recordButton.textContent = 'Start';
 	object.dom.recordButton.onclick = function() {
@@ -1591,7 +1574,7 @@ function ws12_TileRecord(object, screen) {
 			window.clearInterval(this._interval);
 			this._interval = undefined;
 			this.dom.number.textContent = 'GO!';
-			this.dom.number.style.backgroundColor = $ui.config.brandColor;
+			this.dom.number.style.backgroundColor = $ui.getThemeColor();
 			$ui.addClass(this.dom.number,'animation');
 			// Fire the onrecord event
 			if (this.onrecord) {
@@ -1771,13 +1754,13 @@ function ws12_TileZeroToSixty(object, screen) {
 			// Determine Color
 			switch (true) {
 				case (percent > 90):
-					colorValue = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_GREAT;
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GREAT;
 					break;
 				case (percent > 50):
-					colorValue = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_GOOD;
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GOOD;
 					break;
 				default:
-					colorValue = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_OK;
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_OK;
 					break;
 			}
 			// Create our chart data object
@@ -1788,7 +1771,7 @@ function ws12_TileZeroToSixty(object, screen) {
 				},
 				{
 					value: (100-percent),
-					color: ($ui.config.inHeadUnit == true) ? $ui.color_DARK : $ui.color_LIGHT
+					color: ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.color_DARK : $ui.color_LIGHT
 				}
 			];	
 		} 
@@ -1865,7 +1848,7 @@ function ws12_TileZeroToSixtyHistory(object, screen) {
 		}
 
 		// Get our root color
-		var graphColor = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_OK,
+		var graphColor = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_OK,
 			R = parseInt(($ui._cutHex(graphColor)).substring(0,2),16),
 			G = parseInt(($ui._cutHex(graphColor)).substring(2,4),16),
 			B = parseInt(($ui._cutHex(graphColor)).substring(4,6),16);	
@@ -1880,7 +1863,7 @@ function ws12_TileZeroToSixtyHistory(object, screen) {
 				}
 			]
 		}
-		this.dom.chart.Line(data,{scaleShowGridLines: true,showTooltips: false,scaleFontColor: $ui.config.tileFontColor});
+		this.dom.chart.Line(data,{scaleShowGridLines: true,showTooltips: false,scaleFontColor: window.getComputedStyle(this.dom).color});
 		this.showContent(true);
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);	

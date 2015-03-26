@@ -1,4 +1,4 @@
-/* $ui VERSION: 1.0.0.105*/
+/* $ui VERSION: 1.0.0.123*/
 body,
 html {
   padding: 0px;
@@ -10,10 +10,6 @@ html {
 ::-webkit-scrollbar {
   width: 0 !important;
   height: 0 !important;
-}
-.no-select {
-  user-select: none;
-  -webkit-user-select: none;
 }
 /* Android highlighting fix */
 div {
@@ -52,16 +48,20 @@ div {
   position: relative;
   height: 200px;
   width: 200px;
-  border: solid 3px #ffffff;
+  border-style: solid;
+  border-width: 3px;
   border-radius: 101px;
   box-sizing: border-box;
   cursor: pointer;
-  background-color: #000000;
   background-position: center center;
   background-size: 120px 120px;
   background-repeat: no-repeat;
   margin-left: auto;
   margin-right: auto;
+}
+.ui-circle-menu.ui-theme-dark > .menu-item > .circle {
+  border-color: #ffffff;
+  background-color: #000000;
 }
 .ui-circle-menu > .menu-item > .caption {
   position: absolute;
@@ -71,9 +71,11 @@ div {
   height: 50px;
   line-height: 50px;
   text-align: center;
-  color: #ffffff;
   font-size: 25px;
   font-weight: bold;
+}
+.ui-circle-menu.ui-theme-dark > .menu-item > .caption {
+  color: #ffffff;
 }
 /* Core Component */
 .ui-core-component.marginTop {
@@ -88,16 +90,16 @@ div {
 .ui-core-component.marginBottom {
   margin-bottom: 5px;
 }
-.ui-core-component.in-head-unit.marginTop {
+.ui-core-component.bold-weight.marginTop {
   margin-top: 10px;
 }
-.ui-core-component.in-head-unit.marginLeft {
+.ui-core-component.bold-weight.marginLeft {
   margin-left: 10px;
 }
-.ui-core-component.in-head-unit.marginRight {
+.ui-core-component.bold-weight.marginRight {
   margin-right: 10px;
 }
-.ui-core-component.in-head-unit.marginBottom {
+.ui-core-component.bold-weight.marginBottom {
   margin-bottom: 10px;
 }
 /* Our root class for screens */
@@ -105,7 +107,6 @@ div {
   position: absolute;
   top: 0px;
   bottom: 0px;
-  background-color: #d8d8d8;
   padding: 0px;
   margin: 0px;
   left: 0px;
@@ -124,8 +125,11 @@ div {
   -webkit-transition: opacity 0.4s ease;
   -webkit-backface-visibility: hidden;
 }
-.ui-core-screen.in-head-unit {
+.ui-core-screen.ui-theme-dark {
   background-color: #000000;
+}
+.ui-core-screen.ui-theme-light {
+  background-color: #d8d8d8;
 }
 /* Base Tile styling */
 .ui-tile {
@@ -136,10 +140,20 @@ div {
   width: 246px;
   box-sizing: border-box;
   margin: 5px;
-  background-color: white;
   border-radius: 5px;
-  border: solid 1px #d4d4d4;
+  border-style: solid;
+  border-width: 1px;
   overflow: hidden;
+}
+.ui-tile.ui-theme-dark {
+  background-color: #000000;
+  border-color: #d4d4d4;
+  color: #ffffff;
+}
+.ui-tile.ui-theme-light {
+  background-color: #d8d8d8;
+  border-color: #d4d4d4;
+  color: #747474;
 }
 .ui-tile > .loading,
 .ui-tile > .content {
@@ -155,9 +169,6 @@ div {
 }
 .ui-tile > .content {
   display: none;
-}
-.ui-tile.in-head-unit {
-  background-color: #000000;
 }
 .ui-tile.wide {
   width: 502px;
@@ -314,19 +325,23 @@ div {
   -webkit-user-select: none;
   position: relative;
   border-bottom-style: solid;
-  border-bottom-color: #d4d4d4;
   border-bottom-width: 1px;
   height: 60px;
   padding: 5px;
-  background-color: white;
   overflow: hidden;
-  color: #222222;
   cursor: pointer;
 }
-.ui-generic-list-item.in-head-unit {
+.ui-generic-list-item.ui-theme-light {
+  border-bottom-color: #d4d4d4;
+  background-color: #d8d8d8;
+  color: #222222;
+}
+.ui-generic-list-item.ui-theme-dark {
   background-color: #000000;
-  border-bottom-color: #ffffff;
+  border-bottom-color: #d4d4d4;
   color: #ffffff;
+}
+.ui-generic-list-item.bold-weight {
   height: 100px;
 }
 .ui-generic-list-item > .img {
@@ -346,7 +361,7 @@ div {
   -webkit-transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
 }
-.ui-generic-list-item.in-head-unit > .img {
+.ui-generic-list-item.bold-weight > .img {
   border-style: none;
   height: 90px;
   width: 90px;
@@ -361,7 +376,7 @@ div {
   right: 0px;
   font-size: 15px;
 }
-.ui-generic-list-item.in-head-unit > .details {
+.ui-generic-list-item.bold-weight > .details {
   left: 110px;
 }
 .ui-generic-list-item > .details > .title {
@@ -373,7 +388,7 @@ div {
   text-overflow: ellipsis;
   text-overflow: -blackberry-fade;
 }
-.ui-generic-list-item.in-head-unit > .details > .title {
+.ui-generic-list-item.bold-weight > .details > .title {
   font-size: 30px;
 }
 .ui-generic-list-item.has-accent > .details > .title {
@@ -392,14 +407,18 @@ div {
   overflow: hidden;
   text-overflow: ellipsis;
   text-overflow: -blackberry-fade;
-  color: #747474;
   display: none;
   margin-top: 0px;
 }
-.ui-generic-list-item.in-head-unit > .details > .accent {
-  color: #ffffff;
+.ui-generic-list-item.bold-weight > .details > .accent {
   font-size: 15px;
   height: 20px;
+}
+.ui-generic-list-item.ui-theme-light > .details > .accent {
+  color: #747474;
+}
+.ui-generic-list-item.ui-theme-dark > .details > .accent {
+  color: #ffffff;
 }
 .ui-generic-list-item.has-accent > .details > .accent {
   display: inherit;
@@ -412,13 +431,17 @@ div {
   overflow: hidden;
   text-overflow: ellipsis;
   text-overflow: -blackberry-fade;
-  color: #747474;
   margin-top: -3px;
 }
-.ui-generic-list-item.in-head-unit > .details > .caption {
-  color: #ffffff;
+.ui-generic-list-item.ui-theme-dark > .details > .caption {
+  color: #747474;
+}
+.ui-generic-list-item.bold-weight > .details > .caption {
   font-size: 24px;
   height: 34px;
+}
+.ui-generic-list-item.ui-theme-dark > .details > .caption {
+  color: #ffffff;
 }
 .ui-generic-list-item.no-caption > .details > .caption {
   display: none;
@@ -426,6 +449,14 @@ div {
 /* List Component */
 .ui-list {
   clear: both;
+}
+/**** Light Coloring ********/
+/**** Dark Coloring ********/
+/**** Default Visuals ********/
+/**** Bold Visuals ********/
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
 }
 @font-face {
   font-family: 'Open Sans';
@@ -472,14 +503,18 @@ div {
   line-height: 35px;
   border-style: solid;
   border-width: 1px;
-  border-color: #d4d4d4;
   border-radius: 5px;
   background-color: white;
 }
-.ui-segmented-control.in-head-unit {
-  border-width: 2px;
+.ui-segmented-control.ui-theme-light {
+  border-color: #d4d4d4;
+}
+.ui-segmented-control.ui-theme-dark {
   border-color: #ffffff;
   background-color: #000000;
+}
+.ui-segmented-control.bold-weight {
+  border-width: 2px;
   height: 50px;
 }
 .ui-segmented-control > .button {
@@ -491,7 +526,6 @@ div {
   text-align: center;
   border-left-width: 1px;
   border-left-style: solid;
-  border-color: #d4d4d4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -499,16 +533,23 @@ div {
   font-size: 15px;
   -webkit-transition: background-color 0.5s linear;
 }
-.ui-segmented-control.in-head-unit > .button {
-  border-left-width: 2px;
+.ui-segmented-control.ui-theme-light > .button {
+  border-color: #d4d4d4;
+}
+.ui-segmented-control.ui-theme-dark > .button {
   border-color: #ffffff;
+  color: #ffffff;
+}
+.ui-segmented-control.bold-weight > .button {
+  border-left-width: 2px;
   font-size: 25px;
   height: 50px;
   line-height: 50px;
-  color: #ffffff;
 }
 .ui-segmented-control > .button.selected {
   font-weight: bold;
+}
+.ui-segmented-control.ui-theme-light > .button.selected {
   color: white;
 }
 .ui-segmented-control > .button.left {
@@ -516,7 +557,7 @@ div {
   border-bottom-left-radius: 5px;
   border-left-color: transparent;
 }
-.ui-segmented-control.in-head-unit > .button.left {
+.ui-segmented-control.bold-weight > .button.left {
   border-top-left-radius: 2px;
   border-bottom-left-radius: 2px;
 }
@@ -525,7 +566,7 @@ div {
   border-bottom-right-radius: 5px;
   border-right-color: transparent;
 }
-.ui-segmented-control.in-head-unit > .button.right {
+.ui-segmented-control.bold-weight > .button.right {
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
 }
@@ -651,7 +692,7 @@ div {
   margin-bottom: 10px;
   visibility: hidden;
 }
-.ui-tile-group.in-head-unit {
+.ui-tile-group.bold-weight {
   width: 768px;
   margin-right: auto;
   margin-left: auto;
@@ -675,19 +716,25 @@ div {
   top: 0px;
   height: 58px;
   border-bottom-style: solid;
-  border-bottom-width: 2px;
-  background-color: #000000;
   background-position: 10px center;
   background-size: 38px 38px;
   background-repeat: no-repeat;
 }
+.ui-window-pane.bold-weight > .back-bar {
+  border-bottom-width: 2px;
+}
+.ui-window-pane.ui-theme-dark > .back-bar {
+  background-color: #000000;
+}
 .ui-window-pane > .back-bar > .caption {
-  color: #ffffff;
   line-height: 58px;
   padding-left: 58px;
   font-size: 35px;
   font-weight: 100;
   cursor: pointer;
+}
+.ui-window-pane.ui-theme-dark > .back-bar > .caption {
+  color: #ffffff;
 }
 @-webkit-keyframes ui-pane-slide-left {
   0% {

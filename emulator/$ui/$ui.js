@@ -1,19 +1,22 @@
-/* $ui VERSION: 1.0.0.105*/
+/* $ui VERSION: 1.0.0.123*/
 
 var $system;
 
 var $ui = {
 	screens : [],  // Holds all of the current screens on the stack;
 	definitions: [],
-	config: {
-		inHeadUnit: false,
-		brandColor: '#D94646',
-		tileFontColor: '#747474',
-		celsius: false,
-	},
 	inScreenTransition: false,
 	// Global events
 	ONSHOW: 'onshow',
+	ThemeStyle: {
+		DARK: 'ui-theme-dark',
+		LIGHT: 'ui-theme-light'
+	},
+	ThemeWeight: {
+		NORMAL: 'normal-weight',
+		BOLD: 'bold-weight'
+	},
+	_config: {},
 	// Graph Colors
 	color_LIGHT: '#F0F0F0',
 	color_DARK: '#747474',
@@ -44,10 +47,14 @@ var $ui = {
 		} 
 		// If $system object exists, read it's configuration
 		if ($system) {
-			var config = window.parent.$system.config;
-			this.config.inHeadUnit = config.inHeadUnit;
-			this.config.brandColor = config.brandColor;
-			this.config.tileFontColor = config.tileFontColor;
+			var config = window.parent.$system._config;
+			this._config.themeStyle = (config.themeStyle == undefined) ? $ui.ThemeStyle.DARK : config.themeStyle;
+			this._config.themeColor = (config.themeColor == undefined) ? '#D94646' : config.themeColor;
+			this._config.themeWeight = (config.themeWeight == undefined) ? $ui.ThemeWeight.BOLD : config.themeWeight;
+		} else {
+			this._config.themeStyle = $ui.ThemeStyle.DARK;
+			this._config.themeColor = '#D94646';
+			this._config.themeWeight = $ui.ThemeWeight.NORMAL;
 		}
 		// before push the initial page, add blockAllTapEvent function to body
 		document.body.blockAllTapEvent = function(e) {
@@ -125,6 +132,21 @@ var $ui = {
 				}
 			}
 		}, false);
+	},
+	
+	// Returns the current style of theme
+	getThemeStyle: function() {
+		return this._config.themeStyle;
+	},
+	
+	// Returns the theme color
+	getThemeColor: function() {
+		return this._config.themeColor;
+	},			
+	
+	// Returns the current theme weight
+	getThemeWeight: function() {
+		return this._config.themeWeight;
 	},
 	
 	// Adds a new control to the framework
@@ -553,7 +575,7 @@ function $ui_CircleMenuItem(object, screen) {
 		}
 	}
 	object.dom.inner.ontouchstart = function() {
-		this.style.backgroundColor = $ui.config.brandColor;
+		this.style.backgroundColor = $ui.getThemeColor();
 	}
 	object.dom.inner.ontouchend = function() {
 		this.style.backgroundColor = '';
@@ -618,10 +640,11 @@ function $ui_CoreComponent(object, screen) {
 		object.dom.model = object;
 		$ui.addClass(object.dom, 'ui-core-component');
 		
-		// See if it is running in the head unit
-		if ($ui.config.inHeadUnit === true) {
-			$ui.addClass(object.dom,'in-head-unit');
-		}
+		// Apply our current theme style
+		$ui.addClass(object.dom,$ui.getThemeStyle());
+		
+		// Apply our current theme weight
+		$ui.addClass(object.dom,$ui.getThemeWeight());
 		
 		// Check for our margins
 		if (object.marginTop === true) {
@@ -920,7 +943,7 @@ function $ui_CoreScreen(object, data) {
 						this.model.dom.backgroundDiv.style.backgroundImage = 'url("'+this.model.background.img+'")';
 						if (this.model.background.colorized === true) {
 							this.model.dom.backgroundDiv.style.backgroundBlendMode = 'hard-light';//'multiply';//'luminosity';
-							this.model.dom.backgroundDiv.style.backgroundColor = $ui.config.brandColor;
+							this.model.dom.backgroundDiv.style.backgroundColor = $ui.getThemeColor();
 						}
 						this.model.dom.backgroundDiv.style.opacity = '1';
 						this.model._loader = null;
@@ -1003,9 +1026,8 @@ function $ui_CoreTile(object, screen) {
 	if (object) {
 		$ui.addClass(object.dom,'ui-tile');
 		object._contentShowing = false;
-		object.dom.style.color = $ui.config.tileFontColor;
-		if ($ui.config.inHeadUnit == true) {
-			object.dom.style.borderColor = $ui.config.brandColor;
+		if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+			object.dom.style.borderColor = $ui.getThemeColor();
 		}
 		
 		// See if a style was defined
@@ -1080,7 +1102,7 @@ function $ui_CoreTileDonutChart(object, screen) {
 		object.dom.accent = document.createElement('div');
 		$ui.addClass(object.dom.accent,'accent');
 		object.dom.contentDiv.appendChild(object.dom.accent);
-		var color = ($ui.config.inHeadUnit == true) ? $ui.color_DARK : $ui.color_LIGHT
+		var color = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.color_DARK : $ui.color_LIGHT
 		object.dom.accent.style.color = color;
 		
 		// Set the accent text for the chart
@@ -1186,7 +1208,7 @@ function $ui_CoreTileGauge(object, screen) {
 		
 			//Background 180 degree arc
 			ctx.beginPath();
-			ctx.strokeStyle = ($ui.config.inHeadUnit == true) ? $ui.color_DARK : $ui.color_LIGHT;
+			ctx.strokeStyle = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.color_DARK : $ui.color_LIGHT;
 			ctx.lineWidth = 40;
 			ctx.arc(this._width/2, this._height/2, 80, 0 - 180*Math.PI/180, Math.PI/180, false); //you can see the arc now
 			ctx.stroke();
@@ -1224,15 +1246,15 @@ function $ui_CoreTileGauge(object, screen) {
 			this._newDegrees = percent * 180;
 			switch (true) {
 				case (percent < 0.33):
-					this._color = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_GREAT;
+					this._color = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GREAT;
 					this._step = 2;
 					break;
 				case (percent < 0.77):
-					this._color = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_GOOD;
+					this._color = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GOOD;
 					this._step = 7;
 					break;
 				default:
-					this._color = ($ui.config.inHeadUnit == true) ? $ui.config.brandColor : $ui.color_OK;
+					this._color = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_OK;
 					this._step = 10;
 					break;
 			}
@@ -1472,8 +1494,8 @@ function $ui_GenericListItem(object, screen) {
 	object.dom.accent = document.createElement('div');
 	$ui.addClass(object.dom.accent,'accent');
 	object.dom.details.appendChild(object.dom.accent);
-	if ($ui.config.inHeadUnit === true) {
-		object.dom.accent.style.color = $ui.config.brandColor;
+	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+		object.dom.accent.style.color = $ui.getThemeColor();
 	}
 	if(object.accent != undefined) {
 		object.dom.accent.textContent = object.accent;
@@ -1482,15 +1504,15 @@ function $ui_GenericListItem(object, screen) {
 	
 	// Handle our touch events
 	object.dom.ontouchstart = function() {
-		this.style.backgroundColor = $ui.config.brandColor;
-		if ($ui.config.inHeadUnit === true) {
+		this.style.backgroundColor = $ui.getThemeColor();
+		if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
 			object.dom.accent.style.color = '';
 		}
 	}
 	object.dom.ontouchend = function() {
 		this.style.backgroundColor = '';
-		if ($ui.config.inHeadUnit === true) {
-			object.dom.accent.style.color = $ui.config.brandColor;
+		if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+			object.dom.accent.style.color = $ui.getThemeColor();
 		}
 	}
 	object.dom.ontouchcancel = object.dom.ontouchend;
@@ -2598,7 +2620,7 @@ function $ui_SegmentedControl(object, screen) {
 				this.selected = value;
 				if (value == true) {
 					$ui.addClass(this,'selected');
-					this.style.backgroundColor = $ui.config.brandColor;
+					this.style.backgroundColor = $ui.getThemeColor();
 				} else {
 					$ui.removeClass(this,'selected');
 					this.style.backgroundColor = '';
@@ -2635,7 +2657,7 @@ function $ui_Spinner(object, screen){
 	if (object.forceColor) {
 		$ui.addClass(object.dom.innerDiv, object.forceColor);
 	} else {
-		if ($ui.config.inHeadUnit == true) {
+		if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
 			$ui.addClass(object.dom.innerDiv, 'light');
 		} else {
 			$ui.addClass(object.dom.innerDiv, 'dark');
@@ -2658,7 +2680,7 @@ function $ui_SplitView(object, screen) {
 	object.dom.leftCol = document.createElement('div');
 	$ui.addClass(object.dom.leftCol, 'col');
 	$ui.addClass(object.dom.leftCol, 'left');
-	object.dom.leftCol.style.borderRightColor = $ui.config.brandColor;
+	object.dom.leftCol.style.borderRightColor = $ui.getThemeColor();
 	object.dom.appendChild(object.dom.leftCol);
 	
 	// Load our left column
@@ -2981,7 +3003,7 @@ function $ui_WindowPane(object, data) {
 			object.dom.backBar = document.createElement('div');
 			$ui.addClass(object.dom.backBar,'back-bar');
 			$ui.addClass(object.dom,'has-back');
-			object.dom.backBar.style.borderBottomColor = $ui.config.brandColor;
+			object.dom.backBar.style.borderBottomColor = $ui.getThemeColor();
 			object.dom.appendChild(object.dom.backBar);
 			object.dom.backCaption = document.createElement('span');
 			object.dom.backCaption.textContent = object.backCaption;

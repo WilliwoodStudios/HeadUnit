@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.2764*/
+/* $emulator VERSION: 1.0.0.2774*/
 
 var $emulator = {
 	
@@ -100,7 +100,7 @@ function emulator_CoreWedgeScreen(object, data) {
 		object._degrees	= degrees;
 		// Set our wedge values
 		object.dom.wedge.style.width = wedgeWidth + 'px';
-		object.dom.wedge.style.backgroundColor = $ui.config.brandColor;	
+		object.dom.wedge.style.backgroundColor = $ui.getThemeColor();	
 		if (object._isRightToLeft == true) {
 			degrees = '-' + degrees;
 			object.dom.wedge.style.right = (window.innerWidth > window.innerHeight) ? Math.floor(wedgeWidth/2) + 'px' : '-'+Math.floor(wedgeWidth/1.5) + 'px';
@@ -214,7 +214,7 @@ function emulator_HeadUnitChrome(object, data) {
 		object._primaryWindow = {parent: object};
 		var dom = new emulator_Window(object._primaryWindow,object);
 		$ui.addClass(dom,'primary');
-		dom.style.borderBottomColor = $ui.config.brandColor;
+		dom.style.borderBottomColor = $ui.getThemeColor();
 		object.dom.appendChild(dom);
 		
 		// Create our secondary view area
@@ -276,7 +276,7 @@ function emulator_DefrostButton(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'defrost-button');
 	$ui.addClass(object.dom,'off');
-	object.dom.style.backgroundColor = $ui.config.brandColor;
+	object.dom.style.backgroundColor = $ui.getThemeColor();
 	
 	object.dom.onclick = function() {
 		$ui.playTouchSound();
@@ -286,13 +286,9 @@ function emulator_DefrostButton(object, screen) {
 	}
 	object.dom.ontouchstart = function() {
 		$ui.addClass(this,'selected');
-		//this.style.backgroundColor = $ui.config.brandColor;
-		//this.style.color = 'white';
 	}
 	object.dom.ontouchend = function() {
 		$ui.removeClass(this,'selected');
-		//this.style.backgroundColor = '';
-		//this.style.color = $ui.config.brandColor;
 	}
 	object.dom.ontouchcancel = object.dom.ontouchend;
 	if (!$ui.isMobileDevice()) {
@@ -373,7 +369,7 @@ function emulator_HVACBar(object, screen) {
 	var dom;
 	
 	// Set our brand color
-	object.dom.style.borderTopColor = $ui.config.brandColor;
+	object.dom.style.borderTopColor = $ui.getThemeColor();
 	
 	// Set driver defaults driver heat settings
 	if (object.driver == undefined) {
@@ -564,7 +560,7 @@ emulator_SeatButton.prototype = new $ui_CoreComponent();
 function emulator_TemperatureButton(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'temperature');
-	object.dom.style.color = $ui.config.brandColor;
+	object.dom.style.color = $ui.getThemeColor();
 	
 	// Set the side of the display
 	if (object.side != undefined) {
@@ -582,7 +578,7 @@ function emulator_TemperatureButton(object, screen) {
 		this.style.color = 'white';
 	}
 	object.dom.ontouchend = function() {
-		this.style.color = $ui.config.brandColor;
+		this.style.color = $ui.getThemeColor();
 	}
 	object.dom.ontouchcancel = object.dom.ontouchend;
 	if (!$ui.isMobileDevice()) {
@@ -594,7 +590,7 @@ function emulator_TemperatureButton(object, screen) {
 	// Set the temperature
 	object.setTemperature = function(value) {
 		this.value = value;
-		var degree = ($ui.config.celsius == true) ? 'C' : 'F';
+		var degree = ($system.isCelsius()) ? 'C' : 'F';
 		this.dom.innerHTML = value+'<span class="small">&deg;'+degree+'</span>';
 	}
 	object.setTemperature = object.setTemperature.bind(object);
@@ -613,13 +609,13 @@ function emulator_NavigationBar(object, screen) {
 	$ui.addClass(object.dom,'navigation');
 	
 	// Set our brand color
-	object.dom.style.borderRightColor = $ui.config.brandColor;
-	object.dom.style.borderBottomColor = $ui.config.brandColor;
+	object.dom.style.borderRightColor = $ui.getThemeColor();
+	object.dom.style.borderBottomColor = $ui.getThemeColor();
 	
 	// Add our clock
 	object.dom.clock = document.createElement('div');
 	$ui.addClass(object.dom.clock,'clock');
-	object.dom.clock.style.color = $ui.config.brandColor;
+	object.dom.clock.style.color = $ui.getThemeColor();
 	object.dom.appendChild(object.dom.clock);
 	object._updateClock = function() {
 		var date = new Date(),
@@ -655,7 +651,7 @@ function emulator_NavigationBar(object, screen) {
 	// Create our highlight dot
 	object.dom.dot = document.createElement('div');
 	$ui.addClass(object.dom.dot,'dot');
-	object.dom.dot.style.backgroundColor = $ui.config.brandColor;
+	object.dom.dot.style.backgroundColor = $ui.getThemeColor();
 	object.dom.appendChild(object.dom.dot);
 	
 	// Create the home button
