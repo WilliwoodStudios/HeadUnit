@@ -22,6 +22,74 @@ var $core = {
 		}
 	},
 	
+	// Returns the background image based on the current color code
+	getBackgroundImage: function(colorCode) {
+		var key;
+		switch (colorCode) {
+			case $system.Color.TURQUOISE:
+				key = 'turquoise';
+				break;
+			case $system.Color.EMERALD: 
+				key = 'emerald';
+				break;
+			case $system.Color.PETER_RIVER: 
+				key = 'peter.river';
+				break;
+			case $system.Color.AMETHYST: 
+				key = 'amethyst';
+				break;
+			case $system.Color.WET_ASPHAULT: 
+				key = 'wet.asphault';
+				break;
+			case $system.Color.GREEN_SEA:
+				key = 'green.sea';
+				break;
+			case $system.Color.NEPHRITIS: 
+				key = 'nephritis';
+				break;
+			case $system.Color.BELIZE_HOLE:
+				key = 'belize.hole';
+				break;
+			case $system.Color.WISTERIA: 
+				key = 'wisteria';
+				break;
+			case $system.Color.MIDNIGHT_BLUE: 
+				key = 'midnight.blue';
+				break;
+			case $system.Color.SUN_FLOWER: 
+				key = 'sun.flower';
+				break;
+			case $system.Color.CARROT: 
+				key = 'carrot';
+				break;
+			case $system.Color.ALIZARIN:
+				key = 'alizarin';
+				break;
+			case $system.Color.CONCRETE: 
+				key = 'concrete';
+				break;
+			case $system.Color.ORANGE: 
+				key = 'orange';
+				break;
+			case $system.Color.PUMPKIN: 
+				key = 'pumpkin';
+				break;
+			case $system.Color.POMEGRANATE: 
+				key = 'pomegranate';
+				break;
+			case $system.Color.SILVER: 
+				key = 'silver';
+				break;
+			case $system.Color.ASBESTOS: 
+				key = 'asbestos';
+				break;
+		}
+		if (key) {
+			return 'img/background.' + key +'.png'
+		} 
+		return undefined;
+	},
+	
 	// Private function to load the data from a JSON URL
 	_loadJSONFromUrl: function(url, callback) {
 		var xhr = new XMLHttpRequest();

@@ -13,82 +13,25 @@ var $system = {
 		celsius: false
 	},
 	Color: {
-		TURQUOISE: {
-			key: 'color.turquoise',
-			value: '#1ABC9C'
-		},
-		EMERALD: {
-			key: 'color.emerald',
-			value: '#2ECC71'
-		},
-		PETER_RIVER: {
-			key: 'color.peter.river',
-			value: '#3498DB'
-		},
-		AMETHYST: {
-			key: 'color.amethyst',
-			value: '#AF7AC4'
-		},
-		WET_ASPHAULT: {
-			key: 'color.wet.asphault',
-			value: '#34495E'
-		},
-		GREEN_SEA: {
-			key: 'color.green.sea',
-			value: '#16A085'
-		},
-		NEPHRITIS: {
-			key: 'color.nephritis',
-			value: '#27AE60'
-		},
-		BELIZE_HOLE: {
-			key: 'color.belize.hole',
-			value: '#2980B9'
-		},
-		WISTERIA: {
-			key: 'color.wisteria',
-			value: '#8E44AD'
-		},
-		MIDNIGHT_BLUE: {
-			key: 'color.midnight.blue',
-			value: '#2C3E50'
-		},
-		SUN_FLOWER: {
-			key: 'color.sun.flower',
-			value: '#F1C40F'
-		},
-		CARROT: {
-			key: 'color.carrot',
-			value: '#E67E22'
-		},
-		ALIZARIN: {
-			key: 'color.alizarin',
-			value: '#E74C3C'
-		},
-		CONCRETE: {
-			key: 'color.concrete',
-			value: '#AAB7B7'
-		},
-		ORANGE: {
-			key: 'color.orange',
-			value: '#F39C12'
-		},
-		PUMPKIN: {
-			key: 'color.pumpkin',
-			value: '#D35400'
-		},
-		POMEGRANATE: {
-			key: 'color.pomegranate',
-			value: '#C0392B'
-		},
-		SILVER: {
-			key: 'color.silver',
-			value: '#BDC3C7'
-		},
-		ASBESTOS: {
-			key: 'color.asbestos',
-			value: '#98A3A3'
-		}
+		TURQUOISE: '#1ABC9C',
+		EMERALD:  '#2ECC71',
+		PETER_RIVER: '#3498DB',
+		AMETHYST: '#AF7AC4',
+		WET_ASPHAULT: '#34495E',
+		GREEN_SEA: '#16A085',
+		NEPHRITIS: '#27AE60',
+		BELIZE_HOLE: '#2980B9',
+		WISTERIA: '#8E44AD',
+		MIDNIGHT_BLUE: '#2C3E50',
+		SUN_FLOWER: '#F1C40F',
+		CARROT: '#E67E22',
+		ALIZARIN: '#D94646', // Our brand color
+		CONCRETE: '#AAB7B7',
+		ORANGE: '#F39C12',
+		PUMPKIN: '#D35400',
+		POMEGRANATE: '#C0392B',
+		SILVER: '#BDC3C7',
+		ASBESTOS: '#98A3A3'
 	},
 	MediaSourceType: {
 		PLAYER: 0,

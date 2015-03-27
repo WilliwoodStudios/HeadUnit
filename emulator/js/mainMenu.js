@@ -3,12 +3,6 @@ function mainMenu() {
 	
 	this.disableAnimation = true;
 	
-	this.background = {
-		img: 'img/background.jpg',
-		colorized: true,
-		position: 'center bottom',
-	};
-	
 	this.content = [
 		{
 			component: $ui.CircleMenu,
@@ -47,6 +41,12 @@ function mainMenu() {
 	// Load the menu
 	this.onshow = function() {
 		$core.getAppsList(this.onapplistrefresh);
+		// Get our background image
+		var backgroundImg = $core.getBackgroundImage($ui.getThemeColor());
+		if (backgroundImg) {
+			console.log(backgroundImg);
+			this.setBackground(new ScreenBackground(backgroundImg));
+		}
 	};
 	
 	// Refresh the list of apps

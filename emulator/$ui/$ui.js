@@ -1,4 +1,4 @@
-/* $ui VERSION: 1.0.0.123*/
+/* $ui VERSION: 1.0.0.132*/
 
 var $system;
 
@@ -49,7 +49,7 @@ var $ui = {
 		if ($system) {
 			var config = window.parent.$system._config;
 			this._config.themeStyle = (config.themeStyle == undefined) ? $ui.ThemeStyle.DARK : config.themeStyle;
-			this._config.themeColor = (config.themeColor == undefined) ? '#D94646' : config.themeColor;
+			this._config.themeColor = (config.themeColor == undefined) ? $system.Color.ALIZARIN : config.themeColor;
 			this._config.themeWeight = (config.themeWeight == undefined) ? $ui.ThemeWeight.BOLD : config.themeWeight;
 		} else {
 			this._config.themeStyle = $ui.ThemeStyle.DARK;
@@ -903,16 +903,37 @@ function $ui_CoreScreen(object, data) {
 		object.dom.backgroundDiv = document.createElement('div');
 		$ui.addClass(object.dom.backgroundDiv,'background');
 		object.dom.appendChild(object.dom.backgroundDiv);
-		
-		// See if there is a background image
-		if (object.background) {
-			if (object.background.repeat === true) {
-				object.dom.backgroundDiv.style.backgroundRepeat = 'repeat';
-			} else {
-				object.dom.backgroundDiv.style.backgroundSize = 'cover';
+
+		// Set the background image for a screen
+		object.setBackground = function(screenBackground) {
+			// Clear existing background
+			if (this.background) {
+				this.dom.backgroundDiv.style.opacity = '0';
+			} 
+			// Load new background
+			if (screenBackground != undefined) {
+				this.background = screenBackground;
+				// Check for repeat
+				if (this.background.repeat === true) {
+					this.dom.backgroundDiv.style.backgroundRepeat = 'repeat';
+				} else {
+					this.dom.backgroundDiv.style.backgroundSize = 'cover';
+				}
+				// Load our image
+				if (this.background.img) {
+					this._loader = new Image();
+					this._loader.model = this;
+					this._loader.onload = function() {
+						this.model.dom.backgroundDiv.style.backgroundImage = 'url("'+this.model.background.img+'")';
+						this.model.dom.backgroundDiv.style.opacity = '1';
+						this.model._loader = null;
+					}
+					this._loader.src = this.background.img;
+				}
 			}
 		}
-
+		object.setBackground = object.setBackground.bind(object);
+		
 		// Raise our onshow event when the animation ends
 		object.dom.pushAnimationEnd = function(e) {
 			this.removeEventListener('webkitAnimationEnd', this.pushAnimationEnd); // Webkit
@@ -935,21 +956,7 @@ function $ui_CoreScreen(object, data) {
 			this.dom.dispatchEvent(evt);
 			// Load the background if needed
 			if (this.background) {
-				var background = this.background;
-				if (background.img) {
-					this._loader = new Image();
-					this._loader.model = this;
-					this._loader.onload = function() {
-						this.model.dom.backgroundDiv.style.backgroundImage = 'url("'+this.model.background.img+'")';
-						if (this.model.background.colorized === true) {
-							this.model.dom.backgroundDiv.style.backgroundBlendMode = 'hard-light';//'multiply';//'luminosity';
-							this.model.dom.backgroundDiv.style.backgroundColor = $ui.getThemeColor();
-						}
-						this.model.dom.backgroundDiv.style.opacity = '1';
-						this.model._loader = null;
-					}
-					this._loader.src = background.img;
-				}
+				this.setBackground(this.background);
 			}
 		}
 		object.initialize = object.initialize.bind(object);
@@ -1020,6 +1027,15 @@ function $ui_CoreScreen(object, data) {
 $ui_CoreScreen.prototype = new $ui_CoreComponent();
 
 
+// This provides an interface for a screen's background image
+function ScreenBackground(img, repeat) {
+	if (img == null) throw new Error('ScreenBackground: img cannot be null');
+	if (img == undefined) throw new Error('ScreenBackground: img cannot be undefined');
+	this.img = img;
+	if (repeat == undefined || repeat == null) {
+		this.repeat = false;
+	}
+}
 function $ui_CoreTile(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	
