@@ -1,4 +1,4 @@
-/* $ui VERSION: 1.0.0.132*/
+/* $ui VERSION: 1.0.0.166*/
 
 var $system;
 
@@ -587,9 +587,14 @@ function $ui_CircleMenuItem(object, screen) {
 		object.dom.inner.onmouseleave = object.dom.inner.ontouchend;
 	}
 	
+	// Create the icon area 
+	object.dom.icon = document.createElement('div');
+	$ui.addClass(object.dom.icon,'icon');
+	object.dom.inner.appendChild(object.dom.icon);
+	
 	// Set the image
 	if (object.img) {
-		object.dom.inner.style.backgroundImage = 'url("'+ object.img + '")';
+		object.dom.icon.style.backgroundImage = 'url("'+ object.img + '")';
 	}
 	
 	// Add our caption

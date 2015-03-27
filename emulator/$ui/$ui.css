@@ -1,4 +1,4 @@
-/* $ui VERSION: 1.0.0.132*/
+/* $ui VERSION: 1.0.0.166*/
 body,
 html {
   padding: 0px;
@@ -53,15 +53,29 @@ div {
   border-radius: 101px;
   box-sizing: border-box;
   cursor: pointer;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden;
+}
+.ui-circle-menu.ui-theme-dark > .menu-item > .circle {
+  border-color: #d4d4d4;
+  background-color: #000000;
+}
+.ui-circle-menu.ui-theme-light > .menu-item > .circle {
+  border-color: #d4d4d4;
+  background-color: #FFFFFF;
+}
+.ui-circle-menu > .menu-item > .circle > .icon {
+  height: 194px;
+  width: 194px;
+  border-radius: 98px;
   background-position: center center;
   background-size: 120px 120px;
   background-repeat: no-repeat;
-  margin-left: auto;
-  margin-right: auto;
 }
-.ui-circle-menu.ui-theme-dark > .menu-item > .circle {
-  border-color: #ffffff;
-  background-color: #000000;
+.ui-circle-menu.ui-theme-light > .menu-item > .circle > .icon {
+  -webkit-filter: invert(50%);
+  filter: invert(50%);
 }
 .ui-circle-menu > .menu-item > .caption {
   position: absolute;
@@ -129,7 +143,7 @@ div {
   background-color: #000000;
 }
 .ui-core-screen.ui-theme-light {
-  background-color: #d8d8d8;
+  background-color: #e6e6e6;
 }
 /* Base Tile styling */
 .ui-tile {
@@ -151,7 +165,7 @@ div {
   color: #ffffff;
 }
 .ui-tile.ui-theme-light {
-  background-color: #d8d8d8;
+  background-color: #e6e6e6;
   border-color: #d4d4d4;
   color: #747474;
 }
@@ -333,7 +347,7 @@ div {
 }
 .ui-generic-list-item.ui-theme-light {
   border-bottom-color: #d4d4d4;
-  background-color: #d8d8d8;
+  background-color: #e6e6e6;
   color: #222222;
 }
 .ui-generic-list-item.ui-theme-dark {
@@ -783,6 +797,12 @@ div {
     height: 100px;
     width: 100px;
     border-radius: 51px;
+  }
+  .ui-circle-menu > .menu-item > .circle > .icon {
+    height: 94px;
+    width: 94px;
+    border-width: 1px;
+    border-radius: 48px;
     background-size: 70px 70px;
   }
   .ui-circle-menu > .menu-item > .caption {
