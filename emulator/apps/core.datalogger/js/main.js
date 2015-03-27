@@ -3,12 +3,6 @@ function main() {
 	
 	this.disableAnimation = true;
 	
-	this.background = {
-		img: 'img/background.jpg',
-		colorized: true,
-		position: 'center bottom',
-	};
-	
 	this.content = [
 		{
 			component: $ui.CircleMenu,
@@ -55,6 +49,10 @@ function main() {
 	];
 	
 	this.onshow = function() {
-		
+		// Get our background image
+		var backgroundImg = $core.getBackgroundImage($ui.getThemeColor());
+		if (backgroundImg) {
+			this.setBackground(new ScreenBackground('../../'+backgroundImg));
+		}
 	}
 }
