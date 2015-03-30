@@ -50,6 +50,76 @@ function PlayerMediaSource() {
 	// Load all of our media library
 	$core._loadJSONFromUrl('data/data-mediaLibrary.json', object._populateLibrary);
 	
+	// Retrieves the list of available albums in alphabetical order
+	object.getAlbums = function() {
+		var result = [],
+			i,
+			j,
+			newAlbum,
+			entry,
+			artist,
+			existingAlbum;
+		for (i = 0; i < this._library.albums.length; i++) {
+			newAlbum = this._library.albums[i];
+			artist = this._library.index.artists[newAlbum.artistUid];
+			entry = {
+				uid: newAlbum.uid,
+				name: newAlbum.name,
+				year: newAlbum.year,
+				albumArt: newAlbum.artwork,
+				artistName: artist.name,
+				genre: this._library.index.genres[artist.genreUid].name
+			}
+			if (result.length == 0) {
+				result.push(entry);
+				continue;
+			}
+			// Insert sort the results
+			for (j = 0; j < result.length; j++) {
+				existingAlbum = result[j];
+				// Skip a duplicate entry 
+				if ((entry.name == existingAlbum.name) && (entry.uid == existingAlbum.uid)){
+					continue;
+				} else if (entry.name.toLowerCase() <= existingAlbum.name.toLowerCase()) {
+					// Insert before existing album entry and continue
+					result.splice(j,0,entry);
+					break;
+				}
+				// If it is greater than 
+				if ((j + 1) == result.length) {
+					result.push(entry);
+					break;
+				}
+			}
+		}
+		return result
+	}
+	object.getAlbums = object.getAlbums.bind(object);
+	
+	// Return the top played albums (maximum 4)
+	object.getMostPlayedAlbums = function() {
+		var result = [],
+			i,
+			album,
+			entry,
+			artist;
+		for (i = 0; i < 4; i++) {
+			album = this._library.albums[i];
+			artist = this._library.index.artists[album.artistUid];
+			entry = {
+				uid: album.uid,
+				name: album.name,
+				year: album.year,
+				albumArt: album.artwork,
+				artistName: artist.name,
+				genre: this._library.index.genres[artist.genreUid].name
+			}
+			result.push(entry);
+		}
+		return result;
+	}
+	object.getMostPlayedAlbums = object.getMostPlayedAlbums.bind(object);
+	
 	// Retrieves the current playing song
 	object.getCurrentSong = function(soundEffect) {
 		var index = this._library.index,

@@ -13,12 +13,20 @@
 		
 		<!-- App Code -->
 		<script type="text/javascript" src="js/main.js"></script>
+		<script type="text/javascript" src="js/libraryMenu.js"></script>
+		<script type="text/javascript" src="js/albumList.js"></script>
 		
 		<!-- viewport -->
 		<meta name="viewport" content="initial-scale=1.0,user-scalable=no">
 
 		<script>
+			var $core;
+			
 			function onDeviceReady() {
+				// Get
+				if (window.parent.$core) {
+					$core = window.parent.$core;
+				}
 				// Initialize
 				$ws12.init();
 				$ui.init(main);	

@@ -12,7 +12,7 @@ function main() {
 				property: 'currentSong'
 			},
 			onmenuclick: function() {
-				console.log('menuclick');
+				$ui.push(libraryMenu);
 			},
 			onplay: function() {
 				var mediaSource = $system.audio.getActiveMediaSource();
@@ -51,7 +51,6 @@ function main() {
 						paused: mediaSource.isPaused()
 					}
 				};
-			console.log(data);
 			this.mediaPlayerProvider.setData(data);
 		}
 	}

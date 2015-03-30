@@ -10,7 +10,42 @@
 			"artistUid": "s09wdfu09jeopj",
 			"year": 1992,
 			"artwork": "../../data/img/coverart/licensed_to_ill.jpg"
-		}	
+		},
+		{
+			"uid": "9879ehfjidhf98",
+			"name": "Billy Talent III",
+			"artistUid": "98237hjkhds9",
+			"year": 2009,
+			"artwork": "../../data/img/coverart/album_billytalent.jpg"
+		},
+		{
+			"uid": "4957jf98yf8wh",
+			"name": "Back in Black",
+			"artistUid": "4398hgdioh",
+			"year": 1980,
+			"artwork": "../../data/img/coverart/album_back_in_black.jpg"
+		},
+		{
+			"uid": "498357hnfiuhf87",
+			"name": "The Marshal Mathers LP 2",
+			"artistUid": "948ungfih",
+			"year": 2013,
+			"artwork": "../../data/img/coverart/album_berzerk.jpg"
+		},
+		{
+			"uid": "2398fnoihfiu",
+			"name": "Advanced Basics",
+			"artistUid": "98759843",
+			"year": 2014,
+			"artwork": "../../data/img/coverart/album_uss.jpg"
+		},
+		{
+			"uid": "2098340jfkj",
+			"name": "Word of Mouf",
+			"artistUid": "2398579",
+			"year": 2001,
+			"artwork": "../../data/img/coverart/album_wordofmouf.jpg"
+		}
 	],
 	
 	"songs": [
@@ -20,6 +55,13 @@
 			"duration": 217,
 			"albumUid": "u3459ijf983u",
 			"path": "data/media/Beastie%20Boys/License%20To%20Ill/SoWhatChaWant.mp3"
+		},
+		{
+			"uid": "sjdlkfjsio89",
+			"name": "Rusted from the Rain",
+			"duration": 253,
+			"albumUid": "9879ehfjidhf98",
+			"path": "data/media/Billy%Talent/Billy%20Talent%20III/RustedFromTheRain.m4a"
 		}
 	],
 	
@@ -28,6 +70,31 @@
 			"uid": "s09wdfu09jeopj",
 			"name": "Beastie Boys",
 			"genreUid": "28937549023hkjdh"
+		},
+		{
+			"uid": "98237hjkhds9",
+			"name": "Billy Talent",
+			"genreUid": "2165465sfsdjh"
+		},
+		{
+			"uid": "4398hgdioh",
+			"name": "AC/DC",
+			"genreUid": "98wd7hhhky"
+		},
+		{
+			"uid": "948ungfih",
+			"name": "Eminem",
+			"genreUid": "28937549023hkjdh"
+		},
+		{
+			"uid": "98759843",
+			"name": "USS",
+			"genreUid": "2165465sfsdjh"
+		},
+		{
+			"uid": "2398579",
+			"name": "Ludacris",
+			"genreUid": "28937549023hkjdh"
 		}
 	],
 	
@@ -35,6 +102,14 @@
 		{
 			"uid": "28937549023hkjdh",
 			"name": "Hip Hop/Rap"
+		},
+		{
+			"uid": "2165465sfsdjh",
+			"name": "Alternative"
+		},
+		{
+			"uid": "98wd7hhhky",
+			"name": "Rock"
 		}
 	]
 }

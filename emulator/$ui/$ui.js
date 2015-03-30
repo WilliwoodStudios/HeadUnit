@@ -1,4 +1,4 @@
-/* $ui VERSION: 1.0.0.166*/
+/* $ui VERSION: 1.0.0.199*/
 
 var $system;
 
@@ -79,6 +79,8 @@ var $ui = {
 		this.addExtension(new UIExtension('TabbedPane', $ui_TabbedPane));
 		this.addExtension(new UIExtension('List', $ui_List));
 		this.addExtension(new UIExtension('SplitView', $ui_SplitView));
+		this.addExtension(new UIExtension('ControlGroup', $ui_ControlGroup));
+		this.addExtension(new UIExtension('Header', $ui_Header));
 		def = {
 			SpinnerSize: {
 				LARGE: 'large', 
@@ -113,6 +115,12 @@ var $ui = {
 			}
 		};
 		this.addExtension(new UIExtension('GenericListItem', $ui_GenericListItem, $ui.UIExtensionType.LISTITEM, def));
+		def = { 
+			ImageListEvent: {
+				ONCLICK:'onclick' 
+			}
+		};
+		this.addExtension(new UIExtension('ImageListItem', $ui_ImageListItem, $ui.UIExtensionType.LISTITEM, def));
 		// Push the first screen
 		this.push(object);
 		// Handle window resize
@@ -623,6 +631,28 @@ function $ui_CircleMenuItem(object, screen) {
 }
 
 $ui_CircleMenuItem.prototype = new $ui_CoreComponent();
+function $ui_ControlGroup(object, screen) {
+	$ui_CoreComponent.call(this, object, screen);
+	$ui.addClass(object.dom,'ui-control-group');
+	
+	// If there is no data provider then just create the items
+	if (object.content) {
+		var i,
+			item,
+			itemDom;
+		for (i = 0; i < object.content.length; i++) {
+			item = object.content[i];
+			itemDom = $ui.createControl(item, object.screen);
+			if (itemDom) {
+				object.dom.appendChild(itemDom);
+			}
+		}
+	}	
+	
+	return object.dom;
+}
+
+$ui_ControlGroup.prototype = new $ui_CoreComponent();
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
@@ -1554,6 +1584,70 @@ function $ui_GenericListItem(object, screen) {
 }
 
 $ui_GenericListItem.prototype = new $ui_CoreComponent();
+function $ui_Header(object, screen) {
+	$ui_CoreComponent.call(this, object, screen);
+	$ui.addClass(object.dom,'ui-header');
+	object.dom.style['border-bottom-color'] = $ui.getThemeColor();
+	
+	if (object.caption) {
+		object.dom.textContent = object.caption;
+	}
+	
+	return object.dom;
+}
+
+$ui_Header.prototype = new $ui_CoreComponent();
+function $ui_ImageListItem(object, screen) {
+	$ui_CoreComponent.call(this, object, screen);
+	$ui.addClass(object.dom, 'ui-image-list-item');
+	
+	// Create the image
+	object.dom.img = document.createElement('div');
+	$ui.addClass(object.dom.img,'img');
+	object.dom.appendChild(object.dom.img);
+	
+	if(object.img != undefined && object.img != null && object.img != '') {
+		// Image Loader
+		object._loader = new Image();
+		object._loader.model = object;
+		object._loader.onload = function() {
+			this.model.dom.img.style.backgroundImage = 'url("'+ this.model.img + '")';
+			this.model.dom.img.style.opacity = '1.0';
+			this.model._loader = undefined;
+		}
+		object._loader.onerror = function() {
+			this.model.dom.img.style.backgroundImage = '';
+			this.model.dom.img.style.opacity = '1.0';
+			this.model._loader = undefined;
+		}
+		object._loader.src = object.img;
+	} else {
+		object.dom.img.style.opacity = '1.0';
+		object.dom.loader = undefined;
+	}
+	
+
+	// Caption
+	object.dom.captionDiv = document.createElement('div');
+	$ui.addClass(object.dom.captionDiv,'caption');
+	object.dom.appendChild(object.dom.captionDiv);
+	if (object.caption) {
+		object.dom.captionDiv.textContent = object.caption;
+	} else {
+		$ui.addClass(object.dom.captionDiv, 'no-caption');
+	}
+
+	// Pass the onclick back to the list
+	object.dom.addEventListener('click', function() {
+		if (this.model.parent.onaction == undefined) return;
+		var event = new ListEvent(this.model, $ui.ImageListItem.ImageListEvent.ONCLICK);
+		this.model.parent._onaction(this.model, event);
+	},false);
+
+	return object.dom;
+}
+
+$ui_ImageListItem.prototype = new $ui_CoreComponent();
 function $ui_List(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-list');
@@ -1595,17 +1689,12 @@ function $ui_List(object, screen) {
 	
 	// Create the DOM for a list item depending on the list type
 	object._createItemDom = function(item) {
-		// Find and create the list item
-		var i,
-			extension,
-			dom;
-		for (i = 0; i < $ui.definitions.length; i++) {
-			extension = $ui.definitions[i];
-			if (extension.type != $ui.UIExtensionType.LISTITEM) continue;
-			if (extension.component == this.style) {
-				dom = new extension.constructor(item,this.screen);
-				break;
-			}
+		var dom;
+		// See if the item is a header
+		if (item.component && (item.component == $ui.Header)) {
+			dom = $ui.createControl(item,this.screen);
+		} else if (this._itemConstructor != undefined) {
+			dom = new this._itemConstructor(item,this.screen);
 		}
 		return dom;
 	}
@@ -1739,9 +1828,21 @@ function $ui_List(object, screen) {
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);
 	
-	// Cycle through list items
+	
 	var i,
-		item,
+		extension;
+	// Determine our item constructor
+	for (i = 0; i < $ui.definitions.length; i++) {
+		extension = $ui.definitions[i];
+		if (extension.type != $ui.UIExtensionType.LISTITEM) continue;
+		if (extension.component == object.style) {
+			object._itemConstructor = extension.constructor;
+			break;
+		}
+	}
+
+	// Cycle through list items
+	var	item,
 		index;
 	if (object.items) {
 		for (i = 0; i < object.items.length; i++) {
