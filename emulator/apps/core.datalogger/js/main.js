@@ -42,6 +42,8 @@ function main() {
 			onclick: function(item) {
 				if (item.identifier == 'logger.zero.to.sixty') {
 					$ui.push(zeroToSixty);
+				} else if (item.identifier == 'logger.quarter.mile') {
+					$ui.push(quarterMile);
 				}
 			}
 		}

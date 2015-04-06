@@ -1,4 +1,4 @@
-/* $ws12 VERSION: 1.0.0.52*/
+/* $ws12 VERSION: 1.0.0.57*/
 
 var $ws12 = {
 	// Initialize the toolkit extensions
@@ -21,8 +21,8 @@ var $ws12 = {
 		$ui.addExtension(new UIExtension('TileRecord', ws12_TileRecord));
 		$ui.addExtension(new UIExtension('TileTimer', ws12_TileTimer));
 		$ui.addExtension(new UIExtension('TileWeeksActivity', ws12_TileWeeksActivity));
-		$ui.addExtension(new UIExtension('TileZeroToSixty', ws12_TileZeroToSixty));
-		$ui.addExtension(new UIExtension('TileZeroToSixtyHistory', ws12_TileZeroToSixtyHistory));
+		$ui.addExtension(new UIExtension('TileTimeDonut', ws12_TileTimeDonut));
+		$ui.addExtension(new UIExtension('TileTimeHistory', ws12_TileTimeHistory));
 		// Add our list item extensions
 		$ui.addExtension(new UIExtension('PhoneLogListItem', ws12_PhoneLogListItem, $ui.UIExtensionType.LISTITEM, {ONCLICK: 'onclick',INCOMING: 'incoming',OUTGOING: 'outgoing',MISSED: 'missed'}));
 	}
@@ -1616,6 +1616,151 @@ function ws12_TileRecord(object, screen) {
 }
 
 ws12_TileRecord.prototype = new $ui_CoreTile();
+function ws12_TileTimeDonut(object, screen) {
+	object._size = undefined;
+	$ui_CoreTileDonutChart.call(this, object, screen);
+	$ui.addClass(object.dom,'ws12-tile-time-donut');
+	
+	// Figure out the data array for this chart
+	object._calculateData = function() {
+		var data;
+		if (this.target != undefined && this.value != undefined) {
+			var colorValue,
+				percent;
+			// Check for errors in data
+			if (this.value < 0) this.value = 0;
+			if (this.value < this.target) {
+				percent = 100;	
+			} else {
+				percent = Math.ceil((this.target / this.value)*100);
+			}
+			// Determine Color
+			switch (true) {
+				case (percent > 90):
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GREAT;
+					break;
+				case (percent > 50):
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GOOD;
+					break;
+				default:
+					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_OK;
+					break;
+			}
+			// Create our chart data object
+			data = [
+				{
+					value: percent,
+					color: colorValue,
+				},
+				{
+					value: (100-percent),
+					color: ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.color_DARK : $ui.color_LIGHT
+				}
+			];	
+		} 
+		return data;
+	}
+	object._calculateData = object._calculateData.bind(object);
+	
+
+	// Private function to handle provider updates
+	object._providerUpdate = function(value) {
+		if (value != undefined) {
+			this.value = value.value;
+			this.target = value.target;
+			this.accent = value.accent;
+			this.caption = (value.caption == undefined) ? '' : value.caption;
+		} else {
+			this.value = 0;
+			this.target = 0;
+			this.accent = undefined;
+			this.caption = '';
+		}
+		// Populate our chart with data
+		var data = this._calculateData();
+		if (data != undefined) {
+			this._setData(data);
+			this._setCaption('<span class="tall">'+this.value + '</span>&nbsp;'+ this.caption);
+			this._setAccent(this.accent);
+		}
+		this.showContent(true);
+	}
+	object._providerUpdate = object._providerUpdate.bind(object);	
+	
+	// Load our control if no provider is connected
+	if (object.provider == undefined) {
+		object._providerUpdate(object)
+	}
+	
+	return object.dom;
+}
+
+ws12_TileTimeDonut.prototype = new $ui_CoreTileDonutChart();
+function ws12_TileTimeHistory(object, screen) {
+	// This tile is 1 x 1
+	object._size = $ui.TileSize.WIDE;
+	$ui_CoreTile.call(this, object, screen);
+	$ui.addClass(object.dom,'ws12-tile-time-history');
+	
+	// Create the caption area
+	object.dom.caption = document.createElement('div');
+	$ui.addClass(object.dom.caption,'caption');
+	object.dom.contentDiv.appendChild(object.dom.caption);
+	
+	// Create our chart area
+	object.dom.canvas = document.createElement('canvas');
+	$ui.addClass(object.dom.canvas, 'chart');
+	object.dom.canvas.height = 190;
+	object.dom.canvas.width = 490;
+	object.dom.contentDiv.appendChild(object.dom.canvas);
+	object.dom.ctx = object.dom.canvas.getContext('2d');
+	object.dom.chart = new Chart(object.dom.ctx);
+	
+	// Private function to handle provider updates
+	object._providerUpdate = function(value) {
+		var i,
+			_labels = [];
+		// Assign our values
+		if (value != undefined) {
+			this.data = value.data;
+			this.labels = value.labels
+			this.caption = (value.caption == undefined) ? '' : value.caption;
+		} else {
+			this.data = undefined;
+			this.labels = undefined;
+		}
+		this.dom.caption.textContent = this.caption;// 'Recorded 0-60 times (sec)';
+		// Get our root color
+		var graphColor = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_OK,
+			R = parseInt(($ui._cutHex(graphColor)).substring(0,2),16),
+			G = parseInt(($ui._cutHex(graphColor)).substring(2,4),16),
+			B = parseInt(($ui._cutHex(graphColor)).substring(4,6),16);	
+		// Load our data
+		var data = {
+			labels: this.labels,
+			datasets: [
+				{
+					fillColor: 'rgba('+R+','+G+','+B+',0.5)',
+					strokeColor: 'rgba('+R+','+G+','+B+',1)',
+					data: this.data
+				}
+			]
+		}
+		this.dom.chart.Line(data,{scaleShowGridLines: true,showTooltips: false,scaleFontColor: window.getComputedStyle(this.dom).color});
+		this.showContent(true);
+	}
+	object._providerUpdate = object._providerUpdate.bind(object);	
+	
+	// Load our control if no provider is connected
+	if (object.provider == undefined) {
+		object._providerUpdate(object)
+	}
+	
+	
+	return object.dom;
+}
+
+ws12_TileTimeHistory.prototype = new $ui_CoreTile();
 function ws12_TileTimer(object, screen) {
 	// This tile is 1 x 2
 	object._size = $ui.TileSize.WIDE;
@@ -1733,148 +1878,3 @@ function ws12_TileWeeksActivity(object, screen) {
 }
 
 ws12_TileWeeksActivity.prototype = new $ui_CoreTile();
-function ws12_TileZeroToSixty(object, screen) {
-	object._size = undefined;
-	$ui_CoreTileDonutChart.call(this, object, screen);
-	$ui.addClass(object.dom,'ws12-tile-zero-to-sixty');
-	
-	// Figure out the data array for this chart
-	object._calculateData = function() {
-		var data;
-		if (this.target != undefined && this.value != undefined) {
-			var colorValue,
-				percent;
-			// Check for errors in data
-			if (this.value < 0) this.value = 0;
-			if (this.value < this.target) {
-				percent = 100;	
-			} else {
-				percent = Math.ceil((this.target / this.value)*100);
-			}
-			// Determine Color
-			switch (true) {
-				case (percent > 90):
-					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GREAT;
-					break;
-				case (percent > 50):
-					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_GOOD;
-					break;
-				default:
-					colorValue = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_OK;
-					break;
-			}
-			// Create our chart data object
-			data = [
-				{
-					value: percent,
-					color: colorValue,
-				},
-				{
-					value: (100-percent),
-					color: ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.color_DARK : $ui.color_LIGHT
-				}
-			];	
-		} 
-		return data;
-	}
-	object._calculateData = object._calculateData.bind(object);
-	
-
-	// Private function to handle provider updates
-	object._providerUpdate = function(value) {
-		if (value != undefined) {
-			this.value = value.value;
-			this.target = value.target;
-			this.accent = value.accent;
-		} else {
-			this.value = 0;
-			this.target = 0;
-			this.accent = undefined;
-		}
-		// Populate our chart with data
-		var data = this._calculateData();
-		if (data != undefined) {
-			this._setData(data);
-			this._setCaption('<span class="tall">'+this.value + '</span>&nbsp;sec 0-60');
-			this._setAccent(this.accent);
-		}
-		this.showContent(true);
-	}
-	object._providerUpdate = object._providerUpdate.bind(object);	
-	
-	// Load our control if no provider is connected
-	if (object.provider == undefined) {
-		object._providerUpdate({value: object.value, target: object.target, accent: object.accent })
-	}
-	
-	
-	return object.dom;
-}
-
-ws12_TileZeroToSixty.prototype = new $ui_CoreTileDonutChart();
-function ws12_TileZeroToSixtyHistory(object, screen) {
-	// This tile is 1 x 1
-	object._size = $ui.TileSize.WIDE;
-	$ui_CoreTile.call(this, object, screen);
-	$ui.addClass(object.dom,'ws12-tile-zero-to-sixty-history');
-	
-	// Create the caption area
-	object.dom.caption = document.createElement('div');
-	$ui.addClass(object.dom.caption,'caption');
-	object.dom.contentDiv.appendChild(object.dom.caption);
-	object.dom.caption.textContent = 'Recorded 0-60 times (sec)';
-	
-	// Create our chart area
-	object.dom.canvas = document.createElement('canvas');
-	$ui.addClass(object.dom.canvas, 'chart');
-	object.dom.canvas.height = 190;
-	object.dom.canvas.width = 490;
-	object.dom.contentDiv.appendChild(object.dom.canvas);
-	object.dom.ctx = object.dom.canvas.getContext('2d');
-	object.dom.chart = new Chart(object.dom.ctx);
-	
-	// Private function to handle provider updates
-	object._providerUpdate = function(value) {
-		var i,
-			_labels = [];
-			
-		// Assign our values
-		if (value != undefined) {
-			this.data = value.data;
-			this.labels = value.labels
-		} else {
-			this.data = undefined;
-			this.labels = undefined;
-		}
-
-		// Get our root color
-		var graphColor = ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) ? $ui.getThemeColor() : $ui.color_OK,
-			R = parseInt(($ui._cutHex(graphColor)).substring(0,2),16),
-			G = parseInt(($ui._cutHex(graphColor)).substring(2,4),16),
-			B = parseInt(($ui._cutHex(graphColor)).substring(4,6),16);	
-		// Load our data
-		var data = {
-			labels: this.labels,
-			datasets: [
-				{
-					fillColor: 'rgba('+R+','+G+','+B+',0.5)',
-					strokeColor: 'rgba('+R+','+G+','+B+',1)',
-					data: this.data
-				}
-			]
-		}
-		this.dom.chart.Line(data,{scaleShowGridLines: true,showTooltips: false,scaleFontColor: window.getComputedStyle(this.dom).color});
-		this.showContent(true);
-	}
-	object._providerUpdate = object._providerUpdate.bind(object);	
-	
-	// Load our control if no provider is connected
-	if (object.provider == undefined) {
-		object._providerUpdate({data: object.data})
-	}
-	
-	
-	return object.dom;
-}
-
-ws12_TileZeroToSixtyHistory.prototype = new $ui_CoreTile();

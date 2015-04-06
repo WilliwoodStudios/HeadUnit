@@ -8,20 +8,6 @@ function zeroToSixty() {
 			component: $ui.TileGroup,
 			tiles: [
 				{
-					component: $ui.TileZeroToSixty,
-					provider: {
-						id: 'zeroToSixtyProvider',
-						property: 'zeroToSixty'
-					}
-				},
-				{
-					component: $ui.TileZeroToSixtyHistory,
-					provider: {
-						id: 'zeroToSixtyProvider',
-						property: 'zeroToSixtyHistory'
-					}
-				},
-				{
 					component: $ui.TileRecord,
 					id: 'recordTile',
 					caption: 'Record 0-60 Time',
@@ -47,6 +33,20 @@ function zeroToSixty() {
 				{
 					component: $ui.TileTimer,
 					id: 'timerTile'
+				},
+				{
+					component: $ui.TileTimeDonut,
+					provider: {
+						id: 'zeroToSixtyProvider',
+						property: 'zeroToSixty'
+					}
+				},
+				{
+					component: $ui.TileTimeHistory,
+					provider: {
+						id: 'zeroToSixtyProvider',
+						property: 'zeroToSixtyHistory'
+					}
 				}
 			],
 			attachedObjects: [
@@ -64,11 +64,13 @@ function zeroToSixty() {
 			zeroToSixty: {
 				target: 4.7,
 				value: 5.2,
-				accent: 'Your Best Time'
+				accent: 'Your Best Time',
+				caption: 'sec 0-60'
 			},
 			zeroToSixtyHistory: {
 				labels: ['Apr 10/14','May 12/14','Jul 18/14','Aug 22/14'],
-				data: [6.2,6.3,5.2,5.5]
+				data: [6.2,6.3,5.2,5.5],
+				caption: 'Recorded 0-60 times (sec)'
 			}
 		}
 		// Populate the data provider
