@@ -44,8 +44,9 @@
 				}
 				$system.init(config);
 				// Initialize UI
-				$emulator.init(screenChrome);
+				$emulator.init();
 				$ui.init(screenChrome);	
+				$emulator.chrome = $ui.screens[0];
 			}
 			// Initialize our toolkit
 			window.onload = function() {
