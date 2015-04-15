@@ -4,10 +4,6 @@
         <meta name="format-detection" content="telephone=no" />
 		
         <!-- UI Toolkit -->
-		<script type="text/javascript" src="../../$ui/$ui.js"></script>
-		<link rel="stylesheet" type="text/css" href="../../$ui/$ui.css"></link>
-		
-		 <!-- UI Extensions -->
 		<script type="text/javascript" src="../../$ws12/$ws12.js"></script>
 		<link rel="stylesheet" type="text/css" href="../../$ws12/$ws12.css"></link>
 		
@@ -21,15 +17,25 @@
 
 		<script>
 			var $core;
+			var $system;
 			
 			function onDeviceReady() {
-				// Get
+				var theme;
+				// Get the core object
 				if (window.parent.$core) {
 					$core = window.parent.$core;
 				}
+				if (!$system) {
+					if (window.location !== window.parent.location) {
+						// We are in the emulator
+						$system = window.parent.$system;
+						theme = $system.config.theme;
+					} else {
+						console.log('WARNING: $system not defined');
+					}
+				} 
 				// Initialize
-				$ws12.init();
-				$ui.init(main);	
+				$ui.init(main, theme);	
 			}
 			// Initialize our toolkit
 			window.onload = function() {

@@ -6,10 +6,11 @@ var $system = {
 		build: 1
 	},
 	_events: [],
-	_config: {
-		themeStyle: 'ui-theme-dark',
-		themeColor: '#D94646',
-		themeWeight: 'bold-weight',
+	config: {
+		theme: {
+			rootClass: 'ui-theme-dark bold-weight',
+			color: '#D94646'
+		},
 		celsius: false
 	},
 	Color: {
@@ -67,10 +68,9 @@ var $system = {
 	init: function(config) {
 		this.isClientDevice = (window.innerWidth < 400);
 		// Grab the configuration
-		this._config.themeStyle = (config.themeStyle) ? config.themeStyle : this._config.themeStyle;
-		this._config.themeColor = (config.themeColor) ? config.themeColor : this._config.themeColor;
-		this._config.themeWeight = (config.themeWeight) ? config.themeWeight : this._config.themeWeight;
-		this._config.celsius = (config.celsius) ? config.celsius : this._config.celsius;
+		this.config.theme.rootClass = (config.theme.rootClass) ? config.theme.rootClass : this.config.theme.rootClass;
+		this.config.theme.color = (config.theme.color) ? config.theme.color : this.config.theme.color;
+		this.config.celsius = (config.celsius) ? config.celsius : this.config.celsius;
 		// Create our services
 		this.audio = new AudioManager(this.isClientDevice);
 		this.contacts = new ContactsManager();
@@ -79,7 +79,7 @@ var $system = {
 	
 	// Returns if the system is using Celsius for temperatures
 	isCelsius: function() {
-		return this._config.celsius;
+		return this.config.celsius;
 	},
 	
 	// Add an event listener

@@ -45,7 +45,7 @@ function libraryMenu() {
 	
 	this.onshow = function() {
 		// Get our background image
-		var backgroundImg = $core.getBackgroundImage($ui.getThemeColor());
+		var backgroundImg = $core.getBackgroundImage($ui.theme.color);
 		if (backgroundImg) {
 			this.setBackground(new ScreenBackground('../../'+backgroundImg));
 		}

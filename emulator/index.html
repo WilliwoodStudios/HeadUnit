@@ -3,10 +3,6 @@
         <meta charset="utf-8" />
         <meta name="format-detection" content="telephone=no" />
 		
-		<!-- UI Toolkit -->
-		<script type="text/javascript" src="$ui/$ui.js"></script>
-		<link rel="stylesheet" type="text/css" href="$ui/$ui.css"></link>
-		
         <!-- Emulator Toolkit -->
 		<script type="text/javascript" src="$emulator/$emulator.js"></script>
 		<link rel="stylesheet" type="text/css" href="$emulator/$emulator.css"></link>
@@ -36,16 +32,19 @@
 		<script>
 			function onDeviceReady() {
 				// Initialize the system
-				var config = {};
+				var config = {
+					theme: {
+						rootClass: 'ui-theme-dark bold-weight'
+					}
+				}
 				if (window.innerWidth > window.innerHeight) {
-					config.themeColor = $system.Color.SUN_FLOWER; 
+					config.theme.color = $system.Color.SUN_FLOWER; 
 				} else {
-					config.themeColor = $system.Color.ALIZARIN; 
+					config.theme.color = $system.Color.ALIZARIN; 
 				}
 				$system.init(config);
 				// Initialize UI
-				$emulator.init();
-				$ui.init(screenChrome);	
+				$ui.init(screenChrome, config.theme);	
 				$emulator.chrome = $ui.screens[0];
 			}
 			// Initialize our toolkit

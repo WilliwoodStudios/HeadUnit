@@ -22,11 +22,11 @@ function main() {
 					img: 'img/ic_drift_angle.png',
 					identifier: 'logger.drift.angle'
 				},
-				{
+				/*{
 					caption: 'track day',
 					img: 'img/ic_track_day.png',
 					identifier: 'logger.track.day'
-				},
+				},*/
 				{
 					caption: '1/4 mile',
 					img: 'img/ic_quarter_mile.png',
@@ -52,7 +52,7 @@ function main() {
 	
 	this.onshow = function() {
 		// Get our background image
-		var backgroundImg = $core.getBackgroundImage($ui.getThemeColor());
+		var backgroundImg = $core.getBackgroundImage($ui.theme.color);
 		if (backgroundImg) {
 			this.setBackground(new ScreenBackground('../../'+backgroundImg));
 		}

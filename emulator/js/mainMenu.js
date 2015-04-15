@@ -1,6 +1,6 @@
 function mainMenu() {
+	this.id = 'mainMenu';
 	this.component = $ui.WindowPane;
-	
 	this.disableAnimation = true;
 	
 	this.content = [
@@ -42,7 +42,7 @@ function mainMenu() {
 	this.onshow = function() {
 		$core.getAppsList(this.onapplistrefresh);
 		// Get our background image
-		var backgroundImg = $core.getBackgroundImage($ui.getThemeColor());
+		var backgroundImg = $core.getBackgroundImage($ui.theme.color);
 		if (backgroundImg) {
 			this.setBackground(new ScreenBackground(backgroundImg));
 		}
