@@ -1,5 +1,10 @@
-/* $ws12 VERSION: 1.0.0.2872*/
+/* $ws12 VERSION: 1.0.0.2888*/
 
+/**
+ * $ui provides an extendible out of the box UI framework which provides a pre-defined user experience.
+ * The main object that is used for creating this framework is the <b>$ui</b> object.
+ * @namespace $ui
+ */
 var $ui = {
 	screens : [],  // Contains all of the current screens on the stack;
 	_definitions: [], // Contains all of the component definitions
@@ -7,25 +12,33 @@ var $ui = {
 	_inScreenTransition: false,
 
 	// This contains our core theme information
-	theme: {
-		rootClass: undefined,
-		color: '#D94646'
-	},
+	theme: {},
 	
-	// Component Definitions
+	/**
+	 * Type of extension to be used for extending the <b>$ui</b> framework when using a {@link UIExtension}
+	 * @namespace
+	 * @readonly
+	 * @memberof $ui
+	 */
 	UIExtensionType: {
+		/** Extension is a control */
 		CONTROL: 0,
+		/** Extension is a new type of screen */
 		SCREEN: 1,
+		/** Extension is a new type of list item */
 		LISTITEM: 2
 	},
 	
-	// Initialize the toolkit
+	/** 
+	 * This function will initialize the toolkit and create the first screen provided by the screen parameter.
+	 * @param {$ui.CoreScreen} screen - Initial screen to open
+	 * @param {$ui.Theme} theme - Theme to use for the toolkit
+	 */
 	init: function(screen, theme) {	
+		// Apply any theme settings
 		if (theme) {
-			this.theme.rootClass = (theme.rootClass == undefined) ? this.theme.rootClass : theme.rootClass;
-			this.theme.color = (theme.color == undefined) ? this.theme.color : theme.color;
+			this.theme = theme;
 		}
-		
 		// before push the initial page, add _blockAllTapEvent function to body
 		document.body._blockAllTapEvent = function(e) {
 			e.preventDefault();
@@ -59,14 +72,22 @@ var $ui = {
 		}, false);
 	},
 	
-	// Register your callback as an extender of the toolkit
+	/** 
+	 * You are able to register your $ui extensions by calling the extend function and providing it a callback function to fire when $ui is ready to
+	 * load its extensions.  This function should be called before you call the $ui.init() function.  Within the callback function you will call the $ui.addExtension() functions
+	 * to load your custom extensions
+	 * @param {function} callback - Function to fire when $ui is ready for its extensions to be loaded
+	 */
 	extend: function(callback) {
 		if (callback) {
 			this._extensions.push(callback);
 		}
 	},
 			
-	// Adds a new control to the framework
+	/** 
+	 * You are able to extend the UI framework by registering your own control extensions. You must first register your extension with the framework by calling this function.
+	 * @param {$ui.UIExtension} extension - Extension object to be added to the framework
+	 */
 	addExtension: function(extension) {
 		if (extension.type == undefined) extension.type = $ui.UIExtensionType.CONTROL;
 		if (extension.definition == undefined) extension.definition = {};
@@ -76,9 +97,30 @@ var $ui = {
 		this._definitions.push(extension);
 	},	
 	
-	// Raises an event for a user interaction
-	raiseInteractionEvent: function(event) {
-		console.log(event);
+	/** 
+	 * This function will set the theme for the $ui toolkit.
+	 * @param {$ui.Theme} theme - Theme to use for the toolkit
+	 */
+	setTheme: function(theme) {	
+		var i,
+			screen;
+		for (i = 0; i < this.screens.length; i++) {
+			screen = this.screens[i];
+			screen._fireThemeChange();
+		}
+	},
+	
+	// Internal function to raises an event for a user interaction
+	_raiseInteractionEvent: function(event) {
+		if (this.oninteraction == undefined) return;
+		if (event == undefined || event == null) return;
+		if (event.screenId == undefined || event.screenId == null) return;
+		if (event.controlId == undefined || event.controlId == null) return;
+		if (event.interaction == undefined || event.interaction == null) return;
+		var interactionHandler = this.oninteraction;
+		setTimeout(function() {
+			interactionHandler(event);
+		},0);
 	},
 	
 	// Create any control that is passed in and return the DOM
@@ -122,7 +164,11 @@ var $ui = {
 		}
 	},
 	
-	// Push a new screen onto the stack
+	/** 
+	 * This function will push a new screen on the stack and pass the optional data provided as a parameter to that screen's onshow() event.
+	 * @param {$ui.CoreScreen} screen - Screen to open and push onto the top of the screen stack
+	 * @param {object} data - Data to pass to the new screen that is opened
+	 */
 	push: function(screen, data) {
 		if ($ui._inScreenTransition === true) {
 			setTimeout(function() {
@@ -154,7 +200,9 @@ var $ui = {
 		}
 	},
 	
-	// Pop a screen off the stack
+	/** 
+	 * To close the top-most screen on the stack you can call the pop() function.
+	 */
 	pop: function() {
 		// Return if the screen is in transition.
 		if ($ui._inScreenTransition === true) {
@@ -247,24 +295,53 @@ function $ui_RegisterRootExtensions() {
 	// Register our extensions
 	$ui.addExtension(new UIExtension('List', $ui_List));
 	def = {
+			/**
+			 * Size of {@link $ui.Spinner} control
+			 * @namespace
+			 * @readonly
+			 * @memberof $ui.Spinner
+			 */
 			SpinnerSize: {
+				/** Largest spinner possible */
 				LARGE: 'large', 
-				MEDIUM: 'medium', 
+				/** Default size spinner */
+				MEDIUM: 'medium',
+				/** Small spinner */				
 				SMALL: 'small', 
+				/** Really tiny spinner */
 				TINY: 'tiny'
 			},
+			/**
+			 * Color of {@link $ui.Spinner} control
+			 * @namespace
+			 * @readonly
+			 * @memberof $ui.Spinner
+			 */
 			SpinnerColor: {
+				/** Light spinner Color */
 				LIGHT: 'light',
+				/** Dark spinner color */
 				DARK: 'dark'
 			}
 		};
 	$ui.addExtension(new UIExtension('Spinner', $ui_Spinner, undefined,def));
 	def = {
+		  /**
+		 * Type of error related to retrieving information via a {@link $ui.DataProvider} 
+		 * @namespace
+		 * @readonly
+		 * @memberof $ui.DataProvider
+		 */
 		ProviderError: {
+			/** Head unit does not have a network connection */
 			OFFLINE: -1,
+			/** Data returned was invalid JSON */
 			INVALID_JSON: -2,
+			/** Network timed out */
 			TIMEOUT: -3,
+			/** Access to url denied */
 			ACCESS_DENIED: -4,
+			/** Invalid URL location */
 			NOT_FOUND: -5
 		}
 	};
@@ -281,7 +358,19 @@ Function.prototype.bind = function(object){
 // Register our root extensions
 $ui.extend($ui_RegisterRootExtensions);
 
+/**
+ * Assign this property to a callback function which you desire to handle any interaction logging from UI controls.  This is intended to provide a single point of filtering
+ * of user interactions to be used with an analytics engine
+ * @name oninteraction
+ * @type UIEvent
+ * @memberof $ui
+ */
 
+/**
+ * The {@link $ui} <b>oninteraction</b> fires when a user has interacted with the interface
+ * @callback UIEvent
+ * @param {$ui.InteractionEvent} event - Interaction event which was triggered by the UI
+ */
 /**
  * @preserve FastClick: polyfill to remove click delays on browsers with touch UIs.
  *
@@ -1071,6 +1160,24 @@ if (typeof define !== 'undefined' && define.amd) {
 } else {
 	window.FastClick = FastClick;
 }
+/**
+ * Every component in the UI follows the same general patterns. This is to keep consistency and make coding easier.
+ * <br><br><b>NOTE: The core component is an abstract base class and cannot be created as an instance on its own</b>
+ * @namespace
+ * @name CoreComponent
+ * @memberof $ui
+ * @property {namespace} component - The <b>mandatory</b> component property defines what type of component is being defined. This property always starts with a <b>$ui.</b> defining the component to be used for generating the UI.
+ * @property {string} [id] - The id property is used to uniquely define the control in the screen for which it belongs. <br><br>Providing an id for your control is very convenient because you can easily access your control through your javascript coding. Each id is added as a direct handle on the screen object for access.
+ * @property {boolean} [visible=true] - The visible property specifies the initial visibility of the control. This property can then be changed by calling the <b>setVisible</b> function on the component.
+ * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state</i>
+ * @property {$ui.CoreScreen} screen - This <b>readonly</b> property allows for you to reference the screen from the control. This will be the screen in which the control is embedded
+ * @property {$ui.DataProviderLink} [provider] - This property allows you to bind the control to a [data provider]{@link $ui.DataProvider} in the application. 
+ * @property {object[]} attachedObjects - This property specifies an array of objects that can be attached to the control. These could be objects such as data providers and usually entail a component that does not provide a user interface.
+ * @property {boolean} [marginTop=false] - A boolean property which when set to true will place a standard margin on the top of the control. 
+ * @property {boolean} [marginBottom=false] - A boolean property which when set to true will place a standard margin on the bottom of the control.
+ * @property {boolean} [marginLeft=false] - A boolean property which when set to true will place a standard margin on the left of the control
+ * @property {boolean} [marginRight=false] - A boolean property which when set to true will place a standard margin on the right of the control.
+ */
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
@@ -1142,7 +1249,25 @@ function $ui_CoreComponent(object, screen) {
 			object.attachedObjects = [];
 		}
 		
-		// Public function to set the enabled state
+		/** 
+		 * This protected function will raise an interaction event for the <b>oninteraction</b> callback assigned to the {@link $ui} object.
+		 * @memberof $ui.CoreComponent
+		 * @protected 
+		 * @function _raiseInteractionEvent
+		 * @param {string} interaction - Desired interaction to raise
+		 */
+		object._raiseInteractionEvent = function(interaction) {
+			var event = new InteractionEvent(this.screen.id, this.id, interaction);
+			$ui._raiseInteractionEvent(event);
+		}
+		object._raiseInteractionEvent = object._raiseInteractionEvent.bind(object);
+		
+		/** 
+		 * You can toggle the enabled state of a component by calling its setEnabled function. If the function call is successful it will return true
+		 * @memberof $ui.CoreComponent
+		 * @function setEnabled
+		 * @param {boolean} value - Desired enabled state, <b>true</b> for enabled.
+		 */
 		object.setEnabled = function(value) {
 			if (value == this.enabled) return;
 			if (this.enabled && (value == false)) {
@@ -1197,7 +1322,11 @@ function $ui_CoreComponent(object, screen) {
 		}
 		object._scrollIntoView = object._scrollIntoView.bind(object);
 		
-		// Public function to scroll the control into view
+		/** 
+		 * This function will scroll the control into view for the user.
+		 * @memberof $ui.CoreComponent
+		 * @function scrollIntoView
+		 */
 		object.scrollIntoView = function() {
 			if (this.dom) {
 				this._scrollIterationCounter = 0;
@@ -1318,7 +1447,12 @@ function $ui_CoreComponent(object, screen) {
 			object.visible = true;
 		}
 		
-		// Add our setVisible function 
+		/** 
+		 * You can toggle the visibility of a component by calling its setVisible function. If the function call is successful it will return true
+		 * @memberof $ui.CoreComponent
+		 * @function setVisible
+		 * @param {boolean} value - Desired visibility state, <b>true</b> for visible.
+		 */
 		object.setVisible = function(value) {
 			if (value != this.visible) {
 				if (value == true) {
@@ -1342,7 +1476,50 @@ function $ui_CoreComponent(object, screen) {
 	}
 }
 
+/** 
+ * The function assigned to this member will fire when the screen the component belongs to receives an onshow event. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onshow
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
+ 
+ /** 
+ * The function assigned to this member will fire when the theme for the $ui tookit changes. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onthemechange
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
+ 
+/** 
+ * The function assigned to this member will fire when the screen that the component belongs to has it's viewport size changed. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onresize
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
 
+/** 
+ * The function assigned to this member will fire when the screen that the component belongs to is just about to be popped. This will only fire if the screen is the top most screen in the stack. It allows for any clean-up that might need to be done before animating. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onbeforepop
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
+
+/**
+ * This is the abstract base class that represents a screen instance. It derives from {@link $ui.CoreComponent}. 
+ * A screen is declared as a JavaScript function and has various different properties. When a screen is pushed onto the stack a new instance of the screen will be created and rendered.
+ * <br><br><b>NOTE: This is an abstract class </b>
+ * @namespace
+ * @name CoreScreen
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {boolean} [disableAnimation=false] - This boolean property specifies if the screen should have it's animation disabled when being pushed or popped. 
+ * @property {ScreenResizeEvent} [onresize] - This event will fire when the viewport of the screen changes size
+ * @property {ScreenShowEvent} [onshow] - This event will fire when the screen has been displayed
+ */
 function $ui_CoreScreen(object, data) {
 	$ui_CoreComponent.call(this, object);
 	if (object) {
@@ -1416,6 +1593,23 @@ function $ui_CoreScreen(object, data) {
 		}
 		object._onbeforepop = object._onbeforepop.bind(object);
 		
+		// Internal function to trigger all theme change internal assignments
+		object._fireThemeChange = function() {
+			if (this._onthemechange) {
+				this._onthemechange();
+			}
+			// Fire the _onthemechange for all the controls
+			var i,
+				control;
+			for (i = 0; i < this.children.length;i++) {
+				control = this.children[i];
+				if (control._onthemechange) {
+					control._onthemechange();
+				}
+			}
+		}
+		object._fireThemeChange = object._fireThemeChange.bind(object);
+		
 		// Destroy screen
 		object._destroy = function() {
 			// Loop through all the children and call their destroy
@@ -1432,7 +1626,40 @@ function $ui_CoreScreen(object, data) {
 
 $ui_CoreScreen.prototype = new $ui_CoreComponent();
 
-
+/**
+ * The {@link $ui.CoreScreen} <b>onresize</b> event will fire when the viewport of the screen changes size
+ * @callback ScreenResizeEvent
+ */
+ 
+ /**
+ * The {@link $ui.CoreScreen} <b>onshow</b> event will fire when the screen has been displayed
+ * @callback ScreenShowEvent
+ */
+/**
+ * The DataProvider component provides a data source that can be bound to controls on a screen. This provides the ability to both populate controls with data, as well as automatically save the data based on user interaction with the controls.<br><br>
+ * <b>NOTE: The DataProvider should be attached to a screen or control using its [attachedObjects]{@link $ui.CoreComponent} property.</b><br><br>
+ * <b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   component: $ui.DataProvider,
+ *   id: 'myProvider',
+ *   data: {
+ *      account: {
+ *         username: '@brcewane' 
+ *      }
+ *   }
+ *}
+ * </pre>
+ * @namespace
+ * @name DataProvider
+ * @memberof $ui
+ * @property {string} component - The <b>required</b> component property defines what type of component is being defined. This property must be $ui.DataProvider
+ * @property {string} id - The <b>required</b> id property is used to uniquely define the data provider in the scope of the screen in which it belongs. Providing an id for your data provider is required because you can easily access your provider through your javascript coding and also reference it as the provider for a control.
+ * @property {object} [data] - The data property by default is undefined. You can populate the data property by calling the load or set functions listed in the functions area, or you can define it as any kind of object. The data property holds the object that represents the data for the provider
+ * @property {ProviderLoadEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
+ * @property {ProviderErrorEvent} [onerror] - This event will fire when an attempt to load data into the provider fails. It has one parameter that represents the error code experienced.
+ * @property {ProviderBeforeUpdateEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
+ */
 function $ui_DataProvider(object, screen){
 	object.screen = screen;
 	object._url = undefined;
@@ -1444,7 +1671,12 @@ function $ui_DataProvider(object, screen){
 		screen[object.id] = object;
 	}
 	
-	// Public function to set the data with an object
+	/** 
+	 * You can set the data property for any data provider directly by passing it an object that you want to use as the data source. Setting this property will trigger the <i>onbeforeupdate</i>, <i>onloaded</i> event and update the controls which are using this provider
+	 * @function setData
+	 * @memberof $ui.DataProvider
+	 * @param {object} value - Object to set as data for the data provider
+	 */
 	object.setData = function(value) {
  		this._untouched = false;
 		this.data = value;
@@ -1459,7 +1691,11 @@ function $ui_DataProvider(object, screen){
 	}
 	object.setData = object.setData.bind(object);
 	
-	// Public function to refresh Data from the server
+	/** 
+	 * This function will refresh all the data in the provider based on the last used url used for <i>loadFromUrl()</i>. When data loads, controls will update and the data provider's <i>onbeforeupdate</i> and <i>onload</i> event will be triggered.
+	 * @function refreshFromServer
+	 * @memberof $ui.DataProvider
+	 */
 	object.refreshFromServer = function() {
 		if ((this._url == undefined) || (this._url == '')) return;
 		this._url = url;
@@ -1467,13 +1703,22 @@ function $ui_DataProvider(object, screen){
 	}
 	object.refreshFromServer = object.refreshFromServer.bind(object);
 	
-	// Public function to tell connected controls to reload their data from memory
+	/** 
+	 * The refresh function will send a signal out to all connected components to refresh their data from the current content in memory from the provider. <b>NOTE: No <i>onbeforeupdate</i> or <i>onload</i> event will fire on the provider</b>
+	 * @function refresh
+	 * @memberof $ui.DataProvider
+	 */
 	object.refresh = function() {
 		this._raiseEvent();
 	}
 	object.refresh = object.refresh.bind(object);
 	
-	// Public function to load the data from a JSON URL
+	/** 
+	 * This function will refresh the component with data from a specified URL. The data that is retrieved from the URL must be in valid JSON notation.
+	 * @function loadFromUrl
+	 * @memberof $ui.DataProvider
+	 * @param {object} value - The function takes the parameter url which is the URL path for the JSON GET request.
+	 */
 	object.loadFromUrl = function(url) {
 		// Make sure we are online
 		if(navigator.onLine != true) {
@@ -1552,13 +1797,109 @@ function $ui_DataProvider(object, screen){
 	return undefined;
 }
 
+/**
+ * A data provider link provides a binding between a [control]{@link $ui.CoreComponent} and a data provider. The path for the <b>property</b> attribute starts at the root of the object that is provided as the data source for the data provider.<br><br>
+ * The type of object that the property path should point to is dependent on the control and the data it uses to display and/or edit. If the control also allows the user to edit data or change settings, these changes will be applied to the property value in the data provider.<br><br>
+ * <b>Sample Code:</b><br>
+ * <pre>provider: {
+ *    id: 'myProvider',
+ *    property: 'posts'
+ * }
+ * </pre>
+ * <br>
+ * To access sub objects in the object chain from the data provider you can use normal <b>dot</b> notation:<br><br>
+ * <b>Sample Code:</b><br>
+ * <pre>provider: {
+ *    id: 'myProvider',
+ *    property: 'posts.item.thingy'
+ * }
+ * </pre>
+ * <br>
+ * @namespace
+ * @name DataProviderLink
+ * @memberof $ui
+ * @property {string} id - This is the <b>mandatory</b> id of the data provider belonging to the screen which will be linked to this control.  
+ * @property {string} property - This is the property path/name of the object to be used as the bound data for this control. A nested property can be defined simply by providing a path using <b>.</b> dot separators just like you were referring to the object via JavaScript
+ */
+ 
+ /**
+ * The {@link $ui.DataProvider} <b>onload</b> event when data has been loaded
+ * @callback ProviderLoadEvent
+ */
+ 
+ /**
+ * The {@link $ui.DataProvider} <b>onerror</b> event if there was an error loading the data
+ * @param {$ui.DataProvider.ProviderError} err - Error code
+ * @callback ProviderErrorEvent
+ */
+ 
+  /**
+ * The {@link $ui.DataProvider} <b>onbeforeupdate</b> event will fire after the data has been retrieved but <b>before</b> controls have processed the data
+ * @callback ProviderBeforeUpdateEvent
+ */
+ 
 
-// Represents an interaction with a control
-$ui.InteractionEvent = function(screenId, controlId, interaction) {
+/**
+ * Represents an interaction event from the user interface.  This event is raised when a user interacts with a part of the interface. All interation events are sent to the $ui.oninteraction 
+ * assigned function.  If valid values are not passed in for all of the parameters no event will be raised.
+ * @class InteractionEvent
+ * @param {string} screenId - The <b>id</b> property of the screen which contains the control providing the interaction
+ * @param {string} controlID - The <b>id</b> property of the control in which the user interacted
+ * @param {string} interaction - The interaction which took place
+ */
+function InteractionEvent(screenId, controlId, interaction) {
+	/**
+	 * The <b>id</b> property of the screen which contains the control providing the interaction
+	 * @member {string} screenId
+	 * @memberOf InteractionEvent
+	 */
 	this.screenId = screenId;
+	
+	 /**
+	 * The <b>id</b> property of the control in which the user interacted
+	 * @member {string} controlId
+	 * @memberOf InteractionEvent
+	 */
 	this.controlId = controlId;
+	
+	 
+	 /**
+	 * The interaction which took place
+	 * @member {string} interaction
+	 * @memberOf InteractionEvent
+	 */
 	this.interaction = interaction;
 }
+
+
+ 
+
+
+/**
+ * A List object will display multiple list items based on the data provided to the control.  The type of item objects that are used should match the declaration of the <b>style</b> of the list control<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.List,
+ *   style: $ui.GenericListItem,
+ *   items: [
+ *      {
+ *         img: 'thumbnails/foo.png',
+ *         title: 'This is my title',
+ *         accent: '6 hours ago',
+ *         caption: 'My summary description'
+ *      }
+ *   ]
+ *}
+ * @namespace
+ * @name List
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {object[]} [items] - The items property is an array of objects who's definition matches that of the requirements of the <b>style</b> property of the list
+ * @property {object} style - This is a list item decalaration so that the list knows how to render. For example this could be set to {@link $ui.GenericListItem}
+ * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a list control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
+ * @property {ListActionEvent} [onaction] - The onaction event will fire when an action from a list item is triggered. Some list items may have multiple actions that can be taken. When one of these actions is selected by the user the onaction event will fire.
+ */
 function $ui_List(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-list');
@@ -1627,7 +1968,12 @@ function $ui_List(object, screen) {
 	}
 	object._addItem = object._addItem.bind(object);
 	
-	// Public function to add a new item to the list
+	/** 
+	 * You can add an item to the end of the list by calling the addItem function and passing in an object that matches the a list item
+	 * @function addItem
+	 * @memberof $ui.List
+	 * @param {object} item - Item to be added to the list
+	 */
 	object.addItem = function(item) {
 		if (this._addItem(item)) {
 			this.items.push(item);
@@ -1642,7 +1988,12 @@ function $ui_List(object, screen) {
 	}
 	object.addItem = object.addItem.bind(object);
 	
-	// Public function to remove an existing item from the list
+	/** 
+	 * The remove item function will remove an existing item from a list. If an invalid item is specified the removal will fail
+	 * @function removeItem
+	 * @memberof $ui.List
+	 * @param {object} item - Item to be removed from the list
+	 */
 	object.removeItem = function(item) {
 		if (item == undefined) return false;
 		var index = this.items.indexOf(item);
@@ -1663,7 +2014,13 @@ function $ui_List(object, screen) {
 	}
 	object.removeItem = object.removeItem.bind(object);
 	
-	// Public function to insert a new item into the list
+	/** 
+	 * Insert item works similar to addItem but instead will insert the item into the list at the index specified. If an invalid index is specified it will result in failure to insert the item. To insert an item at the top of a list call insert with the index of 0.
+	 * @function insertItem
+	 * @memberOf $ui.List
+	 * @param {object} item - Item to be inserted into the list
+	 * @param {number} index - Index to insert the item
+	 */
 	object.insertItem = function(item, index) {
 		item.parent = this;
 		if (index < 0) {
@@ -1689,7 +2046,12 @@ function $ui_List(object, screen) {
 	}
 	object.insertItem = object.insertItem.bind(object);
 	
-	// Refresh all the items in the list
+	/** 
+	 * You can refresh all the items in a list by calling the refreshItems function with an array of new items
+	 * @function refreshItems
+	 * @memberof $ui.List
+	 * @param {object[]} items - Array of items to refresh the list
+	 */
 	object.refreshItems = function(itemArray) {
 		if (itemArray == undefined) return; // No data provided
 		var i,
@@ -1717,7 +2079,12 @@ function $ui_List(object, screen) {
 	}
 	object.refreshItems = object.refreshItems.bind(object);
 	
-	// Add a batch of items to the end of a list
+	/** 
+	 * This function is much like the refreshItems function but instead it loads a list of circle list items to the end of the current list and does not replace the existing list items.
+	 * @function addItemBatch
+	 * @memberof $ui.List
+	 * @param {object[]} items - Array of items to be added to the list
+	 */
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
@@ -1768,11 +2135,58 @@ function $ui_List(object, screen) {
 }
 
 $ui_List.prototype = new $ui_CoreComponent();
+
+/**
+ * The {@link $ui.List} <b>onaction</b> event will fire when the user interacts with a list item
+ * @callback ListActionEvent
+ * @param {ListEvent} event - The list event which was raised
+ */
+/**
+ * The list event is what is triggered when a user interacts with the List control. It contains the target list item that the user was interacting with, the type of event which was triggered 
+ * and an optional data property that contains extra data about the event.
+ * @class ListEvent
+ * @param {object} target - Target list item where the event originated
+ * @param {string} eventType - The type of event that was triggered. Each list item has its own set of possible events that can be raised
+ * @param {object} [data] - Optional data that can be passed with a list event
+ */
 function ListEvent(target, eventType, data) {
+	/** 
+	 * Target list item where the event originated
+	 * @member {object} target
+	 * @memberOf ListEvent
+	 */
 	this.target = target;
+	
+	/** 
+	 * The type of event that was triggered. Each list item has its own set of possible events that can be raised
+	 * @member {string} eventType
+	 * @memberOf ListEvent
+	 */
 	this.eventType = eventType;
+	
+	/** 
+	 * Optional data that can be passed with a list event
+	 * @member {object} [data]
+	 * @memberOf ListEvent
+	 */
 	this.data = data;
 }
+
+
+/**
+ * The spinner control provides you the ability to give a visual indicator when your content is loading. The spinner has one main property <b>size</b>. <br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.Spinner,
+ *   size: $ui.Spinner.SpinnerSize.LARGE
+ *}
+ * @namespace Spinner
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.Spinner.SpinnerSize} [size=$ui.Spinner.SpinnerSize.MEDIUM] - Represents the size of the spinner component.
+ * @property {$ui.Spinner.SpinnerColor} [forceColor] - This property specifies if the color should be forced to be dark or light. By default the system figures this out and does not need to be set. However, if you want to force a color in a certain scenario you can use this property.
+ */
 function $ui_Spinner(object, screen){
 	$ui_CoreComponent.call(this, object, screen);
 	object.size = (object.size) ? object.size : $ui.Spinner.SpinnerSize.MEDIUM;
@@ -1800,14 +2214,36 @@ function $ui_Spinner(object, screen){
 }
 
 $ui_Spinner.prototype = new $ui_CoreComponent();
-// This provides an interface for creating a new extension
+/**
+ * The definition of an extension to be used in extending the <b>$ui</b> framework.
+ * @class
+ * @param {string} name - This would be the value you set as the <b>component</b> property for your control
+ * @param {function} constructor - The function to be used as your control constructor
+ * @param {$ui.UIExtensionType} [type=$ui.UIExtensionType.CONTROL] - The type of extension you are registering
+ * @param {object} [definition] - Class definition for your extension, you can include properties such as constants here
+ */
 function UIExtension(name, constructor, type, definition) {
+	/** 
+	 * This would be the value you set as the <b>component</b> property for your control
+	 * @member {string} name
+	 * @memberOf UIExtension
+	 */
 	if (name == null) throw new Error('UIExtension: name cannot be null');
 	if (name == undefined) throw new Error('UIExtension: name cannot be undefined');
 	this.name = name;
+	/** 
+	 * The function to be used as your control constructor
+	 * @member {function} constructor
+	 * @memberOf UIExtension
+	 */
 	if (constructor == null) throw new Error('UIExtension: constructor cannot be null');
 	if (constructor == undefined) throw new Error('UIExtension: constructor cannot be undefined');
 	this.constructor = constructor;
+	/** 
+	 * The type of extension you are registering
+	 * @member {$ui.UIExtensionType} [type=$ui.UIExtensionType.CONTROL]
+	 * @memberOf UIExtension
+	 */
 	if (type == null || type == undefined) {
 		this.type = $ui.UIExtensionType.CONTROL;
 	} else if ((type != $ui.UIExtensionType.CONTROL) && (type != $ui.UIExtensionType.SCREEN) && (type != $ui.UIExtensionType.LISTITEM)) {
@@ -1815,28 +2251,18 @@ function UIExtension(name, constructor, type, definition) {
 	} else {
 		this.type = type;
 	}
+	/** 
+	 * Class definition for your extension, you can include properties such as constants here
+	 * @member {object} [definition]
+	 * @memberOf UIExtension
+	 */
 	if (definition == null || definition == undefined) {
 		this.definition = {};
 	} else {
 		this.definition = definition;
 	}
 }
-
 function $ui_ExtendSDK() {
-	// Set our tile sizes
-	$ui.TileSize = {
-		STANDARD: 'standard',
-		WIDE: 'wide',
-		TALL: 'tall'
-	};
-	
-	// Graph Colors
-	$ui.color_LIGHT = '#F0F0F0';
-	$ui.color_DARK = '#747474';
-	$ui.color_OK = '#FAD60A';
-	$ui.color_GOOD = '#FDBF2F';
-	$ui.color_GREAT = '#A3D525';
-	
 	
 	// Play the touch sound
 	$ui.playTouchSound = function() {
@@ -1846,10 +2272,21 @@ function $ui_ExtendSDK() {
 	}
 	$ui.playTouchSound = $ui.playTouchSound.bind($ui);
 	
-	// Add our control extensions
 	var def = {
+		/**
+		 * Location of where to display docked content in a {@link $ui.DockLayout} 
+		 * @namespace DockLocation
+		 * @readonly
+		 * @memberof $ui.DockLayout
+		 */
 		DockLocation: {
+			/** Dock located at the top 
+			* @memberof $ui.DockLayout.DockLocation
+			*/
 			TOP: 'top',
+			/** Dock located at the bottom
+			* @memberof $ui.DockLayout.DockLocation
+			*/
 			BOTTOM: 'bottom'
 		}
 	};
@@ -1878,13 +2315,31 @@ function $ui_ExtendSDK() {
 	$ui.addExtension(new UIExtension('CoreTileDonutChart', $ui_CoreTileDonutChart));
 	// Add our list item extensions
 	def = { 
+		/**
+		 * Event type of an event raised from a {@link $ui.GenericListItem} 
+		 * @namespace GenericListEvent
+		 * @readonly
+		 * @memberof $ui.GenericListItem
+		 */
 		GenericListEvent: {
+			/** Click of a generic list item 
+			* @memberof $ui.GenericListItem.GenericListEvent
+			*/
 			ONCLICK:'onclick' 
 		}
 	};
 	$ui.addExtension(new UIExtension('GenericListItem', $ui_GenericListItem, $ui.UIExtensionType.LISTITEM, def));
 	def = { 
+		/**
+		 * Event type of an event raised from a {@link $ui.ImageListItem} 
+		 * @namespace ImageListEvent
+		 * @readonly
+		 * @memberof $ui.ImageListItem
+		 */
 		ImageListEvent: {
+			/** Click of an image list item 
+			* @memberof $ui.ImageListItem.ImageListEvent
+			*/
 			ONCLICK:'onclick' 
 		}
 	};
@@ -1894,6 +2349,41 @@ function $ui_ExtendSDK() {
 }
 
 $ui.extend($ui_ExtendSDK);
+
+/**
+ * Internal Tile sizing used with {@link $ui.CoreTile} 
+ * @namespace TileSize
+ * @readonly
+ * @memberof $ui
+ */
+$ui.TileSize = {
+	/** Standard 1 x 1 tile size */
+	STANDARD: 'standard',
+	/** Wide 1 x 2 tile size */
+	WIDE: 'wide',
+	/** Tall 2 x 1 tile size */
+	TALL: 'tall'
+};
+
+/**
+ * Theme properties that can be used with the {@link $ui}($ui.init()) function
+ * @namespace TileSize
+ * @readonly
+ * @memberof $ui
+ */
+$ui.Theme = {
+	/** main root class for light, dark, normal or bold effects */
+	rootClass: undefined,
+	/** main root class for light, dark, normal or bold effects */
+	color: '#D94646'
+}
+
+// Graph Colors
+$ui.color_LIGHT = '#F0F0F0';
+$ui.color_DARK = '#747474';
+$ui.color_OK = '#FAD60A';
+$ui.color_GOOD = '#FDBF2F';
+$ui.color_GREAT = '#A3D525';
 /**
  * @preserve FastClick: polyfill to remove click delays on browsers with touch UIs.
  *
@@ -2683,6 +3173,24 @@ if (typeof define !== 'undefined' && define.amd) {
 } else {
 	window.FastClick = FastClick;
 }
+/**
+ * Every component in the UI follows the same general patterns. This is to keep consistency and make coding easier.
+ * <br><br><b>NOTE: The core component is an abstract base class and cannot be created as an instance on its own</b>
+ * @namespace
+ * @name CoreComponent
+ * @memberof $ui
+ * @property {namespace} component - The <b>mandatory</b> component property defines what type of component is being defined. This property always starts with a <b>$ui.</b> defining the component to be used for generating the UI.
+ * @property {string} [id] - The id property is used to uniquely define the control in the screen for which it belongs. <br><br>Providing an id for your control is very convenient because you can easily access your control through your javascript coding. Each id is added as a direct handle on the screen object for access.
+ * @property {boolean} [visible=true] - The visible property specifies the initial visibility of the control. This property can then be changed by calling the <b>setVisible</b> function on the component.
+ * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state</i>
+ * @property {$ui.CoreScreen} screen - This <b>readonly</b> property allows for you to reference the screen from the control. This will be the screen in which the control is embedded
+ * @property {$ui.DataProviderLink} [provider] - This property allows you to bind the control to a [data provider]{@link $ui.DataProvider} in the application. 
+ * @property {object[]} attachedObjects - This property specifies an array of objects that can be attached to the control. These could be objects such as data providers and usually entail a component that does not provide a user interface.
+ * @property {boolean} [marginTop=false] - A boolean property which when set to true will place a standard margin on the top of the control. 
+ * @property {boolean} [marginBottom=false] - A boolean property which when set to true will place a standard margin on the bottom of the control.
+ * @property {boolean} [marginLeft=false] - A boolean property which when set to true will place a standard margin on the left of the control
+ * @property {boolean} [marginRight=false] - A boolean property which when set to true will place a standard margin on the right of the control.
+ */
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
@@ -2754,7 +3262,25 @@ function $ui_CoreComponent(object, screen) {
 			object.attachedObjects = [];
 		}
 		
-		// Public function to set the enabled state
+		/** 
+		 * This protected function will raise an interaction event for the <b>oninteraction</b> callback assigned to the {@link $ui} object.
+		 * @memberof $ui.CoreComponent
+		 * @protected 
+		 * @function _raiseInteractionEvent
+		 * @param {string} interaction - Desired interaction to raise
+		 */
+		object._raiseInteractionEvent = function(interaction) {
+			var event = new InteractionEvent(this.screen.id, this.id, interaction);
+			$ui._raiseInteractionEvent(event);
+		}
+		object._raiseInteractionEvent = object._raiseInteractionEvent.bind(object);
+		
+		/** 
+		 * You can toggle the enabled state of a component by calling its setEnabled function. If the function call is successful it will return true
+		 * @memberof $ui.CoreComponent
+		 * @function setEnabled
+		 * @param {boolean} value - Desired enabled state, <b>true</b> for enabled.
+		 */
 		object.setEnabled = function(value) {
 			if (value == this.enabled) return;
 			if (this.enabled && (value == false)) {
@@ -2809,7 +3335,11 @@ function $ui_CoreComponent(object, screen) {
 		}
 		object._scrollIntoView = object._scrollIntoView.bind(object);
 		
-		// Public function to scroll the control into view
+		/** 
+		 * This function will scroll the control into view for the user.
+		 * @memberof $ui.CoreComponent
+		 * @function scrollIntoView
+		 */
 		object.scrollIntoView = function() {
 			if (this.dom) {
 				this._scrollIterationCounter = 0;
@@ -2930,7 +3460,12 @@ function $ui_CoreComponent(object, screen) {
 			object.visible = true;
 		}
 		
-		// Add our setVisible function 
+		/** 
+		 * You can toggle the visibility of a component by calling its setVisible function. If the function call is successful it will return true
+		 * @memberof $ui.CoreComponent
+		 * @function setVisible
+		 * @param {boolean} value - Desired visibility state, <b>true</b> for visible.
+		 */
 		object.setVisible = function(value) {
 			if (value != this.visible) {
 				if (value == true) {
@@ -2954,7 +3489,50 @@ function $ui_CoreComponent(object, screen) {
 	}
 }
 
+/** 
+ * The function assigned to this member will fire when the screen the component belongs to receives an onshow event. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onshow
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
+ 
+ /** 
+ * The function assigned to this member will fire when the theme for the $ui tookit changes. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onthemechange
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
+ 
+/** 
+ * The function assigned to this member will fire when the screen that the component belongs to has it's viewport size changed. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onresize
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
 
+/** 
+ * The function assigned to this member will fire when the screen that the component belongs to is just about to be popped. This will only fire if the screen is the top most screen in the stack. It allows for any clean-up that might need to be done before animating. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onbeforepop
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
+
+/**
+ * This is the abstract base class that represents a screen instance. It derives from {@link $ui.CoreComponent}. 
+ * A screen is declared as a JavaScript function and has various different properties. When a screen is pushed onto the stack a new instance of the screen will be created and rendered.
+ * <br><br><b>NOTE: This is an abstract class </b>
+ * @namespace
+ * @name CoreScreen
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {boolean} [disableAnimation=false] - This boolean property specifies if the screen should have it's animation disabled when being pushed or popped. 
+ * @property {ScreenResizeEvent} [onresize] - This event will fire when the viewport of the screen changes size
+ * @property {ScreenShowEvent} [onshow] - This event will fire when the screen has been displayed
+ */
 function $ui_CoreScreen(object, data) {
 	$ui_CoreComponent.call(this, object);
 	if (object) {
@@ -3028,6 +3606,23 @@ function $ui_CoreScreen(object, data) {
 		}
 		object._onbeforepop = object._onbeforepop.bind(object);
 		
+		// Internal function to trigger all theme change internal assignments
+		object._fireThemeChange = function() {
+			if (this._onthemechange) {
+				this._onthemechange();
+			}
+			// Fire the _onthemechange for all the controls
+			var i,
+				control;
+			for (i = 0; i < this.children.length;i++) {
+				control = this.children[i];
+				if (control._onthemechange) {
+					control._onthemechange();
+				}
+			}
+		}
+		object._fireThemeChange = object._fireThemeChange.bind(object);
+		
 		// Destroy screen
 		object._destroy = function() {
 			// Loop through all the children and call their destroy
@@ -3044,7 +3639,40 @@ function $ui_CoreScreen(object, data) {
 
 $ui_CoreScreen.prototype = new $ui_CoreComponent();
 
-
+/**
+ * The {@link $ui.CoreScreen} <b>onresize</b> event will fire when the viewport of the screen changes size
+ * @callback ScreenResizeEvent
+ */
+ 
+ /**
+ * The {@link $ui.CoreScreen} <b>onshow</b> event will fire when the screen has been displayed
+ * @callback ScreenShowEvent
+ */
+/**
+ * The DataProvider component provides a data source that can be bound to controls on a screen. This provides the ability to both populate controls with data, as well as automatically save the data based on user interaction with the controls.<br><br>
+ * <b>NOTE: The DataProvider should be attached to a screen or control using its [attachedObjects]{@link $ui.CoreComponent} property.</b><br><br>
+ * <b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   component: $ui.DataProvider,
+ *   id: 'myProvider',
+ *   data: {
+ *      account: {
+ *         username: '@brcewane' 
+ *      }
+ *   }
+ *}
+ * </pre>
+ * @namespace
+ * @name DataProvider
+ * @memberof $ui
+ * @property {string} component - The <b>required</b> component property defines what type of component is being defined. This property must be $ui.DataProvider
+ * @property {string} id - The <b>required</b> id property is used to uniquely define the data provider in the scope of the screen in which it belongs. Providing an id for your data provider is required because you can easily access your provider through your javascript coding and also reference it as the provider for a control.
+ * @property {object} [data] - The data property by default is undefined. You can populate the data property by calling the load or set functions listed in the functions area, or you can define it as any kind of object. The data property holds the object that represents the data for the provider
+ * @property {ProviderLoadEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
+ * @property {ProviderErrorEvent} [onerror] - This event will fire when an attempt to load data into the provider fails. It has one parameter that represents the error code experienced.
+ * @property {ProviderBeforeUpdateEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
+ */
 function $ui_DataProvider(object, screen){
 	object.screen = screen;
 	object._url = undefined;
@@ -3056,7 +3684,12 @@ function $ui_DataProvider(object, screen){
 		screen[object.id] = object;
 	}
 	
-	// Public function to set the data with an object
+	/** 
+	 * You can set the data property for any data provider directly by passing it an object that you want to use as the data source. Setting this property will trigger the <i>onbeforeupdate</i>, <i>onloaded</i> event and update the controls which are using this provider
+	 * @function setData
+	 * @memberof $ui.DataProvider
+	 * @param {object} value - Object to set as data for the data provider
+	 */
 	object.setData = function(value) {
  		this._untouched = false;
 		this.data = value;
@@ -3071,7 +3704,11 @@ function $ui_DataProvider(object, screen){
 	}
 	object.setData = object.setData.bind(object);
 	
-	// Public function to refresh Data from the server
+	/** 
+	 * This function will refresh all the data in the provider based on the last used url used for <i>loadFromUrl()</i>. When data loads, controls will update and the data provider's <i>onbeforeupdate</i> and <i>onload</i> event will be triggered.
+	 * @function refreshFromServer
+	 * @memberof $ui.DataProvider
+	 */
 	object.refreshFromServer = function() {
 		if ((this._url == undefined) || (this._url == '')) return;
 		this._url = url;
@@ -3079,13 +3716,22 @@ function $ui_DataProvider(object, screen){
 	}
 	object.refreshFromServer = object.refreshFromServer.bind(object);
 	
-	// Public function to tell connected controls to reload their data from memory
+	/** 
+	 * The refresh function will send a signal out to all connected components to refresh their data from the current content in memory from the provider. <b>NOTE: No <i>onbeforeupdate</i> or <i>onload</i> event will fire on the provider</b>
+	 * @function refresh
+	 * @memberof $ui.DataProvider
+	 */
 	object.refresh = function() {
 		this._raiseEvent();
 	}
 	object.refresh = object.refresh.bind(object);
 	
-	// Public function to load the data from a JSON URL
+	/** 
+	 * This function will refresh the component with data from a specified URL. The data that is retrieved from the URL must be in valid JSON notation.
+	 * @function loadFromUrl
+	 * @memberof $ui.DataProvider
+	 * @param {object} value - The function takes the parameter url which is the URL path for the JSON GET request.
+	 */
 	object.loadFromUrl = function(url) {
 		// Make sure we are online
 		if(navigator.onLine != true) {
@@ -3164,13 +3810,109 @@ function $ui_DataProvider(object, screen){
 	return undefined;
 }
 
+/**
+ * A data provider link provides a binding between a [control]{@link $ui.CoreComponent} and a data provider. The path for the <b>property</b> attribute starts at the root of the object that is provided as the data source for the data provider.<br><br>
+ * The type of object that the property path should point to is dependent on the control and the data it uses to display and/or edit. If the control also allows the user to edit data or change settings, these changes will be applied to the property value in the data provider.<br><br>
+ * <b>Sample Code:</b><br>
+ * <pre>provider: {
+ *    id: 'myProvider',
+ *    property: 'posts'
+ * }
+ * </pre>
+ * <br>
+ * To access sub objects in the object chain from the data provider you can use normal <b>dot</b> notation:<br><br>
+ * <b>Sample Code:</b><br>
+ * <pre>provider: {
+ *    id: 'myProvider',
+ *    property: 'posts.item.thingy'
+ * }
+ * </pre>
+ * <br>
+ * @namespace
+ * @name DataProviderLink
+ * @memberof $ui
+ * @property {string} id - This is the <b>mandatory</b> id of the data provider belonging to the screen which will be linked to this control.  
+ * @property {string} property - This is the property path/name of the object to be used as the bound data for this control. A nested property can be defined simply by providing a path using <b>.</b> dot separators just like you were referring to the object via JavaScript
+ */
+ 
+ /**
+ * The {@link $ui.DataProvider} <b>onload</b> event when data has been loaded
+ * @callback ProviderLoadEvent
+ */
+ 
+ /**
+ * The {@link $ui.DataProvider} <b>onerror</b> event if there was an error loading the data
+ * @param {$ui.DataProvider.ProviderError} err - Error code
+ * @callback ProviderErrorEvent
+ */
+ 
+  /**
+ * The {@link $ui.DataProvider} <b>onbeforeupdate</b> event will fire after the data has been retrieved but <b>before</b> controls have processed the data
+ * @callback ProviderBeforeUpdateEvent
+ */
+ 
 
-// Represents an interaction with a control
-$ui.InteractionEvent = function(screenId, controlId, interaction) {
+/**
+ * Represents an interaction event from the user interface.  This event is raised when a user interacts with a part of the interface. All interation events are sent to the $ui.oninteraction 
+ * assigned function.  If valid values are not passed in for all of the parameters no event will be raised.
+ * @class InteractionEvent
+ * @param {string} screenId - The <b>id</b> property of the screen which contains the control providing the interaction
+ * @param {string} controlID - The <b>id</b> property of the control in which the user interacted
+ * @param {string} interaction - The interaction which took place
+ */
+function InteractionEvent(screenId, controlId, interaction) {
+	/**
+	 * The <b>id</b> property of the screen which contains the control providing the interaction
+	 * @member {string} screenId
+	 * @memberOf InteractionEvent
+	 */
 	this.screenId = screenId;
+	
+	 /**
+	 * The <b>id</b> property of the control in which the user interacted
+	 * @member {string} controlId
+	 * @memberOf InteractionEvent
+	 */
 	this.controlId = controlId;
+	
+	 
+	 /**
+	 * The interaction which took place
+	 * @member {string} interaction
+	 * @memberOf InteractionEvent
+	 */
 	this.interaction = interaction;
 }
+
+
+ 
+
+
+/**
+ * A List object will display multiple list items based on the data provided to the control.  The type of item objects that are used should match the declaration of the <b>style</b> of the list control<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.List,
+ *   style: $ui.GenericListItem,
+ *   items: [
+ *      {
+ *         img: 'thumbnails/foo.png',
+ *         title: 'This is my title',
+ *         accent: '6 hours ago',
+ *         caption: 'My summary description'
+ *      }
+ *   ]
+ *}
+ * @namespace
+ * @name List
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {object[]} [items] - The items property is an array of objects who's definition matches that of the requirements of the <b>style</b> property of the list
+ * @property {object} style - This is a list item decalaration so that the list knows how to render. For example this could be set to {@link $ui.GenericListItem}
+ * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a list control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
+ * @property {ListActionEvent} [onaction] - The onaction event will fire when an action from a list item is triggered. Some list items may have multiple actions that can be taken. When one of these actions is selected by the user the onaction event will fire.
+ */
 function $ui_List(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-list');
@@ -3239,7 +3981,12 @@ function $ui_List(object, screen) {
 	}
 	object._addItem = object._addItem.bind(object);
 	
-	// Public function to add a new item to the list
+	/** 
+	 * You can add an item to the end of the list by calling the addItem function and passing in an object that matches the a list item
+	 * @function addItem
+	 * @memberof $ui.List
+	 * @param {object} item - Item to be added to the list
+	 */
 	object.addItem = function(item) {
 		if (this._addItem(item)) {
 			this.items.push(item);
@@ -3254,7 +4001,12 @@ function $ui_List(object, screen) {
 	}
 	object.addItem = object.addItem.bind(object);
 	
-	// Public function to remove an existing item from the list
+	/** 
+	 * The remove item function will remove an existing item from a list. If an invalid item is specified the removal will fail
+	 * @function removeItem
+	 * @memberof $ui.List
+	 * @param {object} item - Item to be removed from the list
+	 */
 	object.removeItem = function(item) {
 		if (item == undefined) return false;
 		var index = this.items.indexOf(item);
@@ -3275,7 +4027,13 @@ function $ui_List(object, screen) {
 	}
 	object.removeItem = object.removeItem.bind(object);
 	
-	// Public function to insert a new item into the list
+	/** 
+	 * Insert item works similar to addItem but instead will insert the item into the list at the index specified. If an invalid index is specified it will result in failure to insert the item. To insert an item at the top of a list call insert with the index of 0.
+	 * @function insertItem
+	 * @memberOf $ui.List
+	 * @param {object} item - Item to be inserted into the list
+	 * @param {number} index - Index to insert the item
+	 */
 	object.insertItem = function(item, index) {
 		item.parent = this;
 		if (index < 0) {
@@ -3301,7 +4059,12 @@ function $ui_List(object, screen) {
 	}
 	object.insertItem = object.insertItem.bind(object);
 	
-	// Refresh all the items in the list
+	/** 
+	 * You can refresh all the items in a list by calling the refreshItems function with an array of new items
+	 * @function refreshItems
+	 * @memberof $ui.List
+	 * @param {object[]} items - Array of items to refresh the list
+	 */
 	object.refreshItems = function(itemArray) {
 		if (itemArray == undefined) return; // No data provided
 		var i,
@@ -3329,7 +4092,12 @@ function $ui_List(object, screen) {
 	}
 	object.refreshItems = object.refreshItems.bind(object);
 	
-	// Add a batch of items to the end of a list
+	/** 
+	 * This function is much like the refreshItems function but instead it loads a list of circle list items to the end of the current list and does not replace the existing list items.
+	 * @function addItemBatch
+	 * @memberof $ui.List
+	 * @param {object[]} items - Array of items to be added to the list
+	 */
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
@@ -3380,11 +4148,58 @@ function $ui_List(object, screen) {
 }
 
 $ui_List.prototype = new $ui_CoreComponent();
+
+/**
+ * The {@link $ui.List} <b>onaction</b> event will fire when the user interacts with a list item
+ * @callback ListActionEvent
+ * @param {ListEvent} event - The list event which was raised
+ */
+/**
+ * The list event is what is triggered when a user interacts with the List control. It contains the target list item that the user was interacting with, the type of event which was triggered 
+ * and an optional data property that contains extra data about the event.
+ * @class ListEvent
+ * @param {object} target - Target list item where the event originated
+ * @param {string} eventType - The type of event that was triggered. Each list item has its own set of possible events that can be raised
+ * @param {object} [data] - Optional data that can be passed with a list event
+ */
 function ListEvent(target, eventType, data) {
+	/** 
+	 * Target list item where the event originated
+	 * @member {object} target
+	 * @memberOf ListEvent
+	 */
 	this.target = target;
+	
+	/** 
+	 * The type of event that was triggered. Each list item has its own set of possible events that can be raised
+	 * @member {string} eventType
+	 * @memberOf ListEvent
+	 */
 	this.eventType = eventType;
+	
+	/** 
+	 * Optional data that can be passed with a list event
+	 * @member {object} [data]
+	 * @memberOf ListEvent
+	 */
 	this.data = data;
 }
+
+
+/**
+ * The spinner control provides you the ability to give a visual indicator when your content is loading. The spinner has one main property <b>size</b>. <br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.Spinner,
+ *   size: $ui.Spinner.SpinnerSize.LARGE
+ *}
+ * @namespace Spinner
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.Spinner.SpinnerSize} [size=$ui.Spinner.SpinnerSize.MEDIUM] - Represents the size of the spinner component.
+ * @property {$ui.Spinner.SpinnerColor} [forceColor] - This property specifies if the color should be forced to be dark or light. By default the system figures this out and does not need to be set. However, if you want to force a color in a certain scenario you can use this property.
+ */
 function $ui_Spinner(object, screen){
 	$ui_CoreComponent.call(this, object, screen);
 	object.size = (object.size) ? object.size : $ui.Spinner.SpinnerSize.MEDIUM;
@@ -3412,14 +4227,36 @@ function $ui_Spinner(object, screen){
 }
 
 $ui_Spinner.prototype = new $ui_CoreComponent();
-// This provides an interface for creating a new extension
+/**
+ * The definition of an extension to be used in extending the <b>$ui</b> framework.
+ * @class
+ * @param {string} name - This would be the value you set as the <b>component</b> property for your control
+ * @param {function} constructor - The function to be used as your control constructor
+ * @param {$ui.UIExtensionType} [type=$ui.UIExtensionType.CONTROL] - The type of extension you are registering
+ * @param {object} [definition] - Class definition for your extension, you can include properties such as constants here
+ */
 function UIExtension(name, constructor, type, definition) {
+	/** 
+	 * This would be the value you set as the <b>component</b> property for your control
+	 * @member {string} name
+	 * @memberOf UIExtension
+	 */
 	if (name == null) throw new Error('UIExtension: name cannot be null');
 	if (name == undefined) throw new Error('UIExtension: name cannot be undefined');
 	this.name = name;
+	/** 
+	 * The function to be used as your control constructor
+	 * @member {function} constructor
+	 * @memberOf UIExtension
+	 */
 	if (constructor == null) throw new Error('UIExtension: constructor cannot be null');
 	if (constructor == undefined) throw new Error('UIExtension: constructor cannot be undefined');
 	this.constructor = constructor;
+	/** 
+	 * The type of extension you are registering
+	 * @member {$ui.UIExtensionType} [type=$ui.UIExtensionType.CONTROL]
+	 * @memberOf UIExtension
+	 */
 	if (type == null || type == undefined) {
 		this.type = $ui.UIExtensionType.CONTROL;
 	} else if ((type != $ui.UIExtensionType.CONTROL) && (type != $ui.UIExtensionType.SCREEN) && (type != $ui.UIExtensionType.LISTITEM)) {
@@ -3427,6 +4264,11 @@ function UIExtension(name, constructor, type, definition) {
 	} else {
 		this.type = type;
 	}
+	/** 
+	 * Class definition for your extension, you can include properties such as constants here
+	 * @member {object} [definition]
+	 * @memberOf UIExtension
+	 */
 	if (definition == null || definition == undefined) {
 		this.definition = {};
 	} else {
@@ -3444,6 +4286,33 @@ function UIExtension(name, constructor, type, definition) {
  */
 (function(){"use strict";var t=this,i=t.Chart,e=function(t){this.canvas=t.canvas,this.ctx=t;this.width=t.canvas.width,this.height=t.canvas.height;return this.aspectRatio=this.width/this.height,s.retinaScale(this),this};e.defaults={global:{animation:!0,animationSteps:60,animationEasing:"easeOutQuart",showScale:!0,scaleOverride:!1,scaleSteps:null,scaleStepWidth:null,scaleStartValue:null,scaleLineColor:"rgba(0,0,0,.1)",scaleLineWidth:1,scaleShowLabels:!0,scaleLabel:"<%=value%>",scaleIntegersOnly:!0,scaleBeginAtZero:!1,scaleFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",scaleFontSize:12,scaleFontStyle:"normal",scaleFontColor:"#666",responsive:!1,maintainAspectRatio:!0,showTooltips:!0,customTooltips:!1,tooltipEvents:["mousemove","touchstart","touchmove","mouseout"],tooltipFillColor:"rgba(0,0,0,0.8)",tooltipFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",tooltipFontSize:14,tooltipFontStyle:"normal",tooltipFontColor:"#fff",tooltipTitleFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",tooltipTitleFontSize:14,tooltipTitleFontStyle:"bold",tooltipTitleFontColor:"#fff",tooltipYPadding:6,tooltipXPadding:6,tooltipCaretSize:8,tooltipCornerRadius:6,tooltipXOffset:10,tooltipTemplate:"<%if (label){%><%=label%>: <%}%><%= value %>",multiTooltipTemplate:"<%= value %>",multiTooltipKeyBackground:"#fff",onAnimationProgress:function(){},onAnimationComplete:function(){}}},e.types={};var s=e.helpers={},n=s.each=function(t,i,e){var s=Array.prototype.slice.call(arguments,3);if(t)if(t.length===+t.length){var n;for(n=0;n<t.length;n++)i.apply(e,[t[n],n].concat(s))}else for(var o in t)i.apply(e,[t[o],o].concat(s))},o=s.clone=function(t){var i={};return n(t,function(e,s){t.hasOwnProperty(s)&&(i[s]=e)}),i},a=s.extend=function(t){return n(Array.prototype.slice.call(arguments,1),function(i){n(i,function(e,s){i.hasOwnProperty(s)&&(t[s]=e)})}),t},h=s.merge=function(){var t=Array.prototype.slice.call(arguments,0);return t.unshift({}),a.apply(null,t)},l=s.indexOf=function(t,i){if(Array.prototype.indexOf)return t.indexOf(i);for(var e=0;e<t.length;e++)if(t[e]===i)return e;return-1},r=(s.where=function(t,i){var e=[];return s.each(t,function(t){i(t)&&e.push(t)}),e},s.findNextWhere=function(t,i,e){e||(e=-1);for(var s=e+1;s<t.length;s++){var n=t[s];if(i(n))return n}},s.findPreviousWhere=function(t,i,e){e||(e=t.length);for(var s=e-1;s>=0;s--){var n=t[s];if(i(n))return n}},s.inherits=function(t){var i=this,e=t&&t.hasOwnProperty("constructor")?t.constructor:function(){return i.apply(this,arguments)},s=function(){this.constructor=e};return s.prototype=i.prototype,e.prototype=new s,e.extend=r,t&&a(e.prototype,t),e.__super__=i.prototype,e}),c=s.noop=function(){},u=s.uid=function(){var t=0;return function(){return"chart-"+t++}}(),d=s.warn=function(t){window.console&&"function"==typeof window.console.warn&&console.warn(t)},p=s.amd="function"==typeof define&&define.amd,f=s.isNumber=function(t){return!isNaN(parseFloat(t))&&isFinite(t)},g=s.max=function(t){return Math.max.apply(Math,t)},m=s.min=function(t){return Math.min.apply(Math,t)},v=(s.cap=function(t,i,e){if(f(i)){if(t>i)return i}else if(f(e)&&e>t)return e;return t},s.getDecimalPlaces=function(t){return t%1!==0&&f(t)?t.toString().split(".")[1].length:0}),S=s.radians=function(t){return t*(Math.PI/180)},x=(s.getAngleFromPoint=function(t,i){var e=i.x-t.x,s=i.y-t.y,n=Math.sqrt(e*e+s*s),o=2*Math.PI+Math.atan2(s,e);return 0>e&&0>s&&(o+=2*Math.PI),{angle:o,distance:n}},s.aliasPixel=function(t){return t%2===0?0:.5}),y=(s.splineCurve=function(t,i,e,s){var n=Math.sqrt(Math.pow(i.x-t.x,2)+Math.pow(i.y-t.y,2)),o=Math.sqrt(Math.pow(e.x-i.x,2)+Math.pow(e.y-i.y,2)),a=s*n/(n+o),h=s*o/(n+o);return{inner:{x:i.x-a*(e.x-t.x),y:i.y-a*(e.y-t.y)},outer:{x:i.x+h*(e.x-t.x),y:i.y+h*(e.y-t.y)}}},s.calculateOrderOfMagnitude=function(t){return Math.floor(Math.log(t)/Math.LN10)}),C=(s.calculateScaleRange=function(t,i,e,s,n){var o=2,a=Math.floor(i/(1.5*e)),h=o>=a,l=g(t),r=m(t);l===r&&(l+=.5,r>=.5&&!s?r-=.5:l+=.5);for(var c=Math.abs(l-r),u=y(c),d=Math.ceil(l/(1*Math.pow(10,u)))*Math.pow(10,u),p=s?0:Math.floor(r/(1*Math.pow(10,u)))*Math.pow(10,u),f=d-p,v=Math.pow(10,u),S=Math.round(f/v);(S>a||a>2*S)&&!h;)if(S>a)v*=2,S=Math.round(f/v),S%1!==0&&(h=!0);else if(n&&u>=0){if(v/2%1!==0)break;v/=2,S=Math.round(f/v)}else v/=2,S=Math.round(f/v);return h&&(S=o,v=f/S),{steps:S,stepValue:v,min:p,max:p+S*v}},s.template=function(t,i){function e(t,i){var e=/\W/.test(t)?new Function("obj","var p=[],print=function(){p.push.apply(p,arguments);};with(obj){p.push('"+t.replace(/[\r\t\n]/g," ").split("<%").join("	").replace(/((^|%>)[^\t]*)'/g,"$1\r").replace(/\t=(.*?)%>/g,"',$1,'").split("	").join("');").split("%>").join("p.push('").split("\r").join("\\'")+"');}return p.join('');"):s[t]=s[t];return i?e(i):e}if(t instanceof Function)return t(i);var s={};return e(t,i)}),w=(s.generateLabels=function(t,i,e,s){var o=new Array(i);return labelTemplateString&&n(o,function(i,n){o[n]=C(t,{value:e+s*(n+1)})}),o},s.easingEffects={linear:function(t){return t},easeInQuad:function(t){return t*t},easeOutQuad:function(t){return-1*t*(t-2)},easeInOutQuad:function(t){return(t/=.5)<1?.5*t*t:-0.5*(--t*(t-2)-1)},easeInCubic:function(t){return t*t*t},easeOutCubic:function(t){return 1*((t=t/1-1)*t*t+1)},easeInOutCubic:function(t){return(t/=.5)<1?.5*t*t*t:.5*((t-=2)*t*t+2)},easeInQuart:function(t){return t*t*t*t},easeOutQuart:function(t){return-1*((t=t/1-1)*t*t*t-1)},easeInOutQuart:function(t){return(t/=.5)<1?.5*t*t*t*t:-0.5*((t-=2)*t*t*t-2)},easeInQuint:function(t){return 1*(t/=1)*t*t*t*t},easeOutQuint:function(t){return 1*((t=t/1-1)*t*t*t*t+1)},easeInOutQuint:function(t){return(t/=.5)<1?.5*t*t*t*t*t:.5*((t-=2)*t*t*t*t+2)},easeInSine:function(t){return-1*Math.cos(t/1*(Math.PI/2))+1},easeOutSine:function(t){return 1*Math.sin(t/1*(Math.PI/2))},easeInOutSine:function(t){return-0.5*(Math.cos(Math.PI*t/1)-1)},easeInExpo:function(t){return 0===t?1:1*Math.pow(2,10*(t/1-1))},easeOutExpo:function(t){return 1===t?1:1*(-Math.pow(2,-10*t/1)+1)},easeInOutExpo:function(t){return 0===t?0:1===t?1:(t/=.5)<1?.5*Math.pow(2,10*(t-1)):.5*(-Math.pow(2,-10*--t)+2)},easeInCirc:function(t){return t>=1?t:-1*(Math.sqrt(1-(t/=1)*t)-1)},easeOutCirc:function(t){return 1*Math.sqrt(1-(t=t/1-1)*t)},easeInOutCirc:function(t){return(t/=.5)<1?-0.5*(Math.sqrt(1-t*t)-1):.5*(Math.sqrt(1-(t-=2)*t)+1)},easeInElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:1==(t/=1)?1:(e||(e=.3),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),-(s*Math.pow(2,10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e)))},easeOutElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:1==(t/=1)?1:(e||(e=.3),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),s*Math.pow(2,-10*t)*Math.sin(2*(1*t-i)*Math.PI/e)+1)},easeInOutElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:2==(t/=.5)?1:(e||(e=.3*1.5),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),1>t?-.5*s*Math.pow(2,10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e):s*Math.pow(2,-10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e)*.5+1)},easeInBack:function(t){var i=1.70158;return 1*(t/=1)*t*((i+1)*t-i)},easeOutBack:function(t){var i=1.70158;return 1*((t=t/1-1)*t*((i+1)*t+i)+1)},easeInOutBack:function(t){var i=1.70158;return(t/=.5)<1?.5*t*t*(((i*=1.525)+1)*t-i):.5*((t-=2)*t*(((i*=1.525)+1)*t+i)+2)},easeInBounce:function(t){return 1-w.easeOutBounce(1-t)},easeOutBounce:function(t){return(t/=1)<1/2.75?7.5625*t*t:2/2.75>t?1*(7.5625*(t-=1.5/2.75)*t+.75):2.5/2.75>t?1*(7.5625*(t-=2.25/2.75)*t+.9375):1*(7.5625*(t-=2.625/2.75)*t+.984375)},easeInOutBounce:function(t){return.5>t?.5*w.easeInBounce(2*t):.5*w.easeOutBounce(2*t-1)+.5}}),b=s.requestAnimFrame=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(t){return window.setTimeout(t,1e3/60)}}(),P=(s.cancelAnimFrame=function(){return window.cancelAnimationFrame||window.webkitCancelAnimationFrame||window.mozCancelAnimationFrame||window.oCancelAnimationFrame||window.msCancelAnimationFrame||function(t){return window.clearTimeout(t,1e3/60)}}(),s.animationLoop=function(t,i,e,s,n,o){var a=0,h=w[e]||w.linear,l=function(){a++;var e=a/i,r=h(e);t.call(o,r,e,a),s.call(o,r,e),i>a?o.animationFrame=b(l):n.apply(o)};b(l)},s.getRelativePosition=function(t){var i,e,s=t.originalEvent||t,n=t.currentTarget||t.srcElement,o=n.getBoundingClientRect();return s.touches?(i=s.touches[0].clientX-o.left,e=s.touches[0].clientY-o.top):(i=s.clientX-o.left,e=s.clientY-o.top),{x:i,y:e}},s.addEvent=function(t,i,e){t.addEventListener?t.addEventListener(i,e):t.attachEvent?t.attachEvent("on"+i,e):t["on"+i]=e}),L=s.removeEvent=function(t,i,e){t.removeEventListener?t.removeEventListener(i,e,!1):t.detachEvent?t.detachEvent("on"+i,e):t["on"+i]=c},k=(s.bindEvents=function(t,i,e){t.events||(t.events={}),n(i,function(i){t.events[i]=function(){e.apply(t,arguments)},P(t.chart.canvas,i,t.events[i])})},s.unbindEvents=function(t,i){n(i,function(i,e){L(t.chart.canvas,e,i)})}),F=s.getMaximumWidth=function(t){var i=t.parentNode;return i.clientWidth},R=s.getMaximumHeight=function(t){var i=t.parentNode;return i.clientHeight},T=(s.getMaximumSize=s.getMaximumWidth,s.retinaScale=function(t){var i=t.ctx,e=t.canvas.width,s=t.canvas.height;window.devicePixelRatio&&(i.canvas.style.width=e+"px",i.canvas.style.height=s+"px",i.canvas.height=s*window.devicePixelRatio,i.canvas.width=e*window.devicePixelRatio,i.scale(window.devicePixelRatio,window.devicePixelRatio))}),A=s.clear=function(t){t.ctx.clearRect(0,0,t.width,t.height)},M=s.fontString=function(t,i,e){return i+" "+t+"px "+e},W=s.longestText=function(t,i,e){t.font=i;var s=0;return n(e,function(i){var e=t.measureText(i).width;s=e>s?e:s}),s},z=s.drawRoundedRectangle=function(t,i,e,s,n,o){t.beginPath(),t.moveTo(i+o,e),t.lineTo(i+s-o,e),t.quadraticCurveTo(i+s,e,i+s,e+o),t.lineTo(i+s,e+n-o),t.quadraticCurveTo(i+s,e+n,i+s-o,e+n),t.lineTo(i+o,e+n),t.quadraticCurveTo(i,e+n,i,e+n-o),t.lineTo(i,e+o),t.quadraticCurveTo(i,e,i+o,e),t.closePath()};e.instances={},e.Type=function(t,i,s){this.options=i,this.chart=s,this.id=u(),e.instances[this.id]=this,i.responsive&&this.resize(),this.initialize.call(this,t)},a(e.Type.prototype,{initialize:function(){return this},clear:function(){return A(this.chart),this},stop:function(){return s.cancelAnimFrame.call(t,this.animationFrame),this},resize:function(t){this.stop();var i=this.chart.canvas,e=F(this.chart.canvas),s=this.options.maintainAspectRatio?e/this.chart.aspectRatio:R(this.chart.canvas);return i.width=this.chart.width=e,i.height=this.chart.height=s,T(this.chart),"function"==typeof t&&t.apply(this,Array.prototype.slice.call(arguments,1)),this},reflow:c,render:function(t){return t&&this.reflow(),this.options.animation&&!t?s.animationLoop(this.draw,this.options.animationSteps,this.options.animationEasing,this.options.onAnimationProgress,this.options.onAnimationComplete,this):(this.draw(),this.options.onAnimationComplete.call(this)),this},generateLegend:function(){return C(this.options.legendTemplate,this)},destroy:function(){this.clear(),k(this,this.events);var t=this.chart.canvas;t.width=this.chart.width,t.height=this.chart.height,t.style.removeProperty?(t.style.removeProperty("width"),t.style.removeProperty("height")):(t.style.removeAttribute("width"),t.style.removeAttribute("height")),delete e.instances[this.id]},showTooltip:function(t,i){"undefined"==typeof this.activeElements&&(this.activeElements=[]);var o=function(t){var i=!1;return t.length!==this.activeElements.length?i=!0:(n(t,function(t,e){t!==this.activeElements[e]&&(i=!0)},this),i)}.call(this,t);if(o||i){if(this.activeElements=t,this.draw(),this.options.customTooltips&&this.options.customTooltips(!1),t.length>0)if(this.datasets&&this.datasets.length>1){for(var a,h,r=this.datasets.length-1;r>=0&&(a=this.datasets[r].points||this.datasets[r].bars||this.datasets[r].segments,h=l(a,t[0]),-1===h);r--);var c=[],u=[],d=function(){var t,i,e,n,o,a=[],l=[],r=[];return s.each(this.datasets,function(i){t=i.points||i.bars||i.segments,t[h]&&t[h].hasValue()&&a.push(t[h])}),s.each(a,function(t){l.push(t.x),r.push(t.y),c.push(s.template(this.options.multiTooltipTemplate,t)),u.push({fill:t._saved.fillColor||t.fillColor,stroke:t._saved.strokeColor||t.strokeColor})},this),o=m(r),e=g(r),n=m(l),i=g(l),{x:n>this.chart.width/2?n:i,y:(o+e)/2}}.call(this,h);new e.MultiTooltip({x:d.x,y:d.y,xPadding:this.options.tooltipXPadding,yPadding:this.options.tooltipYPadding,xOffset:this.options.tooltipXOffset,fillColor:this.options.tooltipFillColor,textColor:this.options.tooltipFontColor,fontFamily:this.options.tooltipFontFamily,fontStyle:this.options.tooltipFontStyle,fontSize:this.options.tooltipFontSize,titleTextColor:this.options.tooltipTitleFontColor,titleFontFamily:this.options.tooltipTitleFontFamily,titleFontStyle:this.options.tooltipTitleFontStyle,titleFontSize:this.options.tooltipTitleFontSize,cornerRadius:this.options.tooltipCornerRadius,labels:c,legendColors:u,legendColorBackground:this.options.multiTooltipKeyBackground,title:t[0].label,chart:this.chart,ctx:this.chart.ctx,custom:this.options.customTooltips}).draw()}else n(t,function(t){var i=t.tooltipPosition();new e.Tooltip({x:Math.round(i.x),y:Math.round(i.y),xPadding:this.options.tooltipXPadding,yPadding:this.options.tooltipYPadding,fillColor:this.options.tooltipFillColor,textColor:this.options.tooltipFontColor,fontFamily:this.options.tooltipFontFamily,fontStyle:this.options.tooltipFontStyle,fontSize:this.options.tooltipFontSize,caretHeight:this.options.tooltipCaretSize,cornerRadius:this.options.tooltipCornerRadius,text:C(this.options.tooltipTemplate,t),chart:this.chart,custom:this.options.customTooltips}).draw()},this);return this}},toBase64Image:function(){return this.chart.canvas.toDataURL.apply(this.chart.canvas,arguments)}}),e.Type.extend=function(t){var i=this,s=function(){return i.apply(this,arguments)};if(s.prototype=o(i.prototype),a(s.prototype,t),s.extend=e.Type.extend,t.name||i.prototype.name){var n=t.name||i.prototype.name,l=e.defaults[i.prototype.name]?o(e.defaults[i.prototype.name]):{};e.defaults[n]=a(l,t.defaults),e.types[n]=s,e.prototype[n]=function(t,i){var o=h(e.defaults.global,e.defaults[n],i||{});return new s(t,o,this)}}else d("Name not provided for this chart, so it hasn't been registered");return i},e.Element=function(t){a(this,t),this.initialize.apply(this,arguments),this.save()},a(e.Element.prototype,{initialize:function(){},restore:function(t){return t?n(t,function(t){this[t]=this._saved[t]},this):a(this,this._saved),this},save:function(){return this._saved=o(this),delete this._saved._saved,this},update:function(t){return n(t,function(t,i){this._saved[i]=this[i],this[i]=t},this),this},transition:function(t,i){return n(t,function(t,e){this[e]=(t-this._saved[e])*i+this._saved[e]},this),this},tooltipPosition:function(){return{x:this.x,y:this.y}},hasValue:function(){return f(this.value)}}),e.Element.extend=r,e.Point=e.Element.extend({display:!0,inRange:function(t,i){var e=this.hitDetectionRadius+this.radius;return Math.pow(t-this.x,2)+Math.pow(i-this.y,2)<Math.pow(e,2)},draw:function(){if(this.display){var t=this.ctx;t.beginPath(),t.arc(this.x,this.y,this.radius,0,2*Math.PI),t.closePath(),t.strokeStyle=this.strokeColor,t.lineWidth=this.strokeWidth,t.fillStyle=this.fillColor,t.fill(),t.stroke()}}}),e.Arc=e.Element.extend({inRange:function(t,i){var e=s.getAngleFromPoint(this,{x:t,y:i}),n=e.angle>=this.startAngle&&e.angle<=this.endAngle,o=e.distance>=this.innerRadius&&e.distance<=this.outerRadius;return n&&o},tooltipPosition:function(){var t=this.startAngle+(this.endAngle-this.startAngle)/2,i=(this.outerRadius-this.innerRadius)/2+this.innerRadius;return{x:this.x+Math.cos(t)*i,y:this.y+Math.sin(t)*i}},draw:function(t){var i=this.ctx;i.beginPath(),i.arc(this.x,this.y,this.outerRadius,this.startAngle,this.endAngle),i.arc(this.x,this.y,this.innerRadius,this.endAngle,this.startAngle,!0),i.closePath(),i.strokeStyle=this.strokeColor,i.lineWidth=this.strokeWidth,i.fillStyle=this.fillColor,i.fill(),i.lineJoin="bevel",this.showStroke&&i.stroke()}}),e.Rectangle=e.Element.extend({draw:function(){var t=this.ctx,i=this.width/2,e=this.x-i,s=this.x+i,n=this.base-(this.base-this.y),o=this.strokeWidth/2;this.showStroke&&(e+=o,s-=o,n+=o),t.beginPath(),t.fillStyle=this.fillColor,t.strokeStyle=this.strokeColor,t.lineWidth=this.strokeWidth,t.moveTo(e,this.base),t.lineTo(e,n),t.lineTo(s,n),t.lineTo(s,this.base),t.fill(),this.showStroke&&t.stroke()},height:function(){return this.base-this.y},inRange:function(t,i){return t>=this.x-this.width/2&&t<=this.x+this.width/2&&i>=this.y&&i<=this.base}}),e.Tooltip=e.Element.extend({draw:function(){var t=this.chart.ctx;t.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.xAlign="center",this.yAlign="above";var i=this.caretPadding=2,e=t.measureText(this.text).width+2*this.xPadding,s=this.fontSize+2*this.yPadding,n=s+this.caretHeight+i;this.x+e/2>this.chart.width?this.xAlign="left":this.x-e/2<0&&(this.xAlign="right"),this.y-n<0&&(this.yAlign="below");var o=this.x-e/2,a=this.y-n;if(t.fillStyle=this.fillColor,this.custom)this.custom(this);else{switch(this.yAlign){case"above":t.beginPath(),t.moveTo(this.x,this.y-i),t.lineTo(this.x+this.caretHeight,this.y-(i+this.caretHeight)),t.lineTo(this.x-this.caretHeight,this.y-(i+this.caretHeight)),t.closePath(),t.fill();break;case"below":a=this.y+i+this.caretHeight,t.beginPath(),t.moveTo(this.x,this.y+i),t.lineTo(this.x+this.caretHeight,this.y+i+this.caretHeight),t.lineTo(this.x-this.caretHeight,this.y+i+this.caretHeight),t.closePath(),t.fill()}switch(this.xAlign){case"left":o=this.x-e+(this.cornerRadius+this.caretHeight);break;case"right":o=this.x-(this.cornerRadius+this.caretHeight)}z(t,o,a,e,s,this.cornerRadius),t.fill(),t.fillStyle=this.textColor,t.textAlign="center",t.textBaseline="middle",t.fillText(this.text,o+e/2,a+s/2)}}}),e.MultiTooltip=e.Element.extend({initialize:function(){this.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.titleFont=M(this.titleFontSize,this.titleFontStyle,this.titleFontFamily),this.height=this.labels.length*this.fontSize+(this.labels.length-1)*(this.fontSize/2)+2*this.yPadding+1.5*this.titleFontSize,this.ctx.font=this.titleFont;var t=this.ctx.measureText(this.title).width,i=W(this.ctx,this.font,this.labels)+this.fontSize+3,e=g([i,t]);this.width=e+2*this.xPadding;var s=this.height/2;this.y-s<0?this.y=s:this.y+s>this.chart.height&&(this.y=this.chart.height-s),this.x>this.chart.width/2?this.x-=this.xOffset+this.width:this.x+=this.xOffset},getLineHeight:function(t){var i=this.y-this.height/2+this.yPadding,e=t-1;return 0===t?i+this.titleFontSize/2:i+(1.5*this.fontSize*e+this.fontSize/2)+1.5*this.titleFontSize},draw:function(){if(this.custom)this.custom(this);else{z(this.ctx,this.x,this.y-this.height/2,this.width,this.height,this.cornerRadius);var t=this.ctx;t.fillStyle=this.fillColor,t.fill(),t.closePath(),t.textAlign="left",t.textBaseline="middle",t.fillStyle=this.titleTextColor,t.font=this.titleFont,t.fillText(this.title,this.x+this.xPadding,this.getLineHeight(0)),t.font=this.font,s.each(this.labels,function(i,e){t.fillStyle=this.textColor,t.fillText(i,this.x+this.xPadding+this.fontSize+3,this.getLineHeight(e+1)),t.fillStyle=this.legendColorBackground,t.fillRect(this.x+this.xPadding,this.getLineHeight(e+1)-this.fontSize/2,this.fontSize,this.fontSize),t.fillStyle=this.legendColors[e].fill,t.fillRect(this.x+this.xPadding,this.getLineHeight(e+1)-this.fontSize/2,this.fontSize,this.fontSize)},this)}}}),e.Scale=e.Element.extend({initialize:function(){this.fit()},buildYLabels:function(){this.yLabels=[];for(var t=v(this.stepValue),i=0;i<=this.steps;i++)this.yLabels.push(C(this.templateString,{value:(this.min+i*this.stepValue).toFixed(t)}));this.yLabelWidth=this.display&&this.showLabels?W(this.ctx,this.font,this.yLabels):0},addXLabel:function(t){this.xLabels.push(t),this.valuesCount++,this.fit()},removeXLabel:function(){this.xLabels.shift(),this.valuesCount--,this.fit()},fit:function(){this.startPoint=this.display?this.fontSize:0,this.endPoint=this.display?this.height-1.5*this.fontSize-5:this.height,this.startPoint+=this.padding,this.endPoint-=this.padding;var t,i=this.endPoint-this.startPoint;for(this.calculateYRange(i),this.buildYLabels(),this.calculateXLabelRotation();i>this.endPoint-this.startPoint;)i=this.endPoint-this.startPoint,t=this.yLabelWidth,this.calculateYRange(i),this.buildYLabels(),t<this.yLabelWidth&&this.calculateXLabelRotation()},calculateXLabelRotation:function(){this.ctx.font=this.font;var t,i,e=this.ctx.measureText(this.xLabels[0]).width,s=this.ctx.measureText(this.xLabels[this.xLabels.length-1]).width;if(this.xScalePaddingRight=s/2+3,this.xScalePaddingLeft=e/2>this.yLabelWidth+10?e/2:this.yLabelWidth+10,this.xLabelRotation=0,this.display){var n,o=W(this.ctx,this.font,this.xLabels);this.xLabelWidth=o;for(var a=Math.floor(this.calculateX(1)-this.calculateX(0))-6;this.xLabelWidth>a&&0===this.xLabelRotation||this.xLabelWidth>a&&this.xLabelRotation<=90&&this.xLabelRotation>0;)n=Math.cos(S(this.xLabelRotation)),t=n*e,i=n*s,t+this.fontSize/2>this.yLabelWidth+8&&(this.xScalePaddingLeft=t+this.fontSize/2),this.xScalePaddingRight=this.fontSize/2,this.xLabelRotation++,this.xLabelWidth=n*o;this.xLabelRotation>0&&(this.endPoint-=Math.sin(S(this.xLabelRotation))*o+3)}else this.xLabelWidth=0,this.xScalePaddingRight=this.padding,this.xScalePaddingLeft=this.padding},calculateYRange:c,drawingArea:function(){return this.startPoint-this.endPoint},calculateY:function(t){var i=this.drawingArea()/(this.min-this.max);return this.endPoint-i*(t-this.min)},calculateX:function(t){var i=(this.xLabelRotation>0,this.width-(this.xScalePaddingLeft+this.xScalePaddingRight)),e=i/(this.valuesCount-(this.offsetGridLines?0:1)),s=e*t+this.xScalePaddingLeft;return this.offsetGridLines&&(s+=e/2),Math.round(s)},update:function(t){s.extend(this,t),this.fit()},draw:function(){var t=this.ctx,i=(this.endPoint-this.startPoint)/this.steps,e=Math.round(this.xScalePaddingLeft);this.display&&(t.fillStyle=this.textColor,t.font=this.font,n(this.yLabels,function(n,o){var a=this.endPoint-i*o,h=Math.round(a),l=this.showHorizontalLines;t.textAlign="right",t.textBaseline="middle",this.showLabels&&t.fillText(n,e-10,a),0!==o||l||(l=!0),l&&t.beginPath(),o>0?(t.lineWidth=this.gridLineWidth,t.strokeStyle=this.gridLineColor):(t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor),h+=s.aliasPixel(t.lineWidth),l&&(t.moveTo(e,h),t.lineTo(this.width,h),t.stroke(),t.closePath()),t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor,t.beginPath(),t.moveTo(e-5,h),t.lineTo(e,h),t.stroke(),t.closePath()},this),n(this.xLabels,function(i,e){var s=this.calculateX(e)+x(this.lineWidth),n=this.calculateX(e-(this.offsetGridLines?.5:0))+x(this.lineWidth),o=this.xLabelRotation>0,a=this.showVerticalLines;0!==e||a||(a=!0),a&&t.beginPath(),e>0?(t.lineWidth=this.gridLineWidth,t.strokeStyle=this.gridLineColor):(t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor),a&&(t.moveTo(n,this.endPoint),t.lineTo(n,this.startPoint-3),t.stroke(),t.closePath()),t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor,t.beginPath(),t.moveTo(n,this.endPoint),t.lineTo(n,this.endPoint+5),t.stroke(),t.closePath(),t.save(),t.translate(s,o?this.endPoint+12:this.endPoint+8),t.rotate(-1*S(this.xLabelRotation)),t.font=this.font,t.textAlign=o?"right":"center",t.textBaseline=o?"middle":"top",t.fillText(i,0,0),t.restore()},this))}}),e.RadialScale=e.Element.extend({initialize:function(){this.size=m([this.height,this.width]),this.drawingArea=this.display?this.size/2-(this.fontSize/2+this.backdropPaddingY):this.size/2},calculateCenterOffset:function(t){var i=this.drawingArea/(this.max-this.min);return(t-this.min)*i},update:function(){this.lineArc?this.drawingArea=this.display?this.size/2-(this.fontSize/2+this.backdropPaddingY):this.size/2:this.setScaleSize(),this.buildYLabels()},buildYLabels:function(){this.yLabels=[];for(var t=v(this.stepValue),i=0;i<=this.steps;i++)this.yLabels.push(C(this.templateString,{value:(this.min+i*this.stepValue).toFixed(t)}))},getCircumference:function(){return 2*Math.PI/this.valuesCount},setScaleSize:function(){var t,i,e,s,n,o,a,h,l,r,c,u,d=m([this.height/2-this.pointLabelFontSize-5,this.width/2]),p=this.width,g=0;for(this.ctx.font=M(this.pointLabelFontSize,this.pointLabelFontStyle,this.pointLabelFontFamily),i=0;i<this.valuesCount;i++)t=this.getPointPosition(i,d),e=this.ctx.measureText(C(this.templateString,{value:this.labels[i]})).width+5,0===i||i===this.valuesCount/2?(s=e/2,t.x+s>p&&(p=t.x+s,n=i),t.x-s<g&&(g=t.x-s,a=i)):i<this.valuesCount/2?t.x+e>p&&(p=t.x+e,n=i):i>this.valuesCount/2&&t.x-e<g&&(g=t.x-e,a=i);l=g,r=Math.ceil(p-this.width),o=this.getIndexAngle(n),h=this.getIndexAngle(a),c=r/Math.sin(o+Math.PI/2),u=l/Math.sin(h+Math.PI/2),c=f(c)?c:0,u=f(u)?u:0,this.drawingArea=d-(u+c)/2,this.setCenterPoint(u,c)},setCenterPoint:function(t,i){var e=this.width-i-this.drawingArea,s=t+this.drawingArea;this.xCenter=(s+e)/2,this.yCenter=this.height/2},getIndexAngle:function(t){var i=2*Math.PI/this.valuesCount;return t*i-Math.PI/2},getPointPosition:function(t,i){var e=this.getIndexAngle(t);return{x:Math.cos(e)*i+this.xCenter,y:Math.sin(e)*i+this.yCenter}},draw:function(){if(this.display){var t=this.ctx;if(n(this.yLabels,function(i,e){if(e>0){var s,n=e*(this.drawingArea/this.steps),o=this.yCenter-n;if(this.lineWidth>0)if(t.strokeStyle=this.lineColor,t.lineWidth=this.lineWidth,this.lineArc)t.beginPath(),t.arc(this.xCenter,this.yCenter,n,0,2*Math.PI),t.closePath(),t.stroke();else{t.beginPath();for(var a=0;a<this.valuesCount;a++)s=this.getPointPosition(a,this.calculateCenterOffset(this.min+e*this.stepValue)),0===a?t.moveTo(s.x,s.y):t.lineTo(s.x,s.y);t.closePath(),t.stroke()}if(this.showLabels){if(t.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.showLabelBackdrop){var h=t.measureText(i).width;t.fillStyle=this.backdropColor,t.fillRect(this.xCenter-h/2-this.backdropPaddingX,o-this.fontSize/2-this.backdropPaddingY,h+2*this.backdropPaddingX,this.fontSize+2*this.backdropPaddingY)}t.textAlign="center",t.textBaseline="middle",t.fillStyle=this.fontColor,t.fillText(i,this.xCenter,o)}}},this),!this.lineArc){t.lineWidth=this.angleLineWidth,t.strokeStyle=this.angleLineColor;for(var i=this.valuesCount-1;i>=0;i--){if(this.angleLineWidth>0){var e=this.getPointPosition(i,this.calculateCenterOffset(this.max));t.beginPath(),t.moveTo(this.xCenter,this.yCenter),t.lineTo(e.x,e.y),t.stroke(),t.closePath()}var s=this.getPointPosition(i,this.calculateCenterOffset(this.max)+5);t.font=M(this.pointLabelFontSize,this.pointLabelFontStyle,this.pointLabelFontFamily),t.fillStyle=this.pointLabelFontColor;var o=this.labels.length,a=this.labels.length/2,h=a/2,l=h>i||i>o-h,r=i===h||i===o-h;t.textAlign=0===i?"center":i===a?"center":a>i?"left":"right",t.textBaseline=r?"middle":l?"bottom":"top",t.fillText(this.labels[i],s.x,s.y)}}}}}),s.addEvent(window,"resize",function(){var t;return function(){clearTimeout(t),t=setTimeout(function(){n(e.instances,function(t){t.options.responsive&&t.resize(t.render,!0)})},50)}}()),p?define(function(){return e}):"object"==typeof module&&module.exports&&(module.exports=e),t.Chart=e,e.noConflict=function(){return t.Chart=i,e}}).call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleBeginAtZero:!0,scaleShowGridLines:!0,scaleGridLineColor:"rgba(0,0,0,.05)",scaleGridLineWidth:1,scaleShowHorizontalLines:!0,scaleShowVerticalLines:!0,barShowStroke:!0,barStrokeWidth:2,barValueSpacing:5,barDatasetSpacing:1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].fillColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Bar",defaults:s,initialize:function(t){var s=this.options;this.ScaleClass=i.Scale.extend({offsetGridLines:!0,calculateBarX:function(t,i,e){var n=this.calculateBaseWidth(),o=this.calculateX(e)-n/2,a=this.calculateBarWidth(t);return o+a*i+i*s.barDatasetSpacing+a/2},calculateBaseWidth:function(){return this.calculateX(1)-this.calculateX(0)-2*s.barValueSpacing},calculateBarWidth:function(t){var i=this.calculateBaseWidth()-(t-1)*s.barDatasetSpacing;return i/t}}),this.datasets=[],this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getBarsAtEvent(t):[];this.eachBars(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),this.BarClass=i.Rectangle.extend({strokeWidth:this.options.barStrokeWidth,showStroke:this.options.barShowStroke,ctx:this.chart.ctx}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,bars:[]};this.datasets.push(s),e.each(i.data,function(e,n){s.bars.push(new this.BarClass({value:e,label:t.labels[n],datasetLabel:i.label,strokeColor:i.strokeColor,fillColor:i.fillColor,highlightFill:i.highlightFill||i.fillColor,highlightStroke:i.highlightStroke||i.strokeColor}))},this)},this),this.buildScale(t.labels),this.BarClass.prototype.base=this.scale.endPoint,this.eachBars(function(t,i,s){e.extend(t,{width:this.scale.calculateBarWidth(this.datasets.length),x:this.scale.calculateBarX(this.datasets.length,s,i),y:this.scale.endPoint}),t.save()},this),this.render()},update:function(){this.scale.update(),e.each(this.activeElements,function(t){t.restore(["fillColor","strokeColor"])}),this.eachBars(function(t){t.save()}),this.render()},eachBars:function(t){e.each(this.datasets,function(i,s){e.each(i.bars,t,this,s)},this)},getBarsAtEvent:function(t){for(var i,s=[],n=e.getRelativePosition(t),o=function(t){s.push(t.bars[i])},a=0;a<this.datasets.length;a++)for(i=0;i<this.datasets[a].bars.length;i++)if(this.datasets[a].bars[i].inRange(n.x,n.y))return e.each(this.datasets,o),s;return s},buildScale:function(t){var i=this,s=function(){var t=[];return i.eachBars(function(i){t.push(i.value)}),t},n={templateString:this.options.scaleLabel,height:this.chart.height,width:this.chart.width,ctx:this.chart.ctx,textColor:this.options.scaleFontColor,fontSize:this.options.scaleFontSize,fontStyle:this.options.scaleFontStyle,fontFamily:this.options.scaleFontFamily,valuesCount:t.length,beginAtZero:this.options.scaleBeginAtZero,integersOnly:this.options.scaleIntegersOnly,calculateYRange:function(t){var i=e.calculateScaleRange(s(),t,this.fontSize,this.beginAtZero,this.integersOnly);e.extend(this,i)},xLabels:t,font:e.fontString(this.options.scaleFontSize,this.options.scaleFontStyle,this.options.scaleFontFamily),lineWidth:this.options.scaleLineWidth,lineColor:this.options.scaleLineColor,showHorizontalLines:this.options.scaleShowHorizontalLines,showVerticalLines:this.options.scaleShowVerticalLines,gridLineWidth:this.options.scaleShowGridLines?this.options.scaleGridLineWidth:0,gridLineColor:this.options.scaleShowGridLines?this.options.scaleGridLineColor:"rgba(0,0,0,0)",padding:this.options.showScale?0:this.options.barShowStroke?this.options.barStrokeWidth:0,showLabels:this.options.scaleShowLabels,display:this.options.showScale};this.options.scaleOverride&&e.extend(n,{calculateYRange:e.noop,steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}),this.scale=new this.ScaleClass(n)},addData:function(t,i){e.each(t,function(t,e){this.datasets[e].bars.push(new this.BarClass({value:t,label:i,x:this.scale.calculateBarX(this.datasets.length,e,this.scale.valuesCount+1),y:this.scale.endPoint,width:this.scale.calculateBarWidth(this.datasets.length),base:this.scale.endPoint,strokeColor:this.datasets[e].strokeColor,fillColor:this.datasets[e].fillColor}))},this),this.scale.addXLabel(i),this.update()},removeData:function(){this.scale.removeXLabel(),e.each(this.datasets,function(t){t.bars.shift()},this),this.update()},reflow:function(){e.extend(this.BarClass.prototype,{y:this.scale.endPoint,base:this.scale.endPoint});
 var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.update(t)},draw:function(t){var i=t||1;this.clear();this.chart.ctx;this.scale.draw(i),e.each(this.datasets,function(t,s){e.each(t.bars,function(t,e){t.hasValue()&&(t.base=this.scale.endPoint,t.transition({x:this.scale.calculateBarX(this.datasets.length,s,e),y:this.scale.calculateY(t.value),width:this.scale.calculateBarWidth(this.datasets.length)},i).draw())},this)},this)}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={segmentShowStroke:!0,segmentStrokeColor:"#fff",segmentStrokeWidth:2,percentageInnerCutout:50,animationSteps:100,animationEasing:"easeOutBounce",animateRotate:!0,animateScale:!1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<segments.length; i++){%><li><span style="background-color:<%=segments[i].fillColor%>"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Doughnut",defaults:s,initialize:function(t){this.segments=[],this.outerRadius=(e.min([this.chart.width,this.chart.height])-this.options.segmentStrokeWidth/2)/2,this.SegmentArc=i.Arc.extend({ctx:this.chart.ctx,x:this.chart.width/2,y:this.chart.height/2}),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getSegmentsAtEvent(t):[];e.each(this.segments,function(t){t.restore(["fillColor"])}),e.each(i,function(t){t.fillColor=t.highlightColor}),this.showTooltip(i)}),this.calculateTotal(t),e.each(t,function(t,i){this.addData(t,i,!0)},this),this.render()},getSegmentsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.segments,function(t){t.inRange(s.x,s.y)&&i.push(t)},this),i},addData:function(t,i,e){var s=i||this.segments.length;this.segments.splice(s,0,new this.SegmentArc({value:t.value,outerRadius:this.options.animateScale?0:this.outerRadius,innerRadius:this.options.animateScale?0:this.outerRadius/100*this.options.percentageInnerCutout,fillColor:t.color,highlightColor:t.highlight||t.color,showStroke:this.options.segmentShowStroke,strokeWidth:this.options.segmentStrokeWidth,strokeColor:this.options.segmentStrokeColor,startAngle:1.5*Math.PI,circumference:this.options.animateRotate?0:this.calculateCircumference(t.value),label:t.label})),e||(this.reflow(),this.update())},calculateCircumference:function(t){return 2*Math.PI*(t/this.total)},calculateTotal:function(t){this.total=0,e.each(t,function(t){this.total+=t.value},this)},update:function(){this.calculateTotal(this.segments),e.each(this.activeElements,function(t){t.restore(["fillColor"])}),e.each(this.segments,function(t){t.save()}),this.render()},removeData:function(t){var i=e.isNumber(t)?t:this.segments.length-1;this.segments.splice(i,1),this.reflow(),this.update()},reflow:function(){e.extend(this.SegmentArc.prototype,{x:this.chart.width/2,y:this.chart.height/2}),this.outerRadius=(e.min([this.chart.width,this.chart.height])-this.options.segmentStrokeWidth/2)/2,e.each(this.segments,function(t){t.update({outerRadius:this.outerRadius,innerRadius:this.outerRadius/100*this.options.percentageInnerCutout})},this)},draw:function(t){var i=t?t:1;this.clear(),e.each(this.segments,function(t,e){t.transition({circumference:this.calculateCircumference(t.value),outerRadius:this.outerRadius,innerRadius:this.outerRadius/100*this.options.percentageInnerCutout},i),t.endAngle=t.startAngle+t.circumference,t.draw(),0===e&&(t.startAngle=1.5*Math.PI),e<this.segments.length-1&&(this.segments[e+1].startAngle=t.endAngle)},this)}}),i.types.Doughnut.extend({name:"Pie",defaults:e.merge(s,{percentageInnerCutout:0})})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleShowGridLines:!0,scaleGridLineColor:"rgba(0,0,0,.05)",scaleGridLineWidth:1,scaleShowHorizontalLines:!0,scaleShowVerticalLines:!0,bezierCurve:!0,bezierCurveTension:.4,pointDot:!0,pointDotRadius:4,pointDotStrokeWidth:1,pointHitDetectionRadius:20,datasetStroke:!0,datasetStrokeWidth:2,datasetFill:!0,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].strokeColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Line",defaults:s,initialize:function(t){this.PointClass=i.Point.extend({strokeWidth:this.options.pointDotStrokeWidth,radius:this.options.pointDotRadius,display:this.options.pointDot,hitDetectionRadius:this.options.pointHitDetectionRadius,ctx:this.chart.ctx,inRange:function(t){return Math.pow(t-this.x,2)<Math.pow(this.radius+this.hitDetectionRadius,2)}}),this.datasets=[],this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getPointsAtEvent(t):[];this.eachPoints(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,pointColor:i.pointColor,pointStrokeColor:i.pointStrokeColor,points:[]};this.datasets.push(s),e.each(i.data,function(e,n){s.points.push(new this.PointClass({value:e,label:t.labels[n],datasetLabel:i.label,strokeColor:i.pointStrokeColor,fillColor:i.pointColor,highlightFill:i.pointHighlightFill||i.pointColor,highlightStroke:i.pointHighlightStroke||i.pointStrokeColor}))},this),this.buildScale(t.labels),this.eachPoints(function(t,i){e.extend(t,{x:this.scale.calculateX(i),y:this.scale.endPoint}),t.save()},this)},this),this.render()},update:function(){this.scale.update(),e.each(this.activeElements,function(t){t.restore(["fillColor","strokeColor"])}),this.eachPoints(function(t){t.save()}),this.render()},eachPoints:function(t){e.each(this.datasets,function(i){e.each(i.points,t,this)},this)},getPointsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.datasets,function(t){e.each(t.points,function(t){t.inRange(s.x,s.y)&&i.push(t)})},this),i},buildScale:function(t){var s=this,n=function(){var t=[];return s.eachPoints(function(i){t.push(i.value)}),t},o={templateString:this.options.scaleLabel,height:this.chart.height,width:this.chart.width,ctx:this.chart.ctx,textColor:this.options.scaleFontColor,fontSize:this.options.scaleFontSize,fontStyle:this.options.scaleFontStyle,fontFamily:this.options.scaleFontFamily,valuesCount:t.length,beginAtZero:this.options.scaleBeginAtZero,integersOnly:this.options.scaleIntegersOnly,calculateYRange:function(t){var i=e.calculateScaleRange(n(),t,this.fontSize,this.beginAtZero,this.integersOnly);e.extend(this,i)},xLabels:t,font:e.fontString(this.options.scaleFontSize,this.options.scaleFontStyle,this.options.scaleFontFamily),lineWidth:this.options.scaleLineWidth,lineColor:this.options.scaleLineColor,showHorizontalLines:this.options.scaleShowHorizontalLines,showVerticalLines:this.options.scaleShowVerticalLines,gridLineWidth:this.options.scaleShowGridLines?this.options.scaleGridLineWidth:0,gridLineColor:this.options.scaleShowGridLines?this.options.scaleGridLineColor:"rgba(0,0,0,0)",padding:this.options.showScale?0:this.options.pointDotRadius+this.options.pointDotStrokeWidth,showLabels:this.options.scaleShowLabels,display:this.options.showScale};this.options.scaleOverride&&e.extend(o,{calculateYRange:e.noop,steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}),this.scale=new i.Scale(o)},addData:function(t,i){e.each(t,function(t,e){this.datasets[e].points.push(new this.PointClass({value:t,label:i,x:this.scale.calculateX(this.scale.valuesCount+1),y:this.scale.endPoint,strokeColor:this.datasets[e].pointStrokeColor,fillColor:this.datasets[e].pointColor}))},this),this.scale.addXLabel(i),this.update()},removeData:function(){this.scale.removeXLabel(),e.each(this.datasets,function(t){t.points.shift()},this),this.update()},reflow:function(){var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.update(t)},draw:function(t){var i=t||1;this.clear();var s=this.chart.ctx,n=function(t){return null!==t.value},o=function(t,i,s){return e.findNextWhere(i,n,s)||t},a=function(t,i,s){return e.findPreviousWhere(i,n,s)||t};this.scale.draw(i),e.each(this.datasets,function(t){var h=e.where(t.points,n);e.each(t.points,function(t,e){t.hasValue()&&t.transition({y:this.scale.calculateY(t.value),x:this.scale.calculateX(e)},i)},this),this.options.bezierCurve&&e.each(h,function(t,i){var s=i>0&&i<h.length-1?this.options.bezierCurveTension:0;t.controlPoints=e.splineCurve(a(t,h,i),t,o(t,h,i),s),t.controlPoints.outer.y>this.scale.endPoint?t.controlPoints.outer.y=this.scale.endPoint:t.controlPoints.outer.y<this.scale.startPoint&&(t.controlPoints.outer.y=this.scale.startPoint),t.controlPoints.inner.y>this.scale.endPoint?t.controlPoints.inner.y=this.scale.endPoint:t.controlPoints.inner.y<this.scale.startPoint&&(t.controlPoints.inner.y=this.scale.startPoint)},this),s.lineWidth=this.options.datasetStrokeWidth,s.strokeStyle=t.strokeColor,s.beginPath(),e.each(h,function(t,i){if(0===i)s.moveTo(t.x,t.y);else if(this.options.bezierCurve){var e=a(t,h,i);s.bezierCurveTo(e.controlPoints.outer.x,e.controlPoints.outer.y,t.controlPoints.inner.x,t.controlPoints.inner.y,t.x,t.y)}else s.lineTo(t.x,t.y)},this),s.stroke(),this.options.datasetFill&&h.length>0&&(s.lineTo(h[h.length-1].x,this.scale.endPoint),s.lineTo(h[0].x,this.scale.endPoint),s.fillStyle=t.fillColor,s.closePath(),s.fill()),e.each(h,function(t){t.draw()})},this)}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleShowLabelBackdrop:!0,scaleBackdropColor:"rgba(255,255,255,0.75)",scaleBeginAtZero:!0,scaleBackdropPaddingY:2,scaleBackdropPaddingX:2,scaleShowLine:!0,segmentShowStroke:!0,segmentStrokeColor:"#fff",segmentStrokeWidth:2,animationSteps:100,animationEasing:"easeOutBounce",animateRotate:!0,animateScale:!1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<segments.length; i++){%><li><span style="background-color:<%=segments[i].fillColor%>"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"PolarArea",defaults:s,initialize:function(t){this.segments=[],this.SegmentArc=i.Arc.extend({showStroke:this.options.segmentShowStroke,strokeWidth:this.options.segmentStrokeWidth,strokeColor:this.options.segmentStrokeColor,ctx:this.chart.ctx,innerRadius:0,x:this.chart.width/2,y:this.chart.height/2}),this.scale=new i.RadialScale({display:this.options.showScale,fontStyle:this.options.scaleFontStyle,fontSize:this.options.scaleFontSize,fontFamily:this.options.scaleFontFamily,fontColor:this.options.scaleFontColor,showLabels:this.options.scaleShowLabels,showLabelBackdrop:this.options.scaleShowLabelBackdrop,backdropColor:this.options.scaleBackdropColor,backdropPaddingY:this.options.scaleBackdropPaddingY,backdropPaddingX:this.options.scaleBackdropPaddingX,lineWidth:this.options.scaleShowLine?this.options.scaleLineWidth:0,lineColor:this.options.scaleLineColor,lineArc:!0,width:this.chart.width,height:this.chart.height,xCenter:this.chart.width/2,yCenter:this.chart.height/2,ctx:this.chart.ctx,templateString:this.options.scaleLabel,valuesCount:t.length}),this.updateScaleRange(t),this.scale.update(),e.each(t,function(t,i){this.addData(t,i,!0)},this),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getSegmentsAtEvent(t):[];e.each(this.segments,function(t){t.restore(["fillColor"])}),e.each(i,function(t){t.fillColor=t.highlightColor}),this.showTooltip(i)}),this.render()},getSegmentsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.segments,function(t){t.inRange(s.x,s.y)&&i.push(t)},this),i},addData:function(t,i,e){var s=i||this.segments.length;this.segments.splice(s,0,new this.SegmentArc({fillColor:t.color,highlightColor:t.highlight||t.color,label:t.label,value:t.value,outerRadius:this.options.animateScale?0:this.scale.calculateCenterOffset(t.value),circumference:this.options.animateRotate?0:this.scale.getCircumference(),startAngle:1.5*Math.PI})),e||(this.reflow(),this.update())},removeData:function(t){var i=e.isNumber(t)?t:this.segments.length-1;this.segments.splice(i,1),this.reflow(),this.update()},calculateTotal:function(t){this.total=0,e.each(t,function(t){this.total+=t.value},this),this.scale.valuesCount=this.segments.length},updateScaleRange:function(t){var i=[];e.each(t,function(t){i.push(t.value)});var s=this.options.scaleOverride?{steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}:e.calculateScaleRange(i,e.min([this.chart.width,this.chart.height])/2,this.options.scaleFontSize,this.options.scaleBeginAtZero,this.options.scaleIntegersOnly);e.extend(this.scale,s,{size:e.min([this.chart.width,this.chart.height]),xCenter:this.chart.width/2,yCenter:this.chart.height/2})},update:function(){this.calculateTotal(this.segments),e.each(this.segments,function(t){t.save()}),this.render()},reflow:function(){e.extend(this.SegmentArc.prototype,{x:this.chart.width/2,y:this.chart.height/2}),this.updateScaleRange(this.segments),this.scale.update(),e.extend(this.scale,{xCenter:this.chart.width/2,yCenter:this.chart.height/2}),e.each(this.segments,function(t){t.update({outerRadius:this.scale.calculateCenterOffset(t.value)})},this)},draw:function(t){var i=t||1;this.clear(),e.each(this.segments,function(t,e){t.transition({circumference:this.scale.getCircumference(),outerRadius:this.scale.calculateCenterOffset(t.value)},i),t.endAngle=t.startAngle+t.circumference,0===e&&(t.startAngle=1.5*Math.PI),e<this.segments.length-1&&(this.segments[e+1].startAngle=t.endAngle),t.draw()},this),this.scale.draw()}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers;i.Type.extend({name:"Radar",defaults:{scaleShowLine:!0,angleShowLineOut:!0,scaleShowLabels:!1,scaleBeginAtZero:!0,angleLineColor:"rgba(0,0,0,.1)",angleLineWidth:1,pointLabelFontFamily:"'Arial'",pointLabelFontStyle:"normal",pointLabelFontSize:10,pointLabelFontColor:"#666",pointDot:!0,pointDotRadius:3,pointDotStrokeWidth:1,pointHitDetectionRadius:20,datasetStroke:!0,datasetStrokeWidth:2,datasetFill:!0,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].strokeColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'},initialize:function(t){this.PointClass=i.Point.extend({strokeWidth:this.options.pointDotStrokeWidth,radius:this.options.pointDotRadius,display:this.options.pointDot,hitDetectionRadius:this.options.pointHitDetectionRadius,ctx:this.chart.ctx}),this.datasets=[],this.buildScale(t),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getPointsAtEvent(t):[];this.eachPoints(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,pointColor:i.pointColor,pointStrokeColor:i.pointStrokeColor,points:[]};this.datasets.push(s),e.each(i.data,function(e,n){var o;this.scale.animation||(o=this.scale.getPointPosition(n,this.scale.calculateCenterOffset(e))),s.points.push(new this.PointClass({value:e,label:t.labels[n],datasetLabel:i.label,x:this.options.animation?this.scale.xCenter:o.x,y:this.options.animation?this.scale.yCenter:o.y,strokeColor:i.pointStrokeColor,fillColor:i.pointColor,highlightFill:i.pointHighlightFill||i.pointColor,highlightStroke:i.pointHighlightStroke||i.pointStrokeColor}))},this)},this),this.render()},eachPoints:function(t){e.each(this.datasets,function(i){e.each(i.points,t,this)},this)},getPointsAtEvent:function(t){var i=e.getRelativePosition(t),s=e.getAngleFromPoint({x:this.scale.xCenter,y:this.scale.yCenter},i),n=2*Math.PI/this.scale.valuesCount,o=Math.round((s.angle-1.5*Math.PI)/n),a=[];return(o>=this.scale.valuesCount||0>o)&&(o=0),s.distance<=this.scale.drawingArea&&e.each(this.datasets,function(t){a.push(t.points[o])}),a},buildScale:function(t){this.scale=new i.RadialScale({display:this.options.showScale,fontStyle:this.options.scaleFontStyle,fontSize:this.options.scaleFontSize,fontFamily:this.options.scaleFontFamily,fontColor:this.options.scaleFontColor,showLabels:this.options.scaleShowLabels,showLabelBackdrop:this.options.scaleShowLabelBackdrop,backdropColor:this.options.scaleBackdropColor,backdropPaddingY:this.options.scaleBackdropPaddingY,backdropPaddingX:this.options.scaleBackdropPaddingX,lineWidth:this.options.scaleShowLine?this.options.scaleLineWidth:0,lineColor:this.options.scaleLineColor,angleLineColor:this.options.angleLineColor,angleLineWidth:this.options.angleShowLineOut?this.options.angleLineWidth:0,pointLabelFontColor:this.options.pointLabelFontColor,pointLabelFontSize:this.options.pointLabelFontSize,pointLabelFontFamily:this.options.pointLabelFontFamily,pointLabelFontStyle:this.options.pointLabelFontStyle,height:this.chart.height,width:this.chart.width,xCenter:this.chart.width/2,yCenter:this.chart.height/2,ctx:this.chart.ctx,templateString:this.options.scaleLabel,labels:t.labels,valuesCount:t.datasets[0].data.length}),this.scale.setScaleSize(),this.updateScaleRange(t.datasets),this.scale.buildYLabels()},updateScaleRange:function(t){var i=function(){var i=[];return e.each(t,function(t){t.data?i=i.concat(t.data):e.each(t.points,function(t){i.push(t.value)})}),i}(),s=this.options.scaleOverride?{steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}:e.calculateScaleRange(i,e.min([this.chart.width,this.chart.height])/2,this.options.scaleFontSize,this.options.scaleBeginAtZero,this.options.scaleIntegersOnly);e.extend(this.scale,s)},addData:function(t,i){this.scale.valuesCount++,e.each(t,function(t,e){var s=this.scale.getPointPosition(this.scale.valuesCount,this.scale.calculateCenterOffset(t));this.datasets[e].points.push(new this.PointClass({value:t,label:i,x:s.x,y:s.y,strokeColor:this.datasets[e].pointStrokeColor,fillColor:this.datasets[e].pointColor}))},this),this.scale.labels.push(i),this.reflow(),this.update()},removeData:function(){this.scale.valuesCount--,this.scale.labels.shift(),e.each(this.datasets,function(t){t.points.shift()},this),this.reflow(),this.update()},update:function(){this.eachPoints(function(t){t.save()}),this.reflow(),this.render()},reflow:function(){e.extend(this.scale,{width:this.chart.width,height:this.chart.height,size:e.min([this.chart.width,this.chart.height]),xCenter:this.chart.width/2,yCenter:this.chart.height/2}),this.updateScaleRange(this.datasets),this.scale.setScaleSize(),this.scale.buildYLabels()},draw:function(t){var i=t||1,s=this.chart.ctx;this.clear(),this.scale.draw(),e.each(this.datasets,function(t){e.each(t.points,function(t,e){t.hasValue()&&t.transition(this.scale.getPointPosition(e,this.scale.calculateCenterOffset(t.value)),i)},this),s.lineWidth=this.options.datasetStrokeWidth,s.strokeStyle=t.strokeColor,s.beginPath(),e.each(t.points,function(t,i){0===i?s.moveTo(t.x,t.y):s.lineTo(t.x,t.y)},this),s.closePath(),s.stroke(),s.fillStyle=t.fillColor,s.fill(),e.each(t.points,function(t){t.hasValue()&&t.draw()})},this)}})}.call(this);
+/**
+ * The Circle Menu object represents a choice menu of multiple menu items.<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.CircleMenu,
+ *    items: [
+ *    {
+ *        caption: 'music',
+ *        visible: false,
+ *        img: 'img/music.png'
+ *    },
+ *    {
+ *        caption: 'maps',
+ *        img: 'img/maps.png'
+ *    }],
+ *    onclick: function(item) {
+ *        console.log(item.caption + ' clicked');
+ *    }
+ *}
+ * @namespace CircleMenu
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CircleMenuItem[]} [items] - The items property is an array of menu items to be displayed in the control
+ * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a circle menu control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
+ * @property {CircleMenuClickEvent} [onclick] - This event fires when an item in the menu is clicked. The parameter passed to the event is [the item]{@link $ui.CircleMenuItem} which was clicked.
+ */
 function $ui_CircleMenu(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-circle-menu');
@@ -3556,7 +4425,12 @@ function $ui_CircleMenu(object, screen) {
 	}
 	object._addItem = object._addItem.bind(object);
 	
-	// Public function to add a new item to the list
+	/** 
+	 * You can add an item to the end of the menu by calling the addItem function and passing in an object that matches the a menu item
+	 * @function addItem
+	 * @memberof $ui.CircleMenu
+	 * @param {$ui.CircleMenuItem} item - Item to be added to the menu
+	 */
 	object.addItem = function(item) {
 		if (this._addItem(item)) {
 			this.items.push(item);
@@ -3568,7 +4442,12 @@ function $ui_CircleMenu(object, screen) {
 	}
 	object.addItem = object.addItem.bind(object);
 	
-	// Refresh all the items in the list
+	/** 
+	 * You can refresh all the items in a menu by calling the refreshItems function with an array of new items
+	 * @function refreshItems
+	 * @memberof $ui.CircleMenu
+	 * @param {$ui.CircleMenuItem[]} items - Array of items to refresh the menu
+	 */
 	object.refreshItems = function(itemArray) {
 		if (itemArray == undefined) return; // No data provided
 		var i,
@@ -3594,7 +4473,12 @@ function $ui_CircleMenu(object, screen) {
 	}
 	object.refreshItems = object.refreshItems.bind(object);
 	
-	// Add a batch of items to the end of a list
+	/** 
+	 * This function is much like the refreshItems function but instead it loads a list of circle menu items to the end of the current menu and does not replace the existing menu items.
+	 * @function addItemBatch
+	 * @memberof $ui.CircleMenu
+	 * @param {$ui.CircleMenuItem[]} items - Array of items to be added to the menu
+	 */
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
@@ -3612,7 +4496,13 @@ function $ui_CircleMenu(object, screen) {
 	}
 	object.addItemBatch = object.addItemBatch.bind(object);
 	
-	// Public function to insert a new item into the list
+	/** 
+	 * Insert item works similar to addItem but instead will insert the item into the menu at the index specified. If an invalid index is specified it will result in failure to insert the item. To insert an item at the top of a menu call insert with the index of 0.
+	 * @function insertItem
+	 * @memberof $ui.CircleMenu
+	 * @param {$ui.CircleMenuItem} item - Item to be inserted into the menu
+	 * @param {number} index - Index to insert the item
+	 */
 	object.insertItem = function(item, index) {
 		item.parent = this;
 		if (index < 0) {
@@ -3661,8 +4551,22 @@ function $ui_CircleMenu(object, screen) {
 	
 	return object.dom;
 }
-
 $ui_CircleMenu.prototype = new $ui_CoreComponent();
+
+/**
+ * The {@link $ui.CircleMenu} <b>onclick</b> event will fire when the user clicks a menu item
+ * @callback CircleMenuClickEvent
+ * @param {$ui.CircleMenuItem} item - The menu item that the user clicked
+ */
+/**
+ * A circle menu item is used within a [Circle Menu]{@link $ui.CircleMenu}.  <b>NOTE: It cannot be defined on its own outside of a circle menu</b> 
+ * @namespace CircleMenuItem
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} caption - Text to appear on the menu item
+ * @property {boolean} [visible=true] - Visibility state of the menu item
+ * @property {string} img - Path to the image to be displayed in the menu item
+ */
 function $ui_CircleMenuItem(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'menu-item');
@@ -3673,8 +4577,7 @@ function $ui_CircleMenuItem(object, screen) {
 	$ui.addClass(object.dom.inner,'circle');
 	object.dom.appendChild(object.dom.inner);
 	object.dom.inner.onclick = function() {
-		var event = new $ui.InteractionEvent(this.model.screen.id, this.model.id, 'data-interaction-click');
-		$ui.raiseInteractionEvent(event);
+		this.model._raiseInteractionEvent('data-interaction-click');
 		$ui.playTouchSound();
 		if (this.model.parent.onclick) {
 			this.model.parent.onclick(this.model);
@@ -3733,6 +4636,29 @@ function $ui_CircleMenuItem(object, screen) {
 }
 
 $ui_CircleMenuItem.prototype = new $ui_CoreComponent();
+/**
+ * The Control Group object represents a grouping of multiple different controls.  This component can be useful when you want to group different controls together for toggling visibility.<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.ControlGroup,
+ *    id: 'myGrouping',
+ *    content: [
+ *       {
+ *           component: $ui.Header,
+ *           caption: 'My Header',
+ *       },
+ *       {
+ *           component: $ui.List,
+ *           style: $ui.GenericListItem
+ *       }
+ *    ]
+ *}
+ * @namespace ControlGroup
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreComponent[]} [content] - The content property is an array of control definitions to be displayed in the control
+*/
 function $ui_ControlGroup(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-control-group');
@@ -3755,9 +4681,15 @@ function $ui_ControlGroup(object, screen) {
 }
 
 $ui_ControlGroup.prototype = new $ui_CoreComponent();
+/**
+ * The CoreTile object represents the abstract base class for all tile controls. <br><br>
+ * <b>NOTE: This base class should never be declared in a screen's declaration. It will not actually render and return a tile. It is simply an abstract base class.</b>
+ * @namespace CoreTile
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ */
 function $ui_CoreTile(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
-	
 	if (object) {
 		$ui.addClass(object.dom,'ui-tile');
 		object._contentShowing = false;
@@ -3765,7 +4697,13 @@ function $ui_CoreTile(object, screen) {
 			object.dom.style.borderColor = $ui.theme.color;
 		}
 		
-		// See if a style was defined
+		/** 
+		 * The size of a tile. This property should be set by the internal code of a derivative Tile class.
+		 * @name _size
+		 * @memberof $ui.CoreTile
+		 * @protected
+		 * @type {$ui.TileSize}
+		 */
 		if (object._size && (object._size != $ui.TileSize.STANDARD)) {
 			$ui.addClass(object.dom, object._size);
 		}
@@ -3782,7 +4720,12 @@ function $ui_CoreTile(object, screen) {
 		$ui.addClass(object.dom.contentDiv, 'content');
 		object.dom.appendChild(object.dom.contentDiv);	
 		
-		// Public function to toggle the display of content
+		/** 
+		 * This function is to be called when a tile needs to be toggled between the loading state and content state. 
+		 * @function showContent
+		 * @memberof $ui.CoreTile
+		 * @param {boolean} value - The value parameter represents the boolean state of visibility of the tile content.
+		 */
 		object.showContent = function(value) {
 			if (value == this._contentShowing) return;
 			if (value) {
@@ -3797,8 +4740,16 @@ function $ui_CoreTile(object, screen) {
 		object.showContent = object.showContent.bind(object);
 	}
 }
-
 $ui_CoreTile.prototype = new $ui_CoreComponent();
+
+
+/**
+ * The CoreTileDonutChart is the abstract base class of any donut chart tiles. This base class should never be declared in a screen's declaration.
+ * <b>NOTE: It will not actually render and return a tile. It is simply an abstract base class.</b>
+ * @namespace CoreTileDonutChart
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ */
 function $ui_CoreTileDonutChart(object, screen) {
 	$ui_CoreTile.call(this, object, screen);
 	if (object) {
@@ -3816,7 +4767,25 @@ function $ui_CoreTileDonutChart(object, screen) {
 		// Create our chart
 		object.chart = new Chart(object.dom.canvas.getContext('2d'));
 		
-		// Set the data for the chart
+		/** 
+		 * This function takes a value parameter which is an array of data point objects. These data point objects defined a section of the chart and consist of two properties representing value and color
+		 * @function _setData
+		 * @memberof $ui.CoreTileDonutChart
+		 * @param {object[]} value - Array of data points. <br/><b>Example:</b>
+		 * <pre>
+		 * [
+		 *   {
+		 *      value: 10,
+		 *      color: '#000000',
+		 *   },
+		 *   {
+		 *      value: 90,
+		 *      color: '#FEFEFE',
+		 *   }
+		 * ]
+		 * </pre>
+		 * @protected
+		 */
 		object._setData = function(data) {
 			this.chart.Doughnut(data,{showTooltips: false, segmentStrokeColor : "transparent",});
 		}
@@ -3827,7 +4796,13 @@ function $ui_CoreTileDonutChart(object, screen) {
 		$ui.addClass(object.dom.caption,'caption');
 		object.dom.contentDiv.appendChild(object.dom.caption);
 		
-		// Set the caption for the chart
+		/** 
+		 * This function will set the caption of the Donut chart.
+		 * @function _setCaption
+		 * @memberof $ui.CoreTileDonutChart
+		 * @param {string} value - Text for the caption
+		 * @protected
+		 */
 		object._setCaption = function(value) {
 			this.dom.caption.innerHTML = value;
 		}
@@ -3840,7 +4815,13 @@ function $ui_CoreTileDonutChart(object, screen) {
 		var color = ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1)  ? $ui.color_DARK : $ui.color_LIGHT
 		object.dom.accent.style.color = color;
 		
-		// Set the accent text for the chart
+		/** 
+		 * This function will set the accent text of the Donut chart
+		 * @function _setAccent
+		 * @memberof $ui.CoreTileDonutChart
+		 * @param {string} value - Text for the accent
+		 * @protected
+		 */
 		object._setAccent = function(value) {
 			if (value == undefined) {
 				$ui.removeClass(this.dom.contentDiv, 'has-accent');
@@ -3857,6 +4838,24 @@ function $ui_CoreTileDonutChart(object, screen) {
 }
 
 $ui_CoreTileDonutChart.prototype = new $ui_CoreTile();
+/**
+ * The CoreTileGauge is the abstract base class of any gauge chart tiles.
+ * <b>NOTE: It will not actually render and return a tile. It is simply an abstract base class.</b><br><br>
+ * <b>Sample Declaration:</b>
+ * <pre>
+ * {
+ *    min: 0,
+ *    max: 1.5,
+ *    value: 1
+ *}
+ * </pre>
+ * @namespace CoreTileGauge
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number} min - This is the minimum numeric value that you want to display at the left hand side of the gauge
+ * @property {number} max - This is the maximum numeric value that you want to display at the right hand side of the gauge
+ * @property {number} value - The numeric value you want to display. This should be between min and max.
+ */
 function $ui_CoreTileGauge(object, screen) {
 	if (object) object._size = undefined; // Always square
 	$ui_CoreTile.call(this, object, screen);
@@ -3868,7 +4867,13 @@ function $ui_CoreTileGauge(object, screen) {
 		$ui.addClass(object.dom.titleDiv,'title');
 		object.dom.contentDiv.appendChild(object.dom.titleDiv);
 		
-		// Internal function to set the title
+		/** 
+		 * This function will set the title of the gauge chart.
+		 * @function _setTitle
+		 * @memberof $ui.CoreTileGauge
+		 * @param {string} value - Value to be used as the title
+		 * @protected
+		 */
 		object._setTitle = function(value) {
 			if (value == undefined || value == null) value = '';
 			object.dom.titleDiv.textContent = value;
@@ -3909,7 +4914,13 @@ function $ui_CoreTileGauge(object, screen) {
 		$ui.addClass(object.dom.accentLabel, 'label');
 		$ui.addClass(object.dom.accentLabel, 'center');
 		object.dom.labels.appendChild(object.dom.accentLabel);
-		// Internal function to set the accent text
+		/** 
+		 * This function will set the title of the gauge chart.
+		 * @function _setAccent
+		 * @memberof $ui.CoreTileGauge
+		 * @param {string} value - Value to use as the accent text
+		 * @protected
+		 */
 		object._setAccent = function(value) {
 			if (value == undefined || value == null) value = '';
 			object.dom.accentLabel.textContent = value;
@@ -3998,12 +5009,36 @@ function $ui_CoreTileGauge(object, screen) {
 			this._renderLoop();
 		}
 		object._populateData = object._populateData.bind(object);
-		
-		
 	}
 }
 
 $ui_CoreTileGauge.prototype = new $ui_CoreTile();
+/**
+ * The DockLayout object represents a layout that allows for a static content and also scrolling content. The DockLayout will size itself to all the available space provided by its parent control.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.DockLayout,
+ *    dock: [
+ *        {
+ *            component: $ui.SegmentedControl,
+ *            options: ['one','two']
+ *        }
+ *    ],
+ *    content: [
+ *        {
+ *            component: $ui.List
+ *        }
+ *    ]
+ *}
+ * </pre>
+ * @namespace DockLayout
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreComponent[]} dock - This array holds all of the component definitions for the docked content
+ * @property {$ui.CoreComponent[]} content - This array holds all of the component definitions for the scrollable area of the dock layout
+ * @property {$ui.DockLayout.DockLocation} [location=$ui.DockLayout.DockLocation.TOP] - This property allows you to set the location of the docked content.
+ */
 function $ui_DockLayout(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-dock-layout');
@@ -4055,6 +5090,25 @@ function $ui_DockLayout(object, screen) {
 }
 
 $ui_DockLayout.prototype = new $ui_CoreComponent();
+/**
+ * The generic list item type is used with the {@link $ui.List} component. A List component will define the type of list item it wishes to display by setting the <b>style</b> property of the control. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   img: 'thumbnails/foo.png',
+ *   title: 'This is my title',
+ *   accent: '6 hours ago',
+ *   caption: 'My summary description'
+ *}
+ * </pre>
+ * @namespace GenericListItem
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} [img] - Represents the path to the image that will appear in the list item
+ * @property {string} title - Represents the main title to display
+ * @property {string} [accent] - Represents the accent text to go along with the title and caption
+ * @property {string} [caption] - Represents the main text to show in the list item
+ */
 function $ui_GenericListItem(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom, 'ui-generic-list-item');
@@ -4148,6 +5202,20 @@ function $ui_GenericListItem(object, screen) {
 }
 
 $ui_GenericListItem.prototype = new $ui_CoreComponent();
+/**
+ * The Header object represents a screen separator with a caption.  This component can be useful when you wish to label different areas of the screen.  Headers can also be used as
+ * an item in a {@link $ui.List} control<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.Header,
+ *   caption: 'My Lovely Header'
+ * }
+ * @namespace Header
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} [caption] - The caption to be displayed in the control
+*/
 function $ui_Header(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-header');
@@ -4161,6 +5229,21 @@ function $ui_Header(object, screen) {
 }
 
 $ui_Header.prototype = new $ui_CoreComponent();
+/**
+ * The image list item type is used with the {@link $ui.List} component. A List component will define the type of list item it wishes to display by setting the <b>style</b> property of the control. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   img: 'thumbnails/foo.png',
+ *   caption: 'My summary description'
+ *}
+ * </pre>
+ * @namespace ImageListItem
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} img - Represents the path to the image that will appear in the list item
+ * @property {string} [caption] - Represents the main text to show in the list item
+ */
 function $ui_ImageListItem(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom, 'ui-image-list-item');
@@ -4212,21 +5295,68 @@ function $ui_ImageListItem(object, screen) {
 }
 
 $ui_ImageListItem.prototype = new $ui_CoreComponent();
-// This provides an interface for a screen's background image
+/**
+ * This object defines the type of background to be shown on the screen.<br><br>
+ * <b>Sample Code:</b><br>
+ * <pre>
+ * {
+ *   img: 'img/background.png', 
+ *   repeat: true, 
+ *}
+ * </pre>
+ * @class ScreenBackground
+ * @param {string} img - Path to the background image
+ * @param {boolean} [repeat=false] - Whether or not you want the background repeated/tiled
+ */
 function ScreenBackground(img, repeat) {
+	/** 
+	 * Path to the background image
+	 * @member {string} img
+	 * @memberOf ScreenBackground
+	 */
 	if (img == null) throw new Error('ScreenBackground: img cannot be null');
 	if (img == undefined) throw new Error('ScreenBackground: img cannot be undefined');
 	this.img = img;
+	/** 
+	 * Whether or not you want the background repeated/tiled
+	 * @member {boolean} [repeat=false]
+	 * @memberOf ScreenBackground
+	 */
 	if (repeat == undefined || repeat == null) {
 		this.repeat = false;
 	}
 }
+/**
+ * The segmented control provides an actionable item for the user to choose between multiple options.
+ * A segmented control's width will fill the width of the container in which it is a member.<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.SegmentedControl,
+ *   selectedIndex: 0,
+ *   options: ['One', 'Two', 'Three'],
+ *   onclick: function() {
+ *      alert('You clicked: ' + this.options[this.selectedIndex]);
+ *   }
+ *}
+ * @namespace SegmentedControl
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {number} [selectedIndex=0] - Represents the index of the option you want to be selected. This property will also be updated whenever a user selects an option from the control. 
+ * @property {string[]} options - This property represents the options provided by the control. It is an array of string values that will be displayed
+ * @property {SegmentedClickEvent} [onclick] - The onclick event will fire when the user selects/clicks an option in the control. You can retrieve which option was selected by inspecting the <b>selectedIndex</b> property.
+ */
 function $ui_SegmentedControl(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-segmented-control');	
 	object.domOptions = [];
 	
-	// Public function to set the selected index for the control
+	/** 
+	 * You can set the selected index for the control by using this function. This function will also raise the <i>onclick</i> event as though a user just clicked the control.
+	 * @function setSelectedIndex
+	 * @memberof $ui.SegmentedControl
+	 * @param {number} index - Item to be added to the menu
+	 */
 	object.setSelectedIndex = function(index) {
 		if (this.selectedIndex != index) {
 			this.selectedIndex = index;
@@ -4310,8 +5440,36 @@ function $ui_SegmentedControl(object, screen) {
 	
 	return object.dom;
 }
-
 $ui_SegmentedControl.prototype = new $ui_CoreComponent();
+
+/**
+ * The {@link $ui.SegmentedControl} <b>onclick</b> event will fire when the user makes a selection in the control
+ * @callback SegmentedClickEvent
+ */
+/**
+ * The SplitView object represents two vertical columns for layout components. The SplitView will size itself to all the available space provided by its parent control.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.SplitView,
+ *    left: [
+ *        {
+ *            component: $ui.SegmentedControl
+ *        }
+ *    ],
+ *    right: [
+ *        {
+ *            component: $ui.Spinner
+ *        }
+ *    ]
+ * }
+ * </pre>
+ * @namespace SplitView
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreComponent[]} left - This array holds all of the component definitions for the left side of the split view
+ * @property {$ui.CoreComponent[]} right - This array holds all of the component definitions for the right side of the split view
+ */
 function $ui_SplitView(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-split-view');
@@ -4359,6 +5517,25 @@ function $ui_SplitView(object, screen) {
 }
 
 $ui_SplitView.prototype = new $ui_CoreComponent();
+/**
+ * The Tab object represents a tab within a {@link $ui.TabbedPane}.  A tab represents a container of multiple other controls
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.Tab,
+ *    content: [
+ *        {
+ *            component: $ui.Spinner
+ *        }
+ *    ]
+ * }
+ * </pre>
+ * @namespace Tab
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreComponent[]} content - This array holds all of the component definitions to be displayed in the tab
+ * @property {boolean} [selected=false] - This property, when set to <i>true</i> will specify that the tab should be the default selected tab in the [Tabbed Pane]{@link $ui.TabbedPane}.  The Tabbed Pane will select only the first tab it encounters with selected set to <i>true</i> as the selected tab.
+ */
 function $ui_Tab(object, screen) {
 	// All tabs are invisible by default
 	object.visible = false;
@@ -4387,6 +5564,26 @@ function $ui_Tab(object, screen) {
 }
 
 $ui_Tab.prototype = new $ui_CoreComponent();
+/**
+ * The TabbedPane object represents a container that has one or more {@link $ui.Tab} objects.<br><br>
+ * A Tabbed Pane will cover the entire area of the control it is contained by. The control will cycle through all of the defined Tabs and see which one has been specified as the first selected tab. If no tabs are found with the specified <b>selected:true</b> property, it will select the first tab in the list.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TabbedPane,
+ *    tabs: [
+ *        {
+ *            component: $ui.Tab,
+ *            selected: true
+ *        }
+ *    ]
+ * }
+ * </pre>
+ * @namespace TabbedPane
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.Tab[]} content - This array holds all of the {@link $ui.Tab} objects that are to be controlled by the tabbed pane
+*/
 function $ui_TabbedPane(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-tabbed-pane');
@@ -4414,7 +5611,12 @@ function $ui_TabbedPane(object, screen) {
 		}
 	}
 	
-	// Public function to select a tab
+	/** 
+	 * This function will set the selected tab to the value passed in as a parameter
+	 * @function selectTab
+	 * @memberof $ui.TabbedPane
+	 * @param {$ui.Tab} tab - Tab to select
+	 */
 	object.selectTab = function(tab) {
 		if (tab == undefined) return;
 		if (tab.component != $ui.Tab) return;
@@ -4455,6 +5657,25 @@ function $ui_TabbedPane(object, screen) {
 }
 
 $ui_TabbedPane.prototype = new $ui_CoreComponent();
+/**
+ * The Tile Group object represents a container that holds one or more tiles that inherit from {@link $ui.CoreTile}.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileGroup,
+ *    tiles: [
+ *        {
+ *            component: $ui.TileCool,
+ *            value: 70
+ *        {
+ *    ]
+ * }
+ * </pre>
+ * @namespace TileGroup
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreTile[]} tiles - This array holds all of the Tiles which are to be displayed
+ */
 function $ui_TileGroup(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-tile-group');
@@ -4630,6 +5851,31 @@ function $ui_TileGroup(object, screen) {
 }
 
 $ui_TileGroup.prototype = new $ui_CoreComponent();
+/**
+ * This is the object that represents a window instance in a head unit. It derives from {@link $ui.CoreScreen}. A WindowPane is declared as a JavaScript function and has various different properties. 
+ * When a WindowPane is pushed onto the stack a new instance of the screen will be created and rendered.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * function MyWindowPane() {
+ *   this.component = $ui.WindowPane;
+ *   this.content = [
+ *       {
+ *          component: $ui.SegmentedControl,
+ *       }
+ *   ];
+ *
+ *   this.onshow = function() {
+ *      console.log('I was just shown');
+ *   }
+ * }
+ * </pre>
+ * @namespace WindowPane
+ * @memberof $ui
+ * @extends $ui.CoreScreen
+ * @property {ScreenBackground} [background] - This object defines the type of background to be shown on the screen
+ * @property {$ui.CoreComponent[]} content - This object array specifies the list of controls that will be rendered in this screen
+ * @property {string} [backCaption] - This property defines the text you would like to appear on the title bar with a back button. If this is left <i>undefined</i> then no back button will appear
+ */
 function $ui_WindowPane(object, data) {
 	$ui_CoreScreen.call(this, object, data);
 	
@@ -4665,7 +5911,12 @@ function $ui_WindowPane(object, data) {
 		$ui.addClass(object.dom.backgroundDiv,'background');
 		object.dom.appendChild(object.dom.backgroundDiv);
 
-		// Set the background image for a screen
+		/** 
+		 * Set the background for the screen
+		 * @function setBackground
+		 * @memberof $ui.WindowPane
+		 * @param {ScreenBackground} screenBackground - The background object to use for the screen.
+		 */
 		object.setBackground = function(screenBackground) {
 			// Clear existing background
 			if (this.background) {
@@ -5554,6 +6805,24 @@ if (typeof define !== 'undefined' && define.amd) {
 } else {
 	window.FastClick = FastClick;
 }
+/**
+ * Every component in the UI follows the same general patterns. This is to keep consistency and make coding easier.
+ * <br><br><b>NOTE: The core component is an abstract base class and cannot be created as an instance on its own</b>
+ * @namespace
+ * @name CoreComponent
+ * @memberof $ui
+ * @property {namespace} component - The <b>mandatory</b> component property defines what type of component is being defined. This property always starts with a <b>$ui.</b> defining the component to be used for generating the UI.
+ * @property {string} [id] - The id property is used to uniquely define the control in the screen for which it belongs. <br><br>Providing an id for your control is very convenient because you can easily access your control through your javascript coding. Each id is added as a direct handle on the screen object for access.
+ * @property {boolean} [visible=true] - The visible property specifies the initial visibility of the control. This property can then be changed by calling the <b>setVisible</b> function on the component.
+ * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state</i>
+ * @property {$ui.CoreScreen} screen - This <b>readonly</b> property allows for you to reference the screen from the control. This will be the screen in which the control is embedded
+ * @property {$ui.DataProviderLink} [provider] - This property allows you to bind the control to a [data provider]{@link $ui.DataProvider} in the application. 
+ * @property {object[]} attachedObjects - This property specifies an array of objects that can be attached to the control. These could be objects such as data providers and usually entail a component that does not provide a user interface.
+ * @property {boolean} [marginTop=false] - A boolean property which when set to true will place a standard margin on the top of the control. 
+ * @property {boolean} [marginBottom=false] - A boolean property which when set to true will place a standard margin on the bottom of the control.
+ * @property {boolean} [marginLeft=false] - A boolean property which when set to true will place a standard margin on the left of the control
+ * @property {boolean} [marginRight=false] - A boolean property which when set to true will place a standard margin on the right of the control.
+ */
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
@@ -5625,7 +6894,25 @@ function $ui_CoreComponent(object, screen) {
 			object.attachedObjects = [];
 		}
 		
-		// Public function to set the enabled state
+		/** 
+		 * This protected function will raise an interaction event for the <b>oninteraction</b> callback assigned to the {@link $ui} object.
+		 * @memberof $ui.CoreComponent
+		 * @protected 
+		 * @function _raiseInteractionEvent
+		 * @param {string} interaction - Desired interaction to raise
+		 */
+		object._raiseInteractionEvent = function(interaction) {
+			var event = new InteractionEvent(this.screen.id, this.id, interaction);
+			$ui._raiseInteractionEvent(event);
+		}
+		object._raiseInteractionEvent = object._raiseInteractionEvent.bind(object);
+		
+		/** 
+		 * You can toggle the enabled state of a component by calling its setEnabled function. If the function call is successful it will return true
+		 * @memberof $ui.CoreComponent
+		 * @function setEnabled
+		 * @param {boolean} value - Desired enabled state, <b>true</b> for enabled.
+		 */
 		object.setEnabled = function(value) {
 			if (value == this.enabled) return;
 			if (this.enabled && (value == false)) {
@@ -5680,7 +6967,11 @@ function $ui_CoreComponent(object, screen) {
 		}
 		object._scrollIntoView = object._scrollIntoView.bind(object);
 		
-		// Public function to scroll the control into view
+		/** 
+		 * This function will scroll the control into view for the user.
+		 * @memberof $ui.CoreComponent
+		 * @function scrollIntoView
+		 */
 		object.scrollIntoView = function() {
 			if (this.dom) {
 				this._scrollIterationCounter = 0;
@@ -5801,7 +7092,12 @@ function $ui_CoreComponent(object, screen) {
 			object.visible = true;
 		}
 		
-		// Add our setVisible function 
+		/** 
+		 * You can toggle the visibility of a component by calling its setVisible function. If the function call is successful it will return true
+		 * @memberof $ui.CoreComponent
+		 * @function setVisible
+		 * @param {boolean} value - Desired visibility state, <b>true</b> for visible.
+		 */
 		object.setVisible = function(value) {
 			if (value != this.visible) {
 				if (value == true) {
@@ -5825,7 +7121,50 @@ function $ui_CoreComponent(object, screen) {
 	}
 }
 
+/** 
+ * The function assigned to this member will fire when the screen the component belongs to receives an onshow event. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onshow
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
+ 
+ /** 
+ * The function assigned to this member will fire when the theme for the $ui tookit changes. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onthemechange
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
+ 
+/** 
+ * The function assigned to this member will fire when the screen that the component belongs to has it's viewport size changed. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onresize
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
 
+/** 
+ * The function assigned to this member will fire when the screen that the component belongs to is just about to be popped. This will only fire if the screen is the top most screen in the stack. It allows for any clean-up that might need to be done before animating. This is an <b>internal protected</b> member to be used by derivative controls and should not be bound to by application code
+ * @name _onbeforepop
+ * @memberof $ui.CoreComponent
+ * @protected
+ * @type {function} 
+ */
+
+/**
+ * This is the abstract base class that represents a screen instance. It derives from {@link $ui.CoreComponent}. 
+ * A screen is declared as a JavaScript function and has various different properties. When a screen is pushed onto the stack a new instance of the screen will be created and rendered.
+ * <br><br><b>NOTE: This is an abstract class </b>
+ * @namespace
+ * @name CoreScreen
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {boolean} [disableAnimation=false] - This boolean property specifies if the screen should have it's animation disabled when being pushed or popped. 
+ * @property {ScreenResizeEvent} [onresize] - This event will fire when the viewport of the screen changes size
+ * @property {ScreenShowEvent} [onshow] - This event will fire when the screen has been displayed
+ */
 function $ui_CoreScreen(object, data) {
 	$ui_CoreComponent.call(this, object);
 	if (object) {
@@ -5899,6 +7238,23 @@ function $ui_CoreScreen(object, data) {
 		}
 		object._onbeforepop = object._onbeforepop.bind(object);
 		
+		// Internal function to trigger all theme change internal assignments
+		object._fireThemeChange = function() {
+			if (this._onthemechange) {
+				this._onthemechange();
+			}
+			// Fire the _onthemechange for all the controls
+			var i,
+				control;
+			for (i = 0; i < this.children.length;i++) {
+				control = this.children[i];
+				if (control._onthemechange) {
+					control._onthemechange();
+				}
+			}
+		}
+		object._fireThemeChange = object._fireThemeChange.bind(object);
+		
 		// Destroy screen
 		object._destroy = function() {
 			// Loop through all the children and call their destroy
@@ -5915,7 +7271,40 @@ function $ui_CoreScreen(object, data) {
 
 $ui_CoreScreen.prototype = new $ui_CoreComponent();
 
-
+/**
+ * The {@link $ui.CoreScreen} <b>onresize</b> event will fire when the viewport of the screen changes size
+ * @callback ScreenResizeEvent
+ */
+ 
+ /**
+ * The {@link $ui.CoreScreen} <b>onshow</b> event will fire when the screen has been displayed
+ * @callback ScreenShowEvent
+ */
+/**
+ * The DataProvider component provides a data source that can be bound to controls on a screen. This provides the ability to both populate controls with data, as well as automatically save the data based on user interaction with the controls.<br><br>
+ * <b>NOTE: The DataProvider should be attached to a screen or control using its [attachedObjects]{@link $ui.CoreComponent} property.</b><br><br>
+ * <b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   component: $ui.DataProvider,
+ *   id: 'myProvider',
+ *   data: {
+ *      account: {
+ *         username: '@brcewane' 
+ *      }
+ *   }
+ *}
+ * </pre>
+ * @namespace
+ * @name DataProvider
+ * @memberof $ui
+ * @property {string} component - The <b>required</b> component property defines what type of component is being defined. This property must be $ui.DataProvider
+ * @property {string} id - The <b>required</b> id property is used to uniquely define the data provider in the scope of the screen in which it belongs. Providing an id for your data provider is required because you can easily access your provider through your javascript coding and also reference it as the provider for a control.
+ * @property {object} [data] - The data property by default is undefined. You can populate the data property by calling the load or set functions listed in the functions area, or you can define it as any kind of object. The data property holds the object that represents the data for the provider
+ * @property {ProviderLoadEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
+ * @property {ProviderErrorEvent} [onerror] - This event will fire when an attempt to load data into the provider fails. It has one parameter that represents the error code experienced.
+ * @property {ProviderBeforeUpdateEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
+ */
 function $ui_DataProvider(object, screen){
 	object.screen = screen;
 	object._url = undefined;
@@ -5927,7 +7316,12 @@ function $ui_DataProvider(object, screen){
 		screen[object.id] = object;
 	}
 	
-	// Public function to set the data with an object
+	/** 
+	 * You can set the data property for any data provider directly by passing it an object that you want to use as the data source. Setting this property will trigger the <i>onbeforeupdate</i>, <i>onloaded</i> event and update the controls which are using this provider
+	 * @function setData
+	 * @memberof $ui.DataProvider
+	 * @param {object} value - Object to set as data for the data provider
+	 */
 	object.setData = function(value) {
  		this._untouched = false;
 		this.data = value;
@@ -5942,7 +7336,11 @@ function $ui_DataProvider(object, screen){
 	}
 	object.setData = object.setData.bind(object);
 	
-	// Public function to refresh Data from the server
+	/** 
+	 * This function will refresh all the data in the provider based on the last used url used for <i>loadFromUrl()</i>. When data loads, controls will update and the data provider's <i>onbeforeupdate</i> and <i>onload</i> event will be triggered.
+	 * @function refreshFromServer
+	 * @memberof $ui.DataProvider
+	 */
 	object.refreshFromServer = function() {
 		if ((this._url == undefined) || (this._url == '')) return;
 		this._url = url;
@@ -5950,13 +7348,22 @@ function $ui_DataProvider(object, screen){
 	}
 	object.refreshFromServer = object.refreshFromServer.bind(object);
 	
-	// Public function to tell connected controls to reload their data from memory
+	/** 
+	 * The refresh function will send a signal out to all connected components to refresh their data from the current content in memory from the provider. <b>NOTE: No <i>onbeforeupdate</i> or <i>onload</i> event will fire on the provider</b>
+	 * @function refresh
+	 * @memberof $ui.DataProvider
+	 */
 	object.refresh = function() {
 		this._raiseEvent();
 	}
 	object.refresh = object.refresh.bind(object);
 	
-	// Public function to load the data from a JSON URL
+	/** 
+	 * This function will refresh the component with data from a specified URL. The data that is retrieved from the URL must be in valid JSON notation.
+	 * @function loadFromUrl
+	 * @memberof $ui.DataProvider
+	 * @param {object} value - The function takes the parameter url which is the URL path for the JSON GET request.
+	 */
 	object.loadFromUrl = function(url) {
 		// Make sure we are online
 		if(navigator.onLine != true) {
@@ -6035,13 +7442,109 @@ function $ui_DataProvider(object, screen){
 	return undefined;
 }
 
+/**
+ * A data provider link provides a binding between a [control]{@link $ui.CoreComponent} and a data provider. The path for the <b>property</b> attribute starts at the root of the object that is provided as the data source for the data provider.<br><br>
+ * The type of object that the property path should point to is dependent on the control and the data it uses to display and/or edit. If the control also allows the user to edit data or change settings, these changes will be applied to the property value in the data provider.<br><br>
+ * <b>Sample Code:</b><br>
+ * <pre>provider: {
+ *    id: 'myProvider',
+ *    property: 'posts'
+ * }
+ * </pre>
+ * <br>
+ * To access sub objects in the object chain from the data provider you can use normal <b>dot</b> notation:<br><br>
+ * <b>Sample Code:</b><br>
+ * <pre>provider: {
+ *    id: 'myProvider',
+ *    property: 'posts.item.thingy'
+ * }
+ * </pre>
+ * <br>
+ * @namespace
+ * @name DataProviderLink
+ * @memberof $ui
+ * @property {string} id - This is the <b>mandatory</b> id of the data provider belonging to the screen which will be linked to this control.  
+ * @property {string} property - This is the property path/name of the object to be used as the bound data for this control. A nested property can be defined simply by providing a path using <b>.</b> dot separators just like you were referring to the object via JavaScript
+ */
+ 
+ /**
+ * The {@link $ui.DataProvider} <b>onload</b> event when data has been loaded
+ * @callback ProviderLoadEvent
+ */
+ 
+ /**
+ * The {@link $ui.DataProvider} <b>onerror</b> event if there was an error loading the data
+ * @param {$ui.DataProvider.ProviderError} err - Error code
+ * @callback ProviderErrorEvent
+ */
+ 
+  /**
+ * The {@link $ui.DataProvider} <b>onbeforeupdate</b> event will fire after the data has been retrieved but <b>before</b> controls have processed the data
+ * @callback ProviderBeforeUpdateEvent
+ */
+ 
 
-// Represents an interaction with a control
-$ui.InteractionEvent = function(screenId, controlId, interaction) {
+/**
+ * Represents an interaction event from the user interface.  This event is raised when a user interacts with a part of the interface. All interation events are sent to the $ui.oninteraction 
+ * assigned function.  If valid values are not passed in for all of the parameters no event will be raised.
+ * @class InteractionEvent
+ * @param {string} screenId - The <b>id</b> property of the screen which contains the control providing the interaction
+ * @param {string} controlID - The <b>id</b> property of the control in which the user interacted
+ * @param {string} interaction - The interaction which took place
+ */
+function InteractionEvent(screenId, controlId, interaction) {
+	/**
+	 * The <b>id</b> property of the screen which contains the control providing the interaction
+	 * @member {string} screenId
+	 * @memberOf InteractionEvent
+	 */
 	this.screenId = screenId;
+	
+	 /**
+	 * The <b>id</b> property of the control in which the user interacted
+	 * @member {string} controlId
+	 * @memberOf InteractionEvent
+	 */
 	this.controlId = controlId;
+	
+	 
+	 /**
+	 * The interaction which took place
+	 * @member {string} interaction
+	 * @memberOf InteractionEvent
+	 */
 	this.interaction = interaction;
 }
+
+
+ 
+
+
+/**
+ * A List object will display multiple list items based on the data provided to the control.  The type of item objects that are used should match the declaration of the <b>style</b> of the list control<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.List,
+ *   style: $ui.GenericListItem,
+ *   items: [
+ *      {
+ *         img: 'thumbnails/foo.png',
+ *         title: 'This is my title',
+ *         accent: '6 hours ago',
+ *         caption: 'My summary description'
+ *      }
+ *   ]
+ *}
+ * @namespace
+ * @name List
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {object[]} [items] - The items property is an array of objects who's definition matches that of the requirements of the <b>style</b> property of the list
+ * @property {object} style - This is a list item decalaration so that the list knows how to render. For example this could be set to {@link $ui.GenericListItem}
+ * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a list control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
+ * @property {ListActionEvent} [onaction] - The onaction event will fire when an action from a list item is triggered. Some list items may have multiple actions that can be taken. When one of these actions is selected by the user the onaction event will fire.
+ */
 function $ui_List(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-list');
@@ -6110,7 +7613,12 @@ function $ui_List(object, screen) {
 	}
 	object._addItem = object._addItem.bind(object);
 	
-	// Public function to add a new item to the list
+	/** 
+	 * You can add an item to the end of the list by calling the addItem function and passing in an object that matches the a list item
+	 * @function addItem
+	 * @memberof $ui.List
+	 * @param {object} item - Item to be added to the list
+	 */
 	object.addItem = function(item) {
 		if (this._addItem(item)) {
 			this.items.push(item);
@@ -6125,7 +7633,12 @@ function $ui_List(object, screen) {
 	}
 	object.addItem = object.addItem.bind(object);
 	
-	// Public function to remove an existing item from the list
+	/** 
+	 * The remove item function will remove an existing item from a list. If an invalid item is specified the removal will fail
+	 * @function removeItem
+	 * @memberof $ui.List
+	 * @param {object} item - Item to be removed from the list
+	 */
 	object.removeItem = function(item) {
 		if (item == undefined) return false;
 		var index = this.items.indexOf(item);
@@ -6146,7 +7659,13 @@ function $ui_List(object, screen) {
 	}
 	object.removeItem = object.removeItem.bind(object);
 	
-	// Public function to insert a new item into the list
+	/** 
+	 * Insert item works similar to addItem but instead will insert the item into the list at the index specified. If an invalid index is specified it will result in failure to insert the item. To insert an item at the top of a list call insert with the index of 0.
+	 * @function insertItem
+	 * @memberOf $ui.List
+	 * @param {object} item - Item to be inserted into the list
+	 * @param {number} index - Index to insert the item
+	 */
 	object.insertItem = function(item, index) {
 		item.parent = this;
 		if (index < 0) {
@@ -6172,7 +7691,12 @@ function $ui_List(object, screen) {
 	}
 	object.insertItem = object.insertItem.bind(object);
 	
-	// Refresh all the items in the list
+	/** 
+	 * You can refresh all the items in a list by calling the refreshItems function with an array of new items
+	 * @function refreshItems
+	 * @memberof $ui.List
+	 * @param {object[]} items - Array of items to refresh the list
+	 */
 	object.refreshItems = function(itemArray) {
 		if (itemArray == undefined) return; // No data provided
 		var i,
@@ -6200,7 +7724,12 @@ function $ui_List(object, screen) {
 	}
 	object.refreshItems = object.refreshItems.bind(object);
 	
-	// Add a batch of items to the end of a list
+	/** 
+	 * This function is much like the refreshItems function but instead it loads a list of circle list items to the end of the current list and does not replace the existing list items.
+	 * @function addItemBatch
+	 * @memberof $ui.List
+	 * @param {object[]} items - Array of items to be added to the list
+	 */
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
@@ -6251,11 +7780,58 @@ function $ui_List(object, screen) {
 }
 
 $ui_List.prototype = new $ui_CoreComponent();
+
+/**
+ * The {@link $ui.List} <b>onaction</b> event will fire when the user interacts with a list item
+ * @callback ListActionEvent
+ * @param {ListEvent} event - The list event which was raised
+ */
+/**
+ * The list event is what is triggered when a user interacts with the List control. It contains the target list item that the user was interacting with, the type of event which was triggered 
+ * and an optional data property that contains extra data about the event.
+ * @class ListEvent
+ * @param {object} target - Target list item where the event originated
+ * @param {string} eventType - The type of event that was triggered. Each list item has its own set of possible events that can be raised
+ * @param {object} [data] - Optional data that can be passed with a list event
+ */
 function ListEvent(target, eventType, data) {
+	/** 
+	 * Target list item where the event originated
+	 * @member {object} target
+	 * @memberOf ListEvent
+	 */
 	this.target = target;
+	
+	/** 
+	 * The type of event that was triggered. Each list item has its own set of possible events that can be raised
+	 * @member {string} eventType
+	 * @memberOf ListEvent
+	 */
 	this.eventType = eventType;
+	
+	/** 
+	 * Optional data that can be passed with a list event
+	 * @member {object} [data]
+	 * @memberOf ListEvent
+	 */
 	this.data = data;
 }
+
+
+/**
+ * The spinner control provides you the ability to give a visual indicator when your content is loading. The spinner has one main property <b>size</b>. <br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.Spinner,
+ *   size: $ui.Spinner.SpinnerSize.LARGE
+ *}
+ * @namespace Spinner
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.Spinner.SpinnerSize} [size=$ui.Spinner.SpinnerSize.MEDIUM] - Represents the size of the spinner component.
+ * @property {$ui.Spinner.SpinnerColor} [forceColor] - This property specifies if the color should be forced to be dark or light. By default the system figures this out and does not need to be set. However, if you want to force a color in a certain scenario you can use this property.
+ */
 function $ui_Spinner(object, screen){
 	$ui_CoreComponent.call(this, object, screen);
 	object.size = (object.size) ? object.size : $ui.Spinner.SpinnerSize.MEDIUM;
@@ -6283,14 +7859,36 @@ function $ui_Spinner(object, screen){
 }
 
 $ui_Spinner.prototype = new $ui_CoreComponent();
-// This provides an interface for creating a new extension
+/**
+ * The definition of an extension to be used in extending the <b>$ui</b> framework.
+ * @class
+ * @param {string} name - This would be the value you set as the <b>component</b> property for your control
+ * @param {function} constructor - The function to be used as your control constructor
+ * @param {$ui.UIExtensionType} [type=$ui.UIExtensionType.CONTROL] - The type of extension you are registering
+ * @param {object} [definition] - Class definition for your extension, you can include properties such as constants here
+ */
 function UIExtension(name, constructor, type, definition) {
+	/** 
+	 * This would be the value you set as the <b>component</b> property for your control
+	 * @member {string} name
+	 * @memberOf UIExtension
+	 */
 	if (name == null) throw new Error('UIExtension: name cannot be null');
 	if (name == undefined) throw new Error('UIExtension: name cannot be undefined');
 	this.name = name;
+	/** 
+	 * The function to be used as your control constructor
+	 * @member {function} constructor
+	 * @memberOf UIExtension
+	 */
 	if (constructor == null) throw new Error('UIExtension: constructor cannot be null');
 	if (constructor == undefined) throw new Error('UIExtension: constructor cannot be undefined');
 	this.constructor = constructor;
+	/** 
+	 * The type of extension you are registering
+	 * @member {$ui.UIExtensionType} [type=$ui.UIExtensionType.CONTROL]
+	 * @memberOf UIExtension
+	 */
 	if (type == null || type == undefined) {
 		this.type = $ui.UIExtensionType.CONTROL;
 	} else if ((type != $ui.UIExtensionType.CONTROL) && (type != $ui.UIExtensionType.SCREEN) && (type != $ui.UIExtensionType.LISTITEM)) {
@@ -6298,6 +7896,11 @@ function UIExtension(name, constructor, type, definition) {
 	} else {
 		this.type = type;
 	}
+	/** 
+	 * Class definition for your extension, you can include properties such as constants here
+	 * @member {object} [definition]
+	 * @memberOf UIExtension
+	 */
 	if (definition == null || definition == undefined) {
 		this.definition = {};
 	} else {
@@ -6315,6 +7918,33 @@ function UIExtension(name, constructor, type, definition) {
  */
 (function(){"use strict";var t=this,i=t.Chart,e=function(t){this.canvas=t.canvas,this.ctx=t;this.width=t.canvas.width,this.height=t.canvas.height;return this.aspectRatio=this.width/this.height,s.retinaScale(this),this};e.defaults={global:{animation:!0,animationSteps:60,animationEasing:"easeOutQuart",showScale:!0,scaleOverride:!1,scaleSteps:null,scaleStepWidth:null,scaleStartValue:null,scaleLineColor:"rgba(0,0,0,.1)",scaleLineWidth:1,scaleShowLabels:!0,scaleLabel:"<%=value%>",scaleIntegersOnly:!0,scaleBeginAtZero:!1,scaleFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",scaleFontSize:12,scaleFontStyle:"normal",scaleFontColor:"#666",responsive:!1,maintainAspectRatio:!0,showTooltips:!0,customTooltips:!1,tooltipEvents:["mousemove","touchstart","touchmove","mouseout"],tooltipFillColor:"rgba(0,0,0,0.8)",tooltipFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",tooltipFontSize:14,tooltipFontStyle:"normal",tooltipFontColor:"#fff",tooltipTitleFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",tooltipTitleFontSize:14,tooltipTitleFontStyle:"bold",tooltipTitleFontColor:"#fff",tooltipYPadding:6,tooltipXPadding:6,tooltipCaretSize:8,tooltipCornerRadius:6,tooltipXOffset:10,tooltipTemplate:"<%if (label){%><%=label%>: <%}%><%= value %>",multiTooltipTemplate:"<%= value %>",multiTooltipKeyBackground:"#fff",onAnimationProgress:function(){},onAnimationComplete:function(){}}},e.types={};var s=e.helpers={},n=s.each=function(t,i,e){var s=Array.prototype.slice.call(arguments,3);if(t)if(t.length===+t.length){var n;for(n=0;n<t.length;n++)i.apply(e,[t[n],n].concat(s))}else for(var o in t)i.apply(e,[t[o],o].concat(s))},o=s.clone=function(t){var i={};return n(t,function(e,s){t.hasOwnProperty(s)&&(i[s]=e)}),i},a=s.extend=function(t){return n(Array.prototype.slice.call(arguments,1),function(i){n(i,function(e,s){i.hasOwnProperty(s)&&(t[s]=e)})}),t},h=s.merge=function(){var t=Array.prototype.slice.call(arguments,0);return t.unshift({}),a.apply(null,t)},l=s.indexOf=function(t,i){if(Array.prototype.indexOf)return t.indexOf(i);for(var e=0;e<t.length;e++)if(t[e]===i)return e;return-1},r=(s.where=function(t,i){var e=[];return s.each(t,function(t){i(t)&&e.push(t)}),e},s.findNextWhere=function(t,i,e){e||(e=-1);for(var s=e+1;s<t.length;s++){var n=t[s];if(i(n))return n}},s.findPreviousWhere=function(t,i,e){e||(e=t.length);for(var s=e-1;s>=0;s--){var n=t[s];if(i(n))return n}},s.inherits=function(t){var i=this,e=t&&t.hasOwnProperty("constructor")?t.constructor:function(){return i.apply(this,arguments)},s=function(){this.constructor=e};return s.prototype=i.prototype,e.prototype=new s,e.extend=r,t&&a(e.prototype,t),e.__super__=i.prototype,e}),c=s.noop=function(){},u=s.uid=function(){var t=0;return function(){return"chart-"+t++}}(),d=s.warn=function(t){window.console&&"function"==typeof window.console.warn&&console.warn(t)},p=s.amd="function"==typeof define&&define.amd,f=s.isNumber=function(t){return!isNaN(parseFloat(t))&&isFinite(t)},g=s.max=function(t){return Math.max.apply(Math,t)},m=s.min=function(t){return Math.min.apply(Math,t)},v=(s.cap=function(t,i,e){if(f(i)){if(t>i)return i}else if(f(e)&&e>t)return e;return t},s.getDecimalPlaces=function(t){return t%1!==0&&f(t)?t.toString().split(".")[1].length:0}),S=s.radians=function(t){return t*(Math.PI/180)},x=(s.getAngleFromPoint=function(t,i){var e=i.x-t.x,s=i.y-t.y,n=Math.sqrt(e*e+s*s),o=2*Math.PI+Math.atan2(s,e);return 0>e&&0>s&&(o+=2*Math.PI),{angle:o,distance:n}},s.aliasPixel=function(t){return t%2===0?0:.5}),y=(s.splineCurve=function(t,i,e,s){var n=Math.sqrt(Math.pow(i.x-t.x,2)+Math.pow(i.y-t.y,2)),o=Math.sqrt(Math.pow(e.x-i.x,2)+Math.pow(e.y-i.y,2)),a=s*n/(n+o),h=s*o/(n+o);return{inner:{x:i.x-a*(e.x-t.x),y:i.y-a*(e.y-t.y)},outer:{x:i.x+h*(e.x-t.x),y:i.y+h*(e.y-t.y)}}},s.calculateOrderOfMagnitude=function(t){return Math.floor(Math.log(t)/Math.LN10)}),C=(s.calculateScaleRange=function(t,i,e,s,n){var o=2,a=Math.floor(i/(1.5*e)),h=o>=a,l=g(t),r=m(t);l===r&&(l+=.5,r>=.5&&!s?r-=.5:l+=.5);for(var c=Math.abs(l-r),u=y(c),d=Math.ceil(l/(1*Math.pow(10,u)))*Math.pow(10,u),p=s?0:Math.floor(r/(1*Math.pow(10,u)))*Math.pow(10,u),f=d-p,v=Math.pow(10,u),S=Math.round(f/v);(S>a||a>2*S)&&!h;)if(S>a)v*=2,S=Math.round(f/v),S%1!==0&&(h=!0);else if(n&&u>=0){if(v/2%1!==0)break;v/=2,S=Math.round(f/v)}else v/=2,S=Math.round(f/v);return h&&(S=o,v=f/S),{steps:S,stepValue:v,min:p,max:p+S*v}},s.template=function(t,i){function e(t,i){var e=/\W/.test(t)?new Function("obj","var p=[],print=function(){p.push.apply(p,arguments);};with(obj){p.push('"+t.replace(/[\r\t\n]/g," ").split("<%").join("	").replace(/((^|%>)[^\t]*)'/g,"$1\r").replace(/\t=(.*?)%>/g,"',$1,'").split("	").join("');").split("%>").join("p.push('").split("\r").join("\\'")+"');}return p.join('');"):s[t]=s[t];return i?e(i):e}if(t instanceof Function)return t(i);var s={};return e(t,i)}),w=(s.generateLabels=function(t,i,e,s){var o=new Array(i);return labelTemplateString&&n(o,function(i,n){o[n]=C(t,{value:e+s*(n+1)})}),o},s.easingEffects={linear:function(t){return t},easeInQuad:function(t){return t*t},easeOutQuad:function(t){return-1*t*(t-2)},easeInOutQuad:function(t){return(t/=.5)<1?.5*t*t:-0.5*(--t*(t-2)-1)},easeInCubic:function(t){return t*t*t},easeOutCubic:function(t){return 1*((t=t/1-1)*t*t+1)},easeInOutCubic:function(t){return(t/=.5)<1?.5*t*t*t:.5*((t-=2)*t*t+2)},easeInQuart:function(t){return t*t*t*t},easeOutQuart:function(t){return-1*((t=t/1-1)*t*t*t-1)},easeInOutQuart:function(t){return(t/=.5)<1?.5*t*t*t*t:-0.5*((t-=2)*t*t*t-2)},easeInQuint:function(t){return 1*(t/=1)*t*t*t*t},easeOutQuint:function(t){return 1*((t=t/1-1)*t*t*t*t+1)},easeInOutQuint:function(t){return(t/=.5)<1?.5*t*t*t*t*t:.5*((t-=2)*t*t*t*t+2)},easeInSine:function(t){return-1*Math.cos(t/1*(Math.PI/2))+1},easeOutSine:function(t){return 1*Math.sin(t/1*(Math.PI/2))},easeInOutSine:function(t){return-0.5*(Math.cos(Math.PI*t/1)-1)},easeInExpo:function(t){return 0===t?1:1*Math.pow(2,10*(t/1-1))},easeOutExpo:function(t){return 1===t?1:1*(-Math.pow(2,-10*t/1)+1)},easeInOutExpo:function(t){return 0===t?0:1===t?1:(t/=.5)<1?.5*Math.pow(2,10*(t-1)):.5*(-Math.pow(2,-10*--t)+2)},easeInCirc:function(t){return t>=1?t:-1*(Math.sqrt(1-(t/=1)*t)-1)},easeOutCirc:function(t){return 1*Math.sqrt(1-(t=t/1-1)*t)},easeInOutCirc:function(t){return(t/=.5)<1?-0.5*(Math.sqrt(1-t*t)-1):.5*(Math.sqrt(1-(t-=2)*t)+1)},easeInElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:1==(t/=1)?1:(e||(e=.3),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),-(s*Math.pow(2,10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e)))},easeOutElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:1==(t/=1)?1:(e||(e=.3),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),s*Math.pow(2,-10*t)*Math.sin(2*(1*t-i)*Math.PI/e)+1)},easeInOutElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:2==(t/=.5)?1:(e||(e=.3*1.5),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),1>t?-.5*s*Math.pow(2,10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e):s*Math.pow(2,-10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e)*.5+1)},easeInBack:function(t){var i=1.70158;return 1*(t/=1)*t*((i+1)*t-i)},easeOutBack:function(t){var i=1.70158;return 1*((t=t/1-1)*t*((i+1)*t+i)+1)},easeInOutBack:function(t){var i=1.70158;return(t/=.5)<1?.5*t*t*(((i*=1.525)+1)*t-i):.5*((t-=2)*t*(((i*=1.525)+1)*t+i)+2)},easeInBounce:function(t){return 1-w.easeOutBounce(1-t)},easeOutBounce:function(t){return(t/=1)<1/2.75?7.5625*t*t:2/2.75>t?1*(7.5625*(t-=1.5/2.75)*t+.75):2.5/2.75>t?1*(7.5625*(t-=2.25/2.75)*t+.9375):1*(7.5625*(t-=2.625/2.75)*t+.984375)},easeInOutBounce:function(t){return.5>t?.5*w.easeInBounce(2*t):.5*w.easeOutBounce(2*t-1)+.5}}),b=s.requestAnimFrame=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(t){return window.setTimeout(t,1e3/60)}}(),P=(s.cancelAnimFrame=function(){return window.cancelAnimationFrame||window.webkitCancelAnimationFrame||window.mozCancelAnimationFrame||window.oCancelAnimationFrame||window.msCancelAnimationFrame||function(t){return window.clearTimeout(t,1e3/60)}}(),s.animationLoop=function(t,i,e,s,n,o){var a=0,h=w[e]||w.linear,l=function(){a++;var e=a/i,r=h(e);t.call(o,r,e,a),s.call(o,r,e),i>a?o.animationFrame=b(l):n.apply(o)};b(l)},s.getRelativePosition=function(t){var i,e,s=t.originalEvent||t,n=t.currentTarget||t.srcElement,o=n.getBoundingClientRect();return s.touches?(i=s.touches[0].clientX-o.left,e=s.touches[0].clientY-o.top):(i=s.clientX-o.left,e=s.clientY-o.top),{x:i,y:e}},s.addEvent=function(t,i,e){t.addEventListener?t.addEventListener(i,e):t.attachEvent?t.attachEvent("on"+i,e):t["on"+i]=e}),L=s.removeEvent=function(t,i,e){t.removeEventListener?t.removeEventListener(i,e,!1):t.detachEvent?t.detachEvent("on"+i,e):t["on"+i]=c},k=(s.bindEvents=function(t,i,e){t.events||(t.events={}),n(i,function(i){t.events[i]=function(){e.apply(t,arguments)},P(t.chart.canvas,i,t.events[i])})},s.unbindEvents=function(t,i){n(i,function(i,e){L(t.chart.canvas,e,i)})}),F=s.getMaximumWidth=function(t){var i=t.parentNode;return i.clientWidth},R=s.getMaximumHeight=function(t){var i=t.parentNode;return i.clientHeight},T=(s.getMaximumSize=s.getMaximumWidth,s.retinaScale=function(t){var i=t.ctx,e=t.canvas.width,s=t.canvas.height;window.devicePixelRatio&&(i.canvas.style.width=e+"px",i.canvas.style.height=s+"px",i.canvas.height=s*window.devicePixelRatio,i.canvas.width=e*window.devicePixelRatio,i.scale(window.devicePixelRatio,window.devicePixelRatio))}),A=s.clear=function(t){t.ctx.clearRect(0,0,t.width,t.height)},M=s.fontString=function(t,i,e){return i+" "+t+"px "+e},W=s.longestText=function(t,i,e){t.font=i;var s=0;return n(e,function(i){var e=t.measureText(i).width;s=e>s?e:s}),s},z=s.drawRoundedRectangle=function(t,i,e,s,n,o){t.beginPath(),t.moveTo(i+o,e),t.lineTo(i+s-o,e),t.quadraticCurveTo(i+s,e,i+s,e+o),t.lineTo(i+s,e+n-o),t.quadraticCurveTo(i+s,e+n,i+s-o,e+n),t.lineTo(i+o,e+n),t.quadraticCurveTo(i,e+n,i,e+n-o),t.lineTo(i,e+o),t.quadraticCurveTo(i,e,i+o,e),t.closePath()};e.instances={},e.Type=function(t,i,s){this.options=i,this.chart=s,this.id=u(),e.instances[this.id]=this,i.responsive&&this.resize(),this.initialize.call(this,t)},a(e.Type.prototype,{initialize:function(){return this},clear:function(){return A(this.chart),this},stop:function(){return s.cancelAnimFrame.call(t,this.animationFrame),this},resize:function(t){this.stop();var i=this.chart.canvas,e=F(this.chart.canvas),s=this.options.maintainAspectRatio?e/this.chart.aspectRatio:R(this.chart.canvas);return i.width=this.chart.width=e,i.height=this.chart.height=s,T(this.chart),"function"==typeof t&&t.apply(this,Array.prototype.slice.call(arguments,1)),this},reflow:c,render:function(t){return t&&this.reflow(),this.options.animation&&!t?s.animationLoop(this.draw,this.options.animationSteps,this.options.animationEasing,this.options.onAnimationProgress,this.options.onAnimationComplete,this):(this.draw(),this.options.onAnimationComplete.call(this)),this},generateLegend:function(){return C(this.options.legendTemplate,this)},destroy:function(){this.clear(),k(this,this.events);var t=this.chart.canvas;t.width=this.chart.width,t.height=this.chart.height,t.style.removeProperty?(t.style.removeProperty("width"),t.style.removeProperty("height")):(t.style.removeAttribute("width"),t.style.removeAttribute("height")),delete e.instances[this.id]},showTooltip:function(t,i){"undefined"==typeof this.activeElements&&(this.activeElements=[]);var o=function(t){var i=!1;return t.length!==this.activeElements.length?i=!0:(n(t,function(t,e){t!==this.activeElements[e]&&(i=!0)},this),i)}.call(this,t);if(o||i){if(this.activeElements=t,this.draw(),this.options.customTooltips&&this.options.customTooltips(!1),t.length>0)if(this.datasets&&this.datasets.length>1){for(var a,h,r=this.datasets.length-1;r>=0&&(a=this.datasets[r].points||this.datasets[r].bars||this.datasets[r].segments,h=l(a,t[0]),-1===h);r--);var c=[],u=[],d=function(){var t,i,e,n,o,a=[],l=[],r=[];return s.each(this.datasets,function(i){t=i.points||i.bars||i.segments,t[h]&&t[h].hasValue()&&a.push(t[h])}),s.each(a,function(t){l.push(t.x),r.push(t.y),c.push(s.template(this.options.multiTooltipTemplate,t)),u.push({fill:t._saved.fillColor||t.fillColor,stroke:t._saved.strokeColor||t.strokeColor})},this),o=m(r),e=g(r),n=m(l),i=g(l),{x:n>this.chart.width/2?n:i,y:(o+e)/2}}.call(this,h);new e.MultiTooltip({x:d.x,y:d.y,xPadding:this.options.tooltipXPadding,yPadding:this.options.tooltipYPadding,xOffset:this.options.tooltipXOffset,fillColor:this.options.tooltipFillColor,textColor:this.options.tooltipFontColor,fontFamily:this.options.tooltipFontFamily,fontStyle:this.options.tooltipFontStyle,fontSize:this.options.tooltipFontSize,titleTextColor:this.options.tooltipTitleFontColor,titleFontFamily:this.options.tooltipTitleFontFamily,titleFontStyle:this.options.tooltipTitleFontStyle,titleFontSize:this.options.tooltipTitleFontSize,cornerRadius:this.options.tooltipCornerRadius,labels:c,legendColors:u,legendColorBackground:this.options.multiTooltipKeyBackground,title:t[0].label,chart:this.chart,ctx:this.chart.ctx,custom:this.options.customTooltips}).draw()}else n(t,function(t){var i=t.tooltipPosition();new e.Tooltip({x:Math.round(i.x),y:Math.round(i.y),xPadding:this.options.tooltipXPadding,yPadding:this.options.tooltipYPadding,fillColor:this.options.tooltipFillColor,textColor:this.options.tooltipFontColor,fontFamily:this.options.tooltipFontFamily,fontStyle:this.options.tooltipFontStyle,fontSize:this.options.tooltipFontSize,caretHeight:this.options.tooltipCaretSize,cornerRadius:this.options.tooltipCornerRadius,text:C(this.options.tooltipTemplate,t),chart:this.chart,custom:this.options.customTooltips}).draw()},this);return this}},toBase64Image:function(){return this.chart.canvas.toDataURL.apply(this.chart.canvas,arguments)}}),e.Type.extend=function(t){var i=this,s=function(){return i.apply(this,arguments)};if(s.prototype=o(i.prototype),a(s.prototype,t),s.extend=e.Type.extend,t.name||i.prototype.name){var n=t.name||i.prototype.name,l=e.defaults[i.prototype.name]?o(e.defaults[i.prototype.name]):{};e.defaults[n]=a(l,t.defaults),e.types[n]=s,e.prototype[n]=function(t,i){var o=h(e.defaults.global,e.defaults[n],i||{});return new s(t,o,this)}}else d("Name not provided for this chart, so it hasn't been registered");return i},e.Element=function(t){a(this,t),this.initialize.apply(this,arguments),this.save()},a(e.Element.prototype,{initialize:function(){},restore:function(t){return t?n(t,function(t){this[t]=this._saved[t]},this):a(this,this._saved),this},save:function(){return this._saved=o(this),delete this._saved._saved,this},update:function(t){return n(t,function(t,i){this._saved[i]=this[i],this[i]=t},this),this},transition:function(t,i){return n(t,function(t,e){this[e]=(t-this._saved[e])*i+this._saved[e]},this),this},tooltipPosition:function(){return{x:this.x,y:this.y}},hasValue:function(){return f(this.value)}}),e.Element.extend=r,e.Point=e.Element.extend({display:!0,inRange:function(t,i){var e=this.hitDetectionRadius+this.radius;return Math.pow(t-this.x,2)+Math.pow(i-this.y,2)<Math.pow(e,2)},draw:function(){if(this.display){var t=this.ctx;t.beginPath(),t.arc(this.x,this.y,this.radius,0,2*Math.PI),t.closePath(),t.strokeStyle=this.strokeColor,t.lineWidth=this.strokeWidth,t.fillStyle=this.fillColor,t.fill(),t.stroke()}}}),e.Arc=e.Element.extend({inRange:function(t,i){var e=s.getAngleFromPoint(this,{x:t,y:i}),n=e.angle>=this.startAngle&&e.angle<=this.endAngle,o=e.distance>=this.innerRadius&&e.distance<=this.outerRadius;return n&&o},tooltipPosition:function(){var t=this.startAngle+(this.endAngle-this.startAngle)/2,i=(this.outerRadius-this.innerRadius)/2+this.innerRadius;return{x:this.x+Math.cos(t)*i,y:this.y+Math.sin(t)*i}},draw:function(t){var i=this.ctx;i.beginPath(),i.arc(this.x,this.y,this.outerRadius,this.startAngle,this.endAngle),i.arc(this.x,this.y,this.innerRadius,this.endAngle,this.startAngle,!0),i.closePath(),i.strokeStyle=this.strokeColor,i.lineWidth=this.strokeWidth,i.fillStyle=this.fillColor,i.fill(),i.lineJoin="bevel",this.showStroke&&i.stroke()}}),e.Rectangle=e.Element.extend({draw:function(){var t=this.ctx,i=this.width/2,e=this.x-i,s=this.x+i,n=this.base-(this.base-this.y),o=this.strokeWidth/2;this.showStroke&&(e+=o,s-=o,n+=o),t.beginPath(),t.fillStyle=this.fillColor,t.strokeStyle=this.strokeColor,t.lineWidth=this.strokeWidth,t.moveTo(e,this.base),t.lineTo(e,n),t.lineTo(s,n),t.lineTo(s,this.base),t.fill(),this.showStroke&&t.stroke()},height:function(){return this.base-this.y},inRange:function(t,i){return t>=this.x-this.width/2&&t<=this.x+this.width/2&&i>=this.y&&i<=this.base}}),e.Tooltip=e.Element.extend({draw:function(){var t=this.chart.ctx;t.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.xAlign="center",this.yAlign="above";var i=this.caretPadding=2,e=t.measureText(this.text).width+2*this.xPadding,s=this.fontSize+2*this.yPadding,n=s+this.caretHeight+i;this.x+e/2>this.chart.width?this.xAlign="left":this.x-e/2<0&&(this.xAlign="right"),this.y-n<0&&(this.yAlign="below");var o=this.x-e/2,a=this.y-n;if(t.fillStyle=this.fillColor,this.custom)this.custom(this);else{switch(this.yAlign){case"above":t.beginPath(),t.moveTo(this.x,this.y-i),t.lineTo(this.x+this.caretHeight,this.y-(i+this.caretHeight)),t.lineTo(this.x-this.caretHeight,this.y-(i+this.caretHeight)),t.closePath(),t.fill();break;case"below":a=this.y+i+this.caretHeight,t.beginPath(),t.moveTo(this.x,this.y+i),t.lineTo(this.x+this.caretHeight,this.y+i+this.caretHeight),t.lineTo(this.x-this.caretHeight,this.y+i+this.caretHeight),t.closePath(),t.fill()}switch(this.xAlign){case"left":o=this.x-e+(this.cornerRadius+this.caretHeight);break;case"right":o=this.x-(this.cornerRadius+this.caretHeight)}z(t,o,a,e,s,this.cornerRadius),t.fill(),t.fillStyle=this.textColor,t.textAlign="center",t.textBaseline="middle",t.fillText(this.text,o+e/2,a+s/2)}}}),e.MultiTooltip=e.Element.extend({initialize:function(){this.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.titleFont=M(this.titleFontSize,this.titleFontStyle,this.titleFontFamily),this.height=this.labels.length*this.fontSize+(this.labels.length-1)*(this.fontSize/2)+2*this.yPadding+1.5*this.titleFontSize,this.ctx.font=this.titleFont;var t=this.ctx.measureText(this.title).width,i=W(this.ctx,this.font,this.labels)+this.fontSize+3,e=g([i,t]);this.width=e+2*this.xPadding;var s=this.height/2;this.y-s<0?this.y=s:this.y+s>this.chart.height&&(this.y=this.chart.height-s),this.x>this.chart.width/2?this.x-=this.xOffset+this.width:this.x+=this.xOffset},getLineHeight:function(t){var i=this.y-this.height/2+this.yPadding,e=t-1;return 0===t?i+this.titleFontSize/2:i+(1.5*this.fontSize*e+this.fontSize/2)+1.5*this.titleFontSize},draw:function(){if(this.custom)this.custom(this);else{z(this.ctx,this.x,this.y-this.height/2,this.width,this.height,this.cornerRadius);var t=this.ctx;t.fillStyle=this.fillColor,t.fill(),t.closePath(),t.textAlign="left",t.textBaseline="middle",t.fillStyle=this.titleTextColor,t.font=this.titleFont,t.fillText(this.title,this.x+this.xPadding,this.getLineHeight(0)),t.font=this.font,s.each(this.labels,function(i,e){t.fillStyle=this.textColor,t.fillText(i,this.x+this.xPadding+this.fontSize+3,this.getLineHeight(e+1)),t.fillStyle=this.legendColorBackground,t.fillRect(this.x+this.xPadding,this.getLineHeight(e+1)-this.fontSize/2,this.fontSize,this.fontSize),t.fillStyle=this.legendColors[e].fill,t.fillRect(this.x+this.xPadding,this.getLineHeight(e+1)-this.fontSize/2,this.fontSize,this.fontSize)},this)}}}),e.Scale=e.Element.extend({initialize:function(){this.fit()},buildYLabels:function(){this.yLabels=[];for(var t=v(this.stepValue),i=0;i<=this.steps;i++)this.yLabels.push(C(this.templateString,{value:(this.min+i*this.stepValue).toFixed(t)}));this.yLabelWidth=this.display&&this.showLabels?W(this.ctx,this.font,this.yLabels):0},addXLabel:function(t){this.xLabels.push(t),this.valuesCount++,this.fit()},removeXLabel:function(){this.xLabels.shift(),this.valuesCount--,this.fit()},fit:function(){this.startPoint=this.display?this.fontSize:0,this.endPoint=this.display?this.height-1.5*this.fontSize-5:this.height,this.startPoint+=this.padding,this.endPoint-=this.padding;var t,i=this.endPoint-this.startPoint;for(this.calculateYRange(i),this.buildYLabels(),this.calculateXLabelRotation();i>this.endPoint-this.startPoint;)i=this.endPoint-this.startPoint,t=this.yLabelWidth,this.calculateYRange(i),this.buildYLabels(),t<this.yLabelWidth&&this.calculateXLabelRotation()},calculateXLabelRotation:function(){this.ctx.font=this.font;var t,i,e=this.ctx.measureText(this.xLabels[0]).width,s=this.ctx.measureText(this.xLabels[this.xLabels.length-1]).width;if(this.xScalePaddingRight=s/2+3,this.xScalePaddingLeft=e/2>this.yLabelWidth+10?e/2:this.yLabelWidth+10,this.xLabelRotation=0,this.display){var n,o=W(this.ctx,this.font,this.xLabels);this.xLabelWidth=o;for(var a=Math.floor(this.calculateX(1)-this.calculateX(0))-6;this.xLabelWidth>a&&0===this.xLabelRotation||this.xLabelWidth>a&&this.xLabelRotation<=90&&this.xLabelRotation>0;)n=Math.cos(S(this.xLabelRotation)),t=n*e,i=n*s,t+this.fontSize/2>this.yLabelWidth+8&&(this.xScalePaddingLeft=t+this.fontSize/2),this.xScalePaddingRight=this.fontSize/2,this.xLabelRotation++,this.xLabelWidth=n*o;this.xLabelRotation>0&&(this.endPoint-=Math.sin(S(this.xLabelRotation))*o+3)}else this.xLabelWidth=0,this.xScalePaddingRight=this.padding,this.xScalePaddingLeft=this.padding},calculateYRange:c,drawingArea:function(){return this.startPoint-this.endPoint},calculateY:function(t){var i=this.drawingArea()/(this.min-this.max);return this.endPoint-i*(t-this.min)},calculateX:function(t){var i=(this.xLabelRotation>0,this.width-(this.xScalePaddingLeft+this.xScalePaddingRight)),e=i/(this.valuesCount-(this.offsetGridLines?0:1)),s=e*t+this.xScalePaddingLeft;return this.offsetGridLines&&(s+=e/2),Math.round(s)},update:function(t){s.extend(this,t),this.fit()},draw:function(){var t=this.ctx,i=(this.endPoint-this.startPoint)/this.steps,e=Math.round(this.xScalePaddingLeft);this.display&&(t.fillStyle=this.textColor,t.font=this.font,n(this.yLabels,function(n,o){var a=this.endPoint-i*o,h=Math.round(a),l=this.showHorizontalLines;t.textAlign="right",t.textBaseline="middle",this.showLabels&&t.fillText(n,e-10,a),0!==o||l||(l=!0),l&&t.beginPath(),o>0?(t.lineWidth=this.gridLineWidth,t.strokeStyle=this.gridLineColor):(t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor),h+=s.aliasPixel(t.lineWidth),l&&(t.moveTo(e,h),t.lineTo(this.width,h),t.stroke(),t.closePath()),t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor,t.beginPath(),t.moveTo(e-5,h),t.lineTo(e,h),t.stroke(),t.closePath()},this),n(this.xLabels,function(i,e){var s=this.calculateX(e)+x(this.lineWidth),n=this.calculateX(e-(this.offsetGridLines?.5:0))+x(this.lineWidth),o=this.xLabelRotation>0,a=this.showVerticalLines;0!==e||a||(a=!0),a&&t.beginPath(),e>0?(t.lineWidth=this.gridLineWidth,t.strokeStyle=this.gridLineColor):(t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor),a&&(t.moveTo(n,this.endPoint),t.lineTo(n,this.startPoint-3),t.stroke(),t.closePath()),t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor,t.beginPath(),t.moveTo(n,this.endPoint),t.lineTo(n,this.endPoint+5),t.stroke(),t.closePath(),t.save(),t.translate(s,o?this.endPoint+12:this.endPoint+8),t.rotate(-1*S(this.xLabelRotation)),t.font=this.font,t.textAlign=o?"right":"center",t.textBaseline=o?"middle":"top",t.fillText(i,0,0),t.restore()},this))}}),e.RadialScale=e.Element.extend({initialize:function(){this.size=m([this.height,this.width]),this.drawingArea=this.display?this.size/2-(this.fontSize/2+this.backdropPaddingY):this.size/2},calculateCenterOffset:function(t){var i=this.drawingArea/(this.max-this.min);return(t-this.min)*i},update:function(){this.lineArc?this.drawingArea=this.display?this.size/2-(this.fontSize/2+this.backdropPaddingY):this.size/2:this.setScaleSize(),this.buildYLabels()},buildYLabels:function(){this.yLabels=[];for(var t=v(this.stepValue),i=0;i<=this.steps;i++)this.yLabels.push(C(this.templateString,{value:(this.min+i*this.stepValue).toFixed(t)}))},getCircumference:function(){return 2*Math.PI/this.valuesCount},setScaleSize:function(){var t,i,e,s,n,o,a,h,l,r,c,u,d=m([this.height/2-this.pointLabelFontSize-5,this.width/2]),p=this.width,g=0;for(this.ctx.font=M(this.pointLabelFontSize,this.pointLabelFontStyle,this.pointLabelFontFamily),i=0;i<this.valuesCount;i++)t=this.getPointPosition(i,d),e=this.ctx.measureText(C(this.templateString,{value:this.labels[i]})).width+5,0===i||i===this.valuesCount/2?(s=e/2,t.x+s>p&&(p=t.x+s,n=i),t.x-s<g&&(g=t.x-s,a=i)):i<this.valuesCount/2?t.x+e>p&&(p=t.x+e,n=i):i>this.valuesCount/2&&t.x-e<g&&(g=t.x-e,a=i);l=g,r=Math.ceil(p-this.width),o=this.getIndexAngle(n),h=this.getIndexAngle(a),c=r/Math.sin(o+Math.PI/2),u=l/Math.sin(h+Math.PI/2),c=f(c)?c:0,u=f(u)?u:0,this.drawingArea=d-(u+c)/2,this.setCenterPoint(u,c)},setCenterPoint:function(t,i){var e=this.width-i-this.drawingArea,s=t+this.drawingArea;this.xCenter=(s+e)/2,this.yCenter=this.height/2},getIndexAngle:function(t){var i=2*Math.PI/this.valuesCount;return t*i-Math.PI/2},getPointPosition:function(t,i){var e=this.getIndexAngle(t);return{x:Math.cos(e)*i+this.xCenter,y:Math.sin(e)*i+this.yCenter}},draw:function(){if(this.display){var t=this.ctx;if(n(this.yLabels,function(i,e){if(e>0){var s,n=e*(this.drawingArea/this.steps),o=this.yCenter-n;if(this.lineWidth>0)if(t.strokeStyle=this.lineColor,t.lineWidth=this.lineWidth,this.lineArc)t.beginPath(),t.arc(this.xCenter,this.yCenter,n,0,2*Math.PI),t.closePath(),t.stroke();else{t.beginPath();for(var a=0;a<this.valuesCount;a++)s=this.getPointPosition(a,this.calculateCenterOffset(this.min+e*this.stepValue)),0===a?t.moveTo(s.x,s.y):t.lineTo(s.x,s.y);t.closePath(),t.stroke()}if(this.showLabels){if(t.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.showLabelBackdrop){var h=t.measureText(i).width;t.fillStyle=this.backdropColor,t.fillRect(this.xCenter-h/2-this.backdropPaddingX,o-this.fontSize/2-this.backdropPaddingY,h+2*this.backdropPaddingX,this.fontSize+2*this.backdropPaddingY)}t.textAlign="center",t.textBaseline="middle",t.fillStyle=this.fontColor,t.fillText(i,this.xCenter,o)}}},this),!this.lineArc){t.lineWidth=this.angleLineWidth,t.strokeStyle=this.angleLineColor;for(var i=this.valuesCount-1;i>=0;i--){if(this.angleLineWidth>0){var e=this.getPointPosition(i,this.calculateCenterOffset(this.max));t.beginPath(),t.moveTo(this.xCenter,this.yCenter),t.lineTo(e.x,e.y),t.stroke(),t.closePath()}var s=this.getPointPosition(i,this.calculateCenterOffset(this.max)+5);t.font=M(this.pointLabelFontSize,this.pointLabelFontStyle,this.pointLabelFontFamily),t.fillStyle=this.pointLabelFontColor;var o=this.labels.length,a=this.labels.length/2,h=a/2,l=h>i||i>o-h,r=i===h||i===o-h;t.textAlign=0===i?"center":i===a?"center":a>i?"left":"right",t.textBaseline=r?"middle":l?"bottom":"top",t.fillText(this.labels[i],s.x,s.y)}}}}}),s.addEvent(window,"resize",function(){var t;return function(){clearTimeout(t),t=setTimeout(function(){n(e.instances,function(t){t.options.responsive&&t.resize(t.render,!0)})},50)}}()),p?define(function(){return e}):"object"==typeof module&&module.exports&&(module.exports=e),t.Chart=e,e.noConflict=function(){return t.Chart=i,e}}).call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleBeginAtZero:!0,scaleShowGridLines:!0,scaleGridLineColor:"rgba(0,0,0,.05)",scaleGridLineWidth:1,scaleShowHorizontalLines:!0,scaleShowVerticalLines:!0,barShowStroke:!0,barStrokeWidth:2,barValueSpacing:5,barDatasetSpacing:1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].fillColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Bar",defaults:s,initialize:function(t){var s=this.options;this.ScaleClass=i.Scale.extend({offsetGridLines:!0,calculateBarX:function(t,i,e){var n=this.calculateBaseWidth(),o=this.calculateX(e)-n/2,a=this.calculateBarWidth(t);return o+a*i+i*s.barDatasetSpacing+a/2},calculateBaseWidth:function(){return this.calculateX(1)-this.calculateX(0)-2*s.barValueSpacing},calculateBarWidth:function(t){var i=this.calculateBaseWidth()-(t-1)*s.barDatasetSpacing;return i/t}}),this.datasets=[],this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getBarsAtEvent(t):[];this.eachBars(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),this.BarClass=i.Rectangle.extend({strokeWidth:this.options.barStrokeWidth,showStroke:this.options.barShowStroke,ctx:this.chart.ctx}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,bars:[]};this.datasets.push(s),e.each(i.data,function(e,n){s.bars.push(new this.BarClass({value:e,label:t.labels[n],datasetLabel:i.label,strokeColor:i.strokeColor,fillColor:i.fillColor,highlightFill:i.highlightFill||i.fillColor,highlightStroke:i.highlightStroke||i.strokeColor}))},this)},this),this.buildScale(t.labels),this.BarClass.prototype.base=this.scale.endPoint,this.eachBars(function(t,i,s){e.extend(t,{width:this.scale.calculateBarWidth(this.datasets.length),x:this.scale.calculateBarX(this.datasets.length,s,i),y:this.scale.endPoint}),t.save()},this),this.render()},update:function(){this.scale.update(),e.each(this.activeElements,function(t){t.restore(["fillColor","strokeColor"])}),this.eachBars(function(t){t.save()}),this.render()},eachBars:function(t){e.each(this.datasets,function(i,s){e.each(i.bars,t,this,s)},this)},getBarsAtEvent:function(t){for(var i,s=[],n=e.getRelativePosition(t),o=function(t){s.push(t.bars[i])},a=0;a<this.datasets.length;a++)for(i=0;i<this.datasets[a].bars.length;i++)if(this.datasets[a].bars[i].inRange(n.x,n.y))return e.each(this.datasets,o),s;return s},buildScale:function(t){var i=this,s=function(){var t=[];return i.eachBars(function(i){t.push(i.value)}),t},n={templateString:this.options.scaleLabel,height:this.chart.height,width:this.chart.width,ctx:this.chart.ctx,textColor:this.options.scaleFontColor,fontSize:this.options.scaleFontSize,fontStyle:this.options.scaleFontStyle,fontFamily:this.options.scaleFontFamily,valuesCount:t.length,beginAtZero:this.options.scaleBeginAtZero,integersOnly:this.options.scaleIntegersOnly,calculateYRange:function(t){var i=e.calculateScaleRange(s(),t,this.fontSize,this.beginAtZero,this.integersOnly);e.extend(this,i)},xLabels:t,font:e.fontString(this.options.scaleFontSize,this.options.scaleFontStyle,this.options.scaleFontFamily),lineWidth:this.options.scaleLineWidth,lineColor:this.options.scaleLineColor,showHorizontalLines:this.options.scaleShowHorizontalLines,showVerticalLines:this.options.scaleShowVerticalLines,gridLineWidth:this.options.scaleShowGridLines?this.options.scaleGridLineWidth:0,gridLineColor:this.options.scaleShowGridLines?this.options.scaleGridLineColor:"rgba(0,0,0,0)",padding:this.options.showScale?0:this.options.barShowStroke?this.options.barStrokeWidth:0,showLabels:this.options.scaleShowLabels,display:this.options.showScale};this.options.scaleOverride&&e.extend(n,{calculateYRange:e.noop,steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}),this.scale=new this.ScaleClass(n)},addData:function(t,i){e.each(t,function(t,e){this.datasets[e].bars.push(new this.BarClass({value:t,label:i,x:this.scale.calculateBarX(this.datasets.length,e,this.scale.valuesCount+1),y:this.scale.endPoint,width:this.scale.calculateBarWidth(this.datasets.length),base:this.scale.endPoint,strokeColor:this.datasets[e].strokeColor,fillColor:this.datasets[e].fillColor}))},this),this.scale.addXLabel(i),this.update()},removeData:function(){this.scale.removeXLabel(),e.each(this.datasets,function(t){t.bars.shift()},this),this.update()},reflow:function(){e.extend(this.BarClass.prototype,{y:this.scale.endPoint,base:this.scale.endPoint});
 var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.update(t)},draw:function(t){var i=t||1;this.clear();this.chart.ctx;this.scale.draw(i),e.each(this.datasets,function(t,s){e.each(t.bars,function(t,e){t.hasValue()&&(t.base=this.scale.endPoint,t.transition({x:this.scale.calculateBarX(this.datasets.length,s,e),y:this.scale.calculateY(t.value),width:this.scale.calculateBarWidth(this.datasets.length)},i).draw())},this)},this)}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={segmentShowStroke:!0,segmentStrokeColor:"#fff",segmentStrokeWidth:2,percentageInnerCutout:50,animationSteps:100,animationEasing:"easeOutBounce",animateRotate:!0,animateScale:!1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<segments.length; i++){%><li><span style="background-color:<%=segments[i].fillColor%>"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Doughnut",defaults:s,initialize:function(t){this.segments=[],this.outerRadius=(e.min([this.chart.width,this.chart.height])-this.options.segmentStrokeWidth/2)/2,this.SegmentArc=i.Arc.extend({ctx:this.chart.ctx,x:this.chart.width/2,y:this.chart.height/2}),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getSegmentsAtEvent(t):[];e.each(this.segments,function(t){t.restore(["fillColor"])}),e.each(i,function(t){t.fillColor=t.highlightColor}),this.showTooltip(i)}),this.calculateTotal(t),e.each(t,function(t,i){this.addData(t,i,!0)},this),this.render()},getSegmentsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.segments,function(t){t.inRange(s.x,s.y)&&i.push(t)},this),i},addData:function(t,i,e){var s=i||this.segments.length;this.segments.splice(s,0,new this.SegmentArc({value:t.value,outerRadius:this.options.animateScale?0:this.outerRadius,innerRadius:this.options.animateScale?0:this.outerRadius/100*this.options.percentageInnerCutout,fillColor:t.color,highlightColor:t.highlight||t.color,showStroke:this.options.segmentShowStroke,strokeWidth:this.options.segmentStrokeWidth,strokeColor:this.options.segmentStrokeColor,startAngle:1.5*Math.PI,circumference:this.options.animateRotate?0:this.calculateCircumference(t.value),label:t.label})),e||(this.reflow(),this.update())},calculateCircumference:function(t){return 2*Math.PI*(t/this.total)},calculateTotal:function(t){this.total=0,e.each(t,function(t){this.total+=t.value},this)},update:function(){this.calculateTotal(this.segments),e.each(this.activeElements,function(t){t.restore(["fillColor"])}),e.each(this.segments,function(t){t.save()}),this.render()},removeData:function(t){var i=e.isNumber(t)?t:this.segments.length-1;this.segments.splice(i,1),this.reflow(),this.update()},reflow:function(){e.extend(this.SegmentArc.prototype,{x:this.chart.width/2,y:this.chart.height/2}),this.outerRadius=(e.min([this.chart.width,this.chart.height])-this.options.segmentStrokeWidth/2)/2,e.each(this.segments,function(t){t.update({outerRadius:this.outerRadius,innerRadius:this.outerRadius/100*this.options.percentageInnerCutout})},this)},draw:function(t){var i=t?t:1;this.clear(),e.each(this.segments,function(t,e){t.transition({circumference:this.calculateCircumference(t.value),outerRadius:this.outerRadius,innerRadius:this.outerRadius/100*this.options.percentageInnerCutout},i),t.endAngle=t.startAngle+t.circumference,t.draw(),0===e&&(t.startAngle=1.5*Math.PI),e<this.segments.length-1&&(this.segments[e+1].startAngle=t.endAngle)},this)}}),i.types.Doughnut.extend({name:"Pie",defaults:e.merge(s,{percentageInnerCutout:0})})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleShowGridLines:!0,scaleGridLineColor:"rgba(0,0,0,.05)",scaleGridLineWidth:1,scaleShowHorizontalLines:!0,scaleShowVerticalLines:!0,bezierCurve:!0,bezierCurveTension:.4,pointDot:!0,pointDotRadius:4,pointDotStrokeWidth:1,pointHitDetectionRadius:20,datasetStroke:!0,datasetStrokeWidth:2,datasetFill:!0,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].strokeColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Line",defaults:s,initialize:function(t){this.PointClass=i.Point.extend({strokeWidth:this.options.pointDotStrokeWidth,radius:this.options.pointDotRadius,display:this.options.pointDot,hitDetectionRadius:this.options.pointHitDetectionRadius,ctx:this.chart.ctx,inRange:function(t){return Math.pow(t-this.x,2)<Math.pow(this.radius+this.hitDetectionRadius,2)}}),this.datasets=[],this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getPointsAtEvent(t):[];this.eachPoints(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,pointColor:i.pointColor,pointStrokeColor:i.pointStrokeColor,points:[]};this.datasets.push(s),e.each(i.data,function(e,n){s.points.push(new this.PointClass({value:e,label:t.labels[n],datasetLabel:i.label,strokeColor:i.pointStrokeColor,fillColor:i.pointColor,highlightFill:i.pointHighlightFill||i.pointColor,highlightStroke:i.pointHighlightStroke||i.pointStrokeColor}))},this),this.buildScale(t.labels),this.eachPoints(function(t,i){e.extend(t,{x:this.scale.calculateX(i),y:this.scale.endPoint}),t.save()},this)},this),this.render()},update:function(){this.scale.update(),e.each(this.activeElements,function(t){t.restore(["fillColor","strokeColor"])}),this.eachPoints(function(t){t.save()}),this.render()},eachPoints:function(t){e.each(this.datasets,function(i){e.each(i.points,t,this)},this)},getPointsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.datasets,function(t){e.each(t.points,function(t){t.inRange(s.x,s.y)&&i.push(t)})},this),i},buildScale:function(t){var s=this,n=function(){var t=[];return s.eachPoints(function(i){t.push(i.value)}),t},o={templateString:this.options.scaleLabel,height:this.chart.height,width:this.chart.width,ctx:this.chart.ctx,textColor:this.options.scaleFontColor,fontSize:this.options.scaleFontSize,fontStyle:this.options.scaleFontStyle,fontFamily:this.options.scaleFontFamily,valuesCount:t.length,beginAtZero:this.options.scaleBeginAtZero,integersOnly:this.options.scaleIntegersOnly,calculateYRange:function(t){var i=e.calculateScaleRange(n(),t,this.fontSize,this.beginAtZero,this.integersOnly);e.extend(this,i)},xLabels:t,font:e.fontString(this.options.scaleFontSize,this.options.scaleFontStyle,this.options.scaleFontFamily),lineWidth:this.options.scaleLineWidth,lineColor:this.options.scaleLineColor,showHorizontalLines:this.options.scaleShowHorizontalLines,showVerticalLines:this.options.scaleShowVerticalLines,gridLineWidth:this.options.scaleShowGridLines?this.options.scaleGridLineWidth:0,gridLineColor:this.options.scaleShowGridLines?this.options.scaleGridLineColor:"rgba(0,0,0,0)",padding:this.options.showScale?0:this.options.pointDotRadius+this.options.pointDotStrokeWidth,showLabels:this.options.scaleShowLabels,display:this.options.showScale};this.options.scaleOverride&&e.extend(o,{calculateYRange:e.noop,steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}),this.scale=new i.Scale(o)},addData:function(t,i){e.each(t,function(t,e){this.datasets[e].points.push(new this.PointClass({value:t,label:i,x:this.scale.calculateX(this.scale.valuesCount+1),y:this.scale.endPoint,strokeColor:this.datasets[e].pointStrokeColor,fillColor:this.datasets[e].pointColor}))},this),this.scale.addXLabel(i),this.update()},removeData:function(){this.scale.removeXLabel(),e.each(this.datasets,function(t){t.points.shift()},this),this.update()},reflow:function(){var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.update(t)},draw:function(t){var i=t||1;this.clear();var s=this.chart.ctx,n=function(t){return null!==t.value},o=function(t,i,s){return e.findNextWhere(i,n,s)||t},a=function(t,i,s){return e.findPreviousWhere(i,n,s)||t};this.scale.draw(i),e.each(this.datasets,function(t){var h=e.where(t.points,n);e.each(t.points,function(t,e){t.hasValue()&&t.transition({y:this.scale.calculateY(t.value),x:this.scale.calculateX(e)},i)},this),this.options.bezierCurve&&e.each(h,function(t,i){var s=i>0&&i<h.length-1?this.options.bezierCurveTension:0;t.controlPoints=e.splineCurve(a(t,h,i),t,o(t,h,i),s),t.controlPoints.outer.y>this.scale.endPoint?t.controlPoints.outer.y=this.scale.endPoint:t.controlPoints.outer.y<this.scale.startPoint&&(t.controlPoints.outer.y=this.scale.startPoint),t.controlPoints.inner.y>this.scale.endPoint?t.controlPoints.inner.y=this.scale.endPoint:t.controlPoints.inner.y<this.scale.startPoint&&(t.controlPoints.inner.y=this.scale.startPoint)},this),s.lineWidth=this.options.datasetStrokeWidth,s.strokeStyle=t.strokeColor,s.beginPath(),e.each(h,function(t,i){if(0===i)s.moveTo(t.x,t.y);else if(this.options.bezierCurve){var e=a(t,h,i);s.bezierCurveTo(e.controlPoints.outer.x,e.controlPoints.outer.y,t.controlPoints.inner.x,t.controlPoints.inner.y,t.x,t.y)}else s.lineTo(t.x,t.y)},this),s.stroke(),this.options.datasetFill&&h.length>0&&(s.lineTo(h[h.length-1].x,this.scale.endPoint),s.lineTo(h[0].x,this.scale.endPoint),s.fillStyle=t.fillColor,s.closePath(),s.fill()),e.each(h,function(t){t.draw()})},this)}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleShowLabelBackdrop:!0,scaleBackdropColor:"rgba(255,255,255,0.75)",scaleBeginAtZero:!0,scaleBackdropPaddingY:2,scaleBackdropPaddingX:2,scaleShowLine:!0,segmentShowStroke:!0,segmentStrokeColor:"#fff",segmentStrokeWidth:2,animationSteps:100,animationEasing:"easeOutBounce",animateRotate:!0,animateScale:!1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<segments.length; i++){%><li><span style="background-color:<%=segments[i].fillColor%>"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"PolarArea",defaults:s,initialize:function(t){this.segments=[],this.SegmentArc=i.Arc.extend({showStroke:this.options.segmentShowStroke,strokeWidth:this.options.segmentStrokeWidth,strokeColor:this.options.segmentStrokeColor,ctx:this.chart.ctx,innerRadius:0,x:this.chart.width/2,y:this.chart.height/2}),this.scale=new i.RadialScale({display:this.options.showScale,fontStyle:this.options.scaleFontStyle,fontSize:this.options.scaleFontSize,fontFamily:this.options.scaleFontFamily,fontColor:this.options.scaleFontColor,showLabels:this.options.scaleShowLabels,showLabelBackdrop:this.options.scaleShowLabelBackdrop,backdropColor:this.options.scaleBackdropColor,backdropPaddingY:this.options.scaleBackdropPaddingY,backdropPaddingX:this.options.scaleBackdropPaddingX,lineWidth:this.options.scaleShowLine?this.options.scaleLineWidth:0,lineColor:this.options.scaleLineColor,lineArc:!0,width:this.chart.width,height:this.chart.height,xCenter:this.chart.width/2,yCenter:this.chart.height/2,ctx:this.chart.ctx,templateString:this.options.scaleLabel,valuesCount:t.length}),this.updateScaleRange(t),this.scale.update(),e.each(t,function(t,i){this.addData(t,i,!0)},this),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getSegmentsAtEvent(t):[];e.each(this.segments,function(t){t.restore(["fillColor"])}),e.each(i,function(t){t.fillColor=t.highlightColor}),this.showTooltip(i)}),this.render()},getSegmentsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.segments,function(t){t.inRange(s.x,s.y)&&i.push(t)},this),i},addData:function(t,i,e){var s=i||this.segments.length;this.segments.splice(s,0,new this.SegmentArc({fillColor:t.color,highlightColor:t.highlight||t.color,label:t.label,value:t.value,outerRadius:this.options.animateScale?0:this.scale.calculateCenterOffset(t.value),circumference:this.options.animateRotate?0:this.scale.getCircumference(),startAngle:1.5*Math.PI})),e||(this.reflow(),this.update())},removeData:function(t){var i=e.isNumber(t)?t:this.segments.length-1;this.segments.splice(i,1),this.reflow(),this.update()},calculateTotal:function(t){this.total=0,e.each(t,function(t){this.total+=t.value},this),this.scale.valuesCount=this.segments.length},updateScaleRange:function(t){var i=[];e.each(t,function(t){i.push(t.value)});var s=this.options.scaleOverride?{steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}:e.calculateScaleRange(i,e.min([this.chart.width,this.chart.height])/2,this.options.scaleFontSize,this.options.scaleBeginAtZero,this.options.scaleIntegersOnly);e.extend(this.scale,s,{size:e.min([this.chart.width,this.chart.height]),xCenter:this.chart.width/2,yCenter:this.chart.height/2})},update:function(){this.calculateTotal(this.segments),e.each(this.segments,function(t){t.save()}),this.render()},reflow:function(){e.extend(this.SegmentArc.prototype,{x:this.chart.width/2,y:this.chart.height/2}),this.updateScaleRange(this.segments),this.scale.update(),e.extend(this.scale,{xCenter:this.chart.width/2,yCenter:this.chart.height/2}),e.each(this.segments,function(t){t.update({outerRadius:this.scale.calculateCenterOffset(t.value)})},this)},draw:function(t){var i=t||1;this.clear(),e.each(this.segments,function(t,e){t.transition({circumference:this.scale.getCircumference(),outerRadius:this.scale.calculateCenterOffset(t.value)},i),t.endAngle=t.startAngle+t.circumference,0===e&&(t.startAngle=1.5*Math.PI),e<this.segments.length-1&&(this.segments[e+1].startAngle=t.endAngle),t.draw()},this),this.scale.draw()}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers;i.Type.extend({name:"Radar",defaults:{scaleShowLine:!0,angleShowLineOut:!0,scaleShowLabels:!1,scaleBeginAtZero:!0,angleLineColor:"rgba(0,0,0,.1)",angleLineWidth:1,pointLabelFontFamily:"'Arial'",pointLabelFontStyle:"normal",pointLabelFontSize:10,pointLabelFontColor:"#666",pointDot:!0,pointDotRadius:3,pointDotStrokeWidth:1,pointHitDetectionRadius:20,datasetStroke:!0,datasetStrokeWidth:2,datasetFill:!0,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].strokeColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'},initialize:function(t){this.PointClass=i.Point.extend({strokeWidth:this.options.pointDotStrokeWidth,radius:this.options.pointDotRadius,display:this.options.pointDot,hitDetectionRadius:this.options.pointHitDetectionRadius,ctx:this.chart.ctx}),this.datasets=[],this.buildScale(t),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getPointsAtEvent(t):[];this.eachPoints(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,pointColor:i.pointColor,pointStrokeColor:i.pointStrokeColor,points:[]};this.datasets.push(s),e.each(i.data,function(e,n){var o;this.scale.animation||(o=this.scale.getPointPosition(n,this.scale.calculateCenterOffset(e))),s.points.push(new this.PointClass({value:e,label:t.labels[n],datasetLabel:i.label,x:this.options.animation?this.scale.xCenter:o.x,y:this.options.animation?this.scale.yCenter:o.y,strokeColor:i.pointStrokeColor,fillColor:i.pointColor,highlightFill:i.pointHighlightFill||i.pointColor,highlightStroke:i.pointHighlightStroke||i.pointStrokeColor}))},this)},this),this.render()},eachPoints:function(t){e.each(this.datasets,function(i){e.each(i.points,t,this)},this)},getPointsAtEvent:function(t){var i=e.getRelativePosition(t),s=e.getAngleFromPoint({x:this.scale.xCenter,y:this.scale.yCenter},i),n=2*Math.PI/this.scale.valuesCount,o=Math.round((s.angle-1.5*Math.PI)/n),a=[];return(o>=this.scale.valuesCount||0>o)&&(o=0),s.distance<=this.scale.drawingArea&&e.each(this.datasets,function(t){a.push(t.points[o])}),a},buildScale:function(t){this.scale=new i.RadialScale({display:this.options.showScale,fontStyle:this.options.scaleFontStyle,fontSize:this.options.scaleFontSize,fontFamily:this.options.scaleFontFamily,fontColor:this.options.scaleFontColor,showLabels:this.options.scaleShowLabels,showLabelBackdrop:this.options.scaleShowLabelBackdrop,backdropColor:this.options.scaleBackdropColor,backdropPaddingY:this.options.scaleBackdropPaddingY,backdropPaddingX:this.options.scaleBackdropPaddingX,lineWidth:this.options.scaleShowLine?this.options.scaleLineWidth:0,lineColor:this.options.scaleLineColor,angleLineColor:this.options.angleLineColor,angleLineWidth:this.options.angleShowLineOut?this.options.angleLineWidth:0,pointLabelFontColor:this.options.pointLabelFontColor,pointLabelFontSize:this.options.pointLabelFontSize,pointLabelFontFamily:this.options.pointLabelFontFamily,pointLabelFontStyle:this.options.pointLabelFontStyle,height:this.chart.height,width:this.chart.width,xCenter:this.chart.width/2,yCenter:this.chart.height/2,ctx:this.chart.ctx,templateString:this.options.scaleLabel,labels:t.labels,valuesCount:t.datasets[0].data.length}),this.scale.setScaleSize(),this.updateScaleRange(t.datasets),this.scale.buildYLabels()},updateScaleRange:function(t){var i=function(){var i=[];return e.each(t,function(t){t.data?i=i.concat(t.data):e.each(t.points,function(t){i.push(t.value)})}),i}(),s=this.options.scaleOverride?{steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}:e.calculateScaleRange(i,e.min([this.chart.width,this.chart.height])/2,this.options.scaleFontSize,this.options.scaleBeginAtZero,this.options.scaleIntegersOnly);e.extend(this.scale,s)},addData:function(t,i){this.scale.valuesCount++,e.each(t,function(t,e){var s=this.scale.getPointPosition(this.scale.valuesCount,this.scale.calculateCenterOffset(t));this.datasets[e].points.push(new this.PointClass({value:t,label:i,x:s.x,y:s.y,strokeColor:this.datasets[e].pointStrokeColor,fillColor:this.datasets[e].pointColor}))},this),this.scale.labels.push(i),this.reflow(),this.update()},removeData:function(){this.scale.valuesCount--,this.scale.labels.shift(),e.each(this.datasets,function(t){t.points.shift()},this),this.reflow(),this.update()},update:function(){this.eachPoints(function(t){t.save()}),this.reflow(),this.render()},reflow:function(){e.extend(this.scale,{width:this.chart.width,height:this.chart.height,size:e.min([this.chart.width,this.chart.height]),xCenter:this.chart.width/2,yCenter:this.chart.height/2}),this.updateScaleRange(this.datasets),this.scale.setScaleSize(),this.scale.buildYLabels()},draw:function(t){var i=t||1,s=this.chart.ctx;this.clear(),this.scale.draw(),e.each(this.datasets,function(t){e.each(t.points,function(t,e){t.hasValue()&&t.transition(this.scale.getPointPosition(e,this.scale.calculateCenterOffset(t.value)),i)},this),s.lineWidth=this.options.datasetStrokeWidth,s.strokeStyle=t.strokeColor,s.beginPath(),e.each(t.points,function(t,i){0===i?s.moveTo(t.x,t.y):s.lineTo(t.x,t.y)},this),s.closePath(),s.stroke(),s.fillStyle=t.fillColor,s.fill(),e.each(t.points,function(t){t.hasValue()&&t.draw()})},this)}})}.call(this);
+/**
+ * The Circle Menu object represents a choice menu of multiple menu items.<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.CircleMenu,
+ *    items: [
+ *    {
+ *        caption: 'music',
+ *        visible: false,
+ *        img: 'img/music.png'
+ *    },
+ *    {
+ *        caption: 'maps',
+ *        img: 'img/maps.png'
+ *    }],
+ *    onclick: function(item) {
+ *        console.log(item.caption + ' clicked');
+ *    }
+ *}
+ * @namespace CircleMenu
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CircleMenuItem[]} [items] - The items property is an array of menu items to be displayed in the control
+ * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a circle menu control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
+ * @property {CircleMenuClickEvent} [onclick] - This event fires when an item in the menu is clicked. The parameter passed to the event is [the item]{@link $ui.CircleMenuItem} which was clicked.
+ */
 function $ui_CircleMenu(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-circle-menu');
@@ -6427,7 +8057,12 @@ function $ui_CircleMenu(object, screen) {
 	}
 	object._addItem = object._addItem.bind(object);
 	
-	// Public function to add a new item to the list
+	/** 
+	 * You can add an item to the end of the menu by calling the addItem function and passing in an object that matches the a menu item
+	 * @function addItem
+	 * @memberof $ui.CircleMenu
+	 * @param {$ui.CircleMenuItem} item - Item to be added to the menu
+	 */
 	object.addItem = function(item) {
 		if (this._addItem(item)) {
 			this.items.push(item);
@@ -6439,7 +8074,12 @@ function $ui_CircleMenu(object, screen) {
 	}
 	object.addItem = object.addItem.bind(object);
 	
-	// Refresh all the items in the list
+	/** 
+	 * You can refresh all the items in a menu by calling the refreshItems function with an array of new items
+	 * @function refreshItems
+	 * @memberof $ui.CircleMenu
+	 * @param {$ui.CircleMenuItem[]} items - Array of items to refresh the menu
+	 */
 	object.refreshItems = function(itemArray) {
 		if (itemArray == undefined) return; // No data provided
 		var i,
@@ -6465,7 +8105,12 @@ function $ui_CircleMenu(object, screen) {
 	}
 	object.refreshItems = object.refreshItems.bind(object);
 	
-	// Add a batch of items to the end of a list
+	/** 
+	 * This function is much like the refreshItems function but instead it loads a list of circle menu items to the end of the current menu and does not replace the existing menu items.
+	 * @function addItemBatch
+	 * @memberof $ui.CircleMenu
+	 * @param {$ui.CircleMenuItem[]} items - Array of items to be added to the menu
+	 */
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
@@ -6483,7 +8128,13 @@ function $ui_CircleMenu(object, screen) {
 	}
 	object.addItemBatch = object.addItemBatch.bind(object);
 	
-	// Public function to insert a new item into the list
+	/** 
+	 * Insert item works similar to addItem but instead will insert the item into the menu at the index specified. If an invalid index is specified it will result in failure to insert the item. To insert an item at the top of a menu call insert with the index of 0.
+	 * @function insertItem
+	 * @memberof $ui.CircleMenu
+	 * @param {$ui.CircleMenuItem} item - Item to be inserted into the menu
+	 * @param {number} index - Index to insert the item
+	 */
 	object.insertItem = function(item, index) {
 		item.parent = this;
 		if (index < 0) {
@@ -6532,8 +8183,22 @@ function $ui_CircleMenu(object, screen) {
 	
 	return object.dom;
 }
-
 $ui_CircleMenu.prototype = new $ui_CoreComponent();
+
+/**
+ * The {@link $ui.CircleMenu} <b>onclick</b> event will fire when the user clicks a menu item
+ * @callback CircleMenuClickEvent
+ * @param {$ui.CircleMenuItem} item - The menu item that the user clicked
+ */
+/**
+ * A circle menu item is used within a [Circle Menu]{@link $ui.CircleMenu}.  <b>NOTE: It cannot be defined on its own outside of a circle menu</b> 
+ * @namespace CircleMenuItem
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} caption - Text to appear on the menu item
+ * @property {boolean} [visible=true] - Visibility state of the menu item
+ * @property {string} img - Path to the image to be displayed in the menu item
+ */
 function $ui_CircleMenuItem(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'menu-item');
@@ -6544,8 +8209,7 @@ function $ui_CircleMenuItem(object, screen) {
 	$ui.addClass(object.dom.inner,'circle');
 	object.dom.appendChild(object.dom.inner);
 	object.dom.inner.onclick = function() {
-		var event = new $ui.InteractionEvent(this.model.screen.id, this.model.id, 'data-interaction-click');
-		$ui.raiseInteractionEvent(event);
+		this.model._raiseInteractionEvent('data-interaction-click');
 		$ui.playTouchSound();
 		if (this.model.parent.onclick) {
 			this.model.parent.onclick(this.model);
@@ -6604,6 +8268,29 @@ function $ui_CircleMenuItem(object, screen) {
 }
 
 $ui_CircleMenuItem.prototype = new $ui_CoreComponent();
+/**
+ * The Control Group object represents a grouping of multiple different controls.  This component can be useful when you want to group different controls together for toggling visibility.<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.ControlGroup,
+ *    id: 'myGrouping',
+ *    content: [
+ *       {
+ *           component: $ui.Header,
+ *           caption: 'My Header',
+ *       },
+ *       {
+ *           component: $ui.List,
+ *           style: $ui.GenericListItem
+ *       }
+ *    ]
+ *}
+ * @namespace ControlGroup
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreComponent[]} [content] - The content property is an array of control definitions to be displayed in the control
+*/
 function $ui_ControlGroup(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-control-group');
@@ -6626,9 +8313,15 @@ function $ui_ControlGroup(object, screen) {
 }
 
 $ui_ControlGroup.prototype = new $ui_CoreComponent();
+/**
+ * The CoreTile object represents the abstract base class for all tile controls. <br><br>
+ * <b>NOTE: This base class should never be declared in a screen's declaration. It will not actually render and return a tile. It is simply an abstract base class.</b>
+ * @namespace CoreTile
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ */
 function $ui_CoreTile(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
-	
 	if (object) {
 		$ui.addClass(object.dom,'ui-tile');
 		object._contentShowing = false;
@@ -6636,7 +8329,13 @@ function $ui_CoreTile(object, screen) {
 			object.dom.style.borderColor = $ui.theme.color;
 		}
 		
-		// See if a style was defined
+		/** 
+		 * The size of a tile. This property should be set by the internal code of a derivative Tile class.
+		 * @name _size
+		 * @memberof $ui.CoreTile
+		 * @protected
+		 * @type {$ui.TileSize}
+		 */
 		if (object._size && (object._size != $ui.TileSize.STANDARD)) {
 			$ui.addClass(object.dom, object._size);
 		}
@@ -6653,7 +8352,12 @@ function $ui_CoreTile(object, screen) {
 		$ui.addClass(object.dom.contentDiv, 'content');
 		object.dom.appendChild(object.dom.contentDiv);	
 		
-		// Public function to toggle the display of content
+		/** 
+		 * This function is to be called when a tile needs to be toggled between the loading state and content state. 
+		 * @function showContent
+		 * @memberof $ui.CoreTile
+		 * @param {boolean} value - The value parameter represents the boolean state of visibility of the tile content.
+		 */
 		object.showContent = function(value) {
 			if (value == this._contentShowing) return;
 			if (value) {
@@ -6668,8 +8372,16 @@ function $ui_CoreTile(object, screen) {
 		object.showContent = object.showContent.bind(object);
 	}
 }
-
 $ui_CoreTile.prototype = new $ui_CoreComponent();
+
+
+/**
+ * The CoreTileDonutChart is the abstract base class of any donut chart tiles. This base class should never be declared in a screen's declaration.
+ * <b>NOTE: It will not actually render and return a tile. It is simply an abstract base class.</b>
+ * @namespace CoreTileDonutChart
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ */
 function $ui_CoreTileDonutChart(object, screen) {
 	$ui_CoreTile.call(this, object, screen);
 	if (object) {
@@ -6687,7 +8399,25 @@ function $ui_CoreTileDonutChart(object, screen) {
 		// Create our chart
 		object.chart = new Chart(object.dom.canvas.getContext('2d'));
 		
-		// Set the data for the chart
+		/** 
+		 * This function takes a value parameter which is an array of data point objects. These data point objects defined a section of the chart and consist of two properties representing value and color
+		 * @function _setData
+		 * @memberof $ui.CoreTileDonutChart
+		 * @param {object[]} value - Array of data points. <br/><b>Example:</b>
+		 * <pre>
+		 * [
+		 *   {
+		 *      value: 10,
+		 *      color: '#000000',
+		 *   },
+		 *   {
+		 *      value: 90,
+		 *      color: '#FEFEFE',
+		 *   }
+		 * ]
+		 * </pre>
+		 * @protected
+		 */
 		object._setData = function(data) {
 			this.chart.Doughnut(data,{showTooltips: false, segmentStrokeColor : "transparent",});
 		}
@@ -6698,7 +8428,13 @@ function $ui_CoreTileDonutChart(object, screen) {
 		$ui.addClass(object.dom.caption,'caption');
 		object.dom.contentDiv.appendChild(object.dom.caption);
 		
-		// Set the caption for the chart
+		/** 
+		 * This function will set the caption of the Donut chart.
+		 * @function _setCaption
+		 * @memberof $ui.CoreTileDonutChart
+		 * @param {string} value - Text for the caption
+		 * @protected
+		 */
 		object._setCaption = function(value) {
 			this.dom.caption.innerHTML = value;
 		}
@@ -6711,7 +8447,13 @@ function $ui_CoreTileDonutChart(object, screen) {
 		var color = ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1)  ? $ui.color_DARK : $ui.color_LIGHT
 		object.dom.accent.style.color = color;
 		
-		// Set the accent text for the chart
+		/** 
+		 * This function will set the accent text of the Donut chart
+		 * @function _setAccent
+		 * @memberof $ui.CoreTileDonutChart
+		 * @param {string} value - Text for the accent
+		 * @protected
+		 */
 		object._setAccent = function(value) {
 			if (value == undefined) {
 				$ui.removeClass(this.dom.contentDiv, 'has-accent');
@@ -6728,6 +8470,24 @@ function $ui_CoreTileDonutChart(object, screen) {
 }
 
 $ui_CoreTileDonutChart.prototype = new $ui_CoreTile();
+/**
+ * The CoreTileGauge is the abstract base class of any gauge chart tiles.
+ * <b>NOTE: It will not actually render and return a tile. It is simply an abstract base class.</b><br><br>
+ * <b>Sample Declaration:</b>
+ * <pre>
+ * {
+ *    min: 0,
+ *    max: 1.5,
+ *    value: 1
+ *}
+ * </pre>
+ * @namespace CoreTileGauge
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number} min - This is the minimum numeric value that you want to display at the left hand side of the gauge
+ * @property {number} max - This is the maximum numeric value that you want to display at the right hand side of the gauge
+ * @property {number} value - The numeric value you want to display. This should be between min and max.
+ */
 function $ui_CoreTileGauge(object, screen) {
 	if (object) object._size = undefined; // Always square
 	$ui_CoreTile.call(this, object, screen);
@@ -6739,7 +8499,13 @@ function $ui_CoreTileGauge(object, screen) {
 		$ui.addClass(object.dom.titleDiv,'title');
 		object.dom.contentDiv.appendChild(object.dom.titleDiv);
 		
-		// Internal function to set the title
+		/** 
+		 * This function will set the title of the gauge chart.
+		 * @function _setTitle
+		 * @memberof $ui.CoreTileGauge
+		 * @param {string} value - Value to be used as the title
+		 * @protected
+		 */
 		object._setTitle = function(value) {
 			if (value == undefined || value == null) value = '';
 			object.dom.titleDiv.textContent = value;
@@ -6780,7 +8546,13 @@ function $ui_CoreTileGauge(object, screen) {
 		$ui.addClass(object.dom.accentLabel, 'label');
 		$ui.addClass(object.dom.accentLabel, 'center');
 		object.dom.labels.appendChild(object.dom.accentLabel);
-		// Internal function to set the accent text
+		/** 
+		 * This function will set the title of the gauge chart.
+		 * @function _setAccent
+		 * @memberof $ui.CoreTileGauge
+		 * @param {string} value - Value to use as the accent text
+		 * @protected
+		 */
 		object._setAccent = function(value) {
 			if (value == undefined || value == null) value = '';
 			object.dom.accentLabel.textContent = value;
@@ -6869,12 +8641,36 @@ function $ui_CoreTileGauge(object, screen) {
 			this._renderLoop();
 		}
 		object._populateData = object._populateData.bind(object);
-		
-		
 	}
 }
 
 $ui_CoreTileGauge.prototype = new $ui_CoreTile();
+/**
+ * The DockLayout object represents a layout that allows for a static content and also scrolling content. The DockLayout will size itself to all the available space provided by its parent control.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.DockLayout,
+ *    dock: [
+ *        {
+ *            component: $ui.SegmentedControl,
+ *            options: ['one','two']
+ *        }
+ *    ],
+ *    content: [
+ *        {
+ *            component: $ui.List
+ *        }
+ *    ]
+ *}
+ * </pre>
+ * @namespace DockLayout
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreComponent[]} dock - This array holds all of the component definitions for the docked content
+ * @property {$ui.CoreComponent[]} content - This array holds all of the component definitions for the scrollable area of the dock layout
+ * @property {$ui.DockLayout.DockLocation} [location=$ui.DockLayout.DockLocation.TOP] - This property allows you to set the location of the docked content.
+ */
 function $ui_DockLayout(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-dock-layout');
@@ -6926,6 +8722,25 @@ function $ui_DockLayout(object, screen) {
 }
 
 $ui_DockLayout.prototype = new $ui_CoreComponent();
+/**
+ * The generic list item type is used with the {@link $ui.List} component. A List component will define the type of list item it wishes to display by setting the <b>style</b> property of the control. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   img: 'thumbnails/foo.png',
+ *   title: 'This is my title',
+ *   accent: '6 hours ago',
+ *   caption: 'My summary description'
+ *}
+ * </pre>
+ * @namespace GenericListItem
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} [img] - Represents the path to the image that will appear in the list item
+ * @property {string} title - Represents the main title to display
+ * @property {string} [accent] - Represents the accent text to go along with the title and caption
+ * @property {string} [caption] - Represents the main text to show in the list item
+ */
 function $ui_GenericListItem(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom, 'ui-generic-list-item');
@@ -7019,6 +8834,20 @@ function $ui_GenericListItem(object, screen) {
 }
 
 $ui_GenericListItem.prototype = new $ui_CoreComponent();
+/**
+ * The Header object represents a screen separator with a caption.  This component can be useful when you wish to label different areas of the screen.  Headers can also be used as
+ * an item in a {@link $ui.List} control<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.Header,
+ *   caption: 'My Lovely Header'
+ * }
+ * @namespace Header
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} [caption] - The caption to be displayed in the control
+*/
 function $ui_Header(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-header');
@@ -7032,6 +8861,21 @@ function $ui_Header(object, screen) {
 }
 
 $ui_Header.prototype = new $ui_CoreComponent();
+/**
+ * The image list item type is used with the {@link $ui.List} component. A List component will define the type of list item it wishes to display by setting the <b>style</b> property of the control. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   img: 'thumbnails/foo.png',
+ *   caption: 'My summary description'
+ *}
+ * </pre>
+ * @namespace ImageListItem
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} img - Represents the path to the image that will appear in the list item
+ * @property {string} [caption] - Represents the main text to show in the list item
+ */
 function $ui_ImageListItem(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom, 'ui-image-list-item');
@@ -7083,21 +8927,68 @@ function $ui_ImageListItem(object, screen) {
 }
 
 $ui_ImageListItem.prototype = new $ui_CoreComponent();
-// This provides an interface for a screen's background image
+/**
+ * This object defines the type of background to be shown on the screen.<br><br>
+ * <b>Sample Code:</b><br>
+ * <pre>
+ * {
+ *   img: 'img/background.png', 
+ *   repeat: true, 
+ *}
+ * </pre>
+ * @class ScreenBackground
+ * @param {string} img - Path to the background image
+ * @param {boolean} [repeat=false] - Whether or not you want the background repeated/tiled
+ */
 function ScreenBackground(img, repeat) {
+	/** 
+	 * Path to the background image
+	 * @member {string} img
+	 * @memberOf ScreenBackground
+	 */
 	if (img == null) throw new Error('ScreenBackground: img cannot be null');
 	if (img == undefined) throw new Error('ScreenBackground: img cannot be undefined');
 	this.img = img;
+	/** 
+	 * Whether or not you want the background repeated/tiled
+	 * @member {boolean} [repeat=false]
+	 * @memberOf ScreenBackground
+	 */
 	if (repeat == undefined || repeat == null) {
 		this.repeat = false;
 	}
 }
+/**
+ * The segmented control provides an actionable item for the user to choose between multiple options.
+ * A segmented control's width will fill the width of the container in which it is a member.<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.SegmentedControl,
+ *   selectedIndex: 0,
+ *   options: ['One', 'Two', 'Three'],
+ *   onclick: function() {
+ *      alert('You clicked: ' + this.options[this.selectedIndex]);
+ *   }
+ *}
+ * @namespace SegmentedControl
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {number} [selectedIndex=0] - Represents the index of the option you want to be selected. This property will also be updated whenever a user selects an option from the control. 
+ * @property {string[]} options - This property represents the options provided by the control. It is an array of string values that will be displayed
+ * @property {SegmentedClickEvent} [onclick] - The onclick event will fire when the user selects/clicks an option in the control. You can retrieve which option was selected by inspecting the <b>selectedIndex</b> property.
+ */
 function $ui_SegmentedControl(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-segmented-control');	
 	object.domOptions = [];
 	
-	// Public function to set the selected index for the control
+	/** 
+	 * You can set the selected index for the control by using this function. This function will also raise the <i>onclick</i> event as though a user just clicked the control.
+	 * @function setSelectedIndex
+	 * @memberof $ui.SegmentedControl
+	 * @param {number} index - Item to be added to the menu
+	 */
 	object.setSelectedIndex = function(index) {
 		if (this.selectedIndex != index) {
 			this.selectedIndex = index;
@@ -7181,8 +9072,36 @@ function $ui_SegmentedControl(object, screen) {
 	
 	return object.dom;
 }
-
 $ui_SegmentedControl.prototype = new $ui_CoreComponent();
+
+/**
+ * The {@link $ui.SegmentedControl} <b>onclick</b> event will fire when the user makes a selection in the control
+ * @callback SegmentedClickEvent
+ */
+/**
+ * The SplitView object represents two vertical columns for layout components. The SplitView will size itself to all the available space provided by its parent control.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.SplitView,
+ *    left: [
+ *        {
+ *            component: $ui.SegmentedControl
+ *        }
+ *    ],
+ *    right: [
+ *        {
+ *            component: $ui.Spinner
+ *        }
+ *    ]
+ * }
+ * </pre>
+ * @namespace SplitView
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreComponent[]} left - This array holds all of the component definitions for the left side of the split view
+ * @property {$ui.CoreComponent[]} right - This array holds all of the component definitions for the right side of the split view
+ */
 function $ui_SplitView(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-split-view');
@@ -7230,6 +9149,25 @@ function $ui_SplitView(object, screen) {
 }
 
 $ui_SplitView.prototype = new $ui_CoreComponent();
+/**
+ * The Tab object represents a tab within a {@link $ui.TabbedPane}.  A tab represents a container of multiple other controls
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.Tab,
+ *    content: [
+ *        {
+ *            component: $ui.Spinner
+ *        }
+ *    ]
+ * }
+ * </pre>
+ * @namespace Tab
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreComponent[]} content - This array holds all of the component definitions to be displayed in the tab
+ * @property {boolean} [selected=false] - This property, when set to <i>true</i> will specify that the tab should be the default selected tab in the [Tabbed Pane]{@link $ui.TabbedPane}.  The Tabbed Pane will select only the first tab it encounters with selected set to <i>true</i> as the selected tab.
+ */
 function $ui_Tab(object, screen) {
 	// All tabs are invisible by default
 	object.visible = false;
@@ -7258,6 +9196,26 @@ function $ui_Tab(object, screen) {
 }
 
 $ui_Tab.prototype = new $ui_CoreComponent();
+/**
+ * The TabbedPane object represents a container that has one or more {@link $ui.Tab} objects.<br><br>
+ * A Tabbed Pane will cover the entire area of the control it is contained by. The control will cycle through all of the defined Tabs and see which one has been specified as the first selected tab. If no tabs are found with the specified <b>selected:true</b> property, it will select the first tab in the list.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TabbedPane,
+ *    tabs: [
+ *        {
+ *            component: $ui.Tab,
+ *            selected: true
+ *        }
+ *    ]
+ * }
+ * </pre>
+ * @namespace TabbedPane
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.Tab[]} content - This array holds all of the {@link $ui.Tab} objects that are to be controlled by the tabbed pane
+*/
 function $ui_TabbedPane(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-tabbed-pane');
@@ -7285,7 +9243,12 @@ function $ui_TabbedPane(object, screen) {
 		}
 	}
 	
-	// Public function to select a tab
+	/** 
+	 * This function will set the selected tab to the value passed in as a parameter
+	 * @function selectTab
+	 * @memberof $ui.TabbedPane
+	 * @param {$ui.Tab} tab - Tab to select
+	 */
 	object.selectTab = function(tab) {
 		if (tab == undefined) return;
 		if (tab.component != $ui.Tab) return;
@@ -7326,6 +9289,25 @@ function $ui_TabbedPane(object, screen) {
 }
 
 $ui_TabbedPane.prototype = new $ui_CoreComponent();
+/**
+ * The Tile Group object represents a container that holds one or more tiles that inherit from {@link $ui.CoreTile}.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileGroup,
+ *    tiles: [
+ *        {
+ *            component: $ui.TileCool,
+ *            value: 70
+ *        {
+ *    ]
+ * }
+ * </pre>
+ * @namespace TileGroup
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreTile[]} tiles - This array holds all of the Tiles which are to be displayed
+ */
 function $ui_TileGroup(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-tile-group');
@@ -7501,6 +9483,31 @@ function $ui_TileGroup(object, screen) {
 }
 
 $ui_TileGroup.prototype = new $ui_CoreComponent();
+/**
+ * This is the object that represents a window instance in a head unit. It derives from {@link $ui.CoreScreen}. A WindowPane is declared as a JavaScript function and has various different properties. 
+ * When a WindowPane is pushed onto the stack a new instance of the screen will be created and rendered.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * function MyWindowPane() {
+ *   this.component = $ui.WindowPane;
+ *   this.content = [
+ *       {
+ *          component: $ui.SegmentedControl,
+ *       }
+ *   ];
+ *
+ *   this.onshow = function() {
+ *      console.log('I was just shown');
+ *   }
+ * }
+ * </pre>
+ * @namespace WindowPane
+ * @memberof $ui
+ * @extends $ui.CoreScreen
+ * @property {ScreenBackground} [background] - This object defines the type of background to be shown on the screen
+ * @property {$ui.CoreComponent[]} content - This object array specifies the list of controls that will be rendered in this screen
+ * @property {string} [backCaption] - This property defines the text you would like to appear on the title bar with a back button. If this is left <i>undefined</i> then no back button will appear
+ */
 function $ui_WindowPane(object, data) {
 	$ui_CoreScreen.call(this, object, data);
 	
@@ -7536,7 +9543,12 @@ function $ui_WindowPane(object, data) {
 		$ui.addClass(object.dom.backgroundDiv,'background');
 		object.dom.appendChild(object.dom.backgroundDiv);
 
-		// Set the background image for a screen
+		/** 
+		 * Set the background for the screen
+		 * @function setBackground
+		 * @memberof $ui.WindowPane
+		 * @param {ScreenBackground} screenBackground - The background object to use for the screen.
+		 */
 		object.setBackground = function(screenBackground) {
 			// Clear existing background
 			if (this.background) {
@@ -9481,4 +11493,3 @@ function $ui_TileTimer(object, screen) {
 }
 
 $ui_TileTimer.prototype = new $ui_CoreTile();
-

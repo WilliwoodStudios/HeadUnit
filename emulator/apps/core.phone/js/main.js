@@ -24,7 +24,7 @@ function main() {
 								} else {
 									this.screen.tabbedPane.selectTab(this.screen.recentCallsTab);
 									if (this.screen.callsProvider.data == undefined) {
-										$system.phone.getCallList(this.screen.updateCallsList);
+										$system.phone.getCallLog(this.screen.updateCallLog);
 									}
 								}
 							}
@@ -151,8 +151,8 @@ function main() {
 	this.updateContactList = this.updateContactList.bind(this);
 	
 	// Populate the calls list provider
-	this.updateCallsList = function(data) {
+	this.updateCallLog = function(data) {
 		this.callsProvider.setData(data);
 	}
-	this.updateCallsList = this.updateCallsList.bind(this);
+	this.updateCallLog = this.updateCallLog.bind(this);
 }

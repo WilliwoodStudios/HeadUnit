@@ -3,23 +3,19 @@
         <meta charset="utf-8" />
         <meta name="format-detection" content="telephone=no" />
 		
-        <!-- Emulator Toolkit -->
-		<script type="text/javascript" src="$emulator/$emulator.js"></script>
-		<link rel="stylesheet" type="text/css" href="$emulator/$emulator.css"></link>
+        <!-- UI Toolkit -->
+		<script type="text/javascript" src="js/$emulator.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/$emulator.css"></link>
+		
+		<!-- System Services -->
+		<script type="text/javascript" src="js/$system.js"></script>
+		<script type="text/javascript" src="js/$core.js"></script>
 		
 		<!-- Chrome Code -->
 		<script type="text/javascript" src="js/mainMenu.js"></script>
 		<script type="text/javascript" src="js/chrome.js"></script>
 		<script type="text/javascript" src="js/wedge-DriverTemperature.js"></script>
 		<script type="text/javascript" src="js/wedge-PassengerTemperature.js"></script>
-		
-		<!-- Emulated System Services -->
-		<script type="text/javascript" src="js/PlayerMediaSource.js"></script>
-		<script type="text/javascript" src="js/audioManager.js"></script>
-		<script type="text/javascript" src="js/contactsManager.js"></script>
-		<script type="text/javascript" src="js/phoneManager.js"></script>
-		<script type="text/javascript" src="js/$system.js"></script>
-		<script type="text/javascript" src="js/$core.js"></script>
 		
 		<!-- viewport -->
 		<meta name="viewport" content="initial-scale=1.0,user-scalable=no">
@@ -42,9 +38,11 @@
 				} else {
 					config.theme.color = $system.Color.ALIZARIN; 
 				}
+				
 				$system.init(config);
+				
 				// Initialize UI
-				$ui.init(screenChrome, config.theme);	
+				$ui.init(screenChrome, config.theme);
 				$emulator.chrome = $ui.screens[0];
 			}
 			// Initialize our toolkit

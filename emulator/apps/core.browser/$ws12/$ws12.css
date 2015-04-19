@@ -1,4 +1,4 @@
-/* $ws12 VERSION: 1.0.0.2872*/
+/* $ws12 VERSION: 1.0.0.2888*/
 body,
 html {
   padding: 0px;
@@ -78,18 +78,6 @@ div {
 }
 .ui-core-component.marginBottom {
   margin-bottom: 5px;
-}
-.ui-core-component.bold-weight.marginTop {
-  margin-top: 10px;
-}
-.ui-core-component.bold-weight.marginLeft {
-  margin-left: 10px;
-}
-.ui-core-component.bold-weight.marginRight {
-  margin-right: 10px;
-}
-.ui-core-component.bold-weight.marginBottom {
-  margin-bottom: 10px;
 }
 /* Our root class for screens */
 .ui-core-screen {
@@ -182,18 +170,6 @@ div {
 }
 .ui-core-component.marginBottom {
   margin-bottom: 5px;
-}
-.ui-core-component.bold-weight.marginTop {
-  margin-top: 10px;
-}
-.ui-core-component.bold-weight.marginLeft {
-  margin-left: 10px;
-}
-.ui-core-component.bold-weight.marginRight {
-  margin-right: 10px;
-}
-.ui-core-component.bold-weight.marginBottom {
-  margin-bottom: 10px;
 }
 /* Our root class for screens */
 .ui-core-screen {
@@ -341,6 +317,19 @@ div {
   color: #ffffff;
 }
 /* Control Group */
+/* Core component margins */
+.ui-core-component.bold-weight.marginTop {
+  margin-top: 10px;
+}
+.ui-core-component.bold-weight.marginLeft {
+  margin-left: 10px;
+}
+.ui-core-component.bold-weight.marginRight {
+  margin-right: 10px;
+}
+.ui-core-component.bold-weight.marginBottom {
+  margin-bottom: 10px;
+}
 /* Base Tile styling */
 .ui-tile {
   user-select: none;
@@ -959,18 +948,6 @@ div {
 .ui-core-component.marginBottom {
   margin-bottom: 5px;
 }
-.ui-core-component.bold-weight.marginTop {
-  margin-top: 10px;
-}
-.ui-core-component.bold-weight.marginLeft {
-  margin-left: 10px;
-}
-.ui-core-component.bold-weight.marginRight {
-  margin-right: 10px;
-}
-.ui-core-component.bold-weight.marginBottom {
-  margin-bottom: 10px;
-}
 /* Our root class for screens */
 .ui-core-screen {
   position: absolute;
@@ -1117,6 +1094,19 @@ div {
   color: #ffffff;
 }
 /* Control Group */
+/* Core component margins */
+.ui-core-component.bold-weight.marginTop {
+  margin-top: 10px;
+}
+.ui-core-component.bold-weight.marginLeft {
+  margin-left: 10px;
+}
+.ui-core-component.bold-weight.marginRight {
+  margin-right: 10px;
+}
+.ui-core-component.bold-weight.marginBottom {
+  margin-bottom: 10px;
+}
 /* Base Tile styling */
 .ui-tile {
   user-select: none;

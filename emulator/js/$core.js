@@ -1,3 +1,5 @@
+/* $core VERSION: 1.0.0.24*/
+
 var $core = {
 	version: {
 		major: 1,
@@ -142,15 +144,20 @@ var $core = {
 			} 
 			callback(apps);
 		});
-	},
-	
-	// Create a system event object
-	SystemEvent: function(eventType, data) {
-		var object = {
-			eventType: eventType,
-			data: data
-		}
-		return object;
 	}
-	
 }
+/**
+ * @namespace SystemEvent
+ * @memberof $system
+ * @property {$system.EventType} eventType - The type of event that was raised
+ * @property {object} data - Data related to the event
+ */
+$core.SystemEvent = function(eventType, data) {
+	var object = {
+		eventType: eventType,
+		data: data
+	}
+	return object;
+}
+
+

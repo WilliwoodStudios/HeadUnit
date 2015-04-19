@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.2836*/
+/* $emulator VERSION: 1.0.0.2858*/
 body,
 html {
   padding: 0px;
@@ -69,18 +69,6 @@ div {
 }
 .ui-core-component.marginBottom {
   margin-bottom: 5px;
-}
-.ui-core-component.bold-weight.marginTop {
-  margin-top: 10px;
-}
-.ui-core-component.bold-weight.marginLeft {
-  margin-left: 10px;
-}
-.ui-core-component.bold-weight.marginRight {
-  margin-right: 10px;
-}
-.ui-core-component.bold-weight.marginBottom {
-  margin-bottom: 10px;
 }
 /* Our root class for screens */
 .ui-core-screen {
@@ -173,18 +161,6 @@ div {
 }
 .ui-core-component.marginBottom {
   margin-bottom: 5px;
-}
-.ui-core-component.bold-weight.marginTop {
-  margin-top: 10px;
-}
-.ui-core-component.bold-weight.marginLeft {
-  margin-left: 10px;
-}
-.ui-core-component.bold-weight.marginRight {
-  margin-right: 10px;
-}
-.ui-core-component.bold-weight.marginBottom {
-  margin-bottom: 10px;
 }
 /* Our root class for screens */
 .ui-core-screen {
@@ -332,6 +308,19 @@ div {
   color: #ffffff;
 }
 /* Control Group */
+/* Core component margins */
+.ui-core-component.bold-weight.marginTop {
+  margin-top: 10px;
+}
+.ui-core-component.bold-weight.marginLeft {
+  margin-left: 10px;
+}
+.ui-core-component.bold-weight.marginRight {
+  margin-right: 10px;
+}
+.ui-core-component.bold-weight.marginBottom {
+  margin-bottom: 10px;
+}
 /* Base Tile styling */
 .ui-tile {
   user-select: none;
@@ -950,18 +939,6 @@ div {
 .ui-core-component.marginBottom {
   margin-bottom: 5px;
 }
-.ui-core-component.bold-weight.marginTop {
-  margin-top: 10px;
-}
-.ui-core-component.bold-weight.marginLeft {
-  margin-left: 10px;
-}
-.ui-core-component.bold-weight.marginRight {
-  margin-right: 10px;
-}
-.ui-core-component.bold-weight.marginBottom {
-  margin-bottom: 10px;
-}
 /* Our root class for screens */
 .ui-core-screen {
   position: absolute;
@@ -1108,6 +1085,19 @@ div {
   color: #ffffff;
 }
 /* Control Group */
+/* Core component margins */
+.ui-core-component.bold-weight.marginTop {
+  margin-top: 10px;
+}
+.ui-core-component.bold-weight.marginLeft {
+  margin-left: 10px;
+}
+.ui-core-component.bold-weight.marginRight {
+  margin-right: 10px;
+}
+.ui-core-component.bold-weight.marginBottom {
+  margin-bottom: 10px;
+}
 /* Base Tile styling */
 .ui-tile {
   user-select: none;
@@ -2742,18 +2732,6 @@ div {
 .ui-core-component.marginBottom {
   margin-bottom: 5px;
 }
-.ui-core-component.bold-weight.marginTop {
-  margin-top: 10px;
-}
-.ui-core-component.bold-weight.marginLeft {
-  margin-left: 10px;
-}
-.ui-core-component.bold-weight.marginRight {
-  margin-right: 10px;
-}
-.ui-core-component.bold-weight.marginBottom {
-  margin-bottom: 10px;
-}
 /* Our root class for screens */
 .ui-core-screen {
   position: absolute;
@@ -2906,6 +2884,19 @@ div {
 /**** Bold Visuals ********/
 .ui-icon-back-white {
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAACNvAAAjbwE1/Af7AAAAB3RJTUUH3wITEwU3zHrjKAAAAfNJREFUeNrt3SFOQ0EARdH30SgUS8Dia0gwsC4WwiYA0wSDx7IEFAo/GASyogwT3nmuScVP78l0kopuY4xY7058BAAYAAaAAWAAGAB25J0leUhyAUBn/H2S2yTPKyIA4PfjX36/Pl8RAQBz4mdVBADMi78kAgDmxv+J4G6FB978GDQ9fpK8JLlJ8ukEEB8A8QEQHwDxARAfAPEBEB8A8QEQHwDxARAfAPEBEB8A8QEQHwDxARAfAPEBEB8A8QEQHwDxARAfAPEBEB8A8QEQHwDxARC/GoD4xQDELwYgfjEA8YsBiF8MQPxiAOIXAxC/GID4xQDELwYgfjEA8YsBiF8MQPxiAOIXAxC/GID4xQDELwYgfjEA8YsBiO8EsGYAH0muk7we8N5dkqckp9L9rxMAAl8BELgDQOASCAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEAEAAAAQAQAAABABAAAAEA9QgAKEcAQDkCAMoRAFCOAIByBACUIwCgHAEA5QgA+DsE9ys89DbGkO64O+RPsN6TXCV5cwL0nQTLxAdgPoKl4gMwF8Fy8QGYh+BxxfgugeYEAMAAMAAMAAPA6vYFjINbZz6islsAAAAASUVORK5CYII=");
+}
+/* Core component margins */
+.ui-core-component.bold-weight.marginTop {
+  margin-top: 10px;
+}
+.ui-core-component.bold-weight.marginLeft {
+  margin-left: 10px;
+}
+.ui-core-component.bold-weight.marginRight {
+  margin-right: 10px;
+}
+.ui-core-component.bold-weight.marginBottom {
+  margin-bottom: 10px;
 }
 /* Base Tile styling */
 .ui-tile {
