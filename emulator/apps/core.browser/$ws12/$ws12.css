@@ -1,10 +1,10 @@
-/* $ws12 VERSION: 1.0.0.2888*/
+/* $ws12 VERSION: 1.0.0.2928*/
 body,
 html {
   padding: 0px;
   margin: 0px;
   overflow: hidden;
-  font-family: 'Open Sans', sans-serif;
+  font-family: Helvetica, sans-serif;
   -webkit-text-size-adjust: 100%;
 }
 ::-webkit-scrollbar {
@@ -915,7 +915,7 @@ div {
     left: 100%;
   }
 }
-.ui-window-pane.animation {
+.ui-window-pane.animated {
   -webkit-animation-name: ui-pane-slide-left;
   -webkit-animation-duration: 0.3s;
   -webkit-animation-timing-function: ease;
@@ -1692,7 +1692,7 @@ div {
     left: 100%;
   }
 }
-.ui-window-pane.animation {
+.ui-window-pane.animated {
   -webkit-animation-name: ui-pane-slide-left;
   -webkit-animation-duration: 0.3s;
   -webkit-animation-timing-function: ease;

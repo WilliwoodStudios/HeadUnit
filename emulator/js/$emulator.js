@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.2858*/
+/* $emulator VERSION: 1.0.0.2899*/
 
 /**
  * $ui provides an extendible out of the box UI framework which provides a pre-defined user experience.
@@ -168,8 +168,9 @@ var $ui = {
 	 * This function will push a new screen on the stack and pass the optional data provided as a parameter to that screen's onshow() event.
 	 * @param {$ui.CoreScreen} screen - Screen to open and push onto the top of the screen stack
 	 * @param {object} data - Data to pass to the new screen that is opened
+	 * @param {number} [numScreensToClose] - Optional number of screens to close below the new screen pushed onto the stack
 	 */
-	push: function(screen, data) {
+	push: function(screen, data, numScreensToClose) {
 		if ($ui._inScreenTransition === true) {
 			setTimeout(function() {
 				$ui.push(screen, data);
@@ -194,8 +195,46 @@ var $ui = {
 			$ui.screens.push(screen);
 			dom.style['z-index'] = $ui.screens.length+1;
 			document.body.appendChild(dom);
-			if (screen.disableAnimation == true) {
+			
+			// Initialize our new screen
+			if (screen.animated == true) {
+				screen._numScreensToClose = numScreensToClose;
+				// Raise our onshow event when the animation ends
+				screen.dom.pushAnimationEnd = function(e) {
+					if (e.target == this.model.dom){
+						this.removeEventListener('webkitAnimationEnd', this.pushAnimationEnd); // Webkit
+						// Close any underlying screens if necessary
+						$ui._popBelowTop(this.model._numScreensToClose);
+						this.model.initialize();
+					}
+				}
+				screen.dom.pushAnimationEnd = screen.dom.pushAnimationEnd.bind(screen.dom);
+				screen.dom.addEventListener('webkitAnimationEnd', screen.dom.pushAnimationEnd, false); // Webkit
+			} else {
+				// Close any underlying screens if necessary
+				$ui._popBelowTop(numScreensToClose);
 				screen.initialize();
+			}
+		}
+	},
+	
+	// This functions will pop of screens below the top screen.  The number of screens to pop off is supplied by the parameter "number"
+	_popBelowTop: function(number) {
+		if (number != undefined && number > 0) {
+			// Make sure there is a screen beneath this new one
+			if ($ui.screens.length-2 > -1) {
+				var i,
+					count = 0,
+					screen;
+				// Loop until we have no more screens or if the number of screens removed matches the number provided
+				for (i = $ui.screens.length - 2; (i > -1) || (count < number); i--) {
+					screen = $ui.screens[i];
+					if (screen.onbeforepop) {
+						screen.onbeforepop();
+					}
+					$ui._removeScreen(screen);
+					count++;
+				}
 			}
 		}
 	},
@@ -214,29 +253,27 @@ var $ui = {
 			$ui._inScreenTransition = true;
 			// Remove the top most screen
 			var screen = $ui.screens[$ui.screens.length-1];
-			if (screen.disableAnimation == true) {
-				$ui._removeScreen(screen);
-			} else {
-				screen.dom.style['-webkit-animation-delay'] = '';
-				screen.dom.style['-webkit-animation-name'] = 'ui-pane-slide-right';
+			if (screen.animated == true) {
 				screen.dom.addEventListener('webkitAnimationEnd', function(e) {
 					$ui._removeScreen(this.model);
 				}, false);
-			}
+				// Call this so that the screen has a chance to set its animation
+				if (screen.onbeforepop) {
+					screen.onbeforepop();
+				}
+			} else {
+				if (screen.onbeforepop) {
+					screen.onbeforepop();
+				}
+				$ui._removeScreen(screen);
+			} 
 		}
 	},
 
 	// Remove a screen from the stack
 	_removeScreen: function(screen) {
-		if (screen._onbeforepop) {
-			screen._onbeforepop();
-		}
 		screen.dom.style.display = 'none';
 		document.body.removeChild(screen.dom);
-		// Remove any global event listeners
-		if ($system) {
-			$system.removeEventListenersForScreen(screen);
-		}
 		screen.destroy();
 		// Handle finalization
 		$ui._inScreenTransition = false;
@@ -357,6 +394,11 @@ Function.prototype.bind = function(object){
 
 // Register our root extensions
 $ui.extend($ui_RegisterRootExtensions);
+
+/**
+ * General event that fires without any parameters
+ * @callback GenericEvent
+ */
 
 /**
  * Assign this property to a callback function which you desire to handle any interaction logging from UI controls.  This is intended to provide a single point of filtering
@@ -1168,8 +1210,9 @@ if (typeof define !== 'undefined' && define.amd) {
  * @memberof $ui
  * @property {namespace} component - The <b>mandatory</b> component property defines what type of component is being defined. This property always starts with a <b>$ui.</b> defining the component to be used for generating the UI.
  * @property {string} [id] - The id property is used to uniquely define the control in the screen for which it belongs. <br><br>Providing an id for your control is very convenient because you can easily access your control through your javascript coding. Each id is added as a direct handle on the screen object for access.
+ * @property {boolean} [animated=false] - Set this value to <b>true</b> for the control to have animation.  NOTE: Each derivative control is responsible for their animation styling. Setting this property to true will add the ".animated" CSS class to the root element of the control.  Feel free to define your own CSS for the ".animated" property
  * @property {boolean} [visible=true] - The visible property specifies the initial visibility of the control. This property can then be changed by calling the <b>setVisible</b> function on the component.
- * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state</i>
+ * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
  * @property {$ui.CoreScreen} screen - This <b>readonly</b> property allows for you to reference the screen from the control. This will be the screen in which the control is embedded
  * @property {$ui.DataProviderLink} [provider] - This property allows you to bind the control to a [data provider]{@link $ui.DataProvider} in the application. 
  * @property {object[]} attachedObjects - This property specifies an array of objects that can be attached to the control. These could be objects such as data providers and usually entail a component that does not provide a user interface.
@@ -1181,11 +1224,7 @@ if (typeof define !== 'undefined' && define.amd) {
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
-		// Create a placeholder for the initial values of the control that can be modified by setters
-		object._original = {};
-		object._original.visible = object.visible;
-		object._original.enabled = object.enabled;
-		
+	
 		// Create our base container for the control 
 		object.dom = document.createElement('div');
 		object.dom.model = object;
@@ -1210,6 +1249,20 @@ function $ui_CoreComponent(object, screen) {
 			$ui.addClass(object.dom,$ui.theme.rootClass);
 		}
 		
+		// Set default enabled state
+		if (object.enabled != false) {
+			object.enabled = true;
+		} else {
+			$ui.addClass(object.dom, 'disabled');
+		}
+		
+		// See if the control is animated
+		if (object.animated == true) {
+			$ui.addClass(object.dom, 'animated');
+		} else {
+			object.animated = false;
+		}
+		
 		// Check for our margins
 		if (object.marginTop === true) {
 			$ui.addClass(object.dom,'marginTop');
@@ -1222,13 +1275,6 @@ function $ui_CoreComponent(object, screen) {
 		}
 		if (object.marginRight === true) {
 			$ui.addClass(object.dom,'marginRight');
-		}
-		
-		// Set default enabled state
-		if (object.enabled != false) {
-			object.enabled = true;
-		} else {
-			$ui.addClass(object.dom, 'disabled');
 		}
 		
 		// Create any attached objects
@@ -1257,7 +1303,7 @@ function $ui_CoreComponent(object, screen) {
 		 * @param {string} interaction - Desired interaction to raise
 		 */
 		object._raiseInteractionEvent = function(interaction) {
-			var event = new InteractionEvent(this.screen.id, this.id, interaction);
+			var event = new InteractionEvent(this.screen.id, this.id, interaction, this.component);
 			$ui._raiseInteractionEvent(event);
 		}
 		object._raiseInteractionEvent = object._raiseInteractionEvent.bind(object);
@@ -1337,9 +1383,6 @@ function $ui_CoreComponent(object, screen) {
 		
 		// Public base destructor for the component
 		object.destroy = function() {	
-			this.visible = this._original.visible;
-			this.enabled = this._original.enabled;
-			
 			// Call private destructor of control if it is there
 			if (object._destroy) {
 				object._destroy();
@@ -1510,15 +1553,16 @@ function $ui_CoreComponent(object, screen) {
 
 /**
  * This is the abstract base class that represents a screen instance. It derives from {@link $ui.CoreComponent}. 
- * A screen is declared as a JavaScript function and has various different properties. When a screen is pushed onto the stack a new instance of the screen will be created and rendered.
+ * A screen is declared as a JavaScript function and has various different properties. When a screen is pushed onto the stack a new instance of the screen will be created and rendered.<br><br>
+ * If a derivative screen is using the <b>animated</b> property to animate a screen transition to show the screen, it must also provide a reverse animation effect within its <b>_onbeforepop</b> event.
  * <br><br><b>NOTE: This is an abstract class </b>
  * @namespace
  * @name CoreScreen
  * @memberof $ui
- * @extends $ui.CoreComponent
- * @property {boolean} [disableAnimation=false] - This boolean property specifies if the screen should have it's animation disabled when being pushed or popped. 
- * @property {ScreenResizeEvent} [onresize] - This event will fire when the viewport of the screen changes size
- * @property {ScreenShowEvent} [onshow] - This event will fire when the screen has been displayed
+ * @extends $ui.CoreComponent 
+ * @property {GenericEvent} [onresize] - This event will fire when the viewport of the screen changes size
+ * @property {GenericEvent} [onshow] - This event will fire when the screen has been displayed
+ * @property {GenericEvent} [ondestroy] - This event will fire when the screen is about to be destroyed. Allowing for any memory clean-up routines
  */
 function $ui_CoreScreen(object, data) {
 	$ui_CoreComponent.call(this, object);
@@ -1528,18 +1572,13 @@ function $ui_CoreScreen(object, data) {
 		object.children = []; // Contains all child controls in the screen
 		$ui.addClass(object.dom,'ui-core-screen');
 		
-		// Add our animation unless it is disabled
-		if (object.disableAnimation != true) {
-			$ui.addClass(object.dom, 'animation');
-		}
-	
-		// Raise our onshow event when the animation ends
-		object.dom.pushAnimationEnd = function(e) {
-			this.removeEventListener('webkitAnimationEnd', this.pushAnimationEnd); // Webkit
-			this.model.initialize();
-		}
-		object.dom.pushAnimationEnd = object.dom.pushAnimationEnd.bind(object.dom);
-		object.dom.addEventListener('webkitAnimationEnd', object.dom.pushAnimationEnd, false); // Webkit
+		/**
+		* Protected internal function for derivative screens to implement if they have specific functionality they wish to
+		* do when the screen initializes.  This function will fire just before the <b>onshow</b> event is triggered for the screen.
+		* @function _intitialize
+		* @memberof $ui.CoreScreen
+		* @protected
+		*/
 		
 		// Initialize the screen
 		object.initialize = function() {
@@ -1580,7 +1619,10 @@ function $ui_CoreScreen(object, data) {
 		object._onresize = object._onresize.bind(object);
 		
 		// Internal before pop event
-		object._onbeforepop = function() {
+		object.onbeforepop = function() {
+			if (this._onbeforepop) {
+				this._onbeforepop();
+			}
 			// Fire the _onbeforepop for all the controls
 			var i,
 				control;
@@ -1591,7 +1633,7 @@ function $ui_CoreScreen(object, data) {
 				}
 			}
 		}
-		object._onbeforepop = object._onbeforepop.bind(object);
+		object.onbeforepop = object.onbeforepop.bind(object);
 		
 		// Internal function to trigger all theme change internal assignments
 		object._fireThemeChange = function() {
@@ -1612,6 +1654,9 @@ function $ui_CoreScreen(object, data) {
 		
 		// Destroy screen
 		object._destroy = function() {
+			if (this.ondestroy) {
+				this.ondestroy();
+			}
 			// Loop through all the children and call their destroy
 			var i;
 			for (i = 0; i < this.children.length; i++) {
@@ -1626,15 +1671,6 @@ function $ui_CoreScreen(object, data) {
 
 $ui_CoreScreen.prototype = new $ui_CoreComponent();
 
-/**
- * The {@link $ui.CoreScreen} <b>onresize</b> event will fire when the viewport of the screen changes size
- * @callback ScreenResizeEvent
- */
- 
- /**
- * The {@link $ui.CoreScreen} <b>onshow</b> event will fire when the screen has been displayed
- * @callback ScreenShowEvent
- */
 /**
  * The DataProvider component provides a data source that can be bound to controls on a screen. This provides the ability to both populate controls with data, as well as automatically save the data based on user interaction with the controls.<br><br>
  * <b>NOTE: The DataProvider should be attached to a screen or control using its [attachedObjects]{@link $ui.CoreComponent} property.</b><br><br>
@@ -1656,9 +1692,8 @@ $ui_CoreScreen.prototype = new $ui_CoreComponent();
  * @property {string} component - The <b>required</b> component property defines what type of component is being defined. This property must be $ui.DataProvider
  * @property {string} id - The <b>required</b> id property is used to uniquely define the data provider in the scope of the screen in which it belongs. Providing an id for your data provider is required because you can easily access your provider through your javascript coding and also reference it as the provider for a control.
  * @property {object} [data] - The data property by default is undefined. You can populate the data property by calling the load or set functions listed in the functions area, or you can define it as any kind of object. The data property holds the object that represents the data for the provider
- * @property {ProviderLoadEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
- * @property {ProviderErrorEvent} [onerror] - This event will fire when an attempt to load data into the provider fails. It has one parameter that represents the error code experienced.
- * @property {ProviderBeforeUpdateEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
+ * @property {GenericEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
+ * @property {GenericEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
  */
 function $ui_DataProvider(object, screen){
 	object.screen = screen;
@@ -1692,18 +1727,6 @@ function $ui_DataProvider(object, screen){
 	object.setData = object.setData.bind(object);
 	
 	/** 
-	 * This function will refresh all the data in the provider based on the last used url used for <i>loadFromUrl()</i>. When data loads, controls will update and the data provider's <i>onbeforeupdate</i> and <i>onload</i> event will be triggered.
-	 * @function refreshFromServer
-	 * @memberof $ui.DataProvider
-	 */
-	object.refreshFromServer = function() {
-		if ((this._url == undefined) || (this._url == '')) return;
-		this._url = url;
- 		this.loadFromUrl(this._url);
-	}
-	object.refreshFromServer = object.refreshFromServer.bind(object);
-	
-	/** 
 	 * The refresh function will send a signal out to all connected components to refresh their data from the current content in memory from the provider. <b>NOTE: No <i>onbeforeupdate</i> or <i>onload</i> event will fire on the provider</b>
 	 * @function refresh
 	 * @memberof $ui.DataProvider
@@ -1713,70 +1736,13 @@ function $ui_DataProvider(object, screen){
 	}
 	object.refresh = object.refresh.bind(object);
 	
-	/** 
-	 * This function will refresh the component with data from a specified URL. The data that is retrieved from the URL must be in valid JSON notation.
-	 * @function loadFromUrl
-	 * @memberof $ui.DataProvider
-	 * @param {object} value - The function takes the parameter url which is the URL path for the JSON GET request.
-	 */
-	object.loadFromUrl = function(url) {
-		// Make sure we are online
-		if(navigator.onLine != true) {
-			if (this.onerror) {
-				this.onerror($ui.DataProvider.ERR_OFFLINE);
-			}
-			return;
-		}
-		this._xhr = new XMLHttpRequest();
-		this._xhr.model = this;
-		// Handle our state changes
-		this._xhr.onreadystatechange = function () {
-			/* On readyState is 4, Determine if the request was successful or not. */
-			if(this.readyState == 4) {
-				if (this.status == 200) {
-					try {
-						var result = JSON.parse(this.responseText);
-					} catch (ex) {
-						console.log(ex + ' : ' + ex.message);
-						if (this.onerror) {
-							this.onerror($ui.DataProvider.ERR_INVALID_JSON);
-						}
-					}
-					// Load our data
-					this.model._loadFromUrl(result);
-				} else if(this.status != 0) {
-					if (this.onerror) {
-						this.onerror(this.status);
-					}
-				}
-			}
-		}
-		this._xhr.open('GET', url, true);
-		this._xhr.setRequestHeader( "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" );
-		this._xhr.send();
-	}
-	object.loadFromUrl = object.loadFromUrl.bind(object);
-	
-	// Private function to asynchronously load the data items from a URL source
-	object._loadFromUrl = function(result) {
-		this.data = result;
-		if (this.onbeforeupdate) {
-			this.onbeforeupdate();
-		}
-		this._raiseEvent();
-		if (this.onload) {
-			this.onload();
-		}
-	}
-	object._loadFromUrl = object._loadFromUrl.bind(object);
-	
 	// Raise our event to let the rest of the app know to refresh
 	object._raiseEvent = function() {
 		var evt = document.createEvent('Events');
 		evt.initEvent(this.screen.guid+'-'+this.id+'-updated', true, true);
 		window.dispatchEvent(evt);
 	}
-	object._loadFromUrl = object._loadFromUrl.bind(object);
+	object._raiseEvent = object._raiseEvent.bind(object);
 	
 	// Private function to handle clean-up
 	object._destroy = function() {
@@ -1822,21 +1788,6 @@ function $ui_DataProvider(object, screen){
  * @property {string} property - This is the property path/name of the object to be used as the bound data for this control. A nested property can be defined simply by providing a path using <b>.</b> dot separators just like you were referring to the object via JavaScript
  */
  
- /**
- * The {@link $ui.DataProvider} <b>onload</b> event when data has been loaded
- * @callback ProviderLoadEvent
- */
- 
- /**
- * The {@link $ui.DataProvider} <b>onerror</b> event if there was an error loading the data
- * @param {$ui.DataProvider.ProviderError} err - Error code
- * @callback ProviderErrorEvent
- */
- 
-  /**
- * The {@link $ui.DataProvider} <b>onbeforeupdate</b> event will fire after the data has been retrieved but <b>before</b> controls have processed the data
- * @callback ProviderBeforeUpdateEvent
- */
  
 
 /**
@@ -1846,8 +1797,9 @@ function $ui_DataProvider(object, screen){
  * @param {string} screenId - The <b>id</b> property of the screen which contains the control providing the interaction
  * @param {string} controlID - The <b>id</b> property of the control in which the user interacted
  * @param {string} interaction - The interaction which took place
+ * @param {object} component - The component type definition for which this interaction took place.   An example could be the value $ui.List.  This is <b>not</b> a pointer to the control.
  */
-function InteractionEvent(screenId, controlId, interaction) {
+function InteractionEvent(screenId, controlId, interaction, component) {
 	/**
 	 * The <b>id</b> property of the screen which contains the control providing the interaction
 	 * @member {string} screenId
@@ -1869,6 +1821,13 @@ function InteractionEvent(screenId, controlId, interaction) {
 	 * @memberOf InteractionEvent
 	 */
 	this.interaction = interaction;
+	
+	/**
+	 * The component type definition for which this interaction took place.  An example could be the value $ui.List.  This is <b>not</b> a pointer to the control
+	 * @member {object} component
+	 * @memberOf InteractionEvent
+	 */
+	this.component = component;
 }
 
 
@@ -3181,8 +3140,9 @@ if (typeof define !== 'undefined' && define.amd) {
  * @memberof $ui
  * @property {namespace} component - The <b>mandatory</b> component property defines what type of component is being defined. This property always starts with a <b>$ui.</b> defining the component to be used for generating the UI.
  * @property {string} [id] - The id property is used to uniquely define the control in the screen for which it belongs. <br><br>Providing an id for your control is very convenient because you can easily access your control through your javascript coding. Each id is added as a direct handle on the screen object for access.
+ * @property {boolean} [animated=false] - Set this value to <b>true</b> for the control to have animation.  NOTE: Each derivative control is responsible for their animation styling. Setting this property to true will add the ".animated" CSS class to the root element of the control.  Feel free to define your own CSS for the ".animated" property
  * @property {boolean} [visible=true] - The visible property specifies the initial visibility of the control. This property can then be changed by calling the <b>setVisible</b> function on the component.
- * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state</i>
+ * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
  * @property {$ui.CoreScreen} screen - This <b>readonly</b> property allows for you to reference the screen from the control. This will be the screen in which the control is embedded
  * @property {$ui.DataProviderLink} [provider] - This property allows you to bind the control to a [data provider]{@link $ui.DataProvider} in the application. 
  * @property {object[]} attachedObjects - This property specifies an array of objects that can be attached to the control. These could be objects such as data providers and usually entail a component that does not provide a user interface.
@@ -3194,11 +3154,7 @@ if (typeof define !== 'undefined' && define.amd) {
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
-		// Create a placeholder for the initial values of the control that can be modified by setters
-		object._original = {};
-		object._original.visible = object.visible;
-		object._original.enabled = object.enabled;
-		
+	
 		// Create our base container for the control 
 		object.dom = document.createElement('div');
 		object.dom.model = object;
@@ -3223,6 +3179,20 @@ function $ui_CoreComponent(object, screen) {
 			$ui.addClass(object.dom,$ui.theme.rootClass);
 		}
 		
+		// Set default enabled state
+		if (object.enabled != false) {
+			object.enabled = true;
+		} else {
+			$ui.addClass(object.dom, 'disabled');
+		}
+		
+		// See if the control is animated
+		if (object.animated == true) {
+			$ui.addClass(object.dom, 'animated');
+		} else {
+			object.animated = false;
+		}
+		
 		// Check for our margins
 		if (object.marginTop === true) {
 			$ui.addClass(object.dom,'marginTop');
@@ -3235,13 +3205,6 @@ function $ui_CoreComponent(object, screen) {
 		}
 		if (object.marginRight === true) {
 			$ui.addClass(object.dom,'marginRight');
-		}
-		
-		// Set default enabled state
-		if (object.enabled != false) {
-			object.enabled = true;
-		} else {
-			$ui.addClass(object.dom, 'disabled');
 		}
 		
 		// Create any attached objects
@@ -3270,7 +3233,7 @@ function $ui_CoreComponent(object, screen) {
 		 * @param {string} interaction - Desired interaction to raise
 		 */
 		object._raiseInteractionEvent = function(interaction) {
-			var event = new InteractionEvent(this.screen.id, this.id, interaction);
+			var event = new InteractionEvent(this.screen.id, this.id, interaction, this.component);
 			$ui._raiseInteractionEvent(event);
 		}
 		object._raiseInteractionEvent = object._raiseInteractionEvent.bind(object);
@@ -3350,9 +3313,6 @@ function $ui_CoreComponent(object, screen) {
 		
 		// Public base destructor for the component
 		object.destroy = function() {	
-			this.visible = this._original.visible;
-			this.enabled = this._original.enabled;
-			
 			// Call private destructor of control if it is there
 			if (object._destroy) {
 				object._destroy();
@@ -3523,15 +3483,16 @@ function $ui_CoreComponent(object, screen) {
 
 /**
  * This is the abstract base class that represents a screen instance. It derives from {@link $ui.CoreComponent}. 
- * A screen is declared as a JavaScript function and has various different properties. When a screen is pushed onto the stack a new instance of the screen will be created and rendered.
+ * A screen is declared as a JavaScript function and has various different properties. When a screen is pushed onto the stack a new instance of the screen will be created and rendered.<br><br>
+ * If a derivative screen is using the <b>animated</b> property to animate a screen transition to show the screen, it must also provide a reverse animation effect within its <b>_onbeforepop</b> event.
  * <br><br><b>NOTE: This is an abstract class </b>
  * @namespace
  * @name CoreScreen
  * @memberof $ui
- * @extends $ui.CoreComponent
- * @property {boolean} [disableAnimation=false] - This boolean property specifies if the screen should have it's animation disabled when being pushed or popped. 
- * @property {ScreenResizeEvent} [onresize] - This event will fire when the viewport of the screen changes size
- * @property {ScreenShowEvent} [onshow] - This event will fire when the screen has been displayed
+ * @extends $ui.CoreComponent 
+ * @property {GenericEvent} [onresize] - This event will fire when the viewport of the screen changes size
+ * @property {GenericEvent} [onshow] - This event will fire when the screen has been displayed
+ * @property {GenericEvent} [ondestroy] - This event will fire when the screen is about to be destroyed. Allowing for any memory clean-up routines
  */
 function $ui_CoreScreen(object, data) {
 	$ui_CoreComponent.call(this, object);
@@ -3541,18 +3502,13 @@ function $ui_CoreScreen(object, data) {
 		object.children = []; // Contains all child controls in the screen
 		$ui.addClass(object.dom,'ui-core-screen');
 		
-		// Add our animation unless it is disabled
-		if (object.disableAnimation != true) {
-			$ui.addClass(object.dom, 'animation');
-		}
-	
-		// Raise our onshow event when the animation ends
-		object.dom.pushAnimationEnd = function(e) {
-			this.removeEventListener('webkitAnimationEnd', this.pushAnimationEnd); // Webkit
-			this.model.initialize();
-		}
-		object.dom.pushAnimationEnd = object.dom.pushAnimationEnd.bind(object.dom);
-		object.dom.addEventListener('webkitAnimationEnd', object.dom.pushAnimationEnd, false); // Webkit
+		/**
+		* Protected internal function for derivative screens to implement if they have specific functionality they wish to
+		* do when the screen initializes.  This function will fire just before the <b>onshow</b> event is triggered for the screen.
+		* @function _intitialize
+		* @memberof $ui.CoreScreen
+		* @protected
+		*/
 		
 		// Initialize the screen
 		object.initialize = function() {
@@ -3593,7 +3549,10 @@ function $ui_CoreScreen(object, data) {
 		object._onresize = object._onresize.bind(object);
 		
 		// Internal before pop event
-		object._onbeforepop = function() {
+		object.onbeforepop = function() {
+			if (this._onbeforepop) {
+				this._onbeforepop();
+			}
 			// Fire the _onbeforepop for all the controls
 			var i,
 				control;
@@ -3604,7 +3563,7 @@ function $ui_CoreScreen(object, data) {
 				}
 			}
 		}
-		object._onbeforepop = object._onbeforepop.bind(object);
+		object.onbeforepop = object.onbeforepop.bind(object);
 		
 		// Internal function to trigger all theme change internal assignments
 		object._fireThemeChange = function() {
@@ -3625,6 +3584,9 @@ function $ui_CoreScreen(object, data) {
 		
 		// Destroy screen
 		object._destroy = function() {
+			if (this.ondestroy) {
+				this.ondestroy();
+			}
 			// Loop through all the children and call their destroy
 			var i;
 			for (i = 0; i < this.children.length; i++) {
@@ -3639,15 +3601,6 @@ function $ui_CoreScreen(object, data) {
 
 $ui_CoreScreen.prototype = new $ui_CoreComponent();
 
-/**
- * The {@link $ui.CoreScreen} <b>onresize</b> event will fire when the viewport of the screen changes size
- * @callback ScreenResizeEvent
- */
- 
- /**
- * The {@link $ui.CoreScreen} <b>onshow</b> event will fire when the screen has been displayed
- * @callback ScreenShowEvent
- */
 /**
  * The DataProvider component provides a data source that can be bound to controls on a screen. This provides the ability to both populate controls with data, as well as automatically save the data based on user interaction with the controls.<br><br>
  * <b>NOTE: The DataProvider should be attached to a screen or control using its [attachedObjects]{@link $ui.CoreComponent} property.</b><br><br>
@@ -3669,9 +3622,8 @@ $ui_CoreScreen.prototype = new $ui_CoreComponent();
  * @property {string} component - The <b>required</b> component property defines what type of component is being defined. This property must be $ui.DataProvider
  * @property {string} id - The <b>required</b> id property is used to uniquely define the data provider in the scope of the screen in which it belongs. Providing an id for your data provider is required because you can easily access your provider through your javascript coding and also reference it as the provider for a control.
  * @property {object} [data] - The data property by default is undefined. You can populate the data property by calling the load or set functions listed in the functions area, or you can define it as any kind of object. The data property holds the object that represents the data for the provider
- * @property {ProviderLoadEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
- * @property {ProviderErrorEvent} [onerror] - This event will fire when an attempt to load data into the provider fails. It has one parameter that represents the error code experienced.
- * @property {ProviderBeforeUpdateEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
+ * @property {GenericEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
+ * @property {GenericEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
  */
 function $ui_DataProvider(object, screen){
 	object.screen = screen;
@@ -3705,18 +3657,6 @@ function $ui_DataProvider(object, screen){
 	object.setData = object.setData.bind(object);
 	
 	/** 
-	 * This function will refresh all the data in the provider based on the last used url used for <i>loadFromUrl()</i>. When data loads, controls will update and the data provider's <i>onbeforeupdate</i> and <i>onload</i> event will be triggered.
-	 * @function refreshFromServer
-	 * @memberof $ui.DataProvider
-	 */
-	object.refreshFromServer = function() {
-		if ((this._url == undefined) || (this._url == '')) return;
-		this._url = url;
- 		this.loadFromUrl(this._url);
-	}
-	object.refreshFromServer = object.refreshFromServer.bind(object);
-	
-	/** 
 	 * The refresh function will send a signal out to all connected components to refresh their data from the current content in memory from the provider. <b>NOTE: No <i>onbeforeupdate</i> or <i>onload</i> event will fire on the provider</b>
 	 * @function refresh
 	 * @memberof $ui.DataProvider
@@ -3726,70 +3666,13 @@ function $ui_DataProvider(object, screen){
 	}
 	object.refresh = object.refresh.bind(object);
 	
-	/** 
-	 * This function will refresh the component with data from a specified URL. The data that is retrieved from the URL must be in valid JSON notation.
-	 * @function loadFromUrl
-	 * @memberof $ui.DataProvider
-	 * @param {object} value - The function takes the parameter url which is the URL path for the JSON GET request.
-	 */
-	object.loadFromUrl = function(url) {
-		// Make sure we are online
-		if(navigator.onLine != true) {
-			if (this.onerror) {
-				this.onerror($ui.DataProvider.ERR_OFFLINE);
-			}
-			return;
-		}
-		this._xhr = new XMLHttpRequest();
-		this._xhr.model = this;
-		// Handle our state changes
-		this._xhr.onreadystatechange = function () {
-			/* On readyState is 4, Determine if the request was successful or not. */
-			if(this.readyState == 4) {
-				if (this.status == 200) {
-					try {
-						var result = JSON.parse(this.responseText);
-					} catch (ex) {
-						console.log(ex + ' : ' + ex.message);
-						if (this.onerror) {
-							this.onerror($ui.DataProvider.ERR_INVALID_JSON);
-						}
-					}
-					// Load our data
-					this.model._loadFromUrl(result);
-				} else if(this.status != 0) {
-					if (this.onerror) {
-						this.onerror(this.status);
-					}
-				}
-			}
-		}
-		this._xhr.open('GET', url, true);
-		this._xhr.setRequestHeader( "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" );
-		this._xhr.send();
-	}
-	object.loadFromUrl = object.loadFromUrl.bind(object);
-	
-	// Private function to asynchronously load the data items from a URL source
-	object._loadFromUrl = function(result) {
-		this.data = result;
-		if (this.onbeforeupdate) {
-			this.onbeforeupdate();
-		}
-		this._raiseEvent();
-		if (this.onload) {
-			this.onload();
-		}
-	}
-	object._loadFromUrl = object._loadFromUrl.bind(object);
-	
 	// Raise our event to let the rest of the app know to refresh
 	object._raiseEvent = function() {
 		var evt = document.createEvent('Events');
 		evt.initEvent(this.screen.guid+'-'+this.id+'-updated', true, true);
 		window.dispatchEvent(evt);
 	}
-	object._loadFromUrl = object._loadFromUrl.bind(object);
+	object._raiseEvent = object._raiseEvent.bind(object);
 	
 	// Private function to handle clean-up
 	object._destroy = function() {
@@ -3835,21 +3718,6 @@ function $ui_DataProvider(object, screen){
  * @property {string} property - This is the property path/name of the object to be used as the bound data for this control. A nested property can be defined simply by providing a path using <b>.</b> dot separators just like you were referring to the object via JavaScript
  */
  
- /**
- * The {@link $ui.DataProvider} <b>onload</b> event when data has been loaded
- * @callback ProviderLoadEvent
- */
- 
- /**
- * The {@link $ui.DataProvider} <b>onerror</b> event if there was an error loading the data
- * @param {$ui.DataProvider.ProviderError} err - Error code
- * @callback ProviderErrorEvent
- */
- 
-  /**
- * The {@link $ui.DataProvider} <b>onbeforeupdate</b> event will fire after the data has been retrieved but <b>before</b> controls have processed the data
- * @callback ProviderBeforeUpdateEvent
- */
  
 
 /**
@@ -3859,8 +3727,9 @@ function $ui_DataProvider(object, screen){
  * @param {string} screenId - The <b>id</b> property of the screen which contains the control providing the interaction
  * @param {string} controlID - The <b>id</b> property of the control in which the user interacted
  * @param {string} interaction - The interaction which took place
+ * @param {object} component - The component type definition for which this interaction took place.   An example could be the value $ui.List.  This is <b>not</b> a pointer to the control.
  */
-function InteractionEvent(screenId, controlId, interaction) {
+function InteractionEvent(screenId, controlId, interaction, component) {
 	/**
 	 * The <b>id</b> property of the screen which contains the control providing the interaction
 	 * @member {string} screenId
@@ -3882,6 +3751,13 @@ function InteractionEvent(screenId, controlId, interaction) {
 	 * @memberOf InteractionEvent
 	 */
 	this.interaction = interaction;
+	
+	/**
+	 * The component type definition for which this interaction took place.  An example could be the value $ui.List.  This is <b>not</b> a pointer to the control
+	 * @member {object} component
+	 * @memberOf InteractionEvent
+	 */
+	this.component = component;
 }
 
 
@@ -5344,7 +5220,7 @@ function ScreenBackground(img, repeat) {
  * @extends $ui.CoreComponent
  * @property {number} [selectedIndex=0] - Represents the index of the option you want to be selected. This property will also be updated whenever a user selects an option from the control. 
  * @property {string[]} options - This property represents the options provided by the control. It is an array of string values that will be displayed
- * @property {SegmentedClickEvent} [onclick] - The onclick event will fire when the user selects/clicks an option in the control. You can retrieve which option was selected by inspecting the <b>selectedIndex</b> property.
+ * @property {GenericEvent} [onclick] - The onclick event will fire when the user selects/clicks an option in the control. You can retrieve which option was selected by inspecting the <b>selectedIndex</b> property.
  */
 function $ui_SegmentedControl(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
@@ -5442,10 +5318,6 @@ function $ui_SegmentedControl(object, screen) {
 }
 $ui_SegmentedControl.prototype = new $ui_CoreComponent();
 
-/**
- * The {@link $ui.SegmentedControl} <b>onclick</b> event will fire when the user makes a selection in the control
- * @callback SegmentedClickEvent
- */
 /**
  * The SplitView object represents two vertical columns for layout components. The SplitView will size itself to all the available space provided by its parent control.
  * <br><br><b>Sample Declaration</b>
@@ -5889,6 +5761,11 @@ function $ui_WindowPane(object, data) {
 			object.dom.style.width = object.width + 'px';
 		}
 		
+		// Create our background image div
+		object.dom.backgroundDiv = document.createElement('div');
+		$ui.addClass(object.dom.backgroundDiv,'background');
+		object.dom.appendChild(object.dom.backgroundDiv);
+		
 		if (object.backCaption) {
 			object.dom.backBar = document.createElement('div');
 			$ui.addClass(object.dom.backBar,'back-bar');
@@ -5905,11 +5782,6 @@ function $ui_WindowPane(object, data) {
 				$ui.pop();
 			}
 		}
-		
-		// Create our background image div
-		object.dom.backgroundDiv = document.createElement('div');
-		$ui.addClass(object.dom.backgroundDiv,'background');
-		object.dom.appendChild(object.dom.backgroundDiv);
 
 		/** 
 		 * Set the background for the screen
@@ -5971,6 +5843,16 @@ function $ui_WindowPane(object, data) {
 		}
 		object._onwindowpaneresize = object._onwindowpaneresize.bind(object);
 		
+		// Clean-up any listeners
+		object._onbeforepop = function() {
+			if (this.animated == true) {
+				this.dom.style['-webkit-animation-delay'] = '';
+				this.dom.style['-webkit-animation-name'] = 'ui-pane-slide-right';
+			}
+			// Remove any global event listeners
+			$system.removeEventListenersForScreen(this);
+		}
+		object._onbeforepop = object._onbeforepop.bind(object);
 		
 		// Initialize the screen
 		object._initialize = function() {
@@ -6012,6 +5894,41 @@ function $ui_ExtendWS12() {
 	$ui.addExtension(new UIExtension('TileTimeDonut', $ui_TileTimeDonut));
 	$ui.addExtension(new UIExtension('TileTimeHistory', $ui_TileTimeHistory));
 	// Add our list item extensions
+	// Add our list item extensions
+	def = { 
+		/**
+		 * Event type of an event raised from a {@link $ui.GenericListItem} 
+		 * @namespace PhoneLogListEvent
+		 * @readonly
+		 * @memberof $ui.PhoneLogListItem
+		 */
+		PhoneLogListEvent: {
+			/** Click of a generic list item 
+			* @memberof $ui.PhoneLogListItem.PhoneLogListEvent
+			*/
+			ONCLICK:'onclick' 
+		},
+		/**
+		 * Event type of an event raised from a {@link $ui.GenericListItem} 
+		 * @namespace PhoneLogStyle
+		 * @readonly
+		 * @memberof $ui.PhoneLogListItem
+		 */
+		PhoneLogStyle: {
+			/** Incoming Call
+			* @memberof $ui.PhoneLogListItem.PhoneLogStyle
+			*/
+			INCOMING: 'incoming',
+			/** Outgoing Call
+			* @memberof $ui.PhoneLogListItem.PhoneLogStyle
+			*/
+			OUTGOING: 'outgoing',
+			/** Missed Call
+			* @memberof $ui.PhoneLogListItem.PhoneLogStyle
+			*/
+			MISSED: 'missed'
+		}
+	};
 	$ui.addExtension(new UIExtension('PhoneLogListItem', $ui_PhoneLogListItem, $ui.UIExtensionType.LISTITEM, {ONCLICK: 'onclick',INCOMING: 'incoming',OUTGOING: 'outgoing',MISSED: 'missed'}));
 }
 
@@ -6813,8 +6730,9 @@ if (typeof define !== 'undefined' && define.amd) {
  * @memberof $ui
  * @property {namespace} component - The <b>mandatory</b> component property defines what type of component is being defined. This property always starts with a <b>$ui.</b> defining the component to be used for generating the UI.
  * @property {string} [id] - The id property is used to uniquely define the control in the screen for which it belongs. <br><br>Providing an id for your control is very convenient because you can easily access your control through your javascript coding. Each id is added as a direct handle on the screen object for access.
+ * @property {boolean} [animated=false] - Set this value to <b>true</b> for the control to have animation.  NOTE: Each derivative control is responsible for their animation styling. Setting this property to true will add the ".animated" CSS class to the root element of the control.  Feel free to define your own CSS for the ".animated" property
  * @property {boolean} [visible=true] - The visible property specifies the initial visibility of the control. This property can then be changed by calling the <b>setVisible</b> function on the component.
- * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state</i>
+ * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
  * @property {$ui.CoreScreen} screen - This <b>readonly</b> property allows for you to reference the screen from the control. This will be the screen in which the control is embedded
  * @property {$ui.DataProviderLink} [provider] - This property allows you to bind the control to a [data provider]{@link $ui.DataProvider} in the application. 
  * @property {object[]} attachedObjects - This property specifies an array of objects that can be attached to the control. These could be objects such as data providers and usually entail a component that does not provide a user interface.
@@ -6826,11 +6744,7 @@ if (typeof define !== 'undefined' && define.amd) {
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
-		// Create a placeholder for the initial values of the control that can be modified by setters
-		object._original = {};
-		object._original.visible = object.visible;
-		object._original.enabled = object.enabled;
-		
+	
 		// Create our base container for the control 
 		object.dom = document.createElement('div');
 		object.dom.model = object;
@@ -6855,6 +6769,20 @@ function $ui_CoreComponent(object, screen) {
 			$ui.addClass(object.dom,$ui.theme.rootClass);
 		}
 		
+		// Set default enabled state
+		if (object.enabled != false) {
+			object.enabled = true;
+		} else {
+			$ui.addClass(object.dom, 'disabled');
+		}
+		
+		// See if the control is animated
+		if (object.animated == true) {
+			$ui.addClass(object.dom, 'animated');
+		} else {
+			object.animated = false;
+		}
+		
 		// Check for our margins
 		if (object.marginTop === true) {
 			$ui.addClass(object.dom,'marginTop');
@@ -6867,13 +6795,6 @@ function $ui_CoreComponent(object, screen) {
 		}
 		if (object.marginRight === true) {
 			$ui.addClass(object.dom,'marginRight');
-		}
-		
-		// Set default enabled state
-		if (object.enabled != false) {
-			object.enabled = true;
-		} else {
-			$ui.addClass(object.dom, 'disabled');
 		}
 		
 		// Create any attached objects
@@ -6902,7 +6823,7 @@ function $ui_CoreComponent(object, screen) {
 		 * @param {string} interaction - Desired interaction to raise
 		 */
 		object._raiseInteractionEvent = function(interaction) {
-			var event = new InteractionEvent(this.screen.id, this.id, interaction);
+			var event = new InteractionEvent(this.screen.id, this.id, interaction, this.component);
 			$ui._raiseInteractionEvent(event);
 		}
 		object._raiseInteractionEvent = object._raiseInteractionEvent.bind(object);
@@ -6982,9 +6903,6 @@ function $ui_CoreComponent(object, screen) {
 		
 		// Public base destructor for the component
 		object.destroy = function() {	
-			this.visible = this._original.visible;
-			this.enabled = this._original.enabled;
-			
 			// Call private destructor of control if it is there
 			if (object._destroy) {
 				object._destroy();
@@ -7155,15 +7073,16 @@ function $ui_CoreComponent(object, screen) {
 
 /**
  * This is the abstract base class that represents a screen instance. It derives from {@link $ui.CoreComponent}. 
- * A screen is declared as a JavaScript function and has various different properties. When a screen is pushed onto the stack a new instance of the screen will be created and rendered.
+ * A screen is declared as a JavaScript function and has various different properties. When a screen is pushed onto the stack a new instance of the screen will be created and rendered.<br><br>
+ * If a derivative screen is using the <b>animated</b> property to animate a screen transition to show the screen, it must also provide a reverse animation effect within its <b>_onbeforepop</b> event.
  * <br><br><b>NOTE: This is an abstract class </b>
  * @namespace
  * @name CoreScreen
  * @memberof $ui
- * @extends $ui.CoreComponent
- * @property {boolean} [disableAnimation=false] - This boolean property specifies if the screen should have it's animation disabled when being pushed or popped. 
- * @property {ScreenResizeEvent} [onresize] - This event will fire when the viewport of the screen changes size
- * @property {ScreenShowEvent} [onshow] - This event will fire when the screen has been displayed
+ * @extends $ui.CoreComponent 
+ * @property {GenericEvent} [onresize] - This event will fire when the viewport of the screen changes size
+ * @property {GenericEvent} [onshow] - This event will fire when the screen has been displayed
+ * @property {GenericEvent} [ondestroy] - This event will fire when the screen is about to be destroyed. Allowing for any memory clean-up routines
  */
 function $ui_CoreScreen(object, data) {
 	$ui_CoreComponent.call(this, object);
@@ -7173,18 +7092,13 @@ function $ui_CoreScreen(object, data) {
 		object.children = []; // Contains all child controls in the screen
 		$ui.addClass(object.dom,'ui-core-screen');
 		
-		// Add our animation unless it is disabled
-		if (object.disableAnimation != true) {
-			$ui.addClass(object.dom, 'animation');
-		}
-	
-		// Raise our onshow event when the animation ends
-		object.dom.pushAnimationEnd = function(e) {
-			this.removeEventListener('webkitAnimationEnd', this.pushAnimationEnd); // Webkit
-			this.model.initialize();
-		}
-		object.dom.pushAnimationEnd = object.dom.pushAnimationEnd.bind(object.dom);
-		object.dom.addEventListener('webkitAnimationEnd', object.dom.pushAnimationEnd, false); // Webkit
+		/**
+		* Protected internal function for derivative screens to implement if they have specific functionality they wish to
+		* do when the screen initializes.  This function will fire just before the <b>onshow</b> event is triggered for the screen.
+		* @function _intitialize
+		* @memberof $ui.CoreScreen
+		* @protected
+		*/
 		
 		// Initialize the screen
 		object.initialize = function() {
@@ -7225,7 +7139,10 @@ function $ui_CoreScreen(object, data) {
 		object._onresize = object._onresize.bind(object);
 		
 		// Internal before pop event
-		object._onbeforepop = function() {
+		object.onbeforepop = function() {
+			if (this._onbeforepop) {
+				this._onbeforepop();
+			}
 			// Fire the _onbeforepop for all the controls
 			var i,
 				control;
@@ -7236,7 +7153,7 @@ function $ui_CoreScreen(object, data) {
 				}
 			}
 		}
-		object._onbeforepop = object._onbeforepop.bind(object);
+		object.onbeforepop = object.onbeforepop.bind(object);
 		
 		// Internal function to trigger all theme change internal assignments
 		object._fireThemeChange = function() {
@@ -7257,6 +7174,9 @@ function $ui_CoreScreen(object, data) {
 		
 		// Destroy screen
 		object._destroy = function() {
+			if (this.ondestroy) {
+				this.ondestroy();
+			}
 			// Loop through all the children and call their destroy
 			var i;
 			for (i = 0; i < this.children.length; i++) {
@@ -7271,15 +7191,6 @@ function $ui_CoreScreen(object, data) {
 
 $ui_CoreScreen.prototype = new $ui_CoreComponent();
 
-/**
- * The {@link $ui.CoreScreen} <b>onresize</b> event will fire when the viewport of the screen changes size
- * @callback ScreenResizeEvent
- */
- 
- /**
- * The {@link $ui.CoreScreen} <b>onshow</b> event will fire when the screen has been displayed
- * @callback ScreenShowEvent
- */
 /**
  * The DataProvider component provides a data source that can be bound to controls on a screen. This provides the ability to both populate controls with data, as well as automatically save the data based on user interaction with the controls.<br><br>
  * <b>NOTE: The DataProvider should be attached to a screen or control using its [attachedObjects]{@link $ui.CoreComponent} property.</b><br><br>
@@ -7301,9 +7212,8 @@ $ui_CoreScreen.prototype = new $ui_CoreComponent();
  * @property {string} component - The <b>required</b> component property defines what type of component is being defined. This property must be $ui.DataProvider
  * @property {string} id - The <b>required</b> id property is used to uniquely define the data provider in the scope of the screen in which it belongs. Providing an id for your data provider is required because you can easily access your provider through your javascript coding and also reference it as the provider for a control.
  * @property {object} [data] - The data property by default is undefined. You can populate the data property by calling the load or set functions listed in the functions area, or you can define it as any kind of object. The data property holds the object that represents the data for the provider
- * @property {ProviderLoadEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
- * @property {ProviderErrorEvent} [onerror] - This event will fire when an attempt to load data into the provider fails. It has one parameter that represents the error code experienced.
- * @property {ProviderBeforeUpdateEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
+ * @property {GenericEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
+ * @property {GenericEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
  */
 function $ui_DataProvider(object, screen){
 	object.screen = screen;
@@ -7337,18 +7247,6 @@ function $ui_DataProvider(object, screen){
 	object.setData = object.setData.bind(object);
 	
 	/** 
-	 * This function will refresh all the data in the provider based on the last used url used for <i>loadFromUrl()</i>. When data loads, controls will update and the data provider's <i>onbeforeupdate</i> and <i>onload</i> event will be triggered.
-	 * @function refreshFromServer
-	 * @memberof $ui.DataProvider
-	 */
-	object.refreshFromServer = function() {
-		if ((this._url == undefined) || (this._url == '')) return;
-		this._url = url;
- 		this.loadFromUrl(this._url);
-	}
-	object.refreshFromServer = object.refreshFromServer.bind(object);
-	
-	/** 
 	 * The refresh function will send a signal out to all connected components to refresh their data from the current content in memory from the provider. <b>NOTE: No <i>onbeforeupdate</i> or <i>onload</i> event will fire on the provider</b>
 	 * @function refresh
 	 * @memberof $ui.DataProvider
@@ -7358,70 +7256,13 @@ function $ui_DataProvider(object, screen){
 	}
 	object.refresh = object.refresh.bind(object);
 	
-	/** 
-	 * This function will refresh the component with data from a specified URL. The data that is retrieved from the URL must be in valid JSON notation.
-	 * @function loadFromUrl
-	 * @memberof $ui.DataProvider
-	 * @param {object} value - The function takes the parameter url which is the URL path for the JSON GET request.
-	 */
-	object.loadFromUrl = function(url) {
-		// Make sure we are online
-		if(navigator.onLine != true) {
-			if (this.onerror) {
-				this.onerror($ui.DataProvider.ERR_OFFLINE);
-			}
-			return;
-		}
-		this._xhr = new XMLHttpRequest();
-		this._xhr.model = this;
-		// Handle our state changes
-		this._xhr.onreadystatechange = function () {
-			/* On readyState is 4, Determine if the request was successful or not. */
-			if(this.readyState == 4) {
-				if (this.status == 200) {
-					try {
-						var result = JSON.parse(this.responseText);
-					} catch (ex) {
-						console.log(ex + ' : ' + ex.message);
-						if (this.onerror) {
-							this.onerror($ui.DataProvider.ERR_INVALID_JSON);
-						}
-					}
-					// Load our data
-					this.model._loadFromUrl(result);
-				} else if(this.status != 0) {
-					if (this.onerror) {
-						this.onerror(this.status);
-					}
-				}
-			}
-		}
-		this._xhr.open('GET', url, true);
-		this._xhr.setRequestHeader( "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" );
-		this._xhr.send();
-	}
-	object.loadFromUrl = object.loadFromUrl.bind(object);
-	
-	// Private function to asynchronously load the data items from a URL source
-	object._loadFromUrl = function(result) {
-		this.data = result;
-		if (this.onbeforeupdate) {
-			this.onbeforeupdate();
-		}
-		this._raiseEvent();
-		if (this.onload) {
-			this.onload();
-		}
-	}
-	object._loadFromUrl = object._loadFromUrl.bind(object);
-	
 	// Raise our event to let the rest of the app know to refresh
 	object._raiseEvent = function() {
 		var evt = document.createEvent('Events');
 		evt.initEvent(this.screen.guid+'-'+this.id+'-updated', true, true);
 		window.dispatchEvent(evt);
 	}
-	object._loadFromUrl = object._loadFromUrl.bind(object);
+	object._raiseEvent = object._raiseEvent.bind(object);
 	
 	// Private function to handle clean-up
 	object._destroy = function() {
@@ -7467,21 +7308,6 @@ function $ui_DataProvider(object, screen){
  * @property {string} property - This is the property path/name of the object to be used as the bound data for this control. A nested property can be defined simply by providing a path using <b>.</b> dot separators just like you were referring to the object via JavaScript
  */
  
- /**
- * The {@link $ui.DataProvider} <b>onload</b> event when data has been loaded
- * @callback ProviderLoadEvent
- */
- 
- /**
- * The {@link $ui.DataProvider} <b>onerror</b> event if there was an error loading the data
- * @param {$ui.DataProvider.ProviderError} err - Error code
- * @callback ProviderErrorEvent
- */
- 
-  /**
- * The {@link $ui.DataProvider} <b>onbeforeupdate</b> event will fire after the data has been retrieved but <b>before</b> controls have processed the data
- * @callback ProviderBeforeUpdateEvent
- */
  
 
 /**
@@ -7491,8 +7317,9 @@ function $ui_DataProvider(object, screen){
  * @param {string} screenId - The <b>id</b> property of the screen which contains the control providing the interaction
  * @param {string} controlID - The <b>id</b> property of the control in which the user interacted
  * @param {string} interaction - The interaction which took place
+ * @param {object} component - The component type definition for which this interaction took place.   An example could be the value $ui.List.  This is <b>not</b> a pointer to the control.
  */
-function InteractionEvent(screenId, controlId, interaction) {
+function InteractionEvent(screenId, controlId, interaction, component) {
 	/**
 	 * The <b>id</b> property of the screen which contains the control providing the interaction
 	 * @member {string} screenId
@@ -7514,6 +7341,13 @@ function InteractionEvent(screenId, controlId, interaction) {
 	 * @memberOf InteractionEvent
 	 */
 	this.interaction = interaction;
+	
+	/**
+	 * The component type definition for which this interaction took place.  An example could be the value $ui.List.  This is <b>not</b> a pointer to the control
+	 * @member {object} component
+	 * @memberOf InteractionEvent
+	 */
+	this.component = component;
 }
 
 
@@ -8976,7 +8810,7 @@ function ScreenBackground(img, repeat) {
  * @extends $ui.CoreComponent
  * @property {number} [selectedIndex=0] - Represents the index of the option you want to be selected. This property will also be updated whenever a user selects an option from the control. 
  * @property {string[]} options - This property represents the options provided by the control. It is an array of string values that will be displayed
- * @property {SegmentedClickEvent} [onclick] - The onclick event will fire when the user selects/clicks an option in the control. You can retrieve which option was selected by inspecting the <b>selectedIndex</b> property.
+ * @property {GenericEvent} [onclick] - The onclick event will fire when the user selects/clicks an option in the control. You can retrieve which option was selected by inspecting the <b>selectedIndex</b> property.
  */
 function $ui_SegmentedControl(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
@@ -9074,10 +8908,6 @@ function $ui_SegmentedControl(object, screen) {
 }
 $ui_SegmentedControl.prototype = new $ui_CoreComponent();
 
-/**
- * The {@link $ui.SegmentedControl} <b>onclick</b> event will fire when the user makes a selection in the control
- * @callback SegmentedClickEvent
- */
 /**
  * The SplitView object represents two vertical columns for layout components. The SplitView will size itself to all the available space provided by its parent control.
  * <br><br><b>Sample Declaration</b>
@@ -9521,6 +9351,11 @@ function $ui_WindowPane(object, data) {
 			object.dom.style.width = object.width + 'px';
 		}
 		
+		// Create our background image div
+		object.dom.backgroundDiv = document.createElement('div');
+		$ui.addClass(object.dom.backgroundDiv,'background');
+		object.dom.appendChild(object.dom.backgroundDiv);
+		
 		if (object.backCaption) {
 			object.dom.backBar = document.createElement('div');
 			$ui.addClass(object.dom.backBar,'back-bar');
@@ -9537,11 +9372,6 @@ function $ui_WindowPane(object, data) {
 				$ui.pop();
 			}
 		}
-		
-		// Create our background image div
-		object.dom.backgroundDiv = document.createElement('div');
-		$ui.addClass(object.dom.backgroundDiv,'background');
-		object.dom.appendChild(object.dom.backgroundDiv);
 
 		/** 
 		 * Set the background for the screen
@@ -9603,6 +9433,16 @@ function $ui_WindowPane(object, data) {
 		}
 		object._onwindowpaneresize = object._onwindowpaneresize.bind(object);
 		
+		// Clean-up any listeners
+		object._onbeforepop = function() {
+			if (this.animated == true) {
+				this.dom.style['-webkit-animation-delay'] = '';
+				this.dom.style['-webkit-animation-name'] = 'ui-pane-slide-right';
+			}
+			// Remove any global event listeners
+			$system.removeEventListenersForScreen(this);
+		}
+		object._onbeforepop = object._onbeforepop.bind(object);
 		
 		// Initialize the screen
 		object._initialize = function() {
@@ -9620,6 +9460,20 @@ function $ui_WindowPane(object, data) {
 $ui_WindowPane.prototype = new $ui_CoreScreen();
 
 
+/**
+ * The Browser control represents the browser window including both the chrome and the viewer.<br><br>
+ * This object will create an iframe area while in demo mode. But when in PhoneGap it will create a child browser window that it will overlay on the screen.<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *    component: $ui.Browser,
+ *    src: 'http://workshoptwelve.com'
+ * }
+ * @namespace Browser
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} [src] - The url path to initialize the browser
+*/
 function $ui_Browser(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-browser');
@@ -9698,7 +9552,12 @@ function $ui_Browser(object, screen) {
 		object.dom.browserDiv.appendChild(object.dom.iframe);
 	}
 	
-	// Public function to set the url
+	/**
+	* Sets the <b>src</b> property for the control
+	* @function setSrc
+	* @memberof $ui.Browser
+	* @param {string} value - Path to set for the <b>src</b> property
+	*/
 	object.setSrc = function(value) {
 		if (value == this.src) return;
 		this._setSrc(value);
@@ -9801,6 +9660,21 @@ function $ui_BrowserButton(object, screen) {
 }
 
 $ui_BrowserButton.prototype = new $ui_CoreComponent();
+/**
+ * The DialPad object a phone dialer keypad component<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *    component: $ui.DialPad,
+ *    onkeypadpress: function(key) {
+ *       console.log(key);
+ *    }
+ * }
+ * @namespace DialPad
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {KeyPadPressEvent} [onkeypadpress] - The event which will fire when a button on the keypad is pressed
+*/
 function $ui_DialPad(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-dial-pad');
@@ -9891,8 +9765,20 @@ function $ui_DialPad(object, screen) {
 	
 	return object.dom;
 }
-
 $ui_DialPad.prototype = new $ui_CoreComponent();
+
+/**
+ * @namespace DialPadKey
+ * @memberof $ui
+ * @property {string} caption - The number or letter on the button
+ * @property {string} [letters] - Optional secondary letters for the button such as "ABC"
+*/
+
+/**
+ * The {@link $ui.DialPad} <b>onkeypadpress</b> event will fire when the user clicks a keypad button
+ * @callback KeyPadPressEvent
+ * @param {$ui.DialPadKey} key - The key which was pressed
+ */
 function $ui_DialPadButton(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'circle-button');
@@ -9947,6 +9833,20 @@ function $ui_DialPadButton(object, screen) {
 }
 
 $ui_DialPadButton.prototype = new $ui_CoreComponent();
+/**
+ * The Map control represents the map window including both the chrome and the viewer.<br><br>
+ * This object will create an iframe area while in demo mode. But when in PhoneGap it will create a child map view window that it will overlay on the screen<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *    component: $ui.Map,
+ *    src: 'https://www.google.com/maps/embed?pb=!1m14!1m1'
+ * }
+ * @namespace Map
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} src - Populates the Google Maps URL for the control
+ */
 function $ui_Map(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-map');
@@ -9982,6 +9882,34 @@ function $ui_Map(object, screen) {
 	return object.dom;
 }
 $ui_Map.prototype = new $ui_CoreComponent();
+/**
+ * The Media Player control provides the user interface to the audio services of Brainiac. This control will fill the entire available space provided by its parent containing control.<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *    component: $ui.MediaPlayer,
+ *    album: 'License To Ill',
+ *    song: 'So What Cha Want',
+ *    artist: 'Beastie Boys',
+ *    coverArt: 'img/foo.png',
+ *    duration: 217,
+ *    onplay: function() {
+ *       // Do something
+ *    }
+ * }
+ * @namespace MediaPlayer
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} [album] - The name of the album of the current playing/paused song
+ * @property {string} [song] - The name of the current playing/paused song
+ * @property {string} [artist] - The name of the artist for the current playing/paused song
+ * @property {string} [coverArt] - Path to the cover/album art for the current playing/paused song
+ * @property {number} [duration] - The duration of the current playing/paused song in <b>seconds</b>
+ * @property {boolean} [paused=false] - Optional property specifying if the player is paused or not
+ * @property {GenericEvent} [onplay] - This event will fire when the user presses play
+ * @property {GenericEvent} [onpause] - This event will fire when the user presses pause
+ * @property {GenericEvent} [onmenuclick] - This event will fire when the user presses the menu
+ */
 function $ui_MediaPlayer(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-media-player');
@@ -10098,7 +10026,12 @@ function $ui_MediaPlayer(object, screen) {
 	object.dom.buttonShuffle.textContent = 'Shuffle Off';
 	object.dom.textButtonBox.appendChild(object.dom.buttonShuffle);
 	
-	// Public function to set the album
+	/**
+	* Sets the <b>album</b> property of the control
+	* @function setAlbum
+	* @memberof $ui.MediaPlayer
+	* @param {string} value - The new property value
+	*/
 	object.setAlbum = function(value) {
 		this.album = value;
 		// Now load the new image
@@ -10110,7 +10043,12 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object.setAlbum = object.setAlbum.bind(object);
 	
-	// Public function to set the song
+	/**
+	* Sets the <b>song</b> property of the control
+	* @function setSong
+	* @memberof $ui.MediaPlayer
+	* @param {string} value - The new property value
+	*/
 	object.setSong = function(value) {
 		this.song = value;
 		// Now load the new image
@@ -10122,7 +10060,12 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object.setSong = object.setSong.bind(object);
 	
-	// Public function to set the artist
+	/**
+	* Sets the <b>artist</b> property of the control
+	* @function setArtist
+	* @memberof $ui.MediaPlayer
+	* @param {string} value - The new property value
+	*/
 	object.setArtist = function(value) {
 		this.artist = value;
 		// Now load the new image
@@ -10134,7 +10077,12 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object.setArtist = object.setArtist.bind(object);
 	
-	// Public function to set cover art
+	/**
+	* Sets the <b>coverArt</b> property of the control
+	* @function setCoverArt
+	* @memberof $ui.MediaPlayer
+	* @param {string} value - The new property value
+	*/
 	object.setCoverArt = function(value) {
 		this.coverArt = value;
 		this.dom.coverArt.style.opacity = '0';
@@ -10145,7 +10093,12 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object.setCoverArt = object.setCoverArt.bind(object);
 	
-	// Public function to set duration
+	/**
+	* Sets the <b>duration</b> property of the control
+	* @function setDuration
+	* @memberof $ui.MediaPlayer
+	* @param {number} value - The new property value
+	*/
 	object.setDuration = function(value) {
 		this.duration = value;
 		// Now load the new image
@@ -10165,7 +10118,11 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object._renderPlayState = object._renderPlayState.bind(object);
 	
-	// Public function to play the current song
+	/**
+	* Play the current song
+	* @function play
+	* @memberof $ui.MediaPlayer
+	*/
 	object.play = function(value) {
 		if (this.paused == false) return;
 		this.paused = false;
@@ -10176,7 +10133,11 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object.play = object.play.bind(object);
 	
-	// Public function to pause the current song
+	/**
+	* Pause the current song
+	* @function pause
+	* @memberof $ui.MediaPlayer
+	*/
 	object.pause = function(value) {
 		if (this.paused == true) return;
 		this.paused = true;
@@ -10210,6 +10171,7 @@ function $ui_MediaPlayer(object, screen) {
 }
 
 $ui_MediaPlayer.prototype = new $ui_CoreComponent();
+
 function $ui_OnlineScreen(object, data) {
 	$ui_CoreScreen.call(this, object, data);
 	
@@ -10243,6 +10205,23 @@ function $ui_OnlineScreen(object, data) {
 $ui_OnlineScreen.prototype = new $ui_CoreScreen();
 
 
+/**
+ * The phone log list item type is used with the {@link $ui.List} component and represents a call log entry. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   title: 'Susan',
+ *   caption: '(555) 897-9876',
+ *   style: $ui.PhoneLogListItem.PhoneLogStyle.MISSED
+ * }
+ * </pre>
+ * @namespace PhoneLogListItem
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} title - Represents the main title to display
+ * @property {$ui.PhoneLogListItem.PhoneLogStyle} [style] - The type of call that is in the list
+ * @property {string} [caption] - Represents the main text to show in the list item
+ */
 function $ui_PhoneLogListItem(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom, 'ui-phone-log-list-item');
@@ -10303,6 +10282,21 @@ function $ui_PhoneLogListItem(object, screen) {
 }
 
 $ui_PhoneLogListItem.prototype = new $ui_CoreComponent();
+/**
+ * The TileAcceleration represents the tile that shows Acceleration in G-forces..
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileAcceleration,
+ *    min: 0,
+ *    max: 1.5,
+ *    value: 1
+ * }
+ * </pre>
+ * @namespace TileAcceleration
+ * @memberof $ui
+ * @extends $ui.CoreTileGauge
+ */
 function $ui_TileAcceleration(object, screen) {
 	$ui_CoreTileGauge.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-tile-acceleration');
@@ -10335,6 +10329,24 @@ function $ui_TileAcceleration(object, screen) {
 }
 
 $ui_TileAcceleration.prototype = new $ui_CoreTileGauge();
+/**
+ * The Badge tile displays the different badges that the user has been awarded. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileBadge
+ *    img: 'img/badge.png',
+ *    caption: 'This is <large>my</large> caption',
+ *    accent:  'Smaller text'
+ * }
+ * </pre>
+ * @namespace TileBadge
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {string} [img] - Represents the path to the image representing the badge
+ * @property {string} [accent] - Represents the accent text to go along with the caption
+ * @property {string} [caption] - This is the text to appear on the badge. The caption value can also have opening and closing <b>&lt;large&gt;</b> elements to signify which parts of the text should be large-sized.
+ */
 function $ui_TileBadge(object, screen) {
 	// This tile is 1 x 1
 	object._size = undefined;
@@ -10400,6 +10412,21 @@ function $ui_TileBadge(object, screen) {
 }
 
 $ui_TileBadge.prototype = new $ui_CoreTile();
+/**
+ * The Braking Tile represents the tile which shows Braking in G-forces.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileBraking,
+ *    min: 0,
+ *    max: 1.5,
+ *    value: 1
+ * }
+ * </pre>
+ * @namespace TileBraking
+ * @memberof $ui
+ * @extends $ui.CoreTileGauge
+ */
 function $ui_TileBraking(object, screen) {
 	$ui_CoreTileGauge.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-tile-braking');
@@ -10433,6 +10460,22 @@ function $ui_TileBraking(object, screen) {
 }
 
 $ui_TileBraking.prototype = new $ui_CoreTileGauge();
+/**
+ * The Distance tile displays the distance travelled over the last few recorded periods. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileDistance
+ *    data: [5,25,8.2],
+ *    units:  'miles'
+ * }
+ * </pre>
+ * @namespace TileDistance
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number[]} [data] - This array of numbers represents the last few points of distance units recorded. The values in the array are ordered from oldest to newest.
+ * @property {string} units - This string value represents the units of measure. Typically miles or km.
+ */
 function $ui_TileDistance(object, screen) {
 	// This tile is 1 x 1
 	object._size = undefined;
@@ -10531,6 +10574,22 @@ function $ui_TileDistance(object, screen) {
 }
 
 $ui_TileDistance.prototype = new $ui_CoreTile();
+/**
+ * The Fuel tile displays the fuel used over the last few recorded periods. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileFuel
+ *    data: [5,25,8.2],
+ *    value: 8.25
+ * }
+ * </pre>
+ * @namespace TileFuel
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number[]} [data] - This array of numbers represents the last few points of fuel level values recorded. The values in the array are ordered from oldest to newest.
+ * @property {number} value - This number value represents the dollar amount of fuel used for the day
+ */
 function $ui_TileFuel(object, screen) {
 	// This tile is 1 x 1
 	object._size = undefined;
@@ -10657,6 +10716,20 @@ function $ui_TileFuel(object, screen) {
 }
 
 $ui_TileFuel.prototype = new $ui_CoreTile();
+/**
+ * The Idle tile represents the amount of time the driver spends moving and not sitting in one place.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileIdle
+ *    value: 70
+ * }
+ * </pre>
+ * @namespace TileIdle
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number} value - This number value represents the percentage of time the driver spent moving.
+ */
 function $ui_TileIdle(object, screen) {
 	object._size = undefined;
 	$ui_CoreTileDonutChart.call(this, object, screen);
@@ -10725,6 +10798,22 @@ function $ui_TileIdle(object, screen) {
 }
 
 $ui_TileIdle.prototype = new $ui_CoreTileDonutChart();
+/**
+ * The Idle Details tile represents how much time was spent being stuck in traffic over the last 7 days.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileIdleDetails,
+ *    labels: ['Sun','Mon','Tue','Wed','Thur','Fri','Today'],
+ *    data: [0,35,17,65,0,10,15]
+ * }
+ * </pre>
+ * @namespace TileIdleDetails
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number[]} [data] - This array of numbers represents the amount of minutes spent idle over the last 7 days
+ * @property {string[]} [labels] - This array of strings represents the labels for the last 7 days
+ */
 function $ui_TileIdleDetails(object, screen) {
 	// This tile is 1 x 1
 	object._size = $ui.TileSize.WIDE;
@@ -10786,6 +10875,24 @@ function $ui_TileIdleDetails(object, screen) {
 }
 
 $ui_TileIdleDetails.prototype = new $ui_CoreTile();
+/**
+ * The MPG tile represents how close to the target miles per gallon target they achieved
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileMPG,
+ *    value: 25,
+ *    max: 34,
+ *    abbreviation: 'MPG'
+ * }
+ * </pre>
+ * @namespace TileMPG
+ * @memberof $ui
+ * @extends $ui.CoreTileDonutChart
+ * @property {number} [value] - This number value represents the actual MPG value achived
+ * @property {number} [max] - This number value represents the target value the driver is hoping to achieve
+ * @property {string} [abbreviation] - This string value represents the Miles per gallon or KM per liter abbreviation
+ */
 function $ui_TileMPG(object, screen) {
 	object._size = undefined;
 	$ui_CoreTileDonutChart.call(this, object, screen);
@@ -10864,6 +10971,31 @@ function $ui_TileMPG(object, screen) {
 }
 
 $ui_TileMPG.prototype = new $ui_CoreTileDonutChart();
+/**
+ * The Profile tile displays the user's profile and participation statistics.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileProfile
+ *    backgroundImg: 'img/car.png',
+ *    avatar: 'img/useravatar.png',
+ *    userName:  'brcewane',
+ *    stats: {
+ *        friends: 12,
+ *        groups: 6,
+ *        score: 4056,
+ *        rank: 2,
+ *    }
+ * }
+ * </pre>
+ * @namespace TileProfile
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {string} [backgroundImg] - This is the path to the background image the user has chosen for their profile.
+ * @property {string} [userName] - This is the path to the avatar image the user has chosen for their profile.
+ * @property {string} [avatar] - This string value represents the Miles per gallon or KM per liter abbreviation
+ * @property {$ui.TileProfile.ProfileStats} [stats] - This object represents the participation statistics for the user
+ */
 function $ui_TileProfile(object, screen) {
 	// This is a tall tile
 	object._size = $ui.TileSize.TALL;
@@ -11119,6 +11251,33 @@ function $ui_TileProfile(object, screen) {
 }
 
 $ui_TileProfile.prototype = new $ui_CoreTile();
+/**
+ * Statistics for the user profile tile {@link $ui.TileProfile}
+ * @namespace ProfileStats
+ * @memberof $ui.TileProfile
+ * @property {number} [friends] - The number of friends
+ * @property {number} [groups] - The number of groups
+ * @property {number} [score] - The overall point total for the user
+ * @property {number} [rank] - The overall rank of the user among their friends and groups
+ */
+/**
+ * The Record tile provides a button to start recording with optional countdown capability.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileRecord,
+ *    caption: 'Record 0-60 Time',
+ *    countdown: true
+ * }
+ * </pre>
+ * @namespace TileRecord
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {string} [caption] - This is the caption to show at the bottom of the tile
+ * @property {boolean} [countdown=false] - This optional boolean property specifies if you wish to have a count down come after the user presses the start button. If set to true it will do a countdown from 3 before the <b>onrecord</b> event is triggered.
+ * @property {GenericEvent} [onstartclick] - Fires when the user presses Start
+ * @property {GenericEvent} [onrecord] - Fires when the recording begins
+ */
 function $ui_TileRecord(object, screen) {
 	// This tile is 1 x 1
 	object._size = undefined;
@@ -11223,7 +11382,11 @@ function $ui_TileRecord(object, screen) {
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);
 	
-	// Public function to reset the control
+	/**
+	* Reset the tile to its original state
+	* @function reset
+	* @memberof $ui.TileRecord
+	*/
 	object.reset = function() {
 		if (this._interval != undefined) {
 			window.clearInterval(this._interval);
@@ -11241,6 +11404,26 @@ function $ui_TileRecord(object, screen) {
 }
 
 $ui_TileRecord.prototype = new $ui_CoreTile();
+
+/**
+ * The Time donut tile represents how close you reach a target number goal
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileTimeDonut,
+ *    value: 3.8,
+ *    target: 4.2,
+ *    accent: 'Your Best Time'
+ * }
+ * </pre>
+ * @namespace TileTimeDonut
+ * @memberof $ui
+ * @extends $ui.CoreTileDonutChart
+ * @property {number} [value] - This number value represents the actual time achieved
+ * @property {number} [target] - This number value represents the target time the driver is hoping to achieve.
+ * @property {string} [caption] - This optional string value represents the text to appear to the left of the displayed value
+ * @property {string} [accent] - This optional string value represents any extra accent text to display on the tile
+ */
 function $ui_TileTimeDonut(object, screen) {
 	object._size = undefined;
 	$ui_CoreTileDonutChart.call(this, object, screen);
@@ -11321,6 +11504,24 @@ function $ui_TileTimeDonut(object, screen) {
 }
 
 $ui_TileTimeDonut.prototype = new $ui_CoreTileDonutChart();
+/**
+ * The Time History tile represents past recorded times.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileTimeHistory,
+ *    labels: ['Apr 10/14','May 12/14','Jul 18/14','Aug 22/14'],
+ *    data: [5.2,6.3,4.2,4.5],
+ *    caption: 'Recorded 0-60 times (sec)'
+ * }
+ * </pre>
+ * @namespace TileTimeHistory
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number[]} [data] - This array of numbers represents the time values
+ * @property {string[]} [labels] - This array of strings represents the labels for the times. These labels are typically logging dates.
+ * @property {string} [caption] - This optional string value represents the text caption you wish to include
+ */
 function $ui_TileTimeHistory(object, screen) {
 	// This tile is 1 x 1
 	object._size = $ui.TileSize.WIDE;
@@ -11386,6 +11587,21 @@ function $ui_TileTimeHistory(object, screen) {
 }
 
 $ui_TileTimeHistory.prototype = new $ui_CoreTile();
+/**
+ * The Timer tile provides a stop watch timer. <b>NOTE: Currently there is a 60 minute limit for the timer</b>
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileTimer
+ * }
+ * </pre>
+ * @namespace TileTimer
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {GenericEvent} [onstart] - This event fires when the timer starts
+ * @property {GenericEvent} [onstop] - This event fires when the timer stops
+ * @property {GenericEvent} [onreset] - This event fires when the timer has been reset
+ */
 function $ui_TileTimer(object, screen) {
 	// This tile is 1 x 2
 	object._size = $ui.TileSize.WIDE;
@@ -11418,7 +11634,11 @@ function $ui_TileTimer(object, screen) {
 	}
 	object._doInterval = object._doInterval.bind(object);
 	
-	// Public function to reset the control
+	/**
+	* This function will reset the timer and trigger the <b>onreset</b> event
+	* @function reset
+	* @memberof $ui.TileTimer
+	*/
 	object.reset = function() {
 		if (this._interval != undefined) {
 			window.clearInterval(this._interval);
@@ -11432,7 +11652,11 @@ function $ui_TileTimer(object, screen) {
 	}
 	object.reset = object.reset.bind(object);
 	
-	// Public function to start the control
+	/**
+	* This function will start the timer and trigger the <b>onstart</b> event
+	* @function start
+	* @memberof $ui.TileTimer
+	*/
 	object.start = function() {
 		if (this._interval != undefined) return; // Already running
 		this._startTime = new Date();
@@ -11444,7 +11668,11 @@ function $ui_TileTimer(object, screen) {
 	}
 	object.start = object.start.bind(object);
 	
-	// Public function to stop the control
+	/**
+	* This function will stop the timer and trigger the <b>onstop</b> event
+	* @function stop
+	* @memberof $ui.TileTimer
+	*/
 	object.stop = function() {
 		if (this._interval != undefined) {
 			window.clearInterval(this._interval);
@@ -11456,19 +11684,31 @@ function $ui_TileTimer(object, screen) {
 	}
 	object.stop = object.stop.bind(object);
 	
-	// Public function to get the time in milliseconds
+	/**
+	* Retrieve the timer's value in Milliseconds
+	* @function getMilliseconds
+	* @memberof $ui.TileTimer
+	*/
 	object.getMilliseconds = function() {
 		return this._milliseconds;
 	}
 	object.getMilliseconds = object.getMilliseconds.bind(object);
 	
-	// Public function to get the time in seconds
+	/**
+	* Retrieve the timer's value in Seconds
+	* @function getSeconds
+	* @memberof $ui.TileTimer
+	*/
 	object.getSeconds = function() {
 		return (this._milliseconds/1000).toFixed(1);
 	}
 	object.getSeconds = object.getSeconds.bind(object);
 	
-	// Public function to get the time in minutes
+	/**
+	* Retrieve the timer's value in Minutes
+	* @function getMinutes
+	* @memberof $ui.TileTimer
+	*/
 	object.getMinutes = function() {
 		return (this._milliseconds/60000).toFixed(2);
 	}
@@ -11493,14 +11733,49 @@ function $ui_TileTimer(object, screen) {
 }
 
 $ui_TileTimer.prototype = new $ui_CoreTile();
+
 var $emulator = {
 	_panThreshold: 30,
 	
 	// Initialize the emulator
 	_extend: function() {
 		// Register our custom controls/screens
-		$ui.addExtension(new UIExtension('HeadUnitChrome',emulator_HeadUnitChrome, $ui.UIExtensionType.SCREEN, {Fans : {AUTO: 0}}));
-		$ui.addExtension(new UIExtension('WedgeTemperature',emulator_WedgeTemperature, $ui.UIExtensionType.SCREEN, {RIGHT:'right',LEFT:'left'}));
+		
+		var def = {
+			/**
+			 * Settings for Fans for a {@link $ui.FansButton}  
+			 * @namespace Fans
+			 * @readonly
+			 * @memberof $ui.HeadUnitChrome
+			 */
+			Fans: {
+				/** Automatic fans
+				* @memberof $ui.HeadUnitChrome.Fans
+				*/
+				AUTO: 0
+			}
+		}
+		$ui.addExtension(new UIExtension('HeadUnitChrome',emulator_HeadUnitChrome, $ui.UIExtensionType.SCREEN, def));
+		
+		def = {
+			/**
+			 * Direction of a {@link $ui.WedgeTemperature} Screen 
+			 * @namespace Direction
+			 * @readonly
+			 * @memberof $ui.WedgeTemperature
+			 */
+			Direction: {
+				/** Appear from the left 
+				* @memberof $ui.WedgeTemperature.Direction
+				*/
+				LEFT: 'left',
+				/** Appear from the right  
+				* @memberof $ui.WedgeTemperature.Direction
+				*/
+				RIGHT: 'right'
+			}
+		}
+		$ui.addExtension(new UIExtension('WedgeTemperature',emulator_WedgeTemperature, $ui.UIExtensionType.SCREEN,def));
 		$ui.addExtension(new UIExtension('AppContainer', emulator_AppContainer, $ui.UIExtensionType.SCREEN));
 		
 		// Handle our swipe gestures
@@ -12319,8 +12594,9 @@ if (typeof define !== 'undefined' && define.amd) {
  * @memberof $ui
  * @property {namespace} component - The <b>mandatory</b> component property defines what type of component is being defined. This property always starts with a <b>$ui.</b> defining the component to be used for generating the UI.
  * @property {string} [id] - The id property is used to uniquely define the control in the screen for which it belongs. <br><br>Providing an id for your control is very convenient because you can easily access your control through your javascript coding. Each id is added as a direct handle on the screen object for access.
+ * @property {boolean} [animated=false] - Set this value to <b>true</b> for the control to have animation.  NOTE: Each derivative control is responsible for their animation styling. Setting this property to true will add the ".animated" CSS class to the root element of the control.  Feel free to define your own CSS for the ".animated" property
  * @property {boolean} [visible=true] - The visible property specifies the initial visibility of the control. This property can then be changed by calling the <b>setVisible</b> function on the component.
- * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state</i>
+ * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
  * @property {$ui.CoreScreen} screen - This <b>readonly</b> property allows for you to reference the screen from the control. This will be the screen in which the control is embedded
  * @property {$ui.DataProviderLink} [provider] - This property allows you to bind the control to a [data provider]{@link $ui.DataProvider} in the application. 
  * @property {object[]} attachedObjects - This property specifies an array of objects that can be attached to the control. These could be objects such as data providers and usually entail a component that does not provide a user interface.
@@ -12332,11 +12608,7 @@ if (typeof define !== 'undefined' && define.amd) {
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
-		// Create a placeholder for the initial values of the control that can be modified by setters
-		object._original = {};
-		object._original.visible = object.visible;
-		object._original.enabled = object.enabled;
-		
+	
 		// Create our base container for the control 
 		object.dom = document.createElement('div');
 		object.dom.model = object;
@@ -12361,6 +12633,20 @@ function $ui_CoreComponent(object, screen) {
 			$ui.addClass(object.dom,$ui.theme.rootClass);
 		}
 		
+		// Set default enabled state
+		if (object.enabled != false) {
+			object.enabled = true;
+		} else {
+			$ui.addClass(object.dom, 'disabled');
+		}
+		
+		// See if the control is animated
+		if (object.animated == true) {
+			$ui.addClass(object.dom, 'animated');
+		} else {
+			object.animated = false;
+		}
+		
 		// Check for our margins
 		if (object.marginTop === true) {
 			$ui.addClass(object.dom,'marginTop');
@@ -12373,13 +12659,6 @@ function $ui_CoreComponent(object, screen) {
 		}
 		if (object.marginRight === true) {
 			$ui.addClass(object.dom,'marginRight');
-		}
-		
-		// Set default enabled state
-		if (object.enabled != false) {
-			object.enabled = true;
-		} else {
-			$ui.addClass(object.dom, 'disabled');
 		}
 		
 		// Create any attached objects
@@ -12408,7 +12687,7 @@ function $ui_CoreComponent(object, screen) {
 		 * @param {string} interaction - Desired interaction to raise
 		 */
 		object._raiseInteractionEvent = function(interaction) {
-			var event = new InteractionEvent(this.screen.id, this.id, interaction);
+			var event = new InteractionEvent(this.screen.id, this.id, interaction, this.component);
 			$ui._raiseInteractionEvent(event);
 		}
 		object._raiseInteractionEvent = object._raiseInteractionEvent.bind(object);
@@ -12488,9 +12767,6 @@ function $ui_CoreComponent(object, screen) {
 		
 		// Public base destructor for the component
 		object.destroy = function() {	
-			this.visible = this._original.visible;
-			this.enabled = this._original.enabled;
-			
 			// Call private destructor of control if it is there
 			if (object._destroy) {
 				object._destroy();
@@ -12661,15 +12937,16 @@ function $ui_CoreComponent(object, screen) {
 
 /**
  * This is the abstract base class that represents a screen instance. It derives from {@link $ui.CoreComponent}. 
- * A screen is declared as a JavaScript function and has various different properties. When a screen is pushed onto the stack a new instance of the screen will be created and rendered.
+ * A screen is declared as a JavaScript function and has various different properties. When a screen is pushed onto the stack a new instance of the screen will be created and rendered.<br><br>
+ * If a derivative screen is using the <b>animated</b> property to animate a screen transition to show the screen, it must also provide a reverse animation effect within its <b>_onbeforepop</b> event.
  * <br><br><b>NOTE: This is an abstract class </b>
  * @namespace
  * @name CoreScreen
  * @memberof $ui
- * @extends $ui.CoreComponent
- * @property {boolean} [disableAnimation=false] - This boolean property specifies if the screen should have it's animation disabled when being pushed or popped. 
- * @property {ScreenResizeEvent} [onresize] - This event will fire when the viewport of the screen changes size
- * @property {ScreenShowEvent} [onshow] - This event will fire when the screen has been displayed
+ * @extends $ui.CoreComponent 
+ * @property {GenericEvent} [onresize] - This event will fire when the viewport of the screen changes size
+ * @property {GenericEvent} [onshow] - This event will fire when the screen has been displayed
+ * @property {GenericEvent} [ondestroy] - This event will fire when the screen is about to be destroyed. Allowing for any memory clean-up routines
  */
 function $ui_CoreScreen(object, data) {
 	$ui_CoreComponent.call(this, object);
@@ -12679,18 +12956,13 @@ function $ui_CoreScreen(object, data) {
 		object.children = []; // Contains all child controls in the screen
 		$ui.addClass(object.dom,'ui-core-screen');
 		
-		// Add our animation unless it is disabled
-		if (object.disableAnimation != true) {
-			$ui.addClass(object.dom, 'animation');
-		}
-	
-		// Raise our onshow event when the animation ends
-		object.dom.pushAnimationEnd = function(e) {
-			this.removeEventListener('webkitAnimationEnd', this.pushAnimationEnd); // Webkit
-			this.model.initialize();
-		}
-		object.dom.pushAnimationEnd = object.dom.pushAnimationEnd.bind(object.dom);
-		object.dom.addEventListener('webkitAnimationEnd', object.dom.pushAnimationEnd, false); // Webkit
+		/**
+		* Protected internal function for derivative screens to implement if they have specific functionality they wish to
+		* do when the screen initializes.  This function will fire just before the <b>onshow</b> event is triggered for the screen.
+		* @function _intitialize
+		* @memberof $ui.CoreScreen
+		* @protected
+		*/
 		
 		// Initialize the screen
 		object.initialize = function() {
@@ -12731,7 +13003,10 @@ function $ui_CoreScreen(object, data) {
 		object._onresize = object._onresize.bind(object);
 		
 		// Internal before pop event
-		object._onbeforepop = function() {
+		object.onbeforepop = function() {
+			if (this._onbeforepop) {
+				this._onbeforepop();
+			}
 			// Fire the _onbeforepop for all the controls
 			var i,
 				control;
@@ -12742,7 +13017,7 @@ function $ui_CoreScreen(object, data) {
 				}
 			}
 		}
-		object._onbeforepop = object._onbeforepop.bind(object);
+		object.onbeforepop = object.onbeforepop.bind(object);
 		
 		// Internal function to trigger all theme change internal assignments
 		object._fireThemeChange = function() {
@@ -12763,6 +13038,9 @@ function $ui_CoreScreen(object, data) {
 		
 		// Destroy screen
 		object._destroy = function() {
+			if (this.ondestroy) {
+				this.ondestroy();
+			}
 			// Loop through all the children and call their destroy
 			var i;
 			for (i = 0; i < this.children.length; i++) {
@@ -12777,15 +13055,6 @@ function $ui_CoreScreen(object, data) {
 
 $ui_CoreScreen.prototype = new $ui_CoreComponent();
 
-/**
- * The {@link $ui.CoreScreen} <b>onresize</b> event will fire when the viewport of the screen changes size
- * @callback ScreenResizeEvent
- */
- 
- /**
- * The {@link $ui.CoreScreen} <b>onshow</b> event will fire when the screen has been displayed
- * @callback ScreenShowEvent
- */
 /**
  * The DataProvider component provides a data source that can be bound to controls on a screen. This provides the ability to both populate controls with data, as well as automatically save the data based on user interaction with the controls.<br><br>
  * <b>NOTE: The DataProvider should be attached to a screen or control using its [attachedObjects]{@link $ui.CoreComponent} property.</b><br><br>
@@ -12807,9 +13076,8 @@ $ui_CoreScreen.prototype = new $ui_CoreComponent();
  * @property {string} component - The <b>required</b> component property defines what type of component is being defined. This property must be $ui.DataProvider
  * @property {string} id - The <b>required</b> id property is used to uniquely define the data provider in the scope of the screen in which it belongs. Providing an id for your data provider is required because you can easily access your provider through your javascript coding and also reference it as the provider for a control.
  * @property {object} [data] - The data property by default is undefined. You can populate the data property by calling the load or set functions listed in the functions area, or you can define it as any kind of object. The data property holds the object that represents the data for the provider
- * @property {ProviderLoadEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
- * @property {ProviderErrorEvent} [onerror] - This event will fire when an attempt to load data into the provider fails. It has one parameter that represents the error code experienced.
- * @property {ProviderBeforeUpdateEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
+ * @property {GenericEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
+ * @property {GenericEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
  */
 function $ui_DataProvider(object, screen){
 	object.screen = screen;
@@ -12843,18 +13111,6 @@ function $ui_DataProvider(object, screen){
 	object.setData = object.setData.bind(object);
 	
 	/** 
-	 * This function will refresh all the data in the provider based on the last used url used for <i>loadFromUrl()</i>. When data loads, controls will update and the data provider's <i>onbeforeupdate</i> and <i>onload</i> event will be triggered.
-	 * @function refreshFromServer
-	 * @memberof $ui.DataProvider
-	 */
-	object.refreshFromServer = function() {
-		if ((this._url == undefined) || (this._url == '')) return;
-		this._url = url;
- 		this.loadFromUrl(this._url);
-	}
-	object.refreshFromServer = object.refreshFromServer.bind(object);
-	
-	/** 
 	 * The refresh function will send a signal out to all connected components to refresh their data from the current content in memory from the provider. <b>NOTE: No <i>onbeforeupdate</i> or <i>onload</i> event will fire on the provider</b>
 	 * @function refresh
 	 * @memberof $ui.DataProvider
@@ -12864,70 +13120,13 @@ function $ui_DataProvider(object, screen){
 	}
 	object.refresh = object.refresh.bind(object);
 	
-	/** 
-	 * This function will refresh the component with data from a specified URL. The data that is retrieved from the URL must be in valid JSON notation.
-	 * @function loadFromUrl
-	 * @memberof $ui.DataProvider
-	 * @param {object} value - The function takes the parameter url which is the URL path for the JSON GET request.
-	 */
-	object.loadFromUrl = function(url) {
-		// Make sure we are online
-		if(navigator.onLine != true) {
-			if (this.onerror) {
-				this.onerror($ui.DataProvider.ERR_OFFLINE);
-			}
-			return;
-		}
-		this._xhr = new XMLHttpRequest();
-		this._xhr.model = this;
-		// Handle our state changes
-		this._xhr.onreadystatechange = function () {
-			/* On readyState is 4, Determine if the request was successful or not. */
-			if(this.readyState == 4) {
-				if (this.status == 200) {
-					try {
-						var result = JSON.parse(this.responseText);
-					} catch (ex) {
-						console.log(ex + ' : ' + ex.message);
-						if (this.onerror) {
-							this.onerror($ui.DataProvider.ERR_INVALID_JSON);
-						}
-					}
-					// Load our data
-					this.model._loadFromUrl(result);
-				} else if(this.status != 0) {
-					if (this.onerror) {
-						this.onerror(this.status);
-					}
-				}
-			}
-		}
-		this._xhr.open('GET', url, true);
-		this._xhr.setRequestHeader( "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" );
-		this._xhr.send();
-	}
-	object.loadFromUrl = object.loadFromUrl.bind(object);
-	
-	// Private function to asynchronously load the data items from a URL source
-	object._loadFromUrl = function(result) {
-		this.data = result;
-		if (this.onbeforeupdate) {
-			this.onbeforeupdate();
-		}
-		this._raiseEvent();
-		if (this.onload) {
-			this.onload();
-		}
-	}
-	object._loadFromUrl = object._loadFromUrl.bind(object);
-	
 	// Raise our event to let the rest of the app know to refresh
 	object._raiseEvent = function() {
 		var evt = document.createEvent('Events');
 		evt.initEvent(this.screen.guid+'-'+this.id+'-updated', true, true);
 		window.dispatchEvent(evt);
 	}
-	object._loadFromUrl = object._loadFromUrl.bind(object);
+	object._raiseEvent = object._raiseEvent.bind(object);
 	
 	// Private function to handle clean-up
 	object._destroy = function() {
@@ -12973,21 +13172,6 @@ function $ui_DataProvider(object, screen){
  * @property {string} property - This is the property path/name of the object to be used as the bound data for this control. A nested property can be defined simply by providing a path using <b>.</b> dot separators just like you were referring to the object via JavaScript
  */
  
- /**
- * The {@link $ui.DataProvider} <b>onload</b> event when data has been loaded
- * @callback ProviderLoadEvent
- */
- 
- /**
- * The {@link $ui.DataProvider} <b>onerror</b> event if there was an error loading the data
- * @param {$ui.DataProvider.ProviderError} err - Error code
- * @callback ProviderErrorEvent
- */
- 
-  /**
- * The {@link $ui.DataProvider} <b>onbeforeupdate</b> event will fire after the data has been retrieved but <b>before</b> controls have processed the data
- * @callback ProviderBeforeUpdateEvent
- */
  
 
 /**
@@ -12997,8 +13181,9 @@ function $ui_DataProvider(object, screen){
  * @param {string} screenId - The <b>id</b> property of the screen which contains the control providing the interaction
  * @param {string} controlID - The <b>id</b> property of the control in which the user interacted
  * @param {string} interaction - The interaction which took place
+ * @param {object} component - The component type definition for which this interaction took place.   An example could be the value $ui.List.  This is <b>not</b> a pointer to the control.
  */
-function InteractionEvent(screenId, controlId, interaction) {
+function InteractionEvent(screenId, controlId, interaction, component) {
 	/**
 	 * The <b>id</b> property of the screen which contains the control providing the interaction
 	 * @member {string} screenId
@@ -13020,6 +13205,13 @@ function InteractionEvent(screenId, controlId, interaction) {
 	 * @memberOf InteractionEvent
 	 */
 	this.interaction = interaction;
+	
+	/**
+	 * The component type definition for which this interaction took place.  An example could be the value $ui.List.  This is <b>not</b> a pointer to the control
+	 * @member {object} component
+	 * @memberOf InteractionEvent
+	 */
+	this.component = component;
 }
 
 
@@ -14482,7 +14674,7 @@ function ScreenBackground(img, repeat) {
  * @extends $ui.CoreComponent
  * @property {number} [selectedIndex=0] - Represents the index of the option you want to be selected. This property will also be updated whenever a user selects an option from the control. 
  * @property {string[]} options - This property represents the options provided by the control. It is an array of string values that will be displayed
- * @property {SegmentedClickEvent} [onclick] - The onclick event will fire when the user selects/clicks an option in the control. You can retrieve which option was selected by inspecting the <b>selectedIndex</b> property.
+ * @property {GenericEvent} [onclick] - The onclick event will fire when the user selects/clicks an option in the control. You can retrieve which option was selected by inspecting the <b>selectedIndex</b> property.
  */
 function $ui_SegmentedControl(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
@@ -14580,10 +14772,6 @@ function $ui_SegmentedControl(object, screen) {
 }
 $ui_SegmentedControl.prototype = new $ui_CoreComponent();
 
-/**
- * The {@link $ui.SegmentedControl} <b>onclick</b> event will fire when the user makes a selection in the control
- * @callback SegmentedClickEvent
- */
 /**
  * The SplitView object represents two vertical columns for layout components. The SplitView will size itself to all the available space provided by its parent control.
  * <br><br><b>Sample Declaration</b>
@@ -15027,6 +15215,11 @@ function $ui_WindowPane(object, data) {
 			object.dom.style.width = object.width + 'px';
 		}
 		
+		// Create our background image div
+		object.dom.backgroundDiv = document.createElement('div');
+		$ui.addClass(object.dom.backgroundDiv,'background');
+		object.dom.appendChild(object.dom.backgroundDiv);
+		
 		if (object.backCaption) {
 			object.dom.backBar = document.createElement('div');
 			$ui.addClass(object.dom.backBar,'back-bar');
@@ -15043,11 +15236,6 @@ function $ui_WindowPane(object, data) {
 				$ui.pop();
 			}
 		}
-		
-		// Create our background image div
-		object.dom.backgroundDiv = document.createElement('div');
-		$ui.addClass(object.dom.backgroundDiv,'background');
-		object.dom.appendChild(object.dom.backgroundDiv);
 
 		/** 
 		 * Set the background for the screen
@@ -15109,6 +15297,16 @@ function $ui_WindowPane(object, data) {
 		}
 		object._onwindowpaneresize = object._onwindowpaneresize.bind(object);
 		
+		// Clean-up any listeners
+		object._onbeforepop = function() {
+			if (this.animated == true) {
+				this.dom.style['-webkit-animation-delay'] = '';
+				this.dom.style['-webkit-animation-name'] = 'ui-pane-slide-right';
+			}
+			// Remove any global event listeners
+			$system.removeEventListenersForScreen(this);
+		}
+		object._onbeforepop = object._onbeforepop.bind(object);
 		
 		// Initialize the screen
 		object._initialize = function() {
@@ -15126,6 +15324,20 @@ function $ui_WindowPane(object, data) {
 $ui_WindowPane.prototype = new $ui_CoreScreen();
 
 
+/**
+ * The Browser control represents the browser window including both the chrome and the viewer.<br><br>
+ * This object will create an iframe area while in demo mode. But when in PhoneGap it will create a child browser window that it will overlay on the screen.<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *    component: $ui.Browser,
+ *    src: 'http://workshoptwelve.com'
+ * }
+ * @namespace Browser
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} [src] - The url path to initialize the browser
+*/
 function $ui_Browser(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-browser');
@@ -15204,7 +15416,12 @@ function $ui_Browser(object, screen) {
 		object.dom.browserDiv.appendChild(object.dom.iframe);
 	}
 	
-	// Public function to set the url
+	/**
+	* Sets the <b>src</b> property for the control
+	* @function setSrc
+	* @memberof $ui.Browser
+	* @param {string} value - Path to set for the <b>src</b> property
+	*/
 	object.setSrc = function(value) {
 		if (value == this.src) return;
 		this._setSrc(value);
@@ -15307,6 +15524,21 @@ function $ui_BrowserButton(object, screen) {
 }
 
 $ui_BrowserButton.prototype = new $ui_CoreComponent();
+/**
+ * The DialPad object a phone dialer keypad component<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *    component: $ui.DialPad,
+ *    onkeypadpress: function(key) {
+ *       console.log(key);
+ *    }
+ * }
+ * @namespace DialPad
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {KeyPadPressEvent} [onkeypadpress] - The event which will fire when a button on the keypad is pressed
+*/
 function $ui_DialPad(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-dial-pad');
@@ -15397,8 +15629,20 @@ function $ui_DialPad(object, screen) {
 	
 	return object.dom;
 }
-
 $ui_DialPad.prototype = new $ui_CoreComponent();
+
+/**
+ * @namespace DialPadKey
+ * @memberof $ui
+ * @property {string} caption - The number or letter on the button
+ * @property {string} [letters] - Optional secondary letters for the button such as "ABC"
+*/
+
+/**
+ * The {@link $ui.DialPad} <b>onkeypadpress</b> event will fire when the user clicks a keypad button
+ * @callback KeyPadPressEvent
+ * @param {$ui.DialPadKey} key - The key which was pressed
+ */
 function $ui_DialPadButton(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'circle-button');
@@ -15453,6 +15697,20 @@ function $ui_DialPadButton(object, screen) {
 }
 
 $ui_DialPadButton.prototype = new $ui_CoreComponent();
+/**
+ * The Map control represents the map window including both the chrome and the viewer.<br><br>
+ * This object will create an iframe area while in demo mode. But when in PhoneGap it will create a child map view window that it will overlay on the screen<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *    component: $ui.Map,
+ *    src: 'https://www.google.com/maps/embed?pb=!1m14!1m1'
+ * }
+ * @namespace Map
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} src - Populates the Google Maps URL for the control
+ */
 function $ui_Map(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-map');
@@ -15488,6 +15746,34 @@ function $ui_Map(object, screen) {
 	return object.dom;
 }
 $ui_Map.prototype = new $ui_CoreComponent();
+/**
+ * The Media Player control provides the user interface to the audio services of Brainiac. This control will fill the entire available space provided by its parent containing control.<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *    component: $ui.MediaPlayer,
+ *    album: 'License To Ill',
+ *    song: 'So What Cha Want',
+ *    artist: 'Beastie Boys',
+ *    coverArt: 'img/foo.png',
+ *    duration: 217,
+ *    onplay: function() {
+ *       // Do something
+ *    }
+ * }
+ * @namespace MediaPlayer
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} [album] - The name of the album of the current playing/paused song
+ * @property {string} [song] - The name of the current playing/paused song
+ * @property {string} [artist] - The name of the artist for the current playing/paused song
+ * @property {string} [coverArt] - Path to the cover/album art for the current playing/paused song
+ * @property {number} [duration] - The duration of the current playing/paused song in <b>seconds</b>
+ * @property {boolean} [paused=false] - Optional property specifying if the player is paused or not
+ * @property {GenericEvent} [onplay] - This event will fire when the user presses play
+ * @property {GenericEvent} [onpause] - This event will fire when the user presses pause
+ * @property {GenericEvent} [onmenuclick] - This event will fire when the user presses the menu
+ */
 function $ui_MediaPlayer(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-media-player');
@@ -15604,7 +15890,12 @@ function $ui_MediaPlayer(object, screen) {
 	object.dom.buttonShuffle.textContent = 'Shuffle Off';
 	object.dom.textButtonBox.appendChild(object.dom.buttonShuffle);
 	
-	// Public function to set the album
+	/**
+	* Sets the <b>album</b> property of the control
+	* @function setAlbum
+	* @memberof $ui.MediaPlayer
+	* @param {string} value - The new property value
+	*/
 	object.setAlbum = function(value) {
 		this.album = value;
 		// Now load the new image
@@ -15616,7 +15907,12 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object.setAlbum = object.setAlbum.bind(object);
 	
-	// Public function to set the song
+	/**
+	* Sets the <b>song</b> property of the control
+	* @function setSong
+	* @memberof $ui.MediaPlayer
+	* @param {string} value - The new property value
+	*/
 	object.setSong = function(value) {
 		this.song = value;
 		// Now load the new image
@@ -15628,7 +15924,12 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object.setSong = object.setSong.bind(object);
 	
-	// Public function to set the artist
+	/**
+	* Sets the <b>artist</b> property of the control
+	* @function setArtist
+	* @memberof $ui.MediaPlayer
+	* @param {string} value - The new property value
+	*/
 	object.setArtist = function(value) {
 		this.artist = value;
 		// Now load the new image
@@ -15640,7 +15941,12 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object.setArtist = object.setArtist.bind(object);
 	
-	// Public function to set cover art
+	/**
+	* Sets the <b>coverArt</b> property of the control
+	* @function setCoverArt
+	* @memberof $ui.MediaPlayer
+	* @param {string} value - The new property value
+	*/
 	object.setCoverArt = function(value) {
 		this.coverArt = value;
 		this.dom.coverArt.style.opacity = '0';
@@ -15651,7 +15957,12 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object.setCoverArt = object.setCoverArt.bind(object);
 	
-	// Public function to set duration
+	/**
+	* Sets the <b>duration</b> property of the control
+	* @function setDuration
+	* @memberof $ui.MediaPlayer
+	* @param {number} value - The new property value
+	*/
 	object.setDuration = function(value) {
 		this.duration = value;
 		// Now load the new image
@@ -15671,7 +15982,11 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object._renderPlayState = object._renderPlayState.bind(object);
 	
-	// Public function to play the current song
+	/**
+	* Play the current song
+	* @function play
+	* @memberof $ui.MediaPlayer
+	*/
 	object.play = function(value) {
 		if (this.paused == false) return;
 		this.paused = false;
@@ -15682,7 +15997,11 @@ function $ui_MediaPlayer(object, screen) {
 	}
 	object.play = object.play.bind(object);
 	
-	// Public function to pause the current song
+	/**
+	* Pause the current song
+	* @function pause
+	* @memberof $ui.MediaPlayer
+	*/
 	object.pause = function(value) {
 		if (this.paused == true) return;
 		this.paused = true;
@@ -15716,6 +16035,7 @@ function $ui_MediaPlayer(object, screen) {
 }
 
 $ui_MediaPlayer.prototype = new $ui_CoreComponent();
+
 function $ui_OnlineScreen(object, data) {
 	$ui_CoreScreen.call(this, object, data);
 	
@@ -15749,6 +16069,23 @@ function $ui_OnlineScreen(object, data) {
 $ui_OnlineScreen.prototype = new $ui_CoreScreen();
 
 
+/**
+ * The phone log list item type is used with the {@link $ui.List} component and represents a call log entry. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   title: 'Susan',
+ *   caption: '(555) 897-9876',
+ *   style: $ui.PhoneLogListItem.PhoneLogStyle.MISSED
+ * }
+ * </pre>
+ * @namespace PhoneLogListItem
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} title - Represents the main title to display
+ * @property {$ui.PhoneLogListItem.PhoneLogStyle} [style] - The type of call that is in the list
+ * @property {string} [caption] - Represents the main text to show in the list item
+ */
 function $ui_PhoneLogListItem(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom, 'ui-phone-log-list-item');
@@ -15809,6 +16146,21 @@ function $ui_PhoneLogListItem(object, screen) {
 }
 
 $ui_PhoneLogListItem.prototype = new $ui_CoreComponent();
+/**
+ * The TileAcceleration represents the tile that shows Acceleration in G-forces..
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileAcceleration,
+ *    min: 0,
+ *    max: 1.5,
+ *    value: 1
+ * }
+ * </pre>
+ * @namespace TileAcceleration
+ * @memberof $ui
+ * @extends $ui.CoreTileGauge
+ */
 function $ui_TileAcceleration(object, screen) {
 	$ui_CoreTileGauge.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-tile-acceleration');
@@ -15841,6 +16193,24 @@ function $ui_TileAcceleration(object, screen) {
 }
 
 $ui_TileAcceleration.prototype = new $ui_CoreTileGauge();
+/**
+ * The Badge tile displays the different badges that the user has been awarded. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileBadge
+ *    img: 'img/badge.png',
+ *    caption: 'This is <large>my</large> caption',
+ *    accent:  'Smaller text'
+ * }
+ * </pre>
+ * @namespace TileBadge
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {string} [img] - Represents the path to the image representing the badge
+ * @property {string} [accent] - Represents the accent text to go along with the caption
+ * @property {string} [caption] - This is the text to appear on the badge. The caption value can also have opening and closing <b>&lt;large&gt;</b> elements to signify which parts of the text should be large-sized.
+ */
 function $ui_TileBadge(object, screen) {
 	// This tile is 1 x 1
 	object._size = undefined;
@@ -15906,6 +16276,21 @@ function $ui_TileBadge(object, screen) {
 }
 
 $ui_TileBadge.prototype = new $ui_CoreTile();
+/**
+ * The Braking Tile represents the tile which shows Braking in G-forces.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileBraking,
+ *    min: 0,
+ *    max: 1.5,
+ *    value: 1
+ * }
+ * </pre>
+ * @namespace TileBraking
+ * @memberof $ui
+ * @extends $ui.CoreTileGauge
+ */
 function $ui_TileBraking(object, screen) {
 	$ui_CoreTileGauge.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-tile-braking');
@@ -15939,6 +16324,22 @@ function $ui_TileBraking(object, screen) {
 }
 
 $ui_TileBraking.prototype = new $ui_CoreTileGauge();
+/**
+ * The Distance tile displays the distance travelled over the last few recorded periods. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileDistance
+ *    data: [5,25,8.2],
+ *    units:  'miles'
+ * }
+ * </pre>
+ * @namespace TileDistance
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number[]} [data] - This array of numbers represents the last few points of distance units recorded. The values in the array are ordered from oldest to newest.
+ * @property {string} units - This string value represents the units of measure. Typically miles or km.
+ */
 function $ui_TileDistance(object, screen) {
 	// This tile is 1 x 1
 	object._size = undefined;
@@ -16037,6 +16438,22 @@ function $ui_TileDistance(object, screen) {
 }
 
 $ui_TileDistance.prototype = new $ui_CoreTile();
+/**
+ * The Fuel tile displays the fuel used over the last few recorded periods. 
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileFuel
+ *    data: [5,25,8.2],
+ *    value: 8.25
+ * }
+ * </pre>
+ * @namespace TileFuel
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number[]} [data] - This array of numbers represents the last few points of fuel level values recorded. The values in the array are ordered from oldest to newest.
+ * @property {number} value - This number value represents the dollar amount of fuel used for the day
+ */
 function $ui_TileFuel(object, screen) {
 	// This tile is 1 x 1
 	object._size = undefined;
@@ -16163,6 +16580,20 @@ function $ui_TileFuel(object, screen) {
 }
 
 $ui_TileFuel.prototype = new $ui_CoreTile();
+/**
+ * The Idle tile represents the amount of time the driver spends moving and not sitting in one place.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileIdle
+ *    value: 70
+ * }
+ * </pre>
+ * @namespace TileIdle
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number} value - This number value represents the percentage of time the driver spent moving.
+ */
 function $ui_TileIdle(object, screen) {
 	object._size = undefined;
 	$ui_CoreTileDonutChart.call(this, object, screen);
@@ -16231,6 +16662,22 @@ function $ui_TileIdle(object, screen) {
 }
 
 $ui_TileIdle.prototype = new $ui_CoreTileDonutChart();
+/**
+ * The Idle Details tile represents how much time was spent being stuck in traffic over the last 7 days.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileIdleDetails,
+ *    labels: ['Sun','Mon','Tue','Wed','Thur','Fri','Today'],
+ *    data: [0,35,17,65,0,10,15]
+ * }
+ * </pre>
+ * @namespace TileIdleDetails
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number[]} [data] - This array of numbers represents the amount of minutes spent idle over the last 7 days
+ * @property {string[]} [labels] - This array of strings represents the labels for the last 7 days
+ */
 function $ui_TileIdleDetails(object, screen) {
 	// This tile is 1 x 1
 	object._size = $ui.TileSize.WIDE;
@@ -16292,6 +16739,24 @@ function $ui_TileIdleDetails(object, screen) {
 }
 
 $ui_TileIdleDetails.prototype = new $ui_CoreTile();
+/**
+ * The MPG tile represents how close to the target miles per gallon target they achieved
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileMPG,
+ *    value: 25,
+ *    max: 34,
+ *    abbreviation: 'MPG'
+ * }
+ * </pre>
+ * @namespace TileMPG
+ * @memberof $ui
+ * @extends $ui.CoreTileDonutChart
+ * @property {number} [value] - This number value represents the actual MPG value achived
+ * @property {number} [max] - This number value represents the target value the driver is hoping to achieve
+ * @property {string} [abbreviation] - This string value represents the Miles per gallon or KM per liter abbreviation
+ */
 function $ui_TileMPG(object, screen) {
 	object._size = undefined;
 	$ui_CoreTileDonutChart.call(this, object, screen);
@@ -16370,6 +16835,31 @@ function $ui_TileMPG(object, screen) {
 }
 
 $ui_TileMPG.prototype = new $ui_CoreTileDonutChart();
+/**
+ * The Profile tile displays the user's profile and participation statistics.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileProfile
+ *    backgroundImg: 'img/car.png',
+ *    avatar: 'img/useravatar.png',
+ *    userName:  'brcewane',
+ *    stats: {
+ *        friends: 12,
+ *        groups: 6,
+ *        score: 4056,
+ *        rank: 2,
+ *    }
+ * }
+ * </pre>
+ * @namespace TileProfile
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {string} [backgroundImg] - This is the path to the background image the user has chosen for their profile.
+ * @property {string} [userName] - This is the path to the avatar image the user has chosen for their profile.
+ * @property {string} [avatar] - This string value represents the Miles per gallon or KM per liter abbreviation
+ * @property {$ui.TileProfile.ProfileStats} [stats] - This object represents the participation statistics for the user
+ */
 function $ui_TileProfile(object, screen) {
 	// This is a tall tile
 	object._size = $ui.TileSize.TALL;
@@ -16625,6 +17115,33 @@ function $ui_TileProfile(object, screen) {
 }
 
 $ui_TileProfile.prototype = new $ui_CoreTile();
+/**
+ * Statistics for the user profile tile {@link $ui.TileProfile}
+ * @namespace ProfileStats
+ * @memberof $ui.TileProfile
+ * @property {number} [friends] - The number of friends
+ * @property {number} [groups] - The number of groups
+ * @property {number} [score] - The overall point total for the user
+ * @property {number} [rank] - The overall rank of the user among their friends and groups
+ */
+/**
+ * The Record tile provides a button to start recording with optional countdown capability.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileRecord,
+ *    caption: 'Record 0-60 Time',
+ *    countdown: true
+ * }
+ * </pre>
+ * @namespace TileRecord
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {string} [caption] - This is the caption to show at the bottom of the tile
+ * @property {boolean} [countdown=false] - This optional boolean property specifies if you wish to have a count down come after the user presses the start button. If set to true it will do a countdown from 3 before the <b>onrecord</b> event is triggered.
+ * @property {GenericEvent} [onstartclick] - Fires when the user presses Start
+ * @property {GenericEvent} [onrecord] - Fires when the recording begins
+ */
 function $ui_TileRecord(object, screen) {
 	// This tile is 1 x 1
 	object._size = undefined;
@@ -16729,7 +17246,11 @@ function $ui_TileRecord(object, screen) {
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);
 	
-	// Public function to reset the control
+	/**
+	* Reset the tile to its original state
+	* @function reset
+	* @memberof $ui.TileRecord
+	*/
 	object.reset = function() {
 		if (this._interval != undefined) {
 			window.clearInterval(this._interval);
@@ -16747,6 +17268,26 @@ function $ui_TileRecord(object, screen) {
 }
 
 $ui_TileRecord.prototype = new $ui_CoreTile();
+
+/**
+ * The Time donut tile represents how close you reach a target number goal
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileTimeDonut,
+ *    value: 3.8,
+ *    target: 4.2,
+ *    accent: 'Your Best Time'
+ * }
+ * </pre>
+ * @namespace TileTimeDonut
+ * @memberof $ui
+ * @extends $ui.CoreTileDonutChart
+ * @property {number} [value] - This number value represents the actual time achieved
+ * @property {number} [target] - This number value represents the target time the driver is hoping to achieve.
+ * @property {string} [caption] - This optional string value represents the text to appear to the left of the displayed value
+ * @property {string} [accent] - This optional string value represents any extra accent text to display on the tile
+ */
 function $ui_TileTimeDonut(object, screen) {
 	object._size = undefined;
 	$ui_CoreTileDonutChart.call(this, object, screen);
@@ -16827,6 +17368,24 @@ function $ui_TileTimeDonut(object, screen) {
 }
 
 $ui_TileTimeDonut.prototype = new $ui_CoreTileDonutChart();
+/**
+ * The Time History tile represents past recorded times.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileTimeHistory,
+ *    labels: ['Apr 10/14','May 12/14','Jul 18/14','Aug 22/14'],
+ *    data: [5.2,6.3,4.2,4.5],
+ *    caption: 'Recorded 0-60 times (sec)'
+ * }
+ * </pre>
+ * @namespace TileTimeHistory
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {number[]} [data] - This array of numbers represents the time values
+ * @property {string[]} [labels] - This array of strings represents the labels for the times. These labels are typically logging dates.
+ * @property {string} [caption] - This optional string value represents the text caption you wish to include
+ */
 function $ui_TileTimeHistory(object, screen) {
 	// This tile is 1 x 1
 	object._size = $ui.TileSize.WIDE;
@@ -16892,6 +17451,21 @@ function $ui_TileTimeHistory(object, screen) {
 }
 
 $ui_TileTimeHistory.prototype = new $ui_CoreTile();
+/**
+ * The Timer tile provides a stop watch timer. <b>NOTE: Currently there is a 60 minute limit for the timer</b>
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *    component: $ui.TileTimer
+ * }
+ * </pre>
+ * @namespace TileTimer
+ * @memberof $ui
+ * @extends $ui.CoreTile
+ * @property {GenericEvent} [onstart] - This event fires when the timer starts
+ * @property {GenericEvent} [onstop] - This event fires when the timer stops
+ * @property {GenericEvent} [onreset] - This event fires when the timer has been reset
+ */
 function $ui_TileTimer(object, screen) {
 	// This tile is 1 x 2
 	object._size = $ui.TileSize.WIDE;
@@ -16924,7 +17498,11 @@ function $ui_TileTimer(object, screen) {
 	}
 	object._doInterval = object._doInterval.bind(object);
 	
-	// Public function to reset the control
+	/**
+	* This function will reset the timer and trigger the <b>onreset</b> event
+	* @function reset
+	* @memberof $ui.TileTimer
+	*/
 	object.reset = function() {
 		if (this._interval != undefined) {
 			window.clearInterval(this._interval);
@@ -16938,7 +17516,11 @@ function $ui_TileTimer(object, screen) {
 	}
 	object.reset = object.reset.bind(object);
 	
-	// Public function to start the control
+	/**
+	* This function will start the timer and trigger the <b>onstart</b> event
+	* @function start
+	* @memberof $ui.TileTimer
+	*/
 	object.start = function() {
 		if (this._interval != undefined) return; // Already running
 		this._startTime = new Date();
@@ -16950,7 +17532,11 @@ function $ui_TileTimer(object, screen) {
 	}
 	object.start = object.start.bind(object);
 	
-	// Public function to stop the control
+	/**
+	* This function will stop the timer and trigger the <b>onstop</b> event
+	* @function stop
+	* @memberof $ui.TileTimer
+	*/
 	object.stop = function() {
 		if (this._interval != undefined) {
 			window.clearInterval(this._interval);
@@ -16962,19 +17548,31 @@ function $ui_TileTimer(object, screen) {
 	}
 	object.stop = object.stop.bind(object);
 	
-	// Public function to get the time in milliseconds
+	/**
+	* Retrieve the timer's value in Milliseconds
+	* @function getMilliseconds
+	* @memberof $ui.TileTimer
+	*/
 	object.getMilliseconds = function() {
 		return this._milliseconds;
 	}
 	object.getMilliseconds = object.getMilliseconds.bind(object);
 	
-	// Public function to get the time in seconds
+	/**
+	* Retrieve the timer's value in Seconds
+	* @function getSeconds
+	* @memberof $ui.TileTimer
+	*/
 	object.getSeconds = function() {
 		return (this._milliseconds/1000).toFixed(1);
 	}
 	object.getSeconds = object.getSeconds.bind(object);
 	
-	// Public function to get the time in minutes
+	/**
+	* Retrieve the timer's value in Minutes
+	* @function getMinutes
+	* @memberof $ui.TileTimer
+	*/
 	object.getMinutes = function() {
 		return (this._milliseconds/60000).toFixed(2);
 	}
@@ -16999,6 +17597,21 @@ function $ui_TileTimer(object, screen) {
 }
 
 $ui_TileTimer.prototype = new $ui_CoreTile();
+
+/**
+ * The App Container is a window that is used for opening up an application in an iFrame in the emulator. This is mainly an internal class that is used by the Head Unit to open up a new app.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * function myAppContainer() {
+ *   this.component = $ui.AppContainer;
+ *   this.src = 'http://someurl';
+ *}
+ * </pre>
+ * @namespace AppContainer
+ * @memberof $ui
+ * @extends $ui.CoreScreen
+ * @property {string} src - This is the URL path to the application that will be opened in the inner iFrame
+ */
 function emulator_AppContainer(object, data) {
 	$ui_CoreScreen.call(this, object, data);
 	
@@ -17053,6 +17666,19 @@ emulator_AppContainer.prototype = new $ui_CoreScreen();
  * Licensed under the MIT license */
 !function(a,b,c,d){"use strict";function e(a,b,c){return setTimeout(k(a,c),b)}function f(a,b,c){return Array.isArray(a)?(g(a,c[b],c),!0):!1}function g(a,b,c){var e;if(a)if(a.forEach)a.forEach(b,c);else if(a.length!==d)for(e=0;e<a.length;)b.call(c,a[e],e,a),e++;else for(e in a)a.hasOwnProperty(e)&&b.call(c,a[e],e,a)}function h(a,b,c){for(var e=Object.keys(b),f=0;f<e.length;)(!c||c&&a[e[f]]===d)&&(a[e[f]]=b[e[f]]),f++;return a}function i(a,b){return h(a,b,!0)}function j(a,b,c){var d,e=b.prototype;d=a.prototype=Object.create(e),d.constructor=a,d._super=e,c&&h(d,c)}function k(a,b){return function(){return a.apply(b,arguments)}}function l(a,b){return typeof a==kb?a.apply(b?b[0]||d:d,b):a}function m(a,b){return a===d?b:a}function n(a,b,c){g(r(b),function(b){a.addEventListener(b,c,!1)})}function o(a,b,c){g(r(b),function(b){a.removeEventListener(b,c,!1)})}function p(a,b){for(;a;){if(a==b)return!0;a=a.parentNode}return!1}function q(a,b){return a.indexOf(b)>-1}function r(a){return a.trim().split(/\s+/g)}function s(a,b,c){if(a.indexOf&&!c)return a.indexOf(b);for(var d=0;d<a.length;){if(c&&a[d][c]==b||!c&&a[d]===b)return d;d++}return-1}function t(a){return Array.prototype.slice.call(a,0)}function u(a,b,c){for(var d=[],e=[],f=0;f<a.length;){var g=b?a[f][b]:a[f];s(e,g)<0&&d.push(a[f]),e[f]=g,f++}return c&&(d=b?d.sort(function(a,c){return a[b]>c[b]}):d.sort()),d}function v(a,b){for(var c,e,f=b[0].toUpperCase()+b.slice(1),g=0;g<ib.length;){if(c=ib[g],e=c?c+f:b,e in a)return e;g++}return d}function w(){return ob++}function x(a){var b=a.ownerDocument;return b.defaultView||b.parentWindow}function y(a,b){var c=this;this.manager=a,this.callback=b,this.element=a.element,this.target=a.options.inputTarget,this.domHandler=function(b){l(a.options.enable,[a])&&c.handler(b)},this.init()}function z(a){var b,c=a.options.inputClass;return new(b=c?c:rb?N:sb?Q:qb?S:M)(a,A)}function A(a,b,c){var d=c.pointers.length,e=c.changedPointers.length,f=b&yb&&d-e===0,g=b&(Ab|Bb)&&d-e===0;c.isFirst=!!f,c.isFinal=!!g,f&&(a.session={}),c.eventType=b,B(a,c),a.emit("hammer.input",c),a.recognize(c),a.session.prevInput=c}function B(a,b){var c=a.session,d=b.pointers,e=d.length;c.firstInput||(c.firstInput=E(b)),e>1&&!c.firstMultiple?c.firstMultiple=E(b):1===e&&(c.firstMultiple=!1);var f=c.firstInput,g=c.firstMultiple,h=g?g.center:f.center,i=b.center=F(d);b.timeStamp=nb(),b.deltaTime=b.timeStamp-f.timeStamp,b.angle=J(h,i),b.distance=I(h,i),C(c,b),b.offsetDirection=H(b.deltaX,b.deltaY),b.scale=g?L(g.pointers,d):1,b.rotation=g?K(g.pointers,d):0,D(c,b);var j=a.element;p(b.srcEvent.target,j)&&(j=b.srcEvent.target),b.target=j}function C(a,b){var c=b.center,d=a.offsetDelta||{},e=a.prevDelta||{},f=a.prevInput||{};(b.eventType===yb||f.eventType===Ab)&&(e=a.prevDelta={x:f.deltaX||0,y:f.deltaY||0},d=a.offsetDelta={x:c.x,y:c.y}),b.deltaX=e.x+(c.x-d.x),b.deltaY=e.y+(c.y-d.y)}function D(a,b){var c,e,f,g,h=a.lastInterval||b,i=b.timeStamp-h.timeStamp;if(b.eventType!=Bb&&(i>xb||h.velocity===d)){var j=h.deltaX-b.deltaX,k=h.deltaY-b.deltaY,l=G(i,j,k);e=l.x,f=l.y,c=mb(l.x)>mb(l.y)?l.x:l.y,g=H(j,k),a.lastInterval=b}else c=h.velocity,e=h.velocityX,f=h.velocityY,g=h.direction;b.velocity=c,b.velocityX=e,b.velocityY=f,b.direction=g}function E(a){for(var b=[],c=0;c<a.pointers.length;)b[c]={clientX:lb(a.pointers[c].clientX),clientY:lb(a.pointers[c].clientY)},c++;return{timeStamp:nb(),pointers:b,center:F(b),deltaX:a.deltaX,deltaY:a.deltaY}}function F(a){var b=a.length;if(1===b)return{x:lb(a[0].clientX),y:lb(a[0].clientY)};for(var c=0,d=0,e=0;b>e;)c+=a[e].clientX,d+=a[e].clientY,e++;return{x:lb(c/b),y:lb(d/b)}}function G(a,b,c){return{x:b/a||0,y:c/a||0}}function H(a,b){return a===b?Cb:mb(a)>=mb(b)?a>0?Db:Eb:b>0?Fb:Gb}function I(a,b,c){c||(c=Kb);var d=b[c[0]]-a[c[0]],e=b[c[1]]-a[c[1]];return Math.sqrt(d*d+e*e)}function J(a,b,c){c||(c=Kb);var d=b[c[0]]-a[c[0]],e=b[c[1]]-a[c[1]];return 180*Math.atan2(e,d)/Math.PI}function K(a,b){return J(b[1],b[0],Lb)-J(a[1],a[0],Lb)}function L(a,b){return I(b[0],b[1],Lb)/I(a[0],a[1],Lb)}function M(){this.evEl=Nb,this.evWin=Ob,this.allow=!0,this.pressed=!1,y.apply(this,arguments)}function N(){this.evEl=Rb,this.evWin=Sb,y.apply(this,arguments),this.store=this.manager.session.pointerEvents=[]}function O(){this.evTarget=Ub,this.evWin=Vb,this.started=!1,y.apply(this,arguments)}function P(a,b){var c=t(a.touches),d=t(a.changedTouches);return b&(Ab|Bb)&&(c=u(c.concat(d),"identifier",!0)),[c,d]}function Q(){this.evTarget=Xb,this.targetIds={},y.apply(this,arguments)}function R(a,b){var c=t(a.touches),d=this.targetIds;if(b&(yb|zb)&&1===c.length)return d[c[0].identifier]=!0,[c,c];var e,f,g=t(a.changedTouches),h=[],i=this.target;if(f=c.filter(function(a){return p(a.target,i)}),b===yb)for(e=0;e<f.length;)d[f[e].identifier]=!0,e++;for(e=0;e<g.length;)d[g[e].identifier]&&h.push(g[e]),b&(Ab|Bb)&&delete d[g[e].identifier],e++;return h.length?[u(f.concat(h),"identifier",!0),h]:void 0}function S(){y.apply(this,arguments);var a=k(this.handler,this);this.touch=new Q(this.manager,a),this.mouse=new M(this.manager,a)}function T(a,b){this.manager=a,this.set(b)}function U(a){if(q(a,bc))return bc;var b=q(a,cc),c=q(a,dc);return b&&c?cc+" "+dc:b||c?b?cc:dc:q(a,ac)?ac:_b}function V(a){this.id=w(),this.manager=null,this.options=i(a||{},this.defaults),this.options.enable=m(this.options.enable,!0),this.state=ec,this.simultaneous={},this.requireFail=[]}function W(a){return a&jc?"cancel":a&hc?"end":a&gc?"move":a&fc?"start":""}function X(a){return a==Gb?"down":a==Fb?"up":a==Db?"left":a==Eb?"right":""}function Y(a,b){var c=b.manager;return c?c.get(a):a}function Z(){V.apply(this,arguments)}function $(){Z.apply(this,arguments),this.pX=null,this.pY=null}function _(){Z.apply(this,arguments)}function ab(){V.apply(this,arguments),this._timer=null,this._input=null}function bb(){Z.apply(this,arguments)}function cb(){Z.apply(this,arguments)}function db(){V.apply(this,arguments),this.pTime=!1,this.pCenter=!1,this._timer=null,this._input=null,this.count=0}function eb(a,b){return b=b||{},b.recognizers=m(b.recognizers,eb.defaults.preset),new fb(a,b)}function fb(a,b){b=b||{},this.options=i(b,eb.defaults),this.options.inputTarget=this.options.inputTarget||a,this.handlers={},this.session={},this.recognizers=[],this.element=a,this.input=z(this),this.touchAction=new T(this,this.options.touchAction),gb(this,!0),g(b.recognizers,function(a){var b=this.add(new a[0](a[1]));a[2]&&b.recognizeWith(a[2]),a[3]&&b.requireFailure(a[3])},this)}function gb(a,b){var c=a.element;g(a.options.cssProps,function(a,d){c.style[v(c.style,d)]=b?a:""})}function hb(a,c){var d=b.createEvent("Event");d.initEvent(a,!0,!0),d.gesture=c,c.target.dispatchEvent(d)}var ib=["","webkit","moz","MS","ms","o"],jb=b.createElement("div"),kb="function",lb=Math.round,mb=Math.abs,nb=Date.now,ob=1,pb=/mobile|tablet|ip(ad|hone|od)|android/i,qb="ontouchstart"in a,rb=v(a,"PointerEvent")!==d,sb=qb&&pb.test(navigator.userAgent),tb="touch",ub="pen",vb="mouse",wb="kinect",xb=25,yb=1,zb=2,Ab=4,Bb=8,Cb=1,Db=2,Eb=4,Fb=8,Gb=16,Hb=Db|Eb,Ib=Fb|Gb,Jb=Hb|Ib,Kb=["x","y"],Lb=["clientX","clientY"];y.prototype={handler:function(){},init:function(){this.evEl&&n(this.element,this.evEl,this.domHandler),this.evTarget&&n(this.target,this.evTarget,this.domHandler),this.evWin&&n(x(this.element),this.evWin,this.domHandler)},destroy:function(){this.evEl&&o(this.element,this.evEl,this.domHandler),this.evTarget&&o(this.target,this.evTarget,this.domHandler),this.evWin&&o(x(this.element),this.evWin,this.domHandler)}};var Mb={mousedown:yb,mousemove:zb,mouseup:Ab},Nb="mousedown",Ob="mousemove mouseup";j(M,y,{handler:function(a){var b=Mb[a.type];b&yb&&0===a.button&&(this.pressed=!0),b&zb&&1!==a.which&&(b=Ab),this.pressed&&this.allow&&(b&Ab&&(this.pressed=!1),this.callback(this.manager,b,{pointers:[a],changedPointers:[a],pointerType:vb,srcEvent:a}))}});var Pb={pointerdown:yb,pointermove:zb,pointerup:Ab,pointercancel:Bb,pointerout:Bb},Qb={2:tb,3:ub,4:vb,5:wb},Rb="pointerdown",Sb="pointermove pointerup pointercancel";a.MSPointerEvent&&(Rb="MSPointerDown",Sb="MSPointerMove MSPointerUp MSPointerCancel"),j(N,y,{handler:function(a){var b=this.store,c=!1,d=a.type.toLowerCase().replace("ms",""),e=Pb[d],f=Qb[a.pointerType]||a.pointerType,g=f==tb,h=s(b,a.pointerId,"pointerId");e&yb&&(0===a.button||g)?0>h&&(b.push(a),h=b.length-1):e&(Ab|Bb)&&(c=!0),0>h||(b[h]=a,this.callback(this.manager,e,{pointers:b,changedPointers:[a],pointerType:f,srcEvent:a}),c&&b.splice(h,1))}});var Tb={touchstart:yb,touchmove:zb,touchend:Ab,touchcancel:Bb},Ub="touchstart",Vb="touchstart touchmove touchend touchcancel";j(O,y,{handler:function(a){var b=Tb[a.type];if(b===yb&&(this.started=!0),this.started){var c=P.call(this,a,b);b&(Ab|Bb)&&c[0].length-c[1].length===0&&(this.started=!1),this.callback(this.manager,b,{pointers:c[0],changedPointers:c[1],pointerType:tb,srcEvent:a})}}});var Wb={touchstart:yb,touchmove:zb,touchend:Ab,touchcancel:Bb},Xb="touchstart touchmove touchend touchcancel";j(Q,y,{handler:function(a){var b=Wb[a.type],c=R.call(this,a,b);c&&this.callback(this.manager,b,{pointers:c[0],changedPointers:c[1],pointerType:tb,srcEvent:a})}}),j(S,y,{handler:function(a,b,c){var d=c.pointerType==tb,e=c.pointerType==vb;if(d)this.mouse.allow=!1;else if(e&&!this.mouse.allow)return;b&(Ab|Bb)&&(this.mouse.allow=!0),this.callback(a,b,c)},destroy:function(){this.touch.destroy(),this.mouse.destroy()}});var Yb=v(jb.style,"touchAction"),Zb=Yb!==d,$b="compute",_b="auto",ac="manipulation",bc="none",cc="pan-x",dc="pan-y";T.prototype={set:function(a){a==$b&&(a=this.compute()),Zb&&(this.manager.element.style[Yb]=a),this.actions=a.toLowerCase().trim()},update:function(){this.set(this.manager.options.touchAction)},compute:function(){var a=[];return g(this.manager.recognizers,function(b){l(b.options.enable,[b])&&(a=a.concat(b.getTouchAction()))}),U(a.join(" "))},preventDefaults:function(a){if(!Zb){var b=a.srcEvent,c=a.offsetDirection;if(this.manager.session.prevented)return void b.preventDefault();var d=this.actions,e=q(d,bc),f=q(d,dc),g=q(d,cc);return e||f&&c&Hb||g&&c&Ib?this.preventSrc(b):void 0}},preventSrc:function(a){this.manager.session.prevented=!0,a.preventDefault()}};var ec=1,fc=2,gc=4,hc=8,ic=hc,jc=16,kc=32;V.prototype={defaults:{},set:function(a){return h(this.options,a),this.manager&&this.manager.touchAction.update(),this},recognizeWith:function(a){if(f(a,"recognizeWith",this))return this;var b=this.simultaneous;return a=Y(a,this),b[a.id]||(b[a.id]=a,a.recognizeWith(this)),this},dropRecognizeWith:function(a){return f(a,"dropRecognizeWith",this)?this:(a=Y(a,this),delete this.simultaneous[a.id],this)},requireFailure:function(a){if(f(a,"requireFailure",this))return this;var b=this.requireFail;return a=Y(a,this),-1===s(b,a)&&(b.push(a),a.requireFailure(this)),this},dropRequireFailure:function(a){if(f(a,"dropRequireFailure",this))return this;a=Y(a,this);var b=s(this.requireFail,a);return b>-1&&this.requireFail.splice(b,1),this},hasRequireFailures:function(){return this.requireFail.length>0},canRecognizeWith:function(a){return!!this.simultaneous[a.id]},emit:function(a){function b(b){c.manager.emit(c.options.event+(b?W(d):""),a)}var c=this,d=this.state;hc>d&&b(!0),b(),d>=hc&&b(!0)},tryEmit:function(a){return this.canEmit()?this.emit(a):void(this.state=kc)},canEmit:function(){for(var a=0;a<this.requireFail.length;){if(!(this.requireFail[a].state&(kc|ec)))return!1;a++}return!0},recognize:function(a){var b=h({},a);return l(this.options.enable,[this,b])?(this.state&(ic|jc|kc)&&(this.state=ec),this.state=this.process(b),void(this.state&(fc|gc|hc|jc)&&this.tryEmit(b))):(this.reset(),void(this.state=kc))},process:function(){},getTouchAction:function(){},reset:function(){}},j(Z,V,{defaults:{pointers:1},attrTest:function(a){var b=this.options.pointers;return 0===b||a.pointers.length===b},process:function(a){var b=this.state,c=a.eventType,d=b&(fc|gc),e=this.attrTest(a);return d&&(c&Bb||!e)?b|jc:d||e?c&Ab?b|hc:b&fc?b|gc:fc:kc}}),j($,Z,{defaults:{event:"pan",threshold:10,pointers:1,direction:Jb},getTouchAction:function(){var a=this.options.direction,b=[];return a&Hb&&b.push(dc),a&Ib&&b.push(cc),b},directionTest:function(a){var b=this.options,c=!0,d=a.distance,e=a.direction,f=a.deltaX,g=a.deltaY;return e&b.direction||(b.direction&Hb?(e=0===f?Cb:0>f?Db:Eb,c=f!=this.pX,d=Math.abs(a.deltaX)):(e=0===g?Cb:0>g?Fb:Gb,c=g!=this.pY,d=Math.abs(a.deltaY))),a.direction=e,c&&d>b.threshold&&e&b.direction},attrTest:function(a){return Z.prototype.attrTest.call(this,a)&&(this.state&fc||!(this.state&fc)&&this.directionTest(a))},emit:function(a){this.pX=a.deltaX,this.pY=a.deltaY;var b=X(a.direction);b&&this.manager.emit(this.options.event+b,a),this._super.emit.call(this,a)}}),j(_,Z,{defaults:{event:"pinch",threshold:0,pointers:2},getTouchAction:function(){return[bc]},attrTest:function(a){return this._super.attrTest.call(this,a)&&(Math.abs(a.scale-1)>this.options.threshold||this.state&fc)},emit:function(a){if(this._super.emit.call(this,a),1!==a.scale){var b=a.scale<1?"in":"out";this.manager.emit(this.options.event+b,a)}}}),j(ab,V,{defaults:{event:"press",pointers:1,time:500,threshold:5},getTouchAction:function(){return[_b]},process:function(a){var b=this.options,c=a.pointers.length===b.pointers,d=a.distance<b.threshold,f=a.deltaTime>b.time;if(this._input=a,!d||!c||a.eventType&(Ab|Bb)&&!f)this.reset();else if(a.eventType&yb)this.reset(),this._timer=e(function(){this.state=ic,this.tryEmit()},b.time,this);else if(a.eventType&Ab)return ic;return kc},reset:function(){clearTimeout(this._timer)},emit:function(a){this.state===ic&&(a&&a.eventType&Ab?this.manager.emit(this.options.event+"up",a):(this._input.timeStamp=nb(),this.manager.emit(this.options.event,this._input)))}}),j(bb,Z,{defaults:{event:"rotate",threshold:0,pointers:2},getTouchAction:function(){return[bc]},attrTest:function(a){return this._super.attrTest.call(this,a)&&(Math.abs(a.rotation)>this.options.threshold||this.state&fc)}}),j(cb,Z,{defaults:{event:"swipe",threshold:10,velocity:.65,direction:Hb|Ib,pointers:1},getTouchAction:function(){return $.prototype.getTouchAction.call(this)},attrTest:function(a){var b,c=this.options.direction;return c&(Hb|Ib)?b=a.velocity:c&Hb?b=a.velocityX:c&Ib&&(b=a.velocityY),this._super.attrTest.call(this,a)&&c&a.direction&&a.distance>this.options.threshold&&mb(b)>this.options.velocity&&a.eventType&Ab},emit:function(a){var b=X(a.direction);b&&this.manager.emit(this.options.event+b,a),this.manager.emit(this.options.event,a)}}),j(db,V,{defaults:{event:"tap",pointers:1,taps:1,interval:300,time:250,threshold:2,posThreshold:10},getTouchAction:function(){return[ac]},process:function(a){var b=this.options,c=a.pointers.length===b.pointers,d=a.distance<b.threshold,f=a.deltaTime<b.time;if(this.reset(),a.eventType&yb&&0===this.count)return this.failTimeout();if(d&&f&&c){if(a.eventType!=Ab)return this.failTimeout();var g=this.pTime?a.timeStamp-this.pTime<b.interval:!0,h=!this.pCenter||I(this.pCenter,a.center)<b.posThreshold;this.pTime=a.timeStamp,this.pCenter=a.center,h&&g?this.count+=1:this.count=1,this._input=a;var i=this.count%b.taps;if(0===i)return this.hasRequireFailures()?(this._timer=e(function(){this.state=ic,this.tryEmit()},b.interval,this),fc):ic}return kc},failTimeout:function(){return this._timer=e(function(){this.state=kc},this.options.interval,this),kc},reset:function(){clearTimeout(this._timer)},emit:function(){this.state==ic&&(this._input.tapCount=this.count,this.manager.emit(this.options.event,this._input))}}),eb.VERSION="2.0.4",eb.defaults={domEvents:!1,touchAction:$b,enable:!0,inputTarget:null,inputClass:null,preset:[[bb,{enable:!1}],[_,{enable:!1},["rotate"]],[cb,{direction:Hb}],[$,{direction:Hb},["swipe"]],[db],[db,{event:"doubletap",taps:2},["tap"]],[ab]],cssProps:{userSelect:"none",touchSelect:"none",touchCallout:"none",contentZooming:"none",userDrag:"none",tapHighlightColor:"rgba(0,0,0,0)"}};var lc=1,mc=2;fb.prototype={set:function(a){return h(this.options,a),a.touchAction&&this.touchAction.update(),a.inputTarget&&(this.input.destroy(),this.input.target=a.inputTarget,this.input.init()),this},stop:function(a){this.session.stopped=a?mc:lc},recognize:function(a){var b=this.session;if(!b.stopped){this.touchAction.preventDefaults(a);var c,d=this.recognizers,e=b.curRecognizer;(!e||e&&e.state&ic)&&(e=b.curRecognizer=null);for(var f=0;f<d.length;)c=d[f],b.stopped===mc||e&&c!=e&&!c.canRecognizeWith(e)?c.reset():c.recognize(a),!e&&c.state&(fc|gc|hc)&&(e=b.curRecognizer=c),f++}},get:function(a){if(a instanceof V)return a;for(var b=this.recognizers,c=0;c<b.length;c++)if(b[c].options.event==a)return b[c];return null},add:function(a){if(f(a,"add",this))return this;var b=this.get(a.options.event);return b&&this.remove(b),this.recognizers.push(a),a.manager=this,this.touchAction.update(),a},remove:function(a){if(f(a,"remove",this))return this;var b=this.recognizers;return a=this.get(a),b.splice(s(b,a),1),this.touchAction.update(),this},on:function(a,b){var c=this.handlers;return g(r(a),function(a){c[a]=c[a]||[],c[a].push(b)}),this},off:function(a,b){var c=this.handlers;return g(r(a),function(a){b?c[a].splice(s(c[a],b),1):delete c[a]}),this},emit:function(a,b){this.options.domEvents&&hb(a,b);var c=this.handlers[a]&&this.handlers[a].slice();if(c&&c.length){b.type=a,b.preventDefault=function(){b.srcEvent.preventDefault()};for(var d=0;d<c.length;)c[d](b),d++}},destroy:function(){this.element&&gb(this,!1),this.handlers={},this.session={},this.input.destroy(),this.element=null}},h(eb,{INPUT_START:yb,INPUT_MOVE:zb,INPUT_END:Ab,INPUT_CANCEL:Bb,STATE_POSSIBLE:ec,STATE_BEGAN:fc,STATE_CHANGED:gc,STATE_ENDED:hc,STATE_RECOGNIZED:ic,STATE_CANCELLED:jc,STATE_FAILED:kc,DIRECTION_NONE:Cb,DIRECTION_LEFT:Db,DIRECTION_RIGHT:Eb,DIRECTION_UP:Fb,DIRECTION_DOWN:Gb,DIRECTION_HORIZONTAL:Hb,DIRECTION_VERTICAL:Ib,DIRECTION_ALL:Jb,Manager:fb,Input:y,TouchAction:T,TouchInput:Q,MouseInput:M,PointerEventInput:N,TouchMouseInput:S,SingleTouchInput:O,Recognizer:V,AttrRecognizer:Z,Tap:db,Pan:$,Swipe:cb,Pinch:_,Rotate:bb,Press:ab,on:n,off:o,each:g,merge:i,extend:h,inherit:j,bindFn:k,prefixed:v}),typeof define==kb&&define.amd?define(function(){return eb}):"undefined"!=typeof module&&module.exports?module.exports=eb:a[c]=eb}(window,document,"Hammer");
 //# sourceMappingURL=hammer.min.map
+/**
+ * The CoreWedgeScreen represents the base abstract object for any wedge screen.
+ * <b>NOTE: This is an abstract class and should not be declared</b>
+ * @namespace CoreWedgeScreen
+ * @memberof $ui
+ * @extends $ui.CoreScreen
+ * @property {string} [backButton] - This optional object specifies details for the back button. If it is not specified a back arrow and the word "Back" will be used. The object definition for this property looks like the following:
+ * <pre>
+ * {
+ *    icon: 'my-icon-class', // CSS class specifying the background icon
+ *    caption: 'Done' // Text to show on the back button
+ *}
+ */
 function emulator_CoreWedgeScreen(object, data) {
 	// Default disable some core screen features
 	if (object) {
@@ -17177,13 +17803,37 @@ function emulator_CoreWedgeScreen(object, data) {
 emulator_CoreWedgeScreen.prototype = new $ui_CoreScreen();
 
 
+/**
+ * This is the object that represents the main chrome menu system for a Head Unit. A HeadUnitChrome is declared as a JavaScript function and has various different properties. 
+ * When a HeadUnitChrome is pushed onto the stack a new instance of the screen will be created and rendered.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * function MyChrome() {
+ *   this.disableAnimation = true;
+ *   this.component = $ui.HeadUnitChrome;
+ *   this.home = myHomePane;
+ *}
+ * </pre>
+ * @namespace HeadUnitChrome
+ * @memberof $ui
+ * @extends $ui.CoreScreen
+ * @property {$ui.HVAC} [hvac] - This represents the HVAC controls that are shown in the emulator.
+ * @property {$ui.WindowPane} homeWindowPane - This property represents the {@link $ui.WindowPane} you wish to use as the home pane
+ * @property {$ui.WindowPane} secondaryWindowPane - This property represents the {@link $ui.WindowPane} you wish to use as the secondary display. This area will only be visible if the dualView property evaluates to true
+ */
 function emulator_HeadUnitChrome(object, data) {
 	$ui_CoreScreen.call(this, object);
 	
 	if (object) {
 		$ui.addClass(object.dom,'emulator-head-unit-chrome');
 
-		// Determine if we are a stacked dual view
+		/**
+		* This readonly boolean property will return true if the view has two different viewable Window areas creating a stacked display.
+		* @name isDualView
+		* @type {boolean}
+		* @readonly
+		* @memberof $ui.HeadUnitChrome
+		*/
 		object.isDualView = (window.innerHeight > window.innerWidth) && ($system.isClientDevice == false);
 		if ((object.isDualView == true) || ($system.isClientDevice == true)) {
 			$ui.addClass(object.dom,'portrait');
@@ -17327,6 +17977,22 @@ function emulator_DefrostButton(object, screen) {
 }
 
 emulator_DefrostButton.prototype = new $ui_CoreComponent();
+/**
+ * This button is used in the emulators {@link $ui.HVAC} controls for adjusting the fans<br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   value: $ui.HeadUnitChrome.Fans.AUTO,
+ *   onclick: function() {
+ *      // Do something
+ *   }
+ * }
+ * @namespace FansButton
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.HeadUnitChrome.Fans} [value=$ui.HeadUnitChrome.Fans.AUTO] - The current settings for the fans
+ * @property {GenericEvent} [onclick] - This will fire when a user clicks thefans button control
+ */
 function emulator_FansButton(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'fans');
@@ -17356,7 +18022,12 @@ function emulator_FansButton(object, screen) {
 		object.dom.onmouseleave = object.dom.ontouchend;
 	}
 	
-	// Set the current fan setting
+	/**
+	* Set the fans value property of the control
+	* @function setValue
+	* @memberof $ui.FansButton
+	* @param {$ui.HeadUnitChrome.Fans} value - The value to set for the fans
+	*/
 	object.setValue = function(value) {
 		var prevValue = (this.value == undefined) ? $ui.HeadUnitChrome.Fans.AUTO : this.value;
 		if (value == undefined) value = $ui.HeadUnitChrome.Fans.AUTO;
@@ -17387,8 +18058,35 @@ function emulator_FansButton(object, screen) {
 	
 	return object.dom;
 }
-
 emulator_FansButton.prototype = new $ui_CoreComponent();
+
+/**
+ * The HVAC Interface is used with the {@link $ui.HeadUnitChrome} and provides and emulated interface of the HVAC controls of the vehicle.
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   driver: {
+ *      temperature: {
+ *          value: 75
+ *      }
+ *   },
+ *   passenger: {
+ *     temperature: {
+ *          value: 73
+ *      }
+ *   },
+ *   fans: {
+ *      value: $ui.HeadUnitChrome.Fans.AUTO
+ *   }
+ *}
+ * </pre>
+ * @namespace HVAC
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.HVACSide} [driver] - Represents the driver side controls for the emulated HVAC interface
+ * @property {$ui.HVACSide} [passenger] - Represents the driver side controls for the emulated HVAC interface
+ * @property {$ui.FansButton} [fans] - Represents the HVAC fan settings
+ */
 function emulator_HVACBar(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'hvac');
@@ -17504,13 +18202,39 @@ function emulator_HVACBar(object, screen) {
 	object._setVisible = object._setVisible.bind(object);
 	object._setVisible(object.visible);
 	
-
-	
-	
 	return object.dom;
 }
-
 emulator_HVACBar.prototype = new $ui_CoreComponent();
+
+/**
+ * Represents either a driver or passenger side of the vehicle for heat settings
+ * @namespace HVACSide
+ * @memberof $ui
+ * @property {$ui.SeatButton} [seat] - Represents the temperature of the side of the car
+ * @property {$ui.TemperatureButton} [temperature] - Represents the temperature of the side of the car
+ */
+ $ui.HVACSide = {}
+/**
+ * This button is used in the emulators {@link $ui.HVAC} controls for adjusting the heated seats. It can be used for either the Driver or Passenger controls
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   level: 2,
+ *   maxLevel: 3,
+ *   side: 'left',
+ *   onclick: function() {
+ *      // Do something
+ *   }
+ *}
+ * </pre>
+ * @namespace SeatButton
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {number} [level=0] - The numeric level that the heated seat. This cannot exceed the <b>maxLevel</b> property
+ * @property {number} [maxLevel=0] - The numeric maximum level that the heated seat can reach
+ * @property {string} [side=left] - The side in which the button should be displayed. This is either 'right' or 'left'.
+ * @property {GenericEvent} [onclick] - This will fire when a user presses the seat button
+ */
 function emulator_SeatButton(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'seat');
@@ -17550,7 +18274,12 @@ function emulator_SeatButton(object, screen) {
 		object.dom.onmouseleave = object.dom.ontouchend;
 	}
 	
-	// Set the level
+	/**
+	* Set the level to the value provided as a parameter
+	* @memberof $ui.SeatButton
+	* @function setLevel
+	* @param {number} value - Numeric value to use for the <b>level</b> property
+	*/
 	object.setLevel = function(value) {
 		var prevLevel = (this.level == undefined) ? 0 : this.level;
 		if (value == undefined) value = 0;
@@ -17581,8 +18310,27 @@ function emulator_SeatButton(object, screen) {
 	
 	return object.dom;
 }
-
 emulator_SeatButton.prototype = new $ui_CoreComponent();
+
+/**
+ * This button is used in the emulators {@link $ui.HVAC} controls for adjusting the cabin temperature. It can be used for either the Driver or Passenger controls
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * {
+ *   value: 75,
+ *   side: 'left',
+ *   onclick: function() {
+ *      $ui.push(wedgeDriverTemperature, {temperature: this.value});
+ *   }
+ * }
+ * </pre>
+ * @namespace TemperatureButton
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {number} value - The current temperature value
+ * @property {string} [side=left] - The side in which the button should be displayed. This is either 'right' or 'left'.
+ * @property {GenericEvent} [onclick] - This will fire when a user presses the temperature button
+ */
 function emulator_TemperatureButton(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'temperature');
@@ -17628,8 +18376,8 @@ function emulator_TemperatureButton(object, screen) {
 	
 	return object.dom;
 }
-
 emulator_TemperatureButton.prototype = new $ui_CoreComponent();
+
 function emulator_NavigationBar(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'navigation');
@@ -17822,6 +18570,25 @@ function emulator_NavigationBar(object, screen) {
 }
 
 emulator_NavigationBar.prototype = new $ui_CoreComponent();
+/**
+ * This button is used in the emulators {@link $ui.HVAC} controls for adjusting the cabin temperature. It can be used for either the Driver or Passenger controls
+ * <br><br><b>Sample Declaration</b>
+ * <pre>
+ * function myTemperatureWedge() {
+ *    this.component = $ui.WedgeTemperature;
+ *    this.direction = $ui.WedgeTemperature.RIGHT;
+ *    this.onchange = function() {
+ *        // Do something
+ *    }
+ * }
+ * </pre>
+ * @namespace WedgeTemperature
+ * @memberof $ui
+ * @extends $ui.CoreWedgeScreen
+ * @property {number} temperature - The numeric temperature to show in the control
+ * @property {$ui.WedgeTemperature.Direction} [direction=$ui.WedgeTemperature.Direction.LEFT] - The side in which the wedge should be displayed.
+ * @property {TemperatureChangeEvent} [onchange] - This will fire when a user changes the temperature
+ */
 function emulator_WedgeTemperature(object, data) {
 	emulator_CoreWedgeScreen.call(this, object, data);
 	$ui.addClass(object.dom,'emulator-wedge-temperature');
@@ -17879,7 +18646,12 @@ function emulator_WedgeTemperature(object, data) {
 	$ui.addClass(object.dom.temperature, 'temperature');
 	object.dom.box.appendChild(object.dom.temperature);
 	
-	// Set the temperature
+	/** 
+	* Set the temperature of the control
+	* @function setTemperature
+	* @memberof $ui.WedgeTemperature
+	* @param {number} value - Numeric value in which to set the control
+	*/
 	object.setTemperature = function(value) {
 		this.temperature = value;
 		this.dom.temperature.textContent = value;
@@ -17892,10 +18664,13 @@ function emulator_WedgeTemperature(object, data) {
 	}
 	return object.dom;
 }
-
 emulator_WedgeTemperature.prototype = new emulator_CoreWedgeScreen();
 
-
+/**
+ * The {@link $ui.WedgeTemperature} <b>onchange</b> event will fire when the user interacts with a temperature button and changes the temperature
+ * @callback TemperatureChangeEvent
+ * @param {number} value - The value that was just set for the temperature
+ */
 function emulator_WedgeTemperatureButton(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'button');
@@ -17936,13 +18711,26 @@ function emulator_WedgeTemperatureButton(object, screen) {
 }
 
 emulator_WedgeTemperatureButton.prototype = new $ui_CoreComponent();
+/**
+ * This object represents a windowed area in a {@link $ui.HeadUnitChrome} screen. A Window is an internal display area of a HeadUnitChrome control that can show one or more {@link $ui.WindowPane} or 
+ * {@link $ui.AppContainer} objects.
+ * @namespace Window
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ */
 function emulator_Window(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'emulator-window');
 	
 	object.screens = [];
 	
-	// Push a screen into this window
+	/**
+	* This function will push a new window pane onto the stack for display inside the Windowed area
+	* @function push
+	* @memberof $ui.Window
+	* @param {$ui.WindowPane} windowPane - Window to push onto the stack
+	* @param {object} data - Data to be passed to the new window
+	*/
 	object.push = function(screen, data) {
 		screen = new screen();
 		screen.container = this;
@@ -17963,10 +18751,7 @@ function emulator_Window(object, screen) {
 			this.screen._setNavigationMenu(screen); // this.screen is the HeadUnitChrome
 		}
 		this.dom.appendChild(dom);
-		// If there is no animation then initialize the screen
-		if (screen.disableAnimation === true) {
-			screen.initialize();
-		}	
+		screen.initialize();
 	}
 	object.push = object.push.bind(object);
 
@@ -17979,11 +18764,9 @@ function emulator_Window(object, screen) {
 		if (this.screens.length > 1) {
 			var screen = this.screens[this.screens.length - 1];
 			// Let the top most screen know it is going to be popped
-			if (screen._onbeforepop) {
-				screen._onbeforepop();
+			if (screen.onbeforepop) {
+				screen.onbeforepop();
 			}
-			// Remove any global event listeners
-			$system.removeEventListenersForScreen(screen);
 		}
 		setTimeout(this._popToHome, 0);
 	}
@@ -17996,19 +18779,9 @@ function emulator_Window(object, screen) {
 			screen;
 		// Take the top most screen and animate out it as long as animation is not disabled
 		screen = this.screens[this.screens.length-1];
-		if (screen.disableAnimation === true) {
-			this._removeScreen(screen);
-			$ui.inScreenTransition = false;
-			$ui._blockAllTapEvent(false);
-		} else {
-			screen.dom.style['-webkit-animation-delay'] = '';
-			screen.dom.style['-webkit-animation-name'] = 'ui-pane-slide-right';
-			screen.dom.addEventListener('webkitAnimationEnd', function(e) {
-				this.model.container._removeScreen(this.model);
-				$ui.inScreenTransition = false;
-				$ui._blockAllTapEvent(false);
-			}, false);
-		}
+		this._removeScreen(screen);
+		$ui.inScreenTransition = false;
+		$ui._blockAllTapEvent(false);
 		// Remove all the middle screens
 		for (i = this.screens.length - 2; i > 0; i--) {
 			this._removeScreen(this.screens[i]);
@@ -18016,8 +18789,10 @@ function emulator_Window(object, screen) {
 	}
 	object._popToHome = object._popToHome.bind(object);
 	
+	/*
 	// Public function to pop the top most screen
 	object.pop = function() {
+		console.log('$ui.Window.pop()');
 		if (this.screens.length <= 1) return;
 		$ui.inScreenTransition = true;
 		$ui._blockAllTapEvent(true);
@@ -18051,7 +18826,7 @@ function emulator_Window(object, screen) {
 		
 	}
 	object.pop = object.pop.bind(object);
-	
+	*/
 	// Remove the screen from the dom and the array
 	object._removeScreen = function(screen) {
 		screen.dom.style.display = 'none';

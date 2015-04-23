@@ -1,7 +1,7 @@
 function libraryMenu() {
 	this.component = $ui.WindowPane;
-	
-	this.backCaption = 'Back',
+	this.animated = true;
+	this.backCaption = 'Back';
 	
 	this.content = [
 		{

@@ -1,7 +1,7 @@
 function wedgeDriverTemperature() {
 	this.component = $ui.WedgeTemperature;
 	
-	this.direction = $ui.WedgeTemperature.LEFT;
+	this.direction = $ui.WedgeTemperature.Direction.LEFT;
 	
 	this.backButton = {
 		icon: 'emulator-icon-head-unit-temperature',

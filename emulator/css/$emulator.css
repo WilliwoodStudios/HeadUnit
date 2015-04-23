@@ -1,10 +1,10 @@
-/* $emulator VERSION: 1.0.0.2858*/
+/* $emulator VERSION: 1.0.0.2899*/
 body,
 html {
   padding: 0px;
   margin: 0px;
   overflow: hidden;
-  font-family: 'Open Sans', sans-serif;
+  font-family: Helvetica, sans-serif;
   -webkit-text-size-adjust: 100%;
 }
 ::-webkit-scrollbar {
@@ -906,7 +906,7 @@ div {
     left: 100%;
   }
 }
-.ui-window-pane.animation {
+.ui-window-pane.animated {
   -webkit-animation-name: ui-pane-slide-left;
   -webkit-animation-duration: 0.3s;
   -webkit-animation-timing-function: ease;
@@ -1683,7 +1683,7 @@ div {
     left: 100%;
   }
 }
-.ui-window-pane.animation {
+.ui-window-pane.animated {
   -webkit-animation-name: ui-pane-slide-left;
   -webkit-animation-duration: 0.3s;
   -webkit-animation-timing-function: ease;
@@ -2697,7 +2697,7 @@ html {
   padding: 0px;
   margin: 0px;
   overflow: hidden;
-  font-family: 'Open Sans', sans-serif;
+  font-family: Helvetica, sans-serif;
   -webkit-text-size-adjust: 100%;
 }
 ::-webkit-scrollbar {
@@ -3483,7 +3483,7 @@ div {
     left: 100%;
   }
 }
-.ui-window-pane.animation {
+.ui-window-pane.animated {
   -webkit-animation-name: ui-pane-slide-left;
   -webkit-animation-duration: 0.3s;
   -webkit-animation-timing-function: ease;
@@ -4577,42 +4577,6 @@ div {
 }
 .emulator-icon-head-unit-volume {
   background-image: url("data:image/png;base64,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");
-}
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 300;
-  src: local('Open Sans Light'), local('OpenSans-Light'), url('OpenSans-Light.woff') format('woff');
-}
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Open Sans'), local('OpenSans'), url('OpenSans.woff') format('woff');
-}
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 600;
-  src: local('Open Sans Semibold'), local('OpenSans-Semibold'), url('OpenSans-Semibold.woff') format('woff');
-}
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 700;
-  src: local('Open Sans Bold'), local('OpenSans-Bold'), url('OpenSans-Bold.woff') format('woff');
-}
-@font-face {
-  font-family: 'Open Sans';
-  font-style: italic;
-  font-weight: 300;
-  src: local('Open Sans Light Italic'), local('OpenSansLight-Italic'), url('OpenSansLight-Italic.woff') format('woff');
-}
-@font-face {
-  font-family: 'Open Sans';
-  font-style: italic;
-  font-weight: 400;
-  src: local('Open Sans Italic'), local('OpenSans-Italic'), url('OpenSans-Italic.woff') format('woff');
 }
 @font-face {
   font-family: 'Venus Rising';

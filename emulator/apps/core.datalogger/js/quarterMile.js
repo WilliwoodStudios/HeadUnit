@@ -1,6 +1,6 @@
 function quarterMile() {
 	this.component = $ui.WindowPane;
-
+	this.animated = true;	
 	this.backCaption = 'Back';
 	
 	this.content = [

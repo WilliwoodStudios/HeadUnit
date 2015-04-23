@@ -1,7 +1,5 @@
 function main() {
 	this.component = $ui.WindowPane;
-
-	this.disableAnimation = true;
 	
 	this.content = [
 		{

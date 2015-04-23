@@ -11,7 +11,7 @@ function mainMenu() {
 				property: 'items'
 			},
 			onclick: function(item) {
-				$core.openApp(item);
+				 $core.openApp(item);
 			}
 		}
 	];

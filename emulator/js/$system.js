@@ -1,4 +1,4 @@
-/* $system VERSION: 1.0.0.10*/
+/* $system VERSION: 1.0.0.49*/
 
 /**
  * Main system object for Brainiac
@@ -21,27 +21,6 @@ var $system = {
 			color: '#D94646'
 		},
 		celsius: false
-	},
-	Color: {
-		TURQUOISE: '#1ABC9C',
-		EMERALD:  '#2ECC71',
-		PETER_RIVER: '#3498DB',
-		AMETHYST: '#AF7AC4',
-		WET_ASPHAULT: '#34495E',
-		GREEN_SEA: '#16A085',
-		NEPHRITIS: '#27AE60',
-		BELIZE_HOLE: '#2980B9',
-		WISTERIA: '#8E44AD',
-		MIDNIGHT_BLUE: '#2C3E50',
-		SUN_FLOWER: '#F1C40F',
-		CARROT: '#E67E22',
-		ALIZARIN: '#D94646', // Our brand color
-		CONCRETE: '#AAB7B7',
-		ORANGE: '#F39C12',
-		PUMPKIN: '#D35400',
-		POMEGRANATE: '#C0392B',
-		SILVER: '#BDC3C7',
-		ASBESTOS: '#98A3A3'
 	},
 	
 	// Initialize the system object
@@ -118,6 +97,53 @@ var $system = {
  * @callback SystemEventCallback
  * @param {$system.SystemEvent} event - Event which was just raised by the system
  */
+ 
+/**
+ * Definitions of available system colors
+ * @namespace Color
+ * @readonly
+ * @memberof $system
+ */ 
+$system.Color = {
+	/** */
+	TURQUOISE: '#1ABC9C',
+	/**  */
+	EMERALD:  '#2ECC71',
+	/** */
+	PETER_RIVER: '#3498DB',
+	/**  */
+	AMETHYST: '#AF7AC4',
+	/**  */
+	WET_ASPHAULT: '#34495E',
+	/**  */
+	GREEN_SEA: '#16A085',
+	/**  */
+	NEPHRITIS: '#27AE60',
+	/**  */
+	BELIZE_HOLE: '#2980B9',
+	/**  */
+	WISTERIA: '#8E44AD',
+	/**  */
+	MIDNIGHT_BLUE: '#2C3E50',
+	/**  */
+	SUN_FLOWER: '#F1C40F',
+	/**  */
+	CARROT: '#E67E22',
+	/**  */
+	ALIZARIN: '#D94646', // Our brand color
+	/**  */
+	CONCRETE: '#AAB7B7',
+	/**  */
+	ORANGE: '#F39C12',
+	/**  */
+	PUMPKIN: '#D35400',
+	/**  */
+	POMEGRANATE: '#C0392B',
+	/**  */
+	SILVER: '#BDC3C7',
+	/**  */
+	ASBESTOS: '#98A3A3'
+}
  
 
 /**

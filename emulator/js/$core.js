@@ -1,4 +1,4 @@
-/* $core VERSION: 1.0.0.24*/
+/* $core VERSION: 1.0.0.63*/
 
 var $core = {
 	version: {
