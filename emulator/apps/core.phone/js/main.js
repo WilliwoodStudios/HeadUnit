@@ -126,8 +126,8 @@ function main() {
 			component: $ui.DataProvider,
 			id: 'contactProvider',
 			onload: function() {
-				this.screen.listSpinner.setVisible(false);
-				this.screen.contactList.setVisible(true);
+				this.screen.listSpinner.visible = false;
+				this.screen.contactList.visible = true;
 			}
 		},
 		{
@@ -137,7 +137,7 @@ function main() {
 	];
 	
 	this.onshow = function() {
-		this.listSpinner.setVisible(true);
+		this.listSpinner.visible = true;
 		$system.contacts.getContactList(this.updateContactList);
 	}
 	

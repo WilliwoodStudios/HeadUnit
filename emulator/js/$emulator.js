@@ -1,22 +1,46 @@
-/* $emulator VERSION: 1.0.0.2899*/
+/* $emulator VERSION: 1.0.0.2932*/
 
 /**
  * $ui provides an extendible out of the box UI framework which provides a pre-defined user experience.
  * The main object that is used for creating this framework is the <b>$ui</b> object.
  * @namespace $ui
+ * @property {$ui.CoreScreen[]} screens - The screen stack of currently loaded screens
+ * @property {UIEvent} oninteraction - Assign this property to a callback function which you desire to handle any interaction logging from UI controls.  This is intended to provide a single point of filtering
+ * of user interactions to be used with an analytics engine
  */
 var $ui = {
-	screens : [],  // Contains all of the current screens on the stack;
-	_definitions: [], // Contains all of the component definitions
-	_extensions: [], // Contains all of the extension functions to be called
-	_inScreenTransition: false,
-
-	// This contains our core theme information
-	theme: {},
+	// Protected variables which should not be directly accessed from outside the toolkit
+	_protected: {
+		PROPERTY_WARNING: 'WARNING: Property "[prop]" cannot be dynamically updated',
+		screens : [],  // Contains all of the current screens on the stack;
+		definitions: [], // Contains all of the component definitions
+		extensions: [], // Contains all of the extension functions to be called
+		inScreenTransition: false,
+		theme: {}, // This contains our core theme information
+	},
+	
+	/**
+	 * Standard Sizing used in the toolkit
+	 * @namespace Size
+	 * @readonly
+	 * @memberof $ui
+	 */
+	Size: {
+		/** Largest possible size */
+		HUGE: 'huge',
+		/** Larger than normal size */
+		LARGE: 'large',
+		/** Normal default size */
+		NORMAL: 'normal',
+		/** Smaller than normal size */
+		SMALL: 'small',
+		/** Smallest possible size */
+		TINY: 'tiny'
+	},
 	
 	/**
 	 * Type of extension to be used for extending the <b>$ui</b> framework when using a {@link UIExtension}
-	 * @namespace
+	 * @namespace UIExtensionType
 	 * @readonly
 	 * @memberof $ui
 	 */
@@ -48,8 +72,8 @@ var $ui = {
 		// Handle fast clicks in mobile browsers
 		FastClick.attach(document.body);
 		// Run all our registered extensions
-		for (var i = 0; i < this._extensions.length; i++) {
-			this._extensions[i](); // Call the extension
+		for (var i = 0; i < this._protected.extensions.length; i++) {
+			this._protected.extensions[i](); // Call the extension
 		}
 		// Push the first screen
 		this.push(screen);
@@ -80,7 +104,7 @@ var $ui = {
 	 */
 	extend: function(callback) {
 		if (callback) {
-			this._extensions.push(callback);
+			this._protected.extensions.push(callback);
 		}
 	},
 			
@@ -94,21 +118,9 @@ var $ui = {
 		$ui[extension.name] = extension.definition;
 		extension.component = $ui[extension.name];
 		if (extension.type == undefined) extension.type = $ui.UIExtensionType.CONTROL;
-		this._definitions.push(extension);
+		this._protected.definitions.push(extension);
 	},	
 	
-	/** 
-	 * This function will set the theme for the $ui toolkit.
-	 * @param {$ui.Theme} theme - Theme to use for the toolkit
-	 */
-	setTheme: function(theme) {	
-		var i,
-			screen;
-		for (i = 0; i < this.screens.length; i++) {
-			screen = this.screens[i];
-			screen._fireThemeChange();
-		}
-	},
 	
 	// Internal function to raises an event for a user interaction
 	_raiseInteractionEvent: function(event) {
@@ -135,8 +147,8 @@ var $ui = {
 		var i,
 			extension,
 			controlDom = undefined;
-		for (i = 0; i < this._definitions.length; i++) {
-			extension = this._definitions[i];
+		for (i = 0; i < this._protected.definitions.length; i++) {
+			extension = this._protected.definitions[i];
 			if (extension.type != $ui.UIExtensionType.CONTROL) continue;
 			if (extension.component == control.component) {
 				controlDom = new extension.constructor(control,screen);
@@ -171,7 +183,7 @@ var $ui = {
 	 * @param {number} [numScreensToClose] - Optional number of screens to close below the new screen pushed onto the stack
 	 */
 	push: function(screen, data, numScreensToClose) {
-		if ($ui._inScreenTransition === true) {
+		if ($ui._protected.inScreenTransition === true) {
 			setTimeout(function() {
 				$ui.push(screen, data);
 			}, 100);
@@ -181,8 +193,8 @@ var $ui = {
 			var dom,
 				i,
 				extension;
-			for (i = 0; i < this._definitions.length; i++) {
-				extension = this._definitions[i];
+			for (i = 0; i < this._protected.definitions.length; i++) {
+				extension = this._protected.definitions[i];
 				if (extension.type != $ui.UIExtensionType.SCREEN) continue;
 				if (extension.component == screen.component) {
 					dom = new extension.constructor(screen,data);
@@ -191,7 +203,7 @@ var $ui = {
 			}
 			if (dom == undefined) return;
 			$ui._blockAllTapEvent(true);
-			$ui._inScreenTransition = true;
+			$ui._protected.inScreenTransition = true;
 			$ui.screens.push(screen);
 			dom.style['z-index'] = $ui.screens.length+1;
 			document.body.appendChild(dom);
@@ -227,7 +239,7 @@ var $ui = {
 					count = 0,
 					screen;
 				// Loop until we have no more screens or if the number of screens removed matches the number provided
-				for (i = $ui.screens.length - 2; (i > -1) || (count < number); i--) {
+				for (i = $ui.screens.length - 2; (i > -1) && (count < number); i--) {
 					screen = $ui.screens[i];
 					if (screen.onbeforepop) {
 						screen.onbeforepop();
@@ -244,13 +256,13 @@ var $ui = {
 	 */
 	pop: function() {
 		// Return if the screen is in transition.
-		if ($ui._inScreenTransition === true) {
+		if ($ui._protected.inScreenTransition === true) {
 			setTimeout(function() {
 				$ui.pop();
 			}, 100);
 		} else {
 			$ui._blockAllTapEvent(true);
-			$ui._inScreenTransition = true;
+			$ui._protected.inScreenTransition = true;
 			// Remove the top most screen
 			var screen = $ui.screens[$ui.screens.length-1];
 			if (screen.animated == true) {
@@ -276,19 +288,10 @@ var $ui = {
 		document.body.removeChild(screen.dom);
 		screen.destroy();
 		// Handle finalization
-		$ui._inScreenTransition = false;
+		$ui._protected.inScreenTransition = false;
 		$ui._blockAllTapEvent(false);
-		$ui.screens.pop();
-	},
-
-	// Determines if a string is infact valid JSON
-	isValidJsonString: function(str) {
-		try {
-			JSON.parse(str);
-		} catch (e) {
-			return false;
-		}
-		return true;
+		var index = $ui.screens.indexOf(screen);
+		$ui.screens.splice(index, 1);
 	},
 
 	// Determines if an element has the class specified in it's class name
@@ -314,40 +317,62 @@ var $ui = {
 		element.className = element.className.replace(re, ' ').replace(/^\s+|\s+$/g, "");
 	},
 	
-	_cutHex : function(h) {
-		return (h.charAt(0)=="#") ? h.substring(1,7):h
+	/**
+	* Convert a HEX color value to an RGB object. This will return an object with properties R, G and B
+	* @function hexToRgb
+	* @memberof $ui
+	* @param {string} value - The HEX string value to convert to RGB
+	*/
+	hexToRgb: function(value) {
+		if (value == undefined || value == null) return {};
+		function cutHex(h) {
+			return (h.charAt(0)=="#") ? h.substring(1,7):h
+		}
+		// convert the color
+		var R = parseInt((cutHex($ui.theme.color)).substring(0,2),16),
+			G = parseInt((cutHex($ui.theme.color)).substring(2,4),16),
+			B = parseInt((cutHex($ui.theme.color)).substring(4,6),16);
+		return { R: R, G: G, B: B};
 	},
 	
 	// guid(uuid) Generator
 	guid: function() {
-	   return ($ui._guidS4() + $ui._guidS4() + "-" + $ui._guidS4() + "-" + $ui._guidS4() + "-" + $ui._guidS4() + "-" + $ui._guidS4() + $ui._guidS4() + $ui._guidS4());
-	},
-	_guidS4: function() {
-	   return (((1 + Math.random()) * 0x10000)|0).toString(16).substring(1);
+	   function guidS4() {
+		   return (((1 + Math.random()) * 0x10000)|0).toString(16).substring(1);
+		}
+	   return (guidS4() + guidS4() + "-" + guidS4() + "-" + guidS4() + "-" + guidS4() + "-" + guidS4() + guidS4() + guidS4());
 	}
 }
+
+// Screen property handling
+Object.defineProperty($ui, 'screens', {
+	get: function() {return this._protected.screens;},
+	set: function() {
+		console.log(this._protected.PROPERTY_WARNING.replace('[prop]','screens'));
+	},
+	configurable: false}
+);
+
+// Theme property
+Object.defineProperty($ui, 'theme', {
+	get: function() {return this._protected.theme;},
+	set: function(value) {
+		this._protected.theme = value;
+		var i,
+			screen;
+		for (i = 0; i < this.screens.length; i++) {
+			screen = this.screens[i];
+			screen._fireThemeChange();
+		}
+	},
+	configurable: false}
+);
 
 // This function is called as part of the extension registration
 function $ui_RegisterRootExtensions() {
 	// Register our extensions
 	$ui.addExtension(new UIExtension('List', $ui_List));
 	def = {
-			/**
-			 * Size of {@link $ui.Spinner} control
-			 * @namespace
-			 * @readonly
-			 * @memberof $ui.Spinner
-			 */
-			SpinnerSize: {
-				/** Largest spinner possible */
-				LARGE: 'large', 
-				/** Default size spinner */
-				MEDIUM: 'medium',
-				/** Small spinner */				
-				SMALL: 'small', 
-				/** Really tiny spinner */
-				TINY: 'tiny'
-			},
 			/**
 			 * Color of {@link $ui.Spinner} control
 			 * @namespace
@@ -398,14 +423,6 @@ $ui.extend($ui_RegisterRootExtensions);
 /**
  * General event that fires without any parameters
  * @callback GenericEvent
- */
-
-/**
- * Assign this property to a callback function which you desire to handle any interaction logging from UI controls.  This is intended to provide a single point of filtering
- * of user interactions to be used with an analytics engine
- * @name oninteraction
- * @type UIEvent
- * @memberof $ui
  */
 
 /**
@@ -1211,8 +1228,8 @@ if (typeof define !== 'undefined' && define.amd) {
  * @property {namespace} component - The <b>mandatory</b> component property defines what type of component is being defined. This property always starts with a <b>$ui.</b> defining the component to be used for generating the UI.
  * @property {string} [id] - The id property is used to uniquely define the control in the screen for which it belongs. <br><br>Providing an id for your control is very convenient because you can easily access your control through your javascript coding. Each id is added as a direct handle on the screen object for access.
  * @property {boolean} [animated=false] - Set this value to <b>true</b> for the control to have animation.  NOTE: Each derivative control is responsible for their animation styling. Setting this property to true will add the ".animated" CSS class to the root element of the control.  Feel free to define your own CSS for the ".animated" property
- * @property {boolean} [visible=true] - The visible property specifies the initial visibility of the control. This property can then be changed by calling the <b>setVisible</b> function on the component.
- * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
+ * @property {boolean} [visible=true] - The visible property specifies the visibility of the control. 
+ * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control.  <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
  * @property {$ui.CoreScreen} screen - This <b>readonly</b> property allows for you to reference the screen from the control. This will be the screen in which the control is embedded
  * @property {$ui.DataProviderLink} [provider] - This property allows you to bind the control to a [data provider]{@link $ui.DataProvider} in the application. 
  * @property {object[]} attachedObjects - This property specifies an array of objects that can be attached to the control. These could be objects such as data providers and usually entail a component that does not provide a user interface.
@@ -1224,7 +1241,11 @@ if (typeof define !== 'undefined' && define.amd) {
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
-	
+		// The protected object is where we store our dynamic object variables
+		object._protected = {
+			model: object
+		};
+		
 		// Create our base container for the control 
 		object.dom = document.createElement('div');
 		object.dom.model = object;
@@ -1235,7 +1256,17 @@ function $ui_CoreComponent(object, screen) {
 			object.dom.setAttribute('data-id',object.id);
 		}
 		
-		// Assign this control as a child of the screen
+		// Component Property
+		object._protected.component = object.component;
+		Object.defineProperty(object, 'component', {
+			get: function() {return this._protected.component;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','component'));
+			},
+			configurable: false}
+		);
+		
+		// Screen Property
 		if (screen != undefined) {
 			object.screen = screen;
 			screen.children.push(object);
@@ -1243,41 +1274,190 @@ function $ui_CoreComponent(object, screen) {
 				screen[object.id] = object;
 			}
 		}
+		object._protected.screen = object.screen;
+		Object.defineProperty(object, 'screen', {
+			get: function() {return this._protected.screen;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','screen'));
+			},
+			configurable: false}
+		);
 		
 		// Apply our current theme style
 		if ($ui.theme.rootClass) {
 			$ui.addClass(object.dom,$ui.theme.rootClass);
 		}
 		
-		// Set default enabled state
+		// id property
+		object._protected.id = object.id;
+		Object.defineProperty(object, 'id', {
+			get: function() {return this._protected.id;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','id'));
+			},
+			configurable: false}
+		);
+		
+		// Enabled Property
 		if (object.enabled != false) {
 			object.enabled = true;
 		} else {
 			$ui.addClass(object.dom, 'disabled');
 		}
+		object._protected.enabled = object.enabled;
+		Object.defineProperty(object, 'enabled', {
+			get: function() {return this._protected.enabled;},
+			set: function(value) {
+				if (value == this._protected.enabled) return;
+				if (this._protected.enabled && (value == false)) {
+					this._protected.enabled = false;
+					$ui.addClass(this.dom, 'disabled');
+				} else if ((this._protected.enabled == false) && (value == true)) {
+					this._protected.enabled = true;
+					$ui.removeClass(this.dom, 'disabled');
+				}
+				// Call a child class' protected function if they need
+				// to do special handling for enabling
+				if (this._setEnabled) {
+					this._setEnabled(value);
+				}
+			},
+			configurable: false}
+		);		
+
 		
-		// See if the control is animated
+		// Animated property
 		if (object.animated == true) {
 			$ui.addClass(object.dom, 'animated');
 		} else {
 			object.animated = false;
 		}
+		object._protected.animated = object.animated;
+		Object.defineProperty(object, 'animated', {
+			get: function() {return this._protected.animated;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','animated'));
+			},
+			configurable: false}
+		);
 		
-		// Check for our margins
+		// Set our initial visibility
+		if ((object.visible != undefined) && (object.visible == false)) {
+			object.dom.style.display = 'none';
+		} else {
+			object.visible = true;
+		}
+		object._protected.visible = object.visible;
+		// Set our modification rules for 'visible'
+		Object.defineProperty(object, 'visible', {
+			get: function() {return this._protected.visible;},
+			set: function(value) {
+				if (value != this._protected.visible) {
+					if (value == true) {
+						this._protected.visible = true;
+						if (this.dom != undefined) {
+							this.dom.style.display = '';
+						}
+					} else {
+						this._protected.visible = false;
+						if (this.dom != undefined) {
+							this.dom.style.display = 'none';
+						}
+					}
+					// Allow of the top level control to also react to the visibility change
+					if (this._setVisible) {
+						this._setVisible(value);
+					}
+				} 
+			},
+			configurable: false}
+		);
+		
+		// Margin Top Property
 		if (object.marginTop === true) {
 			$ui.addClass(object.dom,'marginTop');
+		} else {
+			object.marginTop = false;
 		}
+		object._protected.marginTop = object.marginTop;
+		Object.defineProperty(object, 'marginTop', {
+			get: function() {return this._protected.marginTop;},
+			set: function(value) {
+				if (value == this._protected.marginTop) return;
+				this._protected.marginTop = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginTop');
+				} else {
+					$ui.addClass(object.dom,'marginTop');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Bottom Property
 		if (object.marginBottom === true) {
 			$ui.addClass(object.dom,'marginBottom');
+		} else {
+			object.marginBottom = false;
 		}
+		object._protected.marginBottom = object.marginBottom;
+		Object.defineProperty(object, 'marginBottom', {
+			get: function() {return this._protected.marginBottom;},
+			set: function(value) {
+				if (value == this._protected.marginBottom) return;
+				this._protected.marginBottom = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginBottom');
+				} else {
+					$ui.addClass(object.dom,'marginBottom');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Left Property
 		if (object.marginLeft === true) {
 			$ui.addClass(object.dom,'marginLeft');
+		} else {
+			object.marginLeft = false;
 		}
+		object._protected.marginLeft = object.marginLeft;
+		Object.defineProperty(object, 'marginLeft', {
+			get: function() {return this._protected.marginLeft;},
+			set: function(value) {
+				if (value == this._protected.marginLeft) return;
+				this._protected.marginLeft = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginLeft');
+				} else {
+					$ui.addClass(object.dom,'marginLeft');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Right Property
 		if (object.marginRight === true) {
 			$ui.addClass(object.dom,'marginRight');
+		} else {
+			object.marginRight = false;
 		}
+		object._protected.marginRight = object.marginRight;
+		Object.defineProperty(object, 'marginRight', {
+			get: function() {return this._protected.marginRight;},
+			set: function(value) {
+				if (value == this._protected.marginRight) return;
+				this._protected.marginRight = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginRight');
+				} else {
+					$ui.addClass(object.dom,'marginRight');
+				}
+			},
+			configurable: false}
+		);
 		
-		// Create any attached objects
+		// Attached Objects Property
 		if (object.attachedObjects) {
 			var i,
 				control,
@@ -1294,6 +1474,14 @@ function $ui_CoreComponent(object, screen) {
 		} else {
 			object.attachedObjects = [];
 		}
+		object._protected.attachedObjects = object.attachedObjects;
+		Object.defineProperty(object, 'attachedObjects', {
+			get: function() {return this._protected.attachedObjects;},
+			set: function(value) {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','attachedObjects'));
+			},
+			configurable: false}
+		);
 		
 		/** 
 		 * This protected function will raise an interaction event for the <b>oninteraction</b> callback assigned to the {@link $ui} object.
@@ -1308,28 +1496,6 @@ function $ui_CoreComponent(object, screen) {
 		}
 		object._raiseInteractionEvent = object._raiseInteractionEvent.bind(object);
 		
-		/** 
-		 * You can toggle the enabled state of a component by calling its setEnabled function. If the function call is successful it will return true
-		 * @memberof $ui.CoreComponent
-		 * @function setEnabled
-		 * @param {boolean} value - Desired enabled state, <b>true</b> for enabled.
-		 */
-		object.setEnabled = function(value) {
-			if (value == this.enabled) return;
-			if (this.enabled && (value == false)) {
-				this.enabled = false;
-				$ui.addClass(this.dom, 'disabled');
-			} else if ((this.enabled == false) && (value == true)) {
-				this.enabled = true;
-				$ui.removeClass(this.dom, 'disabled');
-			}
-			// Call a child class' protected function if they need
-			// to do special handling for enabling
-			if (this._setEnabled) {
-				this._setEnabled(value);
-			}
-		}
-		object.setEnabled = object.setEnabled.bind(object);
 		
 		// Private function to animate scrolling the control into view 
 		object._scrollIntoView = function() {
@@ -1473,7 +1639,7 @@ function $ui_CoreComponent(object, screen) {
 		}
 		object._updateData = object._updateData.bind(object);
 		
-		// Grab our data provider
+		// Data Provider Property
 		if (object.provider != undefined) {
 			if (object.provider.id != undefined) {
 				// unique event listener for this provider on this screen
@@ -1482,40 +1648,14 @@ function $ui_CoreComponent(object, screen) {
 				object._providerRefresh();
 			}
 		}
-		
-		// Set our initial visibility
-		if ((object.visible != undefined) && (object.visible == false)) {
-			object.dom.style.display = 'none';
-		} else {
-			object.visible = true;
-		}
-		
-		/** 
-		 * You can toggle the visibility of a component by calling its setVisible function. If the function call is successful it will return true
-		 * @memberof $ui.CoreComponent
-		 * @function setVisible
-		 * @param {boolean} value - Desired visibility state, <b>true</b> for visible.
-		 */
-		object.setVisible = function(value) {
-			if (value != this.visible) {
-				if (value == true) {
-					this.visible = true;
-					if (this.dom != undefined) {
-						this.dom.style.display = '';
-					}
-				} else {
-					this.visible = false;
-					if (this.dom != undefined) {
-						this.dom.style.display = 'none';
-					}
-				}
-				// Allow of the top level control to also react to the visibility change
-				if (this._setVisible) {
-					this._setVisible(value);
-				}
-			} 
-		}
-		object.setVisible = object.setVisible.bind(object);
+		object._protected.provider = object.provider;
+		Object.defineProperty(object, 'provider', {
+			get: function() {return this._protected.provider;},
+			set: function(value) {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','provider'));
+			},
+			configurable: false}
+		);
 	}
 }
 
@@ -1582,7 +1722,7 @@ function $ui_CoreScreen(object, data) {
 		
 		// Initialize the screen
 		object.initialize = function() {
-			$ui._inScreenTransition = false;
+			$ui._protected.inScreenTransition = false;
 			$ui._blockAllTapEvent(false);
 			// See if there is an internal implementation of _initialize
 			if (this._initialize) {
@@ -1871,25 +2011,6 @@ function $ui_List(object, screen) {
 		}
 	}
 
-	// Private function to handle clean-up
-	object._destroy = function(value) {
-		// See if there was an overflow added to the dom
-		if (this.dom.menuOverflow != undefined) {
-			this.dom.menuOverflow.postListItem = undefined;
-			this.dom.menuOverflow._destroy();
-			if (this.dom.menuOverflow.parentNode == this.screen.dom) {
-				this.screen.dom.removeChild(this.dom.menuOverflow);
-			}
-		}
-		if (this._original.items) {
-			this.items = [];
-			for (var i = 0; i < this._original.items.length; i++) {
-				this.items.push(this._original.items[i]);
-			}
-		}
-	}
-	object._destroy = object._destroy.bind(object);
-	
 	// Broker the onaction from a list item
 	object._onaction = function(item, event) {
 		if (this.onaction) {
@@ -2069,8 +2190,8 @@ function $ui_List(object, screen) {
 	var i,
 		extension;
 	// Determine our item constructor
-	for (i = 0; i < $ui._definitions.length; i++) {
-		extension = $ui._definitions[i];
+	for (i = 0; i < $ui._protected.definitions.length; i++) {
+		extension = $ui._protected.definitions[i];
 		if (extension.type != $ui.UIExtensionType.LISTITEM) continue;
 		if (extension.component == object.style) {
 			object._itemConstructor = extension.constructor;
@@ -2143,12 +2264,12 @@ function ListEvent(target, eventType, data) {
  * @namespace Spinner
  * @memberof $ui
  * @extends $ui.CoreComponent
- * @property {$ui.Spinner.SpinnerSize} [size=$ui.Spinner.SpinnerSize.MEDIUM] - Represents the size of the spinner component.
+ * @property {$ui.Size} [size=$ui.Size.NORMAL] - Represents the size of the spinner component.
  * @property {$ui.Spinner.SpinnerColor} [forceColor] - This property specifies if the color should be forced to be dark or light. By default the system figures this out and does not need to be set. However, if you want to force a color in a certain scenario you can use this property.
  */
 function $ui_Spinner(object, screen){
 	$ui_CoreComponent.call(this, object, screen);
-	object.size = (object.size) ? object.size : $ui.Spinner.SpinnerSize.MEDIUM;
+	object.size = (object.size) ? object.size : $ui.Size.NORMAL;
 	$ui.addClass(object.dom, 'ui-spinner')
 	$ui.addClass(object.dom, object.size);
 	$ui.addClass(object.dom, 'center');
@@ -3141,8 +3262,8 @@ if (typeof define !== 'undefined' && define.amd) {
  * @property {namespace} component - The <b>mandatory</b> component property defines what type of component is being defined. This property always starts with a <b>$ui.</b> defining the component to be used for generating the UI.
  * @property {string} [id] - The id property is used to uniquely define the control in the screen for which it belongs. <br><br>Providing an id for your control is very convenient because you can easily access your control through your javascript coding. Each id is added as a direct handle on the screen object for access.
  * @property {boolean} [animated=false] - Set this value to <b>true</b> for the control to have animation.  NOTE: Each derivative control is responsible for their animation styling. Setting this property to true will add the ".animated" CSS class to the root element of the control.  Feel free to define your own CSS for the ".animated" property
- * @property {boolean} [visible=true] - The visible property specifies the initial visibility of the control. This property can then be changed by calling the <b>setVisible</b> function on the component.
- * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
+ * @property {boolean} [visible=true] - The visible property specifies the visibility of the control. 
+ * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control.  <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
  * @property {$ui.CoreScreen} screen - This <b>readonly</b> property allows for you to reference the screen from the control. This will be the screen in which the control is embedded
  * @property {$ui.DataProviderLink} [provider] - This property allows you to bind the control to a [data provider]{@link $ui.DataProvider} in the application. 
  * @property {object[]} attachedObjects - This property specifies an array of objects that can be attached to the control. These could be objects such as data providers and usually entail a component that does not provide a user interface.
@@ -3154,7 +3275,11 @@ if (typeof define !== 'undefined' && define.amd) {
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
-	
+		// The protected object is where we store our dynamic object variables
+		object._protected = {
+			model: object
+		};
+		
 		// Create our base container for the control 
 		object.dom = document.createElement('div');
 		object.dom.model = object;
@@ -3165,7 +3290,17 @@ function $ui_CoreComponent(object, screen) {
 			object.dom.setAttribute('data-id',object.id);
 		}
 		
-		// Assign this control as a child of the screen
+		// Component Property
+		object._protected.component = object.component;
+		Object.defineProperty(object, 'component', {
+			get: function() {return this._protected.component;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','component'));
+			},
+			configurable: false}
+		);
+		
+		// Screen Property
 		if (screen != undefined) {
 			object.screen = screen;
 			screen.children.push(object);
@@ -3173,41 +3308,190 @@ function $ui_CoreComponent(object, screen) {
 				screen[object.id] = object;
 			}
 		}
+		object._protected.screen = object.screen;
+		Object.defineProperty(object, 'screen', {
+			get: function() {return this._protected.screen;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','screen'));
+			},
+			configurable: false}
+		);
 		
 		// Apply our current theme style
 		if ($ui.theme.rootClass) {
 			$ui.addClass(object.dom,$ui.theme.rootClass);
 		}
 		
-		// Set default enabled state
+		// id property
+		object._protected.id = object.id;
+		Object.defineProperty(object, 'id', {
+			get: function() {return this._protected.id;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','id'));
+			},
+			configurable: false}
+		);
+		
+		// Enabled Property
 		if (object.enabled != false) {
 			object.enabled = true;
 		} else {
 			$ui.addClass(object.dom, 'disabled');
 		}
+		object._protected.enabled = object.enabled;
+		Object.defineProperty(object, 'enabled', {
+			get: function() {return this._protected.enabled;},
+			set: function(value) {
+				if (value == this._protected.enabled) return;
+				if (this._protected.enabled && (value == false)) {
+					this._protected.enabled = false;
+					$ui.addClass(this.dom, 'disabled');
+				} else if ((this._protected.enabled == false) && (value == true)) {
+					this._protected.enabled = true;
+					$ui.removeClass(this.dom, 'disabled');
+				}
+				// Call a child class' protected function if they need
+				// to do special handling for enabling
+				if (this._setEnabled) {
+					this._setEnabled(value);
+				}
+			},
+			configurable: false}
+		);		
+
 		
-		// See if the control is animated
+		// Animated property
 		if (object.animated == true) {
 			$ui.addClass(object.dom, 'animated');
 		} else {
 			object.animated = false;
 		}
+		object._protected.animated = object.animated;
+		Object.defineProperty(object, 'animated', {
+			get: function() {return this._protected.animated;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','animated'));
+			},
+			configurable: false}
+		);
 		
-		// Check for our margins
+		// Set our initial visibility
+		if ((object.visible != undefined) && (object.visible == false)) {
+			object.dom.style.display = 'none';
+		} else {
+			object.visible = true;
+		}
+		object._protected.visible = object.visible;
+		// Set our modification rules for 'visible'
+		Object.defineProperty(object, 'visible', {
+			get: function() {return this._protected.visible;},
+			set: function(value) {
+				if (value != this._protected.visible) {
+					if (value == true) {
+						this._protected.visible = true;
+						if (this.dom != undefined) {
+							this.dom.style.display = '';
+						}
+					} else {
+						this._protected.visible = false;
+						if (this.dom != undefined) {
+							this.dom.style.display = 'none';
+						}
+					}
+					// Allow of the top level control to also react to the visibility change
+					if (this._setVisible) {
+						this._setVisible(value);
+					}
+				} 
+			},
+			configurable: false}
+		);
+		
+		// Margin Top Property
 		if (object.marginTop === true) {
 			$ui.addClass(object.dom,'marginTop');
+		} else {
+			object.marginTop = false;
 		}
+		object._protected.marginTop = object.marginTop;
+		Object.defineProperty(object, 'marginTop', {
+			get: function() {return this._protected.marginTop;},
+			set: function(value) {
+				if (value == this._protected.marginTop) return;
+				this._protected.marginTop = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginTop');
+				} else {
+					$ui.addClass(object.dom,'marginTop');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Bottom Property
 		if (object.marginBottom === true) {
 			$ui.addClass(object.dom,'marginBottom');
+		} else {
+			object.marginBottom = false;
 		}
+		object._protected.marginBottom = object.marginBottom;
+		Object.defineProperty(object, 'marginBottom', {
+			get: function() {return this._protected.marginBottom;},
+			set: function(value) {
+				if (value == this._protected.marginBottom) return;
+				this._protected.marginBottom = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginBottom');
+				} else {
+					$ui.addClass(object.dom,'marginBottom');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Left Property
 		if (object.marginLeft === true) {
 			$ui.addClass(object.dom,'marginLeft');
+		} else {
+			object.marginLeft = false;
 		}
+		object._protected.marginLeft = object.marginLeft;
+		Object.defineProperty(object, 'marginLeft', {
+			get: function() {return this._protected.marginLeft;},
+			set: function(value) {
+				if (value == this._protected.marginLeft) return;
+				this._protected.marginLeft = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginLeft');
+				} else {
+					$ui.addClass(object.dom,'marginLeft');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Right Property
 		if (object.marginRight === true) {
 			$ui.addClass(object.dom,'marginRight');
+		} else {
+			object.marginRight = false;
 		}
+		object._protected.marginRight = object.marginRight;
+		Object.defineProperty(object, 'marginRight', {
+			get: function() {return this._protected.marginRight;},
+			set: function(value) {
+				if (value == this._protected.marginRight) return;
+				this._protected.marginRight = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginRight');
+				} else {
+					$ui.addClass(object.dom,'marginRight');
+				}
+			},
+			configurable: false}
+		);
 		
-		// Create any attached objects
+		// Attached Objects Property
 		if (object.attachedObjects) {
 			var i,
 				control,
@@ -3224,6 +3508,14 @@ function $ui_CoreComponent(object, screen) {
 		} else {
 			object.attachedObjects = [];
 		}
+		object._protected.attachedObjects = object.attachedObjects;
+		Object.defineProperty(object, 'attachedObjects', {
+			get: function() {return this._protected.attachedObjects;},
+			set: function(value) {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','attachedObjects'));
+			},
+			configurable: false}
+		);
 		
 		/** 
 		 * This protected function will raise an interaction event for the <b>oninteraction</b> callback assigned to the {@link $ui} object.
@@ -3238,28 +3530,6 @@ function $ui_CoreComponent(object, screen) {
 		}
 		object._raiseInteractionEvent = object._raiseInteractionEvent.bind(object);
 		
-		/** 
-		 * You can toggle the enabled state of a component by calling its setEnabled function. If the function call is successful it will return true
-		 * @memberof $ui.CoreComponent
-		 * @function setEnabled
-		 * @param {boolean} value - Desired enabled state, <b>true</b> for enabled.
-		 */
-		object.setEnabled = function(value) {
-			if (value == this.enabled) return;
-			if (this.enabled && (value == false)) {
-				this.enabled = false;
-				$ui.addClass(this.dom, 'disabled');
-			} else if ((this.enabled == false) && (value == true)) {
-				this.enabled = true;
-				$ui.removeClass(this.dom, 'disabled');
-			}
-			// Call a child class' protected function if they need
-			// to do special handling for enabling
-			if (this._setEnabled) {
-				this._setEnabled(value);
-			}
-		}
-		object.setEnabled = object.setEnabled.bind(object);
 		
 		// Private function to animate scrolling the control into view 
 		object._scrollIntoView = function() {
@@ -3403,7 +3673,7 @@ function $ui_CoreComponent(object, screen) {
 		}
 		object._updateData = object._updateData.bind(object);
 		
-		// Grab our data provider
+		// Data Provider Property
 		if (object.provider != undefined) {
 			if (object.provider.id != undefined) {
 				// unique event listener for this provider on this screen
@@ -3412,40 +3682,14 @@ function $ui_CoreComponent(object, screen) {
 				object._providerRefresh();
 			}
 		}
-		
-		// Set our initial visibility
-		if ((object.visible != undefined) && (object.visible == false)) {
-			object.dom.style.display = 'none';
-		} else {
-			object.visible = true;
-		}
-		
-		/** 
-		 * You can toggle the visibility of a component by calling its setVisible function. If the function call is successful it will return true
-		 * @memberof $ui.CoreComponent
-		 * @function setVisible
-		 * @param {boolean} value - Desired visibility state, <b>true</b> for visible.
-		 */
-		object.setVisible = function(value) {
-			if (value != this.visible) {
-				if (value == true) {
-					this.visible = true;
-					if (this.dom != undefined) {
-						this.dom.style.display = '';
-					}
-				} else {
-					this.visible = false;
-					if (this.dom != undefined) {
-						this.dom.style.display = 'none';
-					}
-				}
-				// Allow of the top level control to also react to the visibility change
-				if (this._setVisible) {
-					this._setVisible(value);
-				}
-			} 
-		}
-		object.setVisible = object.setVisible.bind(object);
+		object._protected.provider = object.provider;
+		Object.defineProperty(object, 'provider', {
+			get: function() {return this._protected.provider;},
+			set: function(value) {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','provider'));
+			},
+			configurable: false}
+		);
 	}
 }
 
@@ -3512,7 +3756,7 @@ function $ui_CoreScreen(object, data) {
 		
 		// Initialize the screen
 		object.initialize = function() {
-			$ui._inScreenTransition = false;
+			$ui._protected.inScreenTransition = false;
 			$ui._blockAllTapEvent(false);
 			// See if there is an internal implementation of _initialize
 			if (this._initialize) {
@@ -3801,25 +4045,6 @@ function $ui_List(object, screen) {
 		}
 	}
 
-	// Private function to handle clean-up
-	object._destroy = function(value) {
-		// See if there was an overflow added to the dom
-		if (this.dom.menuOverflow != undefined) {
-			this.dom.menuOverflow.postListItem = undefined;
-			this.dom.menuOverflow._destroy();
-			if (this.dom.menuOverflow.parentNode == this.screen.dom) {
-				this.screen.dom.removeChild(this.dom.menuOverflow);
-			}
-		}
-		if (this._original.items) {
-			this.items = [];
-			for (var i = 0; i < this._original.items.length; i++) {
-				this.items.push(this._original.items[i]);
-			}
-		}
-	}
-	object._destroy = object._destroy.bind(object);
-	
 	// Broker the onaction from a list item
 	object._onaction = function(item, event) {
 		if (this.onaction) {
@@ -3999,8 +4224,8 @@ function $ui_List(object, screen) {
 	var i,
 		extension;
 	// Determine our item constructor
-	for (i = 0; i < $ui._definitions.length; i++) {
-		extension = $ui._definitions[i];
+	for (i = 0; i < $ui._protected.definitions.length; i++) {
+		extension = $ui._protected.definitions[i];
 		if (extension.type != $ui.UIExtensionType.LISTITEM) continue;
 		if (extension.component == object.style) {
 			object._itemConstructor = extension.constructor;
@@ -4073,12 +4298,12 @@ function ListEvent(target, eventType, data) {
  * @namespace Spinner
  * @memberof $ui
  * @extends $ui.CoreComponent
- * @property {$ui.Spinner.SpinnerSize} [size=$ui.Spinner.SpinnerSize.MEDIUM] - Represents the size of the spinner component.
+ * @property {$ui.Size} [size=$ui.Size.NORMAL] - Represents the size of the spinner component.
  * @property {$ui.Spinner.SpinnerColor} [forceColor] - This property specifies if the color should be forced to be dark or light. By default the system figures this out and does not need to be set. However, if you want to force a color in a certain scenario you can use this property.
  */
 function $ui_Spinner(object, screen){
 	$ui_CoreComponent.call(this, object, screen);
-	object.size = (object.size) ? object.size : $ui.Spinner.SpinnerSize.MEDIUM;
+	object.size = (object.size) ? object.size : $ui.Size.NORMAL;
 	$ui.addClass(object.dom, 'ui-spinner')
 	$ui.addClass(object.dom, object.size);
 	$ui.addClass(object.dom, 'center');
@@ -5499,7 +5724,7 @@ function $ui_TabbedPane(object, screen) {
 		for (i = 0; i < this.tabs.length; i++) {
 			item = this.tabs[i];
 			item.selected = false;
-			item.setVisible(false);
+			item.visible = false;
 		}
 		// Now select the desired tab
 		this._selectTab(tab);
@@ -5512,7 +5737,7 @@ function $ui_TabbedPane(object, screen) {
 		if (tab.component != $ui.Tab) return;
 		object._selectedTab = tab;
 		tab.selected = true;
-		tab.setVisible(true);
+		tab.visible = true;
 	}
 	object._selectTab = object._selectTab.bind(object);
 	
@@ -6731,8 +6956,8 @@ if (typeof define !== 'undefined' && define.amd) {
  * @property {namespace} component - The <b>mandatory</b> component property defines what type of component is being defined. This property always starts with a <b>$ui.</b> defining the component to be used for generating the UI.
  * @property {string} [id] - The id property is used to uniquely define the control in the screen for which it belongs. <br><br>Providing an id for your control is very convenient because you can easily access your control through your javascript coding. Each id is added as a direct handle on the screen object for access.
  * @property {boolean} [animated=false] - Set this value to <b>true</b> for the control to have animation.  NOTE: Each derivative control is responsible for their animation styling. Setting this property to true will add the ".animated" CSS class to the root element of the control.  Feel free to define your own CSS for the ".animated" property
- * @property {boolean} [visible=true] - The visible property specifies the initial visibility of the control. This property can then be changed by calling the <b>setVisible</b> function on the component.
- * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
+ * @property {boolean} [visible=true] - The visible property specifies the visibility of the control. 
+ * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control.  <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
  * @property {$ui.CoreScreen} screen - This <b>readonly</b> property allows for you to reference the screen from the control. This will be the screen in which the control is embedded
  * @property {$ui.DataProviderLink} [provider] - This property allows you to bind the control to a [data provider]{@link $ui.DataProvider} in the application. 
  * @property {object[]} attachedObjects - This property specifies an array of objects that can be attached to the control. These could be objects such as data providers and usually entail a component that does not provide a user interface.
@@ -6744,7 +6969,11 @@ if (typeof define !== 'undefined' && define.amd) {
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
-	
+		// The protected object is where we store our dynamic object variables
+		object._protected = {
+			model: object
+		};
+		
 		// Create our base container for the control 
 		object.dom = document.createElement('div');
 		object.dom.model = object;
@@ -6755,7 +6984,17 @@ function $ui_CoreComponent(object, screen) {
 			object.dom.setAttribute('data-id',object.id);
 		}
 		
-		// Assign this control as a child of the screen
+		// Component Property
+		object._protected.component = object.component;
+		Object.defineProperty(object, 'component', {
+			get: function() {return this._protected.component;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','component'));
+			},
+			configurable: false}
+		);
+		
+		// Screen Property
 		if (screen != undefined) {
 			object.screen = screen;
 			screen.children.push(object);
@@ -6763,41 +7002,190 @@ function $ui_CoreComponent(object, screen) {
 				screen[object.id] = object;
 			}
 		}
+		object._protected.screen = object.screen;
+		Object.defineProperty(object, 'screen', {
+			get: function() {return this._protected.screen;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','screen'));
+			},
+			configurable: false}
+		);
 		
 		// Apply our current theme style
 		if ($ui.theme.rootClass) {
 			$ui.addClass(object.dom,$ui.theme.rootClass);
 		}
 		
-		// Set default enabled state
+		// id property
+		object._protected.id = object.id;
+		Object.defineProperty(object, 'id', {
+			get: function() {return this._protected.id;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','id'));
+			},
+			configurable: false}
+		);
+		
+		// Enabled Property
 		if (object.enabled != false) {
 			object.enabled = true;
 		} else {
 			$ui.addClass(object.dom, 'disabled');
 		}
+		object._protected.enabled = object.enabled;
+		Object.defineProperty(object, 'enabled', {
+			get: function() {return this._protected.enabled;},
+			set: function(value) {
+				if (value == this._protected.enabled) return;
+				if (this._protected.enabled && (value == false)) {
+					this._protected.enabled = false;
+					$ui.addClass(this.dom, 'disabled');
+				} else if ((this._protected.enabled == false) && (value == true)) {
+					this._protected.enabled = true;
+					$ui.removeClass(this.dom, 'disabled');
+				}
+				// Call a child class' protected function if they need
+				// to do special handling for enabling
+				if (this._setEnabled) {
+					this._setEnabled(value);
+				}
+			},
+			configurable: false}
+		);		
+
 		
-		// See if the control is animated
+		// Animated property
 		if (object.animated == true) {
 			$ui.addClass(object.dom, 'animated');
 		} else {
 			object.animated = false;
 		}
+		object._protected.animated = object.animated;
+		Object.defineProperty(object, 'animated', {
+			get: function() {return this._protected.animated;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','animated'));
+			},
+			configurable: false}
+		);
 		
-		// Check for our margins
+		// Set our initial visibility
+		if ((object.visible != undefined) && (object.visible == false)) {
+			object.dom.style.display = 'none';
+		} else {
+			object.visible = true;
+		}
+		object._protected.visible = object.visible;
+		// Set our modification rules for 'visible'
+		Object.defineProperty(object, 'visible', {
+			get: function() {return this._protected.visible;},
+			set: function(value) {
+				if (value != this._protected.visible) {
+					if (value == true) {
+						this._protected.visible = true;
+						if (this.dom != undefined) {
+							this.dom.style.display = '';
+						}
+					} else {
+						this._protected.visible = false;
+						if (this.dom != undefined) {
+							this.dom.style.display = 'none';
+						}
+					}
+					// Allow of the top level control to also react to the visibility change
+					if (this._setVisible) {
+						this._setVisible(value);
+					}
+				} 
+			},
+			configurable: false}
+		);
+		
+		// Margin Top Property
 		if (object.marginTop === true) {
 			$ui.addClass(object.dom,'marginTop');
+		} else {
+			object.marginTop = false;
 		}
+		object._protected.marginTop = object.marginTop;
+		Object.defineProperty(object, 'marginTop', {
+			get: function() {return this._protected.marginTop;},
+			set: function(value) {
+				if (value == this._protected.marginTop) return;
+				this._protected.marginTop = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginTop');
+				} else {
+					$ui.addClass(object.dom,'marginTop');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Bottom Property
 		if (object.marginBottom === true) {
 			$ui.addClass(object.dom,'marginBottom');
+		} else {
+			object.marginBottom = false;
 		}
+		object._protected.marginBottom = object.marginBottom;
+		Object.defineProperty(object, 'marginBottom', {
+			get: function() {return this._protected.marginBottom;},
+			set: function(value) {
+				if (value == this._protected.marginBottom) return;
+				this._protected.marginBottom = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginBottom');
+				} else {
+					$ui.addClass(object.dom,'marginBottom');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Left Property
 		if (object.marginLeft === true) {
 			$ui.addClass(object.dom,'marginLeft');
+		} else {
+			object.marginLeft = false;
 		}
+		object._protected.marginLeft = object.marginLeft;
+		Object.defineProperty(object, 'marginLeft', {
+			get: function() {return this._protected.marginLeft;},
+			set: function(value) {
+				if (value == this._protected.marginLeft) return;
+				this._protected.marginLeft = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginLeft');
+				} else {
+					$ui.addClass(object.dom,'marginLeft');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Right Property
 		if (object.marginRight === true) {
 			$ui.addClass(object.dom,'marginRight');
+		} else {
+			object.marginRight = false;
 		}
+		object._protected.marginRight = object.marginRight;
+		Object.defineProperty(object, 'marginRight', {
+			get: function() {return this._protected.marginRight;},
+			set: function(value) {
+				if (value == this._protected.marginRight) return;
+				this._protected.marginRight = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginRight');
+				} else {
+					$ui.addClass(object.dom,'marginRight');
+				}
+			},
+			configurable: false}
+		);
 		
-		// Create any attached objects
+		// Attached Objects Property
 		if (object.attachedObjects) {
 			var i,
 				control,
@@ -6814,6 +7202,14 @@ function $ui_CoreComponent(object, screen) {
 		} else {
 			object.attachedObjects = [];
 		}
+		object._protected.attachedObjects = object.attachedObjects;
+		Object.defineProperty(object, 'attachedObjects', {
+			get: function() {return this._protected.attachedObjects;},
+			set: function(value) {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','attachedObjects'));
+			},
+			configurable: false}
+		);
 		
 		/** 
 		 * This protected function will raise an interaction event for the <b>oninteraction</b> callback assigned to the {@link $ui} object.
@@ -6828,28 +7224,6 @@ function $ui_CoreComponent(object, screen) {
 		}
 		object._raiseInteractionEvent = object._raiseInteractionEvent.bind(object);
 		
-		/** 
-		 * You can toggle the enabled state of a component by calling its setEnabled function. If the function call is successful it will return true
-		 * @memberof $ui.CoreComponent
-		 * @function setEnabled
-		 * @param {boolean} value - Desired enabled state, <b>true</b> for enabled.
-		 */
-		object.setEnabled = function(value) {
-			if (value == this.enabled) return;
-			if (this.enabled && (value == false)) {
-				this.enabled = false;
-				$ui.addClass(this.dom, 'disabled');
-			} else if ((this.enabled == false) && (value == true)) {
-				this.enabled = true;
-				$ui.removeClass(this.dom, 'disabled');
-			}
-			// Call a child class' protected function if they need
-			// to do special handling for enabling
-			if (this._setEnabled) {
-				this._setEnabled(value);
-			}
-		}
-		object.setEnabled = object.setEnabled.bind(object);
 		
 		// Private function to animate scrolling the control into view 
 		object._scrollIntoView = function() {
@@ -6993,7 +7367,7 @@ function $ui_CoreComponent(object, screen) {
 		}
 		object._updateData = object._updateData.bind(object);
 		
-		// Grab our data provider
+		// Data Provider Property
 		if (object.provider != undefined) {
 			if (object.provider.id != undefined) {
 				// unique event listener for this provider on this screen
@@ -7002,40 +7376,14 @@ function $ui_CoreComponent(object, screen) {
 				object._providerRefresh();
 			}
 		}
-		
-		// Set our initial visibility
-		if ((object.visible != undefined) && (object.visible == false)) {
-			object.dom.style.display = 'none';
-		} else {
-			object.visible = true;
-		}
-		
-		/** 
-		 * You can toggle the visibility of a component by calling its setVisible function. If the function call is successful it will return true
-		 * @memberof $ui.CoreComponent
-		 * @function setVisible
-		 * @param {boolean} value - Desired visibility state, <b>true</b> for visible.
-		 */
-		object.setVisible = function(value) {
-			if (value != this.visible) {
-				if (value == true) {
-					this.visible = true;
-					if (this.dom != undefined) {
-						this.dom.style.display = '';
-					}
-				} else {
-					this.visible = false;
-					if (this.dom != undefined) {
-						this.dom.style.display = 'none';
-					}
-				}
-				// Allow of the top level control to also react to the visibility change
-				if (this._setVisible) {
-					this._setVisible(value);
-				}
-			} 
-		}
-		object.setVisible = object.setVisible.bind(object);
+		object._protected.provider = object.provider;
+		Object.defineProperty(object, 'provider', {
+			get: function() {return this._protected.provider;},
+			set: function(value) {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','provider'));
+			},
+			configurable: false}
+		);
 	}
 }
 
@@ -7102,7 +7450,7 @@ function $ui_CoreScreen(object, data) {
 		
 		// Initialize the screen
 		object.initialize = function() {
-			$ui._inScreenTransition = false;
+			$ui._protected.inScreenTransition = false;
 			$ui._blockAllTapEvent(false);
 			// See if there is an internal implementation of _initialize
 			if (this._initialize) {
@@ -7391,25 +7739,6 @@ function $ui_List(object, screen) {
 		}
 	}
 
-	// Private function to handle clean-up
-	object._destroy = function(value) {
-		// See if there was an overflow added to the dom
-		if (this.dom.menuOverflow != undefined) {
-			this.dom.menuOverflow.postListItem = undefined;
-			this.dom.menuOverflow._destroy();
-			if (this.dom.menuOverflow.parentNode == this.screen.dom) {
-				this.screen.dom.removeChild(this.dom.menuOverflow);
-			}
-		}
-		if (this._original.items) {
-			this.items = [];
-			for (var i = 0; i < this._original.items.length; i++) {
-				this.items.push(this._original.items[i]);
-			}
-		}
-	}
-	object._destroy = object._destroy.bind(object);
-	
 	// Broker the onaction from a list item
 	object._onaction = function(item, event) {
 		if (this.onaction) {
@@ -7589,8 +7918,8 @@ function $ui_List(object, screen) {
 	var i,
 		extension;
 	// Determine our item constructor
-	for (i = 0; i < $ui._definitions.length; i++) {
-		extension = $ui._definitions[i];
+	for (i = 0; i < $ui._protected.definitions.length; i++) {
+		extension = $ui._protected.definitions[i];
 		if (extension.type != $ui.UIExtensionType.LISTITEM) continue;
 		if (extension.component == object.style) {
 			object._itemConstructor = extension.constructor;
@@ -7663,12 +7992,12 @@ function ListEvent(target, eventType, data) {
  * @namespace Spinner
  * @memberof $ui
  * @extends $ui.CoreComponent
- * @property {$ui.Spinner.SpinnerSize} [size=$ui.Spinner.SpinnerSize.MEDIUM] - Represents the size of the spinner component.
+ * @property {$ui.Size} [size=$ui.Size.NORMAL] - Represents the size of the spinner component.
  * @property {$ui.Spinner.SpinnerColor} [forceColor] - This property specifies if the color should be forced to be dark or light. By default the system figures this out and does not need to be set. However, if you want to force a color in a certain scenario you can use this property.
  */
 function $ui_Spinner(object, screen){
 	$ui_CoreComponent.call(this, object, screen);
-	object.size = (object.size) ? object.size : $ui.Spinner.SpinnerSize.MEDIUM;
+	object.size = (object.size) ? object.size : $ui.Size.NORMAL;
 	$ui.addClass(object.dom, 'ui-spinner')
 	$ui.addClass(object.dom, object.size);
 	$ui.addClass(object.dom, 'center');
@@ -9089,7 +9418,7 @@ function $ui_TabbedPane(object, screen) {
 		for (i = 0; i < this.tabs.length; i++) {
 			item = this.tabs[i];
 			item.selected = false;
-			item.setVisible(false);
+			item.visible = false;
 		}
 		// Now select the desired tab
 		this._selectTab(tab);
@@ -9102,7 +9431,7 @@ function $ui_TabbedPane(object, screen) {
 		if (tab.component != $ui.Tab) return;
 		object._selectedTab = tab;
 		tab.selected = true;
-		tab.setVisible(true);
+		tab.visible = true;
 	}
 	object._selectTab = object._selectTab.bind(object);
 	
@@ -10532,20 +10861,18 @@ function $ui_TileDistance(object, screen) {
 		// Set our caption
 		this.dom.caption.innerHTML = '<span class="tall distance">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="tall">'+this._value+'</span> '+this.units;
 		// Get our root color
-		var R = parseInt(($ui._cutHex($ui.theme.color)).substring(0,2),16),
-			G = parseInt(($ui._cutHex($ui.theme.color)).substring(2,4),16),
-			B = parseInt(($ui._cutHex($ui.theme.color)).substring(4,6),16);	
+		var RGB = $ui.hexToRgb($ui.theme.color);
 		// Load our data
 		var data = {
 			labels: _labels,
 			datasets: [
 				{
-					fillColor: 'rgba('+R+','+G+','+B+',0.2)',
-					strokeColor: 'rgba('+R+','+G+','+B+',1)',
-					pointColor: 'rgba('+R+','+G+','+B+',1)',
+					fillColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',0.2)',
+					strokeColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
+					pointColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					pointStrokeColor: '#fff',
 					pointHighlightFill: '#fff',
-					pointHighlightStroke: 'rgba('+R+','+G+','+B+',1)',
+					pointHighlightStroke: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					data: this.data
 				},
 				{
@@ -10669,26 +10996,24 @@ function $ui_TileFuel(object, screen) {
 		// Set our caption
 		this.dom.caption.innerHTML = '<span class="tall">$'+this.value+'</span> of <span class="tall fuel">&nbsp;&nbsp;&nbsp;&nbsp;</span>Today';
 		// Get our root color
-		var R = 151, 
-			G = 187, 
-			B = 205,
+		var RGB,
 			fontColor;
 		if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
-			R = parseInt(($ui._cutHex($ui.theme.color)).substring(0,2),16),
-			G = parseInt(($ui._cutHex($ui.theme.color)).substring(2,4),16),
-			B = parseInt(($ui._cutHex($ui.theme.color)).substring(4,6),16);
-		} 
+			RGB = $ui.hexToRgb($ui.theme.color);
+		} else {
+			RGB = {R: 151, G: 187, B: 205};
+		}
 		// Load our data
 		var data = {
 			labels: _labels,
 			datasets: [
 				{
-					fillColor: 'rgba('+R+','+G+','+B+',0.2)',
-					strokeColor: 'rgba('+R+','+G+','+B+',1)',
-					pointColor: 'rgba('+R+','+G+','+B+',1)',
+					fillColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',0.2)',
+					strokeColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
+					pointColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					pointStrokeColor: '#fff',
 					pointHighlightFill: '#fff',
-					pointHighlightStroke: 'rgba('+R+','+G+','+B+',1)',
+					pointHighlightStroke: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					data: this.data
 				},
 				{
@@ -10846,16 +11171,14 @@ function $ui_TileIdleDetails(object, screen) {
 		}
 		// Get our root color
 		var graphColor = ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) ? $ui.theme.color : $ui.color_OK,
-			R = parseInt(($ui._cutHex(graphColor)).substring(0,2),16),
-			G = parseInt(($ui._cutHex(graphColor)).substring(2,4),16),
-			B = parseInt(($ui._cutHex(graphColor)).substring(4,6),16);	
+			RGB = $ui.hexToRgb(graphColor);
 		// Load our data
 		var data = {
 			labels: this.labels,
 			datasets: [
 				{
-					fillColor: 'rgba('+R+','+G+','+B+',0.5)',
-					strokeColor: 'rgba('+R+','+G+','+B+',1)',
+					fillColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',0.5)',
+					strokeColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					data: this.data
 				}
 			]
@@ -11558,16 +11881,14 @@ function $ui_TileTimeHistory(object, screen) {
 		this.dom.caption.textContent = this.caption;
 		// Get our root color
 		var graphColor = ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) ? $ui.theme.color : $ui.color_OK,
-			R = parseInt(($ui._cutHex(graphColor)).substring(0,2),16),
-			G = parseInt(($ui._cutHex(graphColor)).substring(2,4),16),
-			B = parseInt(($ui._cutHex(graphColor)).substring(4,6),16);	
+			RGB = $ui.hexToRgb(graphColor);
 		// Load our data
 		var data = {
 			labels: this.labels,
 			datasets: [
 				{
-					fillColor: 'rgba('+R+','+G+','+B+',0.5)',
-					strokeColor: 'rgba('+R+','+G+','+B+',1)',
+					fillColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',0.5)',
+					strokeColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					data: this.data
 				}
 			]
@@ -12595,8 +12916,8 @@ if (typeof define !== 'undefined' && define.amd) {
  * @property {namespace} component - The <b>mandatory</b> component property defines what type of component is being defined. This property always starts with a <b>$ui.</b> defining the component to be used for generating the UI.
  * @property {string} [id] - The id property is used to uniquely define the control in the screen for which it belongs. <br><br>Providing an id for your control is very convenient because you can easily access your control through your javascript coding. Each id is added as a direct handle on the screen object for access.
  * @property {boolean} [animated=false] - Set this value to <b>true</b> for the control to have animation.  NOTE: Each derivative control is responsible for their animation styling. Setting this property to true will add the ".animated" CSS class to the root element of the control.  Feel free to define your own CSS for the ".animated" property
- * @property {boolean} [visible=true] - The visible property specifies the initial visibility of the control. This property can then be changed by calling the <b>setVisible</b> function on the component.
- * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control. This property can then be changed by calling the <b>setEnabled</b> function on the component. <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
+ * @property {boolean} [visible=true] - The visible property specifies the visibility of the control. 
+ * @property {boolean} [enabled=true] - The enabled property specifies the initial enabled state of the control.  <i>NOTE: Not all controls will render a disabled state. If you wish to render a disabled state simply override the ".disabled" CSS for the root of your control</i>
  * @property {$ui.CoreScreen} screen - This <b>readonly</b> property allows for you to reference the screen from the control. This will be the screen in which the control is embedded
  * @property {$ui.DataProviderLink} [provider] - This property allows you to bind the control to a [data provider]{@link $ui.DataProvider} in the application. 
  * @property {object[]} attachedObjects - This property specifies an array of objects that can be attached to the control. These could be objects such as data providers and usually entail a component that does not provide a user interface.
@@ -12608,7 +12929,11 @@ if (typeof define !== 'undefined' && define.amd) {
 function $ui_CoreComponent(object, screen) {
 	if (object) {
 		this.object = object;
-	
+		// The protected object is where we store our dynamic object variables
+		object._protected = {
+			model: object
+		};
+		
 		// Create our base container for the control 
 		object.dom = document.createElement('div');
 		object.dom.model = object;
@@ -12619,7 +12944,17 @@ function $ui_CoreComponent(object, screen) {
 			object.dom.setAttribute('data-id',object.id);
 		}
 		
-		// Assign this control as a child of the screen
+		// Component Property
+		object._protected.component = object.component;
+		Object.defineProperty(object, 'component', {
+			get: function() {return this._protected.component;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','component'));
+			},
+			configurable: false}
+		);
+		
+		// Screen Property
 		if (screen != undefined) {
 			object.screen = screen;
 			screen.children.push(object);
@@ -12627,41 +12962,190 @@ function $ui_CoreComponent(object, screen) {
 				screen[object.id] = object;
 			}
 		}
+		object._protected.screen = object.screen;
+		Object.defineProperty(object, 'screen', {
+			get: function() {return this._protected.screen;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','screen'));
+			},
+			configurable: false}
+		);
 		
 		// Apply our current theme style
 		if ($ui.theme.rootClass) {
 			$ui.addClass(object.dom,$ui.theme.rootClass);
 		}
 		
-		// Set default enabled state
+		// id property
+		object._protected.id = object.id;
+		Object.defineProperty(object, 'id', {
+			get: function() {return this._protected.id;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','id'));
+			},
+			configurable: false}
+		);
+		
+		// Enabled Property
 		if (object.enabled != false) {
 			object.enabled = true;
 		} else {
 			$ui.addClass(object.dom, 'disabled');
 		}
+		object._protected.enabled = object.enabled;
+		Object.defineProperty(object, 'enabled', {
+			get: function() {return this._protected.enabled;},
+			set: function(value) {
+				if (value == this._protected.enabled) return;
+				if (this._protected.enabled && (value == false)) {
+					this._protected.enabled = false;
+					$ui.addClass(this.dom, 'disabled');
+				} else if ((this._protected.enabled == false) && (value == true)) {
+					this._protected.enabled = true;
+					$ui.removeClass(this.dom, 'disabled');
+				}
+				// Call a child class' protected function if they need
+				// to do special handling for enabling
+				if (this._setEnabled) {
+					this._setEnabled(value);
+				}
+			},
+			configurable: false}
+		);		
+
 		
-		// See if the control is animated
+		// Animated property
 		if (object.animated == true) {
 			$ui.addClass(object.dom, 'animated');
 		} else {
 			object.animated = false;
 		}
+		object._protected.animated = object.animated;
+		Object.defineProperty(object, 'animated', {
+			get: function() {return this._protected.animated;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','animated'));
+			},
+			configurable: false}
+		);
 		
-		// Check for our margins
+		// Set our initial visibility
+		if ((object.visible != undefined) && (object.visible == false)) {
+			object.dom.style.display = 'none';
+		} else {
+			object.visible = true;
+		}
+		object._protected.visible = object.visible;
+		// Set our modification rules for 'visible'
+		Object.defineProperty(object, 'visible', {
+			get: function() {return this._protected.visible;},
+			set: function(value) {
+				if (value != this._protected.visible) {
+					if (value == true) {
+						this._protected.visible = true;
+						if (this.dom != undefined) {
+							this.dom.style.display = '';
+						}
+					} else {
+						this._protected.visible = false;
+						if (this.dom != undefined) {
+							this.dom.style.display = 'none';
+						}
+					}
+					// Allow of the top level control to also react to the visibility change
+					if (this._setVisible) {
+						this._setVisible(value);
+					}
+				} 
+			},
+			configurable: false}
+		);
+		
+		// Margin Top Property
 		if (object.marginTop === true) {
 			$ui.addClass(object.dom,'marginTop');
+		} else {
+			object.marginTop = false;
 		}
+		object._protected.marginTop = object.marginTop;
+		Object.defineProperty(object, 'marginTop', {
+			get: function() {return this._protected.marginTop;},
+			set: function(value) {
+				if (value == this._protected.marginTop) return;
+				this._protected.marginTop = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginTop');
+				} else {
+					$ui.addClass(object.dom,'marginTop');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Bottom Property
 		if (object.marginBottom === true) {
 			$ui.addClass(object.dom,'marginBottom');
+		} else {
+			object.marginBottom = false;
 		}
+		object._protected.marginBottom = object.marginBottom;
+		Object.defineProperty(object, 'marginBottom', {
+			get: function() {return this._protected.marginBottom;},
+			set: function(value) {
+				if (value == this._protected.marginBottom) return;
+				this._protected.marginBottom = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginBottom');
+				} else {
+					$ui.addClass(object.dom,'marginBottom');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Left Property
 		if (object.marginLeft === true) {
 			$ui.addClass(object.dom,'marginLeft');
+		} else {
+			object.marginLeft = false;
 		}
+		object._protected.marginLeft = object.marginLeft;
+		Object.defineProperty(object, 'marginLeft', {
+			get: function() {return this._protected.marginLeft;},
+			set: function(value) {
+				if (value == this._protected.marginLeft) return;
+				this._protected.marginLeft = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginLeft');
+				} else {
+					$ui.addClass(object.dom,'marginLeft');
+				}
+			},
+			configurable: false}
+		);
+		
+		// Margin Right Property
 		if (object.marginRight === true) {
 			$ui.addClass(object.dom,'marginRight');
+		} else {
+			object.marginRight = false;
 		}
+		object._protected.marginRight = object.marginRight;
+		Object.defineProperty(object, 'marginRight', {
+			get: function() {return this._protected.marginRight;},
+			set: function(value) {
+				if (value == this._protected.marginRight) return;
+				this._protected.marginRight = value;
+				if (value == false) {
+					$ui.removeClass(object.dom,'marginRight');
+				} else {
+					$ui.addClass(object.dom,'marginRight');
+				}
+			},
+			configurable: false}
+		);
 		
-		// Create any attached objects
+		// Attached Objects Property
 		if (object.attachedObjects) {
 			var i,
 				control,
@@ -12678,6 +13162,14 @@ function $ui_CoreComponent(object, screen) {
 		} else {
 			object.attachedObjects = [];
 		}
+		object._protected.attachedObjects = object.attachedObjects;
+		Object.defineProperty(object, 'attachedObjects', {
+			get: function() {return this._protected.attachedObjects;},
+			set: function(value) {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','attachedObjects'));
+			},
+			configurable: false}
+		);
 		
 		/** 
 		 * This protected function will raise an interaction event for the <b>oninteraction</b> callback assigned to the {@link $ui} object.
@@ -12692,28 +13184,6 @@ function $ui_CoreComponent(object, screen) {
 		}
 		object._raiseInteractionEvent = object._raiseInteractionEvent.bind(object);
 		
-		/** 
-		 * You can toggle the enabled state of a component by calling its setEnabled function. If the function call is successful it will return true
-		 * @memberof $ui.CoreComponent
-		 * @function setEnabled
-		 * @param {boolean} value - Desired enabled state, <b>true</b> for enabled.
-		 */
-		object.setEnabled = function(value) {
-			if (value == this.enabled) return;
-			if (this.enabled && (value == false)) {
-				this.enabled = false;
-				$ui.addClass(this.dom, 'disabled');
-			} else if ((this.enabled == false) && (value == true)) {
-				this.enabled = true;
-				$ui.removeClass(this.dom, 'disabled');
-			}
-			// Call a child class' protected function if they need
-			// to do special handling for enabling
-			if (this._setEnabled) {
-				this._setEnabled(value);
-			}
-		}
-		object.setEnabled = object.setEnabled.bind(object);
 		
 		// Private function to animate scrolling the control into view 
 		object._scrollIntoView = function() {
@@ -12857,7 +13327,7 @@ function $ui_CoreComponent(object, screen) {
 		}
 		object._updateData = object._updateData.bind(object);
 		
-		// Grab our data provider
+		// Data Provider Property
 		if (object.provider != undefined) {
 			if (object.provider.id != undefined) {
 				// unique event listener for this provider on this screen
@@ -12866,40 +13336,14 @@ function $ui_CoreComponent(object, screen) {
 				object._providerRefresh();
 			}
 		}
-		
-		// Set our initial visibility
-		if ((object.visible != undefined) && (object.visible == false)) {
-			object.dom.style.display = 'none';
-		} else {
-			object.visible = true;
-		}
-		
-		/** 
-		 * You can toggle the visibility of a component by calling its setVisible function. If the function call is successful it will return true
-		 * @memberof $ui.CoreComponent
-		 * @function setVisible
-		 * @param {boolean} value - Desired visibility state, <b>true</b> for visible.
-		 */
-		object.setVisible = function(value) {
-			if (value != this.visible) {
-				if (value == true) {
-					this.visible = true;
-					if (this.dom != undefined) {
-						this.dom.style.display = '';
-					}
-				} else {
-					this.visible = false;
-					if (this.dom != undefined) {
-						this.dom.style.display = 'none';
-					}
-				}
-				// Allow of the top level control to also react to the visibility change
-				if (this._setVisible) {
-					this._setVisible(value);
-				}
-			} 
-		}
-		object.setVisible = object.setVisible.bind(object);
+		object._protected.provider = object.provider;
+		Object.defineProperty(object, 'provider', {
+			get: function() {return this._protected.provider;},
+			set: function(value) {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','provider'));
+			},
+			configurable: false}
+		);
 	}
 }
 
@@ -12966,7 +13410,7 @@ function $ui_CoreScreen(object, data) {
 		
 		// Initialize the screen
 		object.initialize = function() {
-			$ui._inScreenTransition = false;
+			$ui._protected.inScreenTransition = false;
 			$ui._blockAllTapEvent(false);
 			// See if there is an internal implementation of _initialize
 			if (this._initialize) {
@@ -13255,25 +13699,6 @@ function $ui_List(object, screen) {
 		}
 	}
 
-	// Private function to handle clean-up
-	object._destroy = function(value) {
-		// See if there was an overflow added to the dom
-		if (this.dom.menuOverflow != undefined) {
-			this.dom.menuOverflow.postListItem = undefined;
-			this.dom.menuOverflow._destroy();
-			if (this.dom.menuOverflow.parentNode == this.screen.dom) {
-				this.screen.dom.removeChild(this.dom.menuOverflow);
-			}
-		}
-		if (this._original.items) {
-			this.items = [];
-			for (var i = 0; i < this._original.items.length; i++) {
-				this.items.push(this._original.items[i]);
-			}
-		}
-	}
-	object._destroy = object._destroy.bind(object);
-	
 	// Broker the onaction from a list item
 	object._onaction = function(item, event) {
 		if (this.onaction) {
@@ -13453,8 +13878,8 @@ function $ui_List(object, screen) {
 	var i,
 		extension;
 	// Determine our item constructor
-	for (i = 0; i < $ui._definitions.length; i++) {
-		extension = $ui._definitions[i];
+	for (i = 0; i < $ui._protected.definitions.length; i++) {
+		extension = $ui._protected.definitions[i];
 		if (extension.type != $ui.UIExtensionType.LISTITEM) continue;
 		if (extension.component == object.style) {
 			object._itemConstructor = extension.constructor;
@@ -13527,12 +13952,12 @@ function ListEvent(target, eventType, data) {
  * @namespace Spinner
  * @memberof $ui
  * @extends $ui.CoreComponent
- * @property {$ui.Spinner.SpinnerSize} [size=$ui.Spinner.SpinnerSize.MEDIUM] - Represents the size of the spinner component.
+ * @property {$ui.Size} [size=$ui.Size.NORMAL] - Represents the size of the spinner component.
  * @property {$ui.Spinner.SpinnerColor} [forceColor] - This property specifies if the color should be forced to be dark or light. By default the system figures this out and does not need to be set. However, if you want to force a color in a certain scenario you can use this property.
  */
 function $ui_Spinner(object, screen){
 	$ui_CoreComponent.call(this, object, screen);
-	object.size = (object.size) ? object.size : $ui.Spinner.SpinnerSize.MEDIUM;
+	object.size = (object.size) ? object.size : $ui.Size.NORMAL;
 	$ui.addClass(object.dom, 'ui-spinner')
 	$ui.addClass(object.dom, object.size);
 	$ui.addClass(object.dom, 'center');
@@ -14953,7 +15378,7 @@ function $ui_TabbedPane(object, screen) {
 		for (i = 0; i < this.tabs.length; i++) {
 			item = this.tabs[i];
 			item.selected = false;
-			item.setVisible(false);
+			item.visible = false;
 		}
 		// Now select the desired tab
 		this._selectTab(tab);
@@ -14966,7 +15391,7 @@ function $ui_TabbedPane(object, screen) {
 		if (tab.component != $ui.Tab) return;
 		object._selectedTab = tab;
 		tab.selected = true;
-		tab.setVisible(true);
+		tab.visible = true;
 	}
 	object._selectTab = object._selectTab.bind(object);
 	
@@ -16396,20 +16821,18 @@ function $ui_TileDistance(object, screen) {
 		// Set our caption
 		this.dom.caption.innerHTML = '<span class="tall distance">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="tall">'+this._value+'</span> '+this.units;
 		// Get our root color
-		var R = parseInt(($ui._cutHex($ui.theme.color)).substring(0,2),16),
-			G = parseInt(($ui._cutHex($ui.theme.color)).substring(2,4),16),
-			B = parseInt(($ui._cutHex($ui.theme.color)).substring(4,6),16);	
+		var RGB = $ui.hexToRgb($ui.theme.color);
 		// Load our data
 		var data = {
 			labels: _labels,
 			datasets: [
 				{
-					fillColor: 'rgba('+R+','+G+','+B+',0.2)',
-					strokeColor: 'rgba('+R+','+G+','+B+',1)',
-					pointColor: 'rgba('+R+','+G+','+B+',1)',
+					fillColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',0.2)',
+					strokeColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
+					pointColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					pointStrokeColor: '#fff',
 					pointHighlightFill: '#fff',
-					pointHighlightStroke: 'rgba('+R+','+G+','+B+',1)',
+					pointHighlightStroke: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					data: this.data
 				},
 				{
@@ -16533,26 +16956,24 @@ function $ui_TileFuel(object, screen) {
 		// Set our caption
 		this.dom.caption.innerHTML = '<span class="tall">$'+this.value+'</span> of <span class="tall fuel">&nbsp;&nbsp;&nbsp;&nbsp;</span>Today';
 		// Get our root color
-		var R = 151, 
-			G = 187, 
-			B = 205,
+		var RGB,
 			fontColor;
 		if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
-			R = parseInt(($ui._cutHex($ui.theme.color)).substring(0,2),16),
-			G = parseInt(($ui._cutHex($ui.theme.color)).substring(2,4),16),
-			B = parseInt(($ui._cutHex($ui.theme.color)).substring(4,6),16);
-		} 
+			RGB = $ui.hexToRgb($ui.theme.color);
+		} else {
+			RGB = {R: 151, G: 187, B: 205};
+		}
 		// Load our data
 		var data = {
 			labels: _labels,
 			datasets: [
 				{
-					fillColor: 'rgba('+R+','+G+','+B+',0.2)',
-					strokeColor: 'rgba('+R+','+G+','+B+',1)',
-					pointColor: 'rgba('+R+','+G+','+B+',1)',
+					fillColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',0.2)',
+					strokeColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
+					pointColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					pointStrokeColor: '#fff',
 					pointHighlightFill: '#fff',
-					pointHighlightStroke: 'rgba('+R+','+G+','+B+',1)',
+					pointHighlightStroke: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					data: this.data
 				},
 				{
@@ -16710,16 +17131,14 @@ function $ui_TileIdleDetails(object, screen) {
 		}
 		// Get our root color
 		var graphColor = ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) ? $ui.theme.color : $ui.color_OK,
-			R = parseInt(($ui._cutHex(graphColor)).substring(0,2),16),
-			G = parseInt(($ui._cutHex(graphColor)).substring(2,4),16),
-			B = parseInt(($ui._cutHex(graphColor)).substring(4,6),16);	
+			RGB = $ui.hexToRgb(graphColor);
 		// Load our data
 		var data = {
 			labels: this.labels,
 			datasets: [
 				{
-					fillColor: 'rgba('+R+','+G+','+B+',0.5)',
-					strokeColor: 'rgba('+R+','+G+','+B+',1)',
+					fillColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',0.5)',
+					strokeColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					data: this.data
 				}
 			]
@@ -17422,16 +17841,14 @@ function $ui_TileTimeHistory(object, screen) {
 		this.dom.caption.textContent = this.caption;
 		// Get our root color
 		var graphColor = ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) ? $ui.theme.color : $ui.color_OK,
-			R = parseInt(($ui._cutHex(graphColor)).substring(0,2),16),
-			G = parseInt(($ui._cutHex(graphColor)).substring(2,4),16),
-			B = parseInt(($ui._cutHex(graphColor)).substring(4,6),16);	
+			RGB = $ui.hexToRgb(graphColor);
 		// Load our data
 		var data = {
 			labels: this.labels,
 			datasets: [
 				{
-					fillColor: 'rgba('+R+','+G+','+B+',0.5)',
-					strokeColor: 'rgba('+R+','+G+','+B+',1)',
+					fillColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',0.5)',
+					strokeColor: 'rgba('+RGB.R+','+RGB.G+','+RGB.B+',1)',
 					data: this.data
 				}
 			]

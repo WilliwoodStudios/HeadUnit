@@ -88,7 +88,7 @@ function albumList() {
 			var topPlayed = mediaSource.getMostPlayedAlbums();
 			if (topPlayed && (topPlayed.length > 0)) {
 				this.topPlayedProvider.setData({items: topPlayed});
-				this.topPlayed.setVisible(true);
+				this.topPlayed.visible = true;
 			}
 			// Retrieve our list of all albums
 			var albums = mediaSource.getAlbums();
