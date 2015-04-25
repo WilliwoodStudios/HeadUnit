@@ -48,7 +48,7 @@ function main() {
 						paused: mediaSource.isPaused()
 					}
 				};
-			this.mediaPlayerProvider.setData(data);
+			this.mediaPlayerProvider.data = data;
 		}
 	}
 }

@@ -143,13 +143,13 @@ function main() {
 	
 	// Populate the contacts list provider
 	this.updateContactList = function(data) {
-		this.contactProvider.setData(data);
+		this.contactProvider.data = data;
 	}
 	this.updateContactList = this.updateContactList.bind(this);
 	
 	// Populate the calls list provider
 	this.updateCallLog = function(data) {
-		this.callsProvider.setData(data);
+		this.callsProvider.data = data;
 	}
 	this.updateCallLog = this.updateCallLog.bind(this);
 }

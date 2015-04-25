@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.2932*/
+/* $emulator VERSION: 1.0.0.2936*/
 
 /**
  * $ui provides an extendible out of the box UI framework which provides a pre-defined user experience.
@@ -1831,40 +1831,60 @@ $ui_CoreScreen.prototype = new $ui_CoreComponent();
  * @memberof $ui
  * @property {string} component - The <b>required</b> component property defines what type of component is being defined. This property must be $ui.DataProvider
  * @property {string} id - The <b>required</b> id property is used to uniquely define the data provider in the scope of the screen in which it belongs. Providing an id for your data provider is required because you can easily access your provider through your javascript coding and also reference it as the provider for a control.
- * @property {object} [data] - The data property by default is undefined. You can populate the data property by calling the load or set functions listed in the functions area, or you can define it as any kind of object. The data property holds the object that represents the data for the provider
+ * @property {object} [data] - The data property by default is undefined. You can populate the data property as any kind of object. The data property holds the object that represents the data for the provider
  * @property {GenericEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
  * @property {GenericEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
  */
 function $ui_DataProvider(object, screen){
-	object.screen = screen;
-	object._url = undefined;
-	object._parameters = undefined;
-	object._untouched = true;
+	// Create our protected area
+	object._protected = {
+		model: object
+	}
 	
 	// Attach the ID to the main screen object
 	if (object.id && screen) {
 		screen[object.id] = object;
 	}
 	
-	/** 
-	 * You can set the data property for any data provider directly by passing it an object that you want to use as the data source. Setting this property will trigger the <i>onbeforeupdate</i>, <i>onloaded</i> event and update the controls which are using this provider
-	 * @function setData
-	 * @memberof $ui.DataProvider
-	 * @param {object} value - Object to set as data for the data provider
-	 */
-	object.setData = function(value) {
- 		this._untouched = false;
-		this.data = value;
-		if (this.onbeforeupdate) {
-			this.onbeforeupdate();
-		}
-		this._raiseEvent();
-		if (value == undefined) return;
-		if (this.onload) {
-			this.onload();
-		}
-	}
-	object.setData = object.setData.bind(object);
+	// Component Property
+	object._protected.component = object.component;
+	Object.defineProperty(object, 'component', {
+		get: function() {return this._protected.component;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','component'));
+		},
+		configurable: false}
+	);
+	
+	// Screen property
+	object.screen = screen;
+	object._protected.screen = object.screen;
+	Object.defineProperty(object, 'screen', {
+		get: function() {return this._protected.screen;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','screen'));
+		},
+		configurable: false}
+	);
+	
+	// Data property
+	object._protected.data = object.data;
+	Object.defineProperty(object, 'data', {
+		get: function() {return this._protected.data;},
+		set: function(value) {
+			this._protected.data = value;
+			if (this.onbeforeupdate) {
+				this.onbeforeupdate();
+			}
+			this._raiseEvent();
+			if (value == undefined) return;
+			if (this.onload) {
+				this.onload();
+			}
+		},
+		configurable: false}
+	);
+
 	
 	/** 
 	 * The refresh function will send a signal out to all connected components to refresh their data from the current content in memory from the provider. <b>NOTE: No <i>onbeforeupdate</i> or <i>onload</i> event will fire on the provider</b>
@@ -1886,7 +1906,7 @@ function $ui_DataProvider(object, screen){
 	
 	// Private function to handle clean-up
 	object._destroy = function() {
-		this.data = undefined;
+		this._protected.data = undefined;
 	}
 	object._destroy = object._destroy.bind(object);
 	
@@ -3865,40 +3885,60 @@ $ui_CoreScreen.prototype = new $ui_CoreComponent();
  * @memberof $ui
  * @property {string} component - The <b>required</b> component property defines what type of component is being defined. This property must be $ui.DataProvider
  * @property {string} id - The <b>required</b> id property is used to uniquely define the data provider in the scope of the screen in which it belongs. Providing an id for your data provider is required because you can easily access your provider through your javascript coding and also reference it as the provider for a control.
- * @property {object} [data] - The data property by default is undefined. You can populate the data property by calling the load or set functions listed in the functions area, or you can define it as any kind of object. The data property holds the object that represents the data for the provider
+ * @property {object} [data] - The data property by default is undefined. You can populate the data property as any kind of object. The data property holds the object that represents the data for the provider
  * @property {GenericEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
  * @property {GenericEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
  */
 function $ui_DataProvider(object, screen){
-	object.screen = screen;
-	object._url = undefined;
-	object._parameters = undefined;
-	object._untouched = true;
+	// Create our protected area
+	object._protected = {
+		model: object
+	}
 	
 	// Attach the ID to the main screen object
 	if (object.id && screen) {
 		screen[object.id] = object;
 	}
 	
-	/** 
-	 * You can set the data property for any data provider directly by passing it an object that you want to use as the data source. Setting this property will trigger the <i>onbeforeupdate</i>, <i>onloaded</i> event and update the controls which are using this provider
-	 * @function setData
-	 * @memberof $ui.DataProvider
-	 * @param {object} value - Object to set as data for the data provider
-	 */
-	object.setData = function(value) {
- 		this._untouched = false;
-		this.data = value;
-		if (this.onbeforeupdate) {
-			this.onbeforeupdate();
-		}
-		this._raiseEvent();
-		if (value == undefined) return;
-		if (this.onload) {
-			this.onload();
-		}
-	}
-	object.setData = object.setData.bind(object);
+	// Component Property
+	object._protected.component = object.component;
+	Object.defineProperty(object, 'component', {
+		get: function() {return this._protected.component;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','component'));
+		},
+		configurable: false}
+	);
+	
+	// Screen property
+	object.screen = screen;
+	object._protected.screen = object.screen;
+	Object.defineProperty(object, 'screen', {
+		get: function() {return this._protected.screen;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','screen'));
+		},
+		configurable: false}
+	);
+	
+	// Data property
+	object._protected.data = object.data;
+	Object.defineProperty(object, 'data', {
+		get: function() {return this._protected.data;},
+		set: function(value) {
+			this._protected.data = value;
+			if (this.onbeforeupdate) {
+				this.onbeforeupdate();
+			}
+			this._raiseEvent();
+			if (value == undefined) return;
+			if (this.onload) {
+				this.onload();
+			}
+		},
+		configurable: false}
+	);
+
 	
 	/** 
 	 * The refresh function will send a signal out to all connected components to refresh their data from the current content in memory from the provider. <b>NOTE: No <i>onbeforeupdate</i> or <i>onload</i> event will fire on the provider</b>
@@ -3920,7 +3960,7 @@ function $ui_DataProvider(object, screen){
 	
 	// Private function to handle clean-up
 	object._destroy = function() {
-		this.data = undefined;
+		this._protected.data = undefined;
 	}
 	object._destroy = object._destroy.bind(object);
 	
@@ -7559,40 +7599,60 @@ $ui_CoreScreen.prototype = new $ui_CoreComponent();
  * @memberof $ui
  * @property {string} component - The <b>required</b> component property defines what type of component is being defined. This property must be $ui.DataProvider
  * @property {string} id - The <b>required</b> id property is used to uniquely define the data provider in the scope of the screen in which it belongs. Providing an id for your data provider is required because you can easily access your provider through your javascript coding and also reference it as the provider for a control.
- * @property {object} [data] - The data property by default is undefined. You can populate the data property by calling the load or set functions listed in the functions area, or you can define it as any kind of object. The data property holds the object that represents the data for the provider
+ * @property {object} [data] - The data property by default is undefined. You can populate the data property as any kind of object. The data property holds the object that represents the data for the provider
  * @property {GenericEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
  * @property {GenericEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
  */
 function $ui_DataProvider(object, screen){
-	object.screen = screen;
-	object._url = undefined;
-	object._parameters = undefined;
-	object._untouched = true;
+	// Create our protected area
+	object._protected = {
+		model: object
+	}
 	
 	// Attach the ID to the main screen object
 	if (object.id && screen) {
 		screen[object.id] = object;
 	}
 	
-	/** 
-	 * You can set the data property for any data provider directly by passing it an object that you want to use as the data source. Setting this property will trigger the <i>onbeforeupdate</i>, <i>onloaded</i> event and update the controls which are using this provider
-	 * @function setData
-	 * @memberof $ui.DataProvider
-	 * @param {object} value - Object to set as data for the data provider
-	 */
-	object.setData = function(value) {
- 		this._untouched = false;
-		this.data = value;
-		if (this.onbeforeupdate) {
-			this.onbeforeupdate();
-		}
-		this._raiseEvent();
-		if (value == undefined) return;
-		if (this.onload) {
-			this.onload();
-		}
-	}
-	object.setData = object.setData.bind(object);
+	// Component Property
+	object._protected.component = object.component;
+	Object.defineProperty(object, 'component', {
+		get: function() {return this._protected.component;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','component'));
+		},
+		configurable: false}
+	);
+	
+	// Screen property
+	object.screen = screen;
+	object._protected.screen = object.screen;
+	Object.defineProperty(object, 'screen', {
+		get: function() {return this._protected.screen;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','screen'));
+		},
+		configurable: false}
+	);
+	
+	// Data property
+	object._protected.data = object.data;
+	Object.defineProperty(object, 'data', {
+		get: function() {return this._protected.data;},
+		set: function(value) {
+			this._protected.data = value;
+			if (this.onbeforeupdate) {
+				this.onbeforeupdate();
+			}
+			this._raiseEvent();
+			if (value == undefined) return;
+			if (this.onload) {
+				this.onload();
+			}
+		},
+		configurable: false}
+	);
+
 	
 	/** 
 	 * The refresh function will send a signal out to all connected components to refresh their data from the current content in memory from the provider. <b>NOTE: No <i>onbeforeupdate</i> or <i>onload</i> event will fire on the provider</b>
@@ -7614,7 +7674,7 @@ function $ui_DataProvider(object, screen){
 	
 	// Private function to handle clean-up
 	object._destroy = function() {
-		this.data = undefined;
+		this._protected.data = undefined;
 	}
 	object._destroy = object._destroy.bind(object);
 	
@@ -9834,7 +9894,7 @@ function $ui_Browser(object, screen) {
 	object.dom.icon = document.createElement('div');
 	$ui.addClass(object.dom.icon,'icon');
 	object.dom.inputDiv.appendChild(object.dom.icon);
-	object.dom.spinner = new $ui_Spinner({component: $ui.Spinner, size: $ui.Spinner.SpinnerSize.TINY, forceColor:'dark'},screen);
+	object.dom.spinner = new $ui_Spinner({component: $ui.Spinner, size: $ui.Size.TINY, forceColor:'dark'},screen);
 	object.dom.spinner.style.display = 'none';
 	object.dom.icon.appendChild(object.dom.spinner);
 	
@@ -13519,40 +13579,60 @@ $ui_CoreScreen.prototype = new $ui_CoreComponent();
  * @memberof $ui
  * @property {string} component - The <b>required</b> component property defines what type of component is being defined. This property must be $ui.DataProvider
  * @property {string} id - The <b>required</b> id property is used to uniquely define the data provider in the scope of the screen in which it belongs. Providing an id for your data provider is required because you can easily access your provider through your javascript coding and also reference it as the provider for a control.
- * @property {object} [data] - The data property by default is undefined. You can populate the data property by calling the load or set functions listed in the functions area, or you can define it as any kind of object. The data property holds the object that represents the data for the provider
+ * @property {object} [data] - The data property by default is undefined. You can populate the data property as any kind of object. The data property holds the object that represents the data for the provider
  * @property {GenericEvent} [onload] - This event will fire when the data has been successfully loaded into the provider and controls have been updated
  * @property {GenericEvent} [onbeforeupdate] - This event will fire when the data property has been successfully set, but has not yet been used to update any controls connected to the provider. This gives you an opportunity to manipulate the data property of the data provider <b>before</b> controls are updated
  */
 function $ui_DataProvider(object, screen){
-	object.screen = screen;
-	object._url = undefined;
-	object._parameters = undefined;
-	object._untouched = true;
+	// Create our protected area
+	object._protected = {
+		model: object
+	}
 	
 	// Attach the ID to the main screen object
 	if (object.id && screen) {
 		screen[object.id] = object;
 	}
 	
-	/** 
-	 * You can set the data property for any data provider directly by passing it an object that you want to use as the data source. Setting this property will trigger the <i>onbeforeupdate</i>, <i>onloaded</i> event and update the controls which are using this provider
-	 * @function setData
-	 * @memberof $ui.DataProvider
-	 * @param {object} value - Object to set as data for the data provider
-	 */
-	object.setData = function(value) {
- 		this._untouched = false;
-		this.data = value;
-		if (this.onbeforeupdate) {
-			this.onbeforeupdate();
-		}
-		this._raiseEvent();
-		if (value == undefined) return;
-		if (this.onload) {
-			this.onload();
-		}
-	}
-	object.setData = object.setData.bind(object);
+	// Component Property
+	object._protected.component = object.component;
+	Object.defineProperty(object, 'component', {
+		get: function() {return this._protected.component;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','component'));
+		},
+		configurable: false}
+	);
+	
+	// Screen property
+	object.screen = screen;
+	object._protected.screen = object.screen;
+	Object.defineProperty(object, 'screen', {
+		get: function() {return this._protected.screen;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','screen'));
+		},
+		configurable: false}
+	);
+	
+	// Data property
+	object._protected.data = object.data;
+	Object.defineProperty(object, 'data', {
+		get: function() {return this._protected.data;},
+		set: function(value) {
+			this._protected.data = value;
+			if (this.onbeforeupdate) {
+				this.onbeforeupdate();
+			}
+			this._raiseEvent();
+			if (value == undefined) return;
+			if (this.onload) {
+				this.onload();
+			}
+		},
+		configurable: false}
+	);
+
 	
 	/** 
 	 * The refresh function will send a signal out to all connected components to refresh their data from the current content in memory from the provider. <b>NOTE: No <i>onbeforeupdate</i> or <i>onload</i> event will fire on the provider</b>
@@ -13574,7 +13654,7 @@ function $ui_DataProvider(object, screen){
 	
 	// Private function to handle clean-up
 	object._destroy = function() {
-		this.data = undefined;
+		this._protected.data = undefined;
 	}
 	object._destroy = object._destroy.bind(object);
 	
@@ -15794,7 +15874,7 @@ function $ui_Browser(object, screen) {
 	object.dom.icon = document.createElement('div');
 	$ui.addClass(object.dom.icon,'icon');
 	object.dom.inputDiv.appendChild(object.dom.icon);
-	object.dom.spinner = new $ui_Spinner({component: $ui.Spinner, size: $ui.Spinner.SpinnerSize.TINY, forceColor:'dark'},screen);
+	object.dom.spinner = new $ui_Spinner({component: $ui.Spinner, size: $ui.Size.TINY, forceColor:'dark'},screen);
 	object.dom.spinner.style.display = 'none';
 	object.dom.icon.appendChild(object.dom.spinner);
 	

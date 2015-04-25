@@ -156,7 +156,7 @@ function quarterMile() {
 			},
 		}
 		// Populate the data provider
-		this.quarterMileProvider.setData(data); 
+		this.quarterMileProvider.data = data; 
 	};
 	
 	// Handle any speed change events
@@ -180,7 +180,7 @@ function quarterMile() {
 		}
 		
 		// Populate the data provider
-		this.quarterMileRun.setData(data); 
+		this.quarterMileRun.data = data; 
 	}
 	this.fakeout = this.fakeout.bind(this);
 }

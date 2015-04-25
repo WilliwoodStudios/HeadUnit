@@ -53,7 +53,7 @@ function mainMenu() {
 		var data = {
 			items: apps
 		}
-		this.mainMenuProvider.setData(data);
+		this.mainMenuProvider.data = data;
 	}
 	this.onapplistrefresh = this.onapplistrefresh.bind(this);
 }

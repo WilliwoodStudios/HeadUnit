@@ -74,7 +74,7 @@ function zeroToSixty() {
 			}
 		}
 		// Populate the data provider
-		this.zeroToSixtyProvider.setData(data); 
+		this.zeroToSixtyProvider.data = data; 
 		// Set our speed change listener
 		$system.addEventListener($system.EventType.ONSPEEDCHANGE, this.onspeedchange, this);
 	};
@@ -98,7 +98,7 @@ function zeroToSixty() {
 				data.zeroToSixty.value = time;
 			}
 			// Re-populate the data provider
-			this.zeroToSixtyProvider.setData(data); 
+			this.zeroToSixtyProvider.data = data; 
 		}
 	}
 	this.onspeedchange = this.onspeedchange.bind(this);

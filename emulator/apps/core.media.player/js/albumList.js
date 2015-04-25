@@ -87,12 +87,12 @@ function albumList() {
 			// Get our top played albums
 			var topPlayed = mediaSource.getMostPlayedAlbums();
 			if (topPlayed && (topPlayed.length > 0)) {
-				this.topPlayedProvider.setData({items: topPlayed});
+				this.topPlayedProvider.data = {items: topPlayed};
 				this.topPlayed.visible = true;
 			}
 			// Retrieve our list of all albums
 			var albums = mediaSource.getAlbums();
-			this.entryProvider.setData({items: albums});
+			this.entryProvider.data = {items: albums};
 		}
 	}
 }

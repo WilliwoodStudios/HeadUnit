@@ -111,6 +111,6 @@ function main() {
 			}
 		}
 		// Populate the dashboard data provider
-		this.dashboardProvider.setData(data); 
+		this.dashboardProvider.data = data; 
 	}
 }
