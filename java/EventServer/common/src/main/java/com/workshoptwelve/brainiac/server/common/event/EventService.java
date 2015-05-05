@@ -22,19 +22,6 @@ public class EventService extends AService {
 
     private Map<String, Set<String>> mEventCodeAndIDs = new HashMap<>();
     private Map<String, EventQueue> mIDAndEventQueues = new HashMap<>();
-
-    public static EventService getInstance() {
-        return sInstance;
-    }
-
-    EventService() {
-        super("/brainiac/events");
-
-        addEndPoint(mAdd);
-        addEndPoint(mRemove);
-        addEndPoint(mListen);
-    }
-
     private AEndPoint mAdd = new AEndPoint("addListener") {
         @Override
         public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
@@ -44,7 +31,6 @@ public class EventService extends AService {
             return null;
         }
     };
-
     private AEndPoint mRemove = new AEndPoint("removeListener") {
         @Override
         public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
@@ -54,6 +40,19 @@ public class EventService extends AService {
             return null;
         }
     };
+    private AEndPoint mListen = new EventEndPoint(this);
+
+    EventService() {
+        super("/brainiac/events");
+
+        addEndPoint(mAdd);
+        addEndPoint(mRemove);
+        addEndPoint(mListen);
+    }
+
+    public static EventService getInstance() {
+        return sInstance;
+    }
 
     protected void addListener(String id, String eventCode) {
         synchronized (mEventCodeAndIDs) {
@@ -113,7 +112,5 @@ public class EventService extends AService {
             }
         }
     }
-
-    private AEndPoint mListen = new EventEndPoint(this);
 }
 

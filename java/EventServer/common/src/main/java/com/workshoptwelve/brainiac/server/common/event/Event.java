@@ -1,7 +1,5 @@
 package com.workshoptwelve.brainiac.server.common.event;
 
-import java.io.ByteArrayOutputStream;
-
 /**
  * Created by robwilliams on 15-04-12.
  */
@@ -14,12 +12,12 @@ public class Event {
         mPayload = payload;
     }
 
-    public EventType getEventType() {
-        return mEventType;
-    }
-
     public Event(EventType type, String payload) {
         this(type, payload.getBytes());
+    }
+
+    public EventType getEventType() {
+        return mEventType;
     }
 
     public byte[] generatePayload(long sequenceNumber) {

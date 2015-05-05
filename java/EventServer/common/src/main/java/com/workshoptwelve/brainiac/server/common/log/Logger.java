@@ -5,5 +5,6 @@ package com.workshoptwelve.brainiac.server.common.log;
  */
 public interface Logger {
     void log(String toLog);
+
     boolean can(Log.Level level);
 }

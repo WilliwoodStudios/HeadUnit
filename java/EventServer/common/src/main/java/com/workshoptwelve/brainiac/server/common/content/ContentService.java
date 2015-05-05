@@ -13,18 +13,17 @@ import java.util.List;
  * Created by robwilliams on 15-04-12.
  */
 public class ContentService extends AService {
+    private static ContentService sInstance = new ContentService();
     private AContentServiceImpl mContentServiceImpl;
+
+    ContentService() {
+        super("www");
+    }
 
     public static ContentService getInstance() {
         return sInstance;
     }
 
-    private static ContentService sInstance = new ContentService();
-
-    ContentService() {
-        super("www");
-    }
-    
     public void setContentServiceImpl(AContentServiceImpl contentServiceImpl) {
         mContentServiceImpl = contentServiceImpl;
     }
@@ -37,11 +36,11 @@ public class ContentService extends AService {
             path = path.substring(5);
 
             if (path.contains("..")) {
-                AEndPoint.sendHeaders(400, "Bad request - you got too many dots in your path dude",outputStream);
+                AEndPoint.sendHeaders(400, "Bad request - you got too many dots in your path dude", outputStream);
                 return;
             }
 
-            while(path.startsWith("/")) {
+            while (path.startsWith("/")) {
                 path = path.substring(1);
             }
 

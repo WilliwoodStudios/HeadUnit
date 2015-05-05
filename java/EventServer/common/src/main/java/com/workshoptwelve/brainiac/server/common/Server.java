@@ -19,9 +19,8 @@ import java.util.List;
  * Created by robwilliams on 15-04-10.
  */
 public class Server {
-    private static Server sInstance = new Server();
     private static final int CLIENT_READ_TIMEOUT_MS = 20000;
-
+    private static Server sInstance = new Server();
     private ArrayList<AService> mServices = new ArrayList<AService>();
 
     private Thread mListenThread;

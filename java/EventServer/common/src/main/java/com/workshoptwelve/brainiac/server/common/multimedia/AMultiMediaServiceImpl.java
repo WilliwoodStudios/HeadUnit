@@ -53,10 +53,10 @@ public abstract class AMultiMediaServiceImpl {
     }
 
     protected void firePositionEvent(long position) {
-        if (mPositionEventType==null) {
+        if (mPositionEventType == null) {
             mPositionEventType = MultiMediaService.getInstance().getPositionEventType();
         }
-        Event toSend = new Event(mPositionEventType,String.valueOf(position));
+        Event toSend = new Event(mPositionEventType, String.valueOf(position));
         EventService.getInstance().sendEvent(toSend);
     }
 }

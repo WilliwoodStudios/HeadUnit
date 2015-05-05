@@ -18,6 +18,9 @@ import java.util.List;
  * Created by robwilliams on 15-04-11.
  */
 public abstract class AEndPoint {
+    private static final byte[] CR_LF = "\r\n".getBytes();
+    private static final byte[] ACCESS_CONTROL_ALLOW_ORIGIN_ALL = "Access-Control-Allow-Origin: *".getBytes();
+    private static final JSONObject RESULT_ONE = buildResultOne();
     private String mPath;
 
     public AEndPoint(String path) {
@@ -30,15 +33,11 @@ public abstract class AEndPoint {
         mPath = path;
     }
 
-    public String getPath() {
-        return mPath;
-    }
-
     protected static String unquote(String urlEncoded) throws UnsupportedEncodingException {
         return URLDecoder.decode(urlEncoded, "UTF-8");
     }
 
-    protected static HashMap<String,String> getParams(String [] headerZeroParts) {
+    protected static HashMap<String, String> getParams(String[] headerZeroParts) {
         // Log.d();
 
         String[] pathParts = headerZeroParts[1].split("\\?");
@@ -66,10 +65,43 @@ public abstract class AEndPoint {
         return params;
     }
 
+    public static void sendHeaders(int errorCode, String message, OutputStream outputStream) throws IOException {
+        sendHeaders(errorCode, message, null, outputStream);
+    }
+
+    public static void sendHeaders(int errorCode, String message, List<String> headers, OutputStream outputStream) throws IOException {
+        outputStream.write(String.format("HTTP/1.0 %d %s", errorCode, message).getBytes());
+        outputStream.write(CR_LF);
+        if (headers != null) {
+            for (String header : headers) {
+                outputStream.write(header.getBytes());
+                outputStream.write(CR_LF);
+            }
+        }
+        outputStream.write(ACCESS_CONTROL_ALLOW_ORIGIN_ALL);
+        outputStream.write(CR_LF);
+        outputStream.write(CR_LF);
+    }
+
+    private static JSONObject buildResultOne() {
+        try {
+            JSONObject toReturn = new JSONObject();
+            toReturn.put("result", 1);
+            return toReturn;
+        } catch (JSONException je) {
+            Log.e("Could not create required static JSON object");
+            return null;
+        }
+    }
+
+    public String getPath() {
+        return mPath;
+    }
+
     public void execute(Socket client, List<String> headers, String[] headerZeroParts, InputStream inputStream, OutputStream outputStream) {
         Log.d();
 
-        HashMap<String,String> params = getParams(headerZeroParts);
+        HashMap<String, String> params = getParams(headerZeroParts);
 
         JSONObject toReturn;
         try {
@@ -85,7 +117,7 @@ public abstract class AEndPoint {
             }
 
             try {
-                sendHeaders(200,"OK",outputStream);
+                sendHeaders(200, "OK", outputStream);
                 outputStream.write(toReturn.toString().getBytes());
             } catch (Exception e) {
                 Log.e("Could not write response", e);
@@ -128,40 +160,6 @@ public abstract class AEndPoint {
     public static class BadParameterException extends Exception {
         public BadParameterException(String message) {
             super(message);
-        }
-    }
-
-    public static void sendHeaders(int errorCode, String message, OutputStream outputStream) throws IOException {
-        sendHeaders(errorCode,message,null,outputStream);
-    }
-
-    private static final byte [] CR_LF = "\r\n".getBytes();
-    private static final byte [] ACCESS_CONTROL_ALLOW_ORIGIN_ALL = "Access-Control-Allow-Origin: *".getBytes();
-
-    public static void sendHeaders(int errorCode, String message, List<String> headers, OutputStream outputStream) throws IOException {
-        outputStream.write(String.format("HTTP/1.0 %d %s",errorCode,message).getBytes());
-        outputStream.write(CR_LF);
-        if (headers!=null) {
-            for (String header : headers) {
-                outputStream.write(header.getBytes());
-                outputStream.write(CR_LF);
-            }
-        }
-        outputStream.write(ACCESS_CONTROL_ALLOW_ORIGIN_ALL);
-        outputStream.write(CR_LF);
-        outputStream.write(CR_LF);
-    }
-
-    private static final JSONObject RESULT_ONE = buildResultOne();
-
-    private static JSONObject buildResultOne() {
-        try {
-            JSONObject toReturn = new JSONObject();
-            toReturn.put("result", 1);
-            return toReturn;
-        } catch (JSONException je) {
-            Log.e("Could not create required static JSON object");
-            return null;
         }
     }
 }

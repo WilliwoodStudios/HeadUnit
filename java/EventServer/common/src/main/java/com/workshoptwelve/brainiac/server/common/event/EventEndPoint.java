@@ -45,12 +45,12 @@ public class EventEndPoint extends AEndPoint {
             byte[][] events = eventQueue.getNextEvent();
 
             if (events != null) {
-                for (byte [] toSend : events) {
+                for (byte[] toSend : events) {
                     outputStream.write(toSend);
                 }
             }
         } catch (IOException ioe) {
-            Log.w("IOException from event connection",ioe);
+            Log.w("IOException from event connection", ioe);
         }
     }
 }

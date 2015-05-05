@@ -14,8 +14,8 @@ public class EventType {
 
     public EventType(String prettyName, String code) {
         mName = prettyName;
-        while(code.endsWith("|")) {
-            code = code.substring(0,code.length()-1);
+        while (code.endsWith("|")) {
+            code = code.substring(0, code.length() - 1);
         }
         mCodeAsString = code;
         mCode = (code + "|").getBytes();

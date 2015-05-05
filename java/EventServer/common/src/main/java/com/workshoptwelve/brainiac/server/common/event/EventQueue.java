@@ -30,7 +30,7 @@ public class EventQueue {
         return mIsShutdown;
     }
 
-    public byte [] [] getNextEvent() {
+    public byte[][] getNextEvent() {
         // TODO need to stagger when these happen.
         return getNextEventInternal();
     }
@@ -57,8 +57,8 @@ public class EventQueue {
         } catch (InterruptedException ie) {
             // consume
         }
-        byte [][] toReturn = new byte[mQueue.size()][];
-        for (int i=0; i<toReturn.length; ++i) {
+        byte[][] toReturn = new byte[mQueue.size()][];
+        for (int i = 0; i < toReturn.length; ++i) {
             toReturn[i] = mQueue.remove(0);
         }
         return toReturn;

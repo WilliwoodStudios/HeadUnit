@@ -11,13 +11,13 @@ public abstract class AContentServiceImpl {
     public abstract void sendPathToStream(String path, OutputStream outputStream) throws IOException;
 
     public void streamToStream(InputStream inputStream, OutputStream outputStream) throws IOException {
-        byte [] buffer = new byte[20000];
+        byte[] buffer = new byte[20000];
         int readLength;
         do {
             readLength = inputStream.read(buffer);
             if (readLength > 0) {
-                outputStream.write(buffer,0,readLength);
+                outputStream.write(buffer, 0, readLength);
             }
-        } while(readLength > 0);
+        } while (readLength > 0);
     }
 }

@@ -2,34 +2,33 @@ package com.workshoptwelve.brainiac.server.common.log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.Date;
 
 /**
  * Created by robwilliams on 15-04-10.
  */
 public class Log {
-    public enum Level {
-        d,i,w,e
-    };
-
     private static Logger sLogger;
+
+    ;
+
     public static void setLogger(Logger logger) {
         sLogger = logger;
     }
+
     public static void i(Object... args) {
-        log(Level.i,args);
+        log(Level.i, args);
     }
 
     public static void d(Object... args) {
-        log(Level.d,args);
+        log(Level.d, args);
     }
 
     public static void e(Object... args) {
-        log(Level.e,args);
+        log(Level.e, args);
     }
 
     public static void w(Object... args) {
-        log(Level.w,args);
+        log(Level.w, args);
     }
 
     private static void log(Level level, Object... args) {
@@ -45,7 +44,7 @@ public class Log {
             String message = "";
             for (Object a : args) {
                 if (a instanceof Throwable) {
-                    message += getExceptionTrace((Throwable)a);
+                    message += getExceptionTrace((Throwable) a);
                 } else {
                     message += a;
                     message += " ";
@@ -81,5 +80,9 @@ public class Log {
         t.printStackTrace(ps);
         ps.flush();
         return new String(baos.toByteArray());
+    }
+
+    public enum Level {
+        d, i, w, e
     }
 }

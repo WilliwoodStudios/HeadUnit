@@ -1,7 +1,6 @@
 package com.workshoptwelve.brainiac.server.common;
 
 import com.workshoptwelve.brainiac.server.common.event.EventType;
-import com.workshoptwelve.brainiac.server.common.log.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -62,13 +61,13 @@ public abstract class AService {
 
         if (remainingPath.equals("?events")) {
             JSONObject events = new JSONObject();
-            events.put("result",1);
+            events.put("result", 1);
             JSONArray array = new JSONArray();
-            events.put("events",array);
-            for (EventType eventType: mEventTypes) {
+            events.put("events", array);
+            for (EventType eventType : mEventTypes) {
                 array.put(eventType.toJSON());
             }
-            AEndPoint.sendHeaders(200,"OK",outputStream);
+            AEndPoint.sendHeaders(200, "OK", outputStream);
             outputStream.write(events.toString(4).getBytes());
         } else {
             JSONObject help = new JSONObject();
@@ -79,7 +78,7 @@ public abstract class AService {
             for (AEndPoint endPoint : mEndPoints) {
                 array.put(endPoint.getPath());
             }
-            AEndPoint.sendHeaders(404,"File not found",outputStream);
+            AEndPoint.sendHeaders(404, "File not found", outputStream);
             outputStream.write(help.toString(4).getBytes());
         }
     }
