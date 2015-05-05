@@ -1,0 +1,106 @@
+<html>
+<head>
+    <script src="events.js"></script>
+    <script src="mm.js"></script>
+</head>
+<body>
+    <input type="button" value="Play (Load)" onClick="_mm.play()" />
+    <input type="button" value="Stop" onClick="_mm.stop()" />
+    <input type="button" value="Pause" onClick="_mm.pause()" />
+    <input type="button" value="Resume" onClick="_mm.resume()" />
+    <input type="button" value="Get Status" onClick="_mm.getStatus()" /><br />
+    <div id="timeGoesHere" />00:00</div>
+    <div id="progressBar">
+        <canvas id="progressBarCanvas" width="800" height="32">
+        </canvas>
+    </div>
+</body>
+<script>
+
+_events.enableEvents();
+
+var mLastStatus;
+var mLastStatusFailureCount;
+
+_mm.onResult(function(error,result) {
+    if ("duration" in result && result["duration"] != null) {
+        mLastStatus = result;
+        mLastStatusFailureCount = 0;
+    } else {    
+        mLastStatusFailureCount++;
+        if (mLastStatusFailureCount < 5) {
+            console.log("not happy with duration - fetching again.");
+            window.setTimeout(function() {
+                _mm.getStatus();
+            },100);
+        } else {
+            console.log("not fetching again - too many tries.");
+        }
+    }
+});
+
+function pad(val) {
+    if (val < 10) {
+        return "0" + val;
+    }
+    return val;
+}
+
+function convert(where) {
+    var hours = Math.floor(where / 1000 / 60 / 60);
+    var minutes = Math.floor(where / 1000 / 60) % 60;
+    var seconds = Math.floor(where / 1000) % 60;
+
+    return pad(hours) + ":" + pad(minutes)+":"+pad(seconds);
+}
+
+var mTimeGoesHere;
+var mLastTimeText;
+
+var mCanvas;
+var mContext;
+
+_mm.onPositionChanged(function(position) {
+    if (mTimeGoesHere == null) {
+        mTimeGoesHere = document.getElementById("timeGoesHere");
+    }
+    var toSet = convert(position);
+    if (toSet === mLastTimeText) {
+            // no change.
+        } else {
+            mTimeGoesHere.innerText = convert(position);
+        }
+
+        if (mCanvas == null) {
+            mCanvas = document.getElementById("progressBarCanvas");
+
+            mCanvas.addEventListener("click",function(event) {
+                var x = event.x - mCanvas.offsetLeft;
+                console.log(event.x,event.y,x);
+                if (mLastStatus != null && "duration" in mLastStatus) {
+                    var duration = mLastStatus.duration;
+                    var newPosition = Math.floor(x * duration / 800);
+                    console.log("Seeking to",newPosition,duration);
+                    _mm.seek(newPosition);
+                }
+            });
+            mContext = mCanvas.getContext("2d");
+        }
+        if (mCanvas != null) {
+            if (mLastStatus != null && "duration" in mLastStatus) {
+                var duration = parseInt(mLastStatus.duration);
+                var corner = Math.floor(800 * position / duration);
+                mContext.fillStyle="#00007f";
+                mContext.fillRect(0,0,corner,32);
+
+                mContext.fillStyle="#efffff";
+                mContext.fillRect(corner,0,800,32);
+
+            } else {
+                _mm.getStatus();
+            }
+        }
+
+    });
+</script>
+</html>
