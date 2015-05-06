@@ -5,6 +5,7 @@ import com.workshoptwelve.brainiac.server.common.event.EventService;
 import com.workshoptwelve.brainiac.server.common.log.Log;
 import com.workshoptwelve.brainiac.server.common.stream.HttpInputStream;
 import com.workshoptwelve.brainiac.server.common.stream.HttpOutputStream;
+import com.workshoptwelve.brainiac.server.common.threading.ThreadPool;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,8 +17,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Created by robwilliams on 15-04-10.
@@ -28,7 +27,6 @@ public class Server {
     private ArrayList<AService> mServices = new ArrayList<AService>();
 
     private ServerSocket mServerSocket;
-    private ExecutorService mThreadPool = Executors.newCachedThreadPool();
 
     Server() {
         addService(EventService.getInstance());
@@ -50,7 +48,7 @@ public class Server {
     public synchronized boolean start() {
         Log.d();
         if (mListenRunnable == null) {
-            mThreadPool.submit(mListenRunnable = new Runnable() {
+            ThreadPool.getInstance().run(mListenRunnable = new Runnable() {
                 public void run() {
                     Log.d();
                     listen();
@@ -70,7 +68,7 @@ public class Server {
             mServerSocket = new ServerSocket(9876);
             while (true) {
                 final Socket client = mServerSocket.accept();
-                mThreadPool.submit(new Runnable() {
+                ThreadPool.getInstance().run(new Runnable() {
                     public void run() {
                         handleConnection(client);
                     }
@@ -83,7 +81,6 @@ public class Server {
     }
 
     private void handleConnection(Socket client) {
-        // Log.d();
         try {
             client.setSoTimeout(CLIENT_READ_TIMEOUT_MS);
 
@@ -94,7 +91,7 @@ public class Server {
 
             HttpInputStream httpInputStream = new HttpInputStream();
 
-            while(true) {
+            while (true) {
                 httpOutputStream.setBase(realOutputStream);
                 httpInputStream.setBase(realInputStream);
 
@@ -187,6 +184,6 @@ public class Server {
     }
 
     public synchronized void stop() {
-
+        // TODO make it stop.
     }
 }
