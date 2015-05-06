@@ -1,5 +1,6 @@
 package com.williwoodstudios.android.brainiaconboardserver;
 
+import android.content.Context;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -19,16 +20,24 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Log.setLogger(new AndroidLogger());
-
-        ContentService.getInstance().setContentServiceImpl(new AndroidContentServiceImpl(this,"html/src"));
-        MultiMediaService.getInstance().setMultiMediaServiceImpl(new AndroidMultiMediaService(this));
-
-        Server server = Server.getInstance();
-        server.addService(MultiMediaService.getInstance());
-        server.start();
-
+        initServices(this);
     }
+
+    private static synchronized void initServices(Context context) {
+        if (!sStarted) {
+            Log.setLogger(new AndroidLogger("boss"));
+
+            ContentService.getInstance().setContentServiceImpl(new AndroidContentServiceImpl(context,"html/src"));
+            MultiMediaService.getInstance().setMultiMediaServiceImpl(new AndroidMultiMediaService(context));
+
+            Server server = Server.getInstance();
+            server.addService(MultiMediaService.getInstance());
+            server.start();
+
+            sStarted = true;
+        }
+    }
+    private static boolean sStarted;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
