@@ -1,9 +1,9 @@
 package com.workshoptwelve.brainiac.boss.common.event;
 
-import com.workshoptwelve.brainiac.boss.common.AEndPoint;
+import com.workshoptwelve.brainiac.boss.common.server.AEndPoint;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
-import com.workshoptwelve.brainiac.boss.common.stream.HttpInputStream;
-import com.workshoptwelve.brainiac.boss.common.stream.HttpOutputStream;
+import com.workshoptwelve.brainiac.boss.common.server.stream.HttpInputStream;
+import com.workshoptwelve.brainiac.boss.common.server.stream.HttpOutputStream;
 
 import java.io.IOException;
 import java.net.Socket;

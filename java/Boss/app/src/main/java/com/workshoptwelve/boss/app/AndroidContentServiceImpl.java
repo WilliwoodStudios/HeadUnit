@@ -3,7 +3,7 @@ package com.workshoptwelve.boss.app;
 import android.content.Context;
 
 import com.workshoptwelve.brainiac.boss.common.content.AContentServiceImpl;
-import com.workshoptwelve.brainiac.boss.common.stream.HttpOutputStream;
+import com.workshoptwelve.brainiac.boss.common.server.stream.HttpOutputStream;
 
 import java.io.IOException;
 import java.io.InputStream;

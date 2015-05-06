@@ -1,7 +1,7 @@
 package com.workshoptwelve.brainiac.boss.common.multimedia;
 
-import com.workshoptwelve.brainiac.boss.common.AEndPoint;
-import com.workshoptwelve.brainiac.boss.common.AService;
+import com.workshoptwelve.brainiac.boss.common.server.AEndPoint;
+import com.workshoptwelve.brainiac.boss.common.server.AService;
 import com.workshoptwelve.brainiac.boss.common.event.EventType;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 

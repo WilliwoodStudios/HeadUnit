@@ -1,6 +1,6 @@
 package com.workshoptwelve.boss.desktop;
 
-import com.workshoptwelve.brainiac.boss.common.Server;
+import com.workshoptwelve.brainiac.boss.common.server.Server;
 import com.workshoptwelve.brainiac.boss.common.content.ContentService;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.boss.common.multimedia.MultiMediaService;

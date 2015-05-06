@@ -1,8 +1,8 @@
-package com.workshoptwelve.brainiac.boss.common;
+package com.workshoptwelve.brainiac.boss.common.server;
 
 import com.workshoptwelve.brainiac.boss.common.log.Log;
-import com.workshoptwelve.brainiac.boss.common.stream.HttpInputStream;
-import com.workshoptwelve.brainiac.boss.common.stream.HttpOutputStream;
+import com.workshoptwelve.brainiac.boss.common.server.stream.HttpInputStream;
+import com.workshoptwelve.brainiac.boss.common.server.stream.HttpOutputStream;
 
 import org.json.JSONException;
 import org.json.JSONObject;

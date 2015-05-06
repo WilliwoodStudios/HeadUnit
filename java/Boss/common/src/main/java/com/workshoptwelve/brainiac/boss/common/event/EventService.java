@@ -1,7 +1,7 @@
 package com.workshoptwelve.brainiac.boss.common.event;
 
-import com.workshoptwelve.brainiac.boss.common.AEndPoint;
-import com.workshoptwelve.brainiac.boss.common.AService;
+import com.workshoptwelve.brainiac.boss.common.server.AEndPoint;
+import com.workshoptwelve.brainiac.boss.common.server.AService;
 
 import org.json.JSONObject;
 

@@ -1,4 +1,4 @@
-package com.workshoptwelve.brainiac.boss.common.stream;
+package com.workshoptwelve.brainiac.boss.common.server.stream;
 
 import org.json.JSONObject;
 

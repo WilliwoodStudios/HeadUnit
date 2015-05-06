@@ -7,7 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.workshoptwelve.boss.app.log.AndroidLogger;
-import com.workshoptwelve.brainiac.boss.common.Server;
+import com.workshoptwelve.brainiac.boss.common.server.Server;
 import com.workshoptwelve.brainiac.boss.common.content.ContentService;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.boss.common.multimedia.MultiMediaService;

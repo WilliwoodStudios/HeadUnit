@@ -1,4 +1,4 @@
-package com.workshoptwelve.brainiac.boss.common.stream;
+package com.workshoptwelve.brainiac.boss.common.server.stream;
 
 import java.io.IOException;
 import java.io.InputStream;
