@@ -74,7 +74,7 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
     public JSONObject pause() throws JSONException {
         if (mMediaPlayer != null) {
             mMediaPlayer.pause();
-            ;
+            // TODO - stop position polling when paused.
         }
         return super.pause();
     }
