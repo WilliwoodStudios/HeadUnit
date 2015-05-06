@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.MediaPlayer;
 
 import com.workshoptwelve.brainiac.server.common.multimedia.AMultiMediaServiceImpl;
+import com.workshoptwelve.brainiac.server.common.threading.ThreadPool;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,6 +16,7 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
 
     private final Context mContext;
     private MediaPlayer mMediaPlayer;
+    private Runnable mPollingRunnable;
 
     public AndroidMultiMediaService(Context context) {
         mContext = context;
@@ -36,35 +38,50 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
             }
         });
         mMediaPlayer.start();
-        new Thread() {
-            public void run() {
-                long position = Long.MIN_VALUE;
-                while (mMediaPlayer == myMediaPlayer) {
-                    long now = myMediaPlayer.getCurrentPosition();
-                    long delta = now - position;
-                    if (delta < 0) {
-                        delta = -delta;
-                    }
-                    if (delta > 333) {
-                        firePositionEvent(now);
-                        position = now;
-                    }
+        startPolling();
+        return super.play();
+    }
 
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException ie) {
-                        // consume.
+    private synchronized void stopPolling() {
+        mPollingRunnable = null;
+    }
+
+    private synchronized void startPolling() {
+
+        if (mPollingRunnable == null && mMediaPlayer != null) {
+            final MediaPlayer myMediaPlayer = mMediaPlayer;
+
+            mPollingRunnable = new Runnable() {
+                public void run() {
+                    long position = Long.MIN_VALUE;
+                    while (mMediaPlayer == myMediaPlayer && mPollingRunnable == this) {
+                        long now = myMediaPlayer.getCurrentPosition();
+                        long delta = now - position;
+                        if (delta < 0) {
+                            delta = -delta;
+                        }
+                        if (delta > 333) {
+                            firePositionEvent(now);
+                            position = now;
+                        }
+
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException ie) {
+                            // consume.
+                        }
                     }
                 }
-            }
-        }.start();
-        return super.play();
+            };
+            ThreadPool.getInstance().run(mPollingRunnable);
+        }
     }
 
     @Override
     public JSONObject resume() throws JSONException {
         if (mMediaPlayer != null) {
             mMediaPlayer.start();
+            startPolling();
         }
 
         return super.resume();
@@ -74,7 +91,7 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
     public JSONObject pause() throws JSONException {
         if (mMediaPlayer != null) {
             mMediaPlayer.pause();
-            // TODO - stop position polling when paused.
+            stopPolling();
         }
         return super.pause();
     }
@@ -85,6 +102,7 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
             mMediaPlayer.stop();
             mMediaPlayer.release();
             mMediaPlayer = null;
+            stopPolling();
         }
         return super.stop();
     }
