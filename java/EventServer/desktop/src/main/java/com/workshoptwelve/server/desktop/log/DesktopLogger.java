@@ -6,14 +6,14 @@ import com.workshoptwelve.brainiac.server.common.log.Logger;
 /**
  * Created by robwilliams on 15-04-10.
  */
-public class DesktopLogger implements Logger {
+public class DesktopLogger extends Logger {
     @Override
-    public void log(String toLog) {
+    protected void rawLog(Level level, StringBuilder toLog) {
         System.out.println(toLog);
     }
 
     @Override
-    public boolean can(Log.Level level) {
-        return true;
+    protected void getPrefix(Level level, StringBuilder prefix) {
+        prefix.append("DESKTOP LOGGER NEEDS WORK");
     }
 }
