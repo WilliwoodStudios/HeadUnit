@@ -1,6 +1,8 @@
 package com.workshoptwelve.brainiac.server.common;
 
 import com.workshoptwelve.brainiac.server.common.log.Log;
+import com.workshoptwelve.brainiac.server.common.stream.HttpInputStream;
+import com.workshoptwelve.brainiac.server.common.stream.HttpOutputStream;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,8 +20,6 @@ import java.util.List;
  * Created by robwilliams on 15-04-11.
  */
 public abstract class AEndPoint {
-    private static final byte[] CR_LF = "\r\n".getBytes();
-    private static final byte[] ACCESS_CONTROL_ALLOW_ORIGIN_ALL = "Access-Control-Allow-Origin: *".getBytes();
     private static final JSONObject RESULT_ONE = buildResultOne();
     private String mPath;
 
@@ -43,7 +43,7 @@ public abstract class AEndPoint {
         String[] pathParts = headerZeroParts[1].split("\\?");
         String query = pathParts.length > 1 ? pathParts[1] : null;
 
-        HashMap<String, String> params = new HashMap<>();
+        HashMap<String, String> params = new HashMap<String, String>();
         if (query != null) {
             String[] queryParts = query.split("&");
             for (String queryPart : queryParts) {
@@ -65,24 +65,6 @@ public abstract class AEndPoint {
         return params;
     }
 
-    public static void sendHeaders(int errorCode, String message, OutputStream outputStream) throws IOException {
-        sendHeaders(errorCode, message, null, outputStream);
-    }
-
-    public static void sendHeaders(int errorCode, String message, List<String> headers, OutputStream outputStream) throws IOException {
-        outputStream.write(String.format("HTTP/1.0 %d %s", errorCode, message).getBytes());
-        outputStream.write(CR_LF);
-        if (headers != null) {
-            for (String header : headers) {
-                outputStream.write(header.getBytes());
-                outputStream.write(CR_LF);
-            }
-        }
-        outputStream.write(ACCESS_CONTROL_ALLOW_ORIGIN_ALL);
-        outputStream.write(CR_LF);
-        outputStream.write(CR_LF);
-    }
-
     private static JSONObject buildResultOne() {
         try {
             JSONObject toReturn = new JSONObject();
@@ -98,7 +80,7 @@ public abstract class AEndPoint {
         return mPath;
     }
 
-    public void execute(Socket client, List<String> headers, String[] headerZeroParts, InputStream inputStream, OutputStream outputStream) {
+    public void execute(Socket client, List<String> headers, String[] headerZeroParts, HttpInputStream inputStream, HttpOutputStream outputStream) {
         Log.d();
 
         HashMap<String, String> params = getParams(headerZeroParts);
@@ -117,8 +99,8 @@ public abstract class AEndPoint {
             }
 
             try {
-                sendHeaders(200, "OK", outputStream);
-                outputStream.write(toReturn.toString().getBytes());
+                outputStream.setResponse(200,"OK");
+                outputStream.write(toReturn);
             } catch (Exception e) {
                 Log.e("Could not write response", e);
             }

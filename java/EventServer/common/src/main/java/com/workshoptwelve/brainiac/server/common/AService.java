@@ -1,6 +1,8 @@
 package com.workshoptwelve.brainiac.server.common;
 
 import com.workshoptwelve.brainiac.server.common.event.EventType;
+import com.workshoptwelve.brainiac.server.common.stream.HttpInputStream;
+import com.workshoptwelve.brainiac.server.common.stream.HttpOutputStream;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,8 +18,8 @@ import java.util.List;
  */
 public abstract class AService {
     protected String mPath;
-    protected List<AEndPoint> mEndPoints = new ArrayList<>();
-    protected List<EventType> mEventTypes = new ArrayList<>();
+    protected List<AEndPoint> mEndPoints = new ArrayList<AEndPoint>();
+    protected List<EventType> mEventTypes = new ArrayList<EventType>();
 
     public AService(String path) {
         if (!path.startsWith("/")) {
@@ -45,7 +47,7 @@ public abstract class AService {
         mEventTypes.add(eventType);
     }
 
-    public void handleConnection(Socket connection, List<String> headers, String[] headerZero, InputStream inputStream, OutputStream outputStream) throws Exception {
+    public void handleConnection(Socket connection, List<String> headers, String[] headerZero, HttpInputStream inputStream, HttpOutputStream outputStream) throws Exception {
         // Log.d();
         int length = getPath().length();
         String remainingPath = headerZero[1].substring(length);
@@ -67,7 +69,7 @@ public abstract class AService {
             for (EventType eventType : mEventTypes) {
                 array.put(eventType.toJSON());
             }
-            AEndPoint.sendHeaders(200, "OK", outputStream);
+            outputStream.setResponse(200,"OK");
             outputStream.write(events.toString(4).getBytes());
         } else {
             JSONObject help = new JSONObject();
@@ -78,7 +80,7 @@ public abstract class AService {
             for (AEndPoint endPoint : mEndPoints) {
                 array.put(endPoint.getPath());
             }
-            AEndPoint.sendHeaders(404, "File not found", outputStream);
+            outputStream.setResponse(404,"File not found");
             outputStream.write(help.toString(4).getBytes());
         }
     }
