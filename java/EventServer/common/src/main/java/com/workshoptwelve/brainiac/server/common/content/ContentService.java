@@ -3,6 +3,8 @@ package com.workshoptwelve.brainiac.server.common.content;
 import com.workshoptwelve.brainiac.server.common.AEndPoint;
 import com.workshoptwelve.brainiac.server.common.AService;
 import com.workshoptwelve.brainiac.server.common.log.Log;
+import com.workshoptwelve.brainiac.server.common.stream.HttpInputStream;
+import com.workshoptwelve.brainiac.server.common.stream.HttpOutputStream;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,14 +31,15 @@ public class ContentService extends AService {
     }
 
     @Override
-    public void handleConnection(Socket connection, List<String> headers, String[] headerZero, InputStream inputStream, OutputStream outputStream) throws Exception {
+    public void handleConnection(Socket connection, List<String> headers, String[] headerZero, HttpInputStream inputStream, HttpOutputStream outputStream) throws Exception {
         Log.d("Path: " + headers);
         String path = headerZero[1];
         if (path.startsWith("/www/")) {
             path = path.substring(5);
 
             if (path.contains("..")) {
-                AEndPoint.sendHeaders(400, "Bad request - you got too many dots in your path dude", outputStream);
+
+                outputStream.setResponse(400, "Bad request - you got too many dots in your path dude");
                 return;
             }
 
@@ -47,7 +50,7 @@ public class ContentService extends AService {
             mContentServiceImpl.sendPathToStream(path, outputStream);
 
         } else {
-            AEndPoint.sendHeaders(404, "File not found", outputStream);
+            outputStream.setResponse(404,"File not found");
             return;
         }
     }

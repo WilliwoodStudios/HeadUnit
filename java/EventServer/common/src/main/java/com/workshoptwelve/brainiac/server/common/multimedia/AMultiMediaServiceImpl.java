@@ -58,5 +58,6 @@ public abstract class AMultiMediaServiceImpl {
         }
         Event toSend = new Event(mPositionEventType, String.valueOf(position));
         EventService.getInstance().sendEvent(toSend);
+        Log.d("Sending position " + position);
     }
 }

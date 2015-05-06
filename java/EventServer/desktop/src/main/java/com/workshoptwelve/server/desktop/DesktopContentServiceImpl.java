@@ -3,6 +3,7 @@ package com.workshoptwelve.server.desktop;
 import com.workshoptwelve.brainiac.server.common.AEndPoint;
 import com.workshoptwelve.brainiac.server.common.content.AContentServiceImpl;
 import com.workshoptwelve.brainiac.server.common.log.Log;
+import com.workshoptwelve.brainiac.server.common.stream.HttpOutputStream;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,7 +24,7 @@ public class DesktopContentServiceImpl extends AContentServiceImpl {
     }
 
     @Override
-    public void sendPathToStream(String path, OutputStream outputStream) throws IOException {
+    public void sendPathToStream(String path, HttpOutputStream outputStream) throws IOException {
         Log.d(path);
         File file = new File(mRootPath + path);
         if (file.exists()) {
