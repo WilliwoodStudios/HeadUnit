@@ -5,7 +5,7 @@ android {
     buildToolsVersion "21.1.2"
 
     defaultConfig {
-        applicationId "com.williwoodstudios.android.brainiaconboardserver"
+        applicationId "com.workshoptwelve.boss.brainiaconboardserver"
         minSdkVersion 14
         targetSdkVersion 21
         versionCode 1
