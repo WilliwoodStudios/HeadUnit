@@ -35,10 +35,8 @@ public class DesktopContentServiceImpl extends AContentServiceImpl {
                 close(fis);
             }
         } else {
-            AEndPoint.sendHeaders(404,"File not found",outputStream);
-            return;
+            throw new IOException("File not found");
         }
-
     }
 
     protected void close(FileInputStream fis) {
