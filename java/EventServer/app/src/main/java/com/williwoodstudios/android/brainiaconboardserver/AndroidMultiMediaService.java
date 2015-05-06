@@ -25,9 +25,17 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
         if (mMediaPlayer != null) {
             stop();
         }
-        mMediaPlayer = MediaPlayer.create(mContext,R.raw.mickrippon_ruleroffairies);
-        mMediaPlayer.start();
+        mMediaPlayer = MediaPlayer.create(mContext, R.raw.mickrippon_ruleroffairies);
         final MediaPlayer myMediaPlayer = mMediaPlayer;
+        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                if (mMediaPlayer == myMediaPlayer) {
+                    mMediaPlayer = null;
+                }
+            }
+        });
+        mMediaPlayer.start();
         new Thread() {
             public void run() {
                 long position = Long.MIN_VALUE;
@@ -55,7 +63,7 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
 
     @Override
     public JSONObject resume() throws JSONException {
-        if (mMediaPlayer!=null) {
+        if (mMediaPlayer != null) {
             mMediaPlayer.start();
         }
 
@@ -65,7 +73,8 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
     @Override
     public JSONObject pause() throws JSONException {
         if (mMediaPlayer != null) {
-            mMediaPlayer.pause();;
+            mMediaPlayer.pause();
+            ;
         }
         return super.pause();
     }
@@ -83,7 +92,7 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
     @Override
     public JSONObject getStatus() throws JSONException {
         JSONObject toReturn = new JSONObject();
-        toReturn.put("result",1);
+        toReturn.put("result", 1);
 
         if (mMediaPlayer == null) {
             toReturn.put("source", JSONObject.NULL);
