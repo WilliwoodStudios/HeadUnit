@@ -3,6 +3,8 @@ package com.workshoptwelve.brainiac.server.common;
 import com.workshoptwelve.brainiac.server.common.content.ContentService;
 import com.workshoptwelve.brainiac.server.common.event.EventService;
 import com.workshoptwelve.brainiac.server.common.log.Log;
+import com.workshoptwelve.brainiac.server.common.stream.HttpInputStream;
+import com.workshoptwelve.brainiac.server.common.stream.HttpOutputStream;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -14,6 +16,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by robwilliams on 15-04-10.
@@ -23,9 +27,8 @@ public class Server {
     private static Server sInstance = new Server();
     private ArrayList<AService> mServices = new ArrayList<AService>();
 
-    private Thread mListenThread;
-
     private ServerSocket mServerSocket;
+    private ExecutorService mThreadPool = Executors.newCachedThreadPool();
 
     Server() {
         addService(EventService.getInstance());
@@ -42,17 +45,23 @@ public class Server {
         mServices.add(service);
     }
 
-    public synchronized void start() {
+    private Runnable mListenRunnable;
+
+    public synchronized boolean start() {
         Log.d();
-        if (mListenThread == null) {
-            mListenThread = new Thread() {
+        if (mListenRunnable == null) {
+            mThreadPool.submit(mListenRunnable = new Runnable() {
                 public void run() {
                     Log.d();
                     listen();
+                    if (mListenRunnable == this) {
+                        mListenRunnable = null;
+                    }
                 }
-            };
-            mListenThread.start();
+            });
+            return true;
         }
+        return false;
     }
 
     private void listen() {
@@ -61,11 +70,11 @@ public class Server {
             mServerSocket = new ServerSocket(9876);
             while (true) {
                 final Socket client = mServerSocket.accept();
-                new Thread() {
+                mThreadPool.submit(new Runnable() {
                     public void run() {
                         handleConnection(client);
                     }
-                }.start();
+                });
             }
         } catch (IOException ioe) {
             Log.e("Could not listen", ioe);
@@ -78,60 +87,74 @@ public class Server {
         try {
             client.setSoTimeout(CLIENT_READ_TIMEOUT_MS);
 
-            InputStream inputStream = client.getInputStream();
-            OutputStream outputStream = client.getOutputStream();
+            InputStream realInputStream = client.getInputStream();
+            OutputStream realOutputStream = client.getOutputStream();
 
-            List<String> headers = readHeaders(inputStream);
+            HttpOutputStream httpOutputStream = new HttpOutputStream();
 
-            Log.d("Headers:", headers);
+            HttpInputStream httpInputStream = new HttpInputStream();
 
-            if (headers.size() == 0) {
-                throw new IOException("Not enough headers.");
-            }
+            while(true) {
+                httpOutputStream.setBase(realOutputStream);
+                httpInputStream.setBase(realInputStream);
 
-            String[] headerZeroParts = headers.get(0).split(" ");
-            if (headerZeroParts.length != 3) {
-                throw new IOException("Wrong number of parts in header 0");
-            }
+                List<String> headers = httpInputStream.readHeaders();
 
-            String path = headerZeroParts[1];
+                Log.d("Headers:", headers);
 
-            try {
-                boolean done = false;
-                for (AService service : mServices) {
-                    String servicePath = service.getPath();
-                    int servicePathLength = servicePath.length();
-                    if (path.startsWith(servicePath)) {
-                        if (path.length() == servicePathLength || isSlashOrQuestionMark(path.charAt(servicePathLength))) {
-                            service.handleConnection(client, headers, headerZeroParts, inputStream, outputStream);
-                            done = true;
-                            break;
-                        }
-                    }
+                if (headers.size() == 0) {
+                    throw new IOException("Not enough headers.");
                 }
-                if (!done) {
-                    JSONObject knownServices = new JSONObject();
-                    knownServices.put("error", "Path not found");
-                    JSONArray services = new JSONArray();
-                    knownServices.put("services", services);
+
+                String[] headerZeroParts = headers.get(0).split(" ");
+                if (headerZeroParts.length != 3) {
+                    throw new IOException("Wrong number of parts in header 0");
+                }
+
+                String path = headerZeroParts[1];
+
+                try {
+                    boolean done = false;
                     for (AService service : mServices) {
-                        JSONObject entry = new JSONObject();
-                        entry.put("path", service.getPath());
-                        JSONArray entryEndPoints = new JSONArray();
-                        entry.put("endPoints", entryEndPoints);
-                        for (AEndPoint endPoint : service.getEndPoints()) {
-                            entryEndPoints.put(endPoint.getPath());
+                        String servicePath = service.getPath();
+                        int servicePathLength = servicePath.length();
+                        if (path.startsWith(servicePath)) {
+                            if (path.length() == servicePathLength || isSlashOrQuestionMark(path.charAt(servicePathLength))) {
+                                service.handleConnection(client, headers, headerZeroParts, httpInputStream, httpOutputStream);
+                                done = true;
+                                break;
+                            }
                         }
-                        services.put(entry);
+                    }
+                    if (!done) {
+                        JSONObject knownServices = new JSONObject();
+                        knownServices.put("error", "Path not found");
+                        JSONArray services = new JSONArray();
+                        knownServices.put("services", services);
+                        for (AService service : mServices) {
+                            JSONObject entry = new JSONObject();
+                            entry.put("path", service.getPath());
+                            JSONArray entryEndPoints = new JSONArray();
+                            entry.put("endPoints", entryEndPoints);
+                            for (AEndPoint endPoint : service.getEndPoints()) {
+                                entryEndPoints.put(endPoint.getPath());
+                            }
+                            services.put(entry);
+                        }
+
+                        httpOutputStream.setResponse(404, "File not found");
+                        httpOutputStream.write(knownServices.toString(4).getBytes());
                     }
 
-                    AEndPoint.sendHeaders(404, "File not found", outputStream);
-                    outputStream.write(knownServices.toString(4).getBytes());
+                    httpOutputStream.close();
+                    httpInputStream.close();
+
+                } catch (RuntimeException re) {
+                    Log.e("Error handling connection", re);
+
+                    httpOutputStream.setResponse(500, "Server Error");
+                    httpOutputStream.write(re.getMessage().getBytes());
                 }
-            } catch (RuntimeException re) {
-                Log.e("Error handling connection", re);
-                AEndPoint.sendHeaders(500, "Server Error", outputStream);
-                outputStream.write(re.getMessage().getBytes());
             }
         } catch (Exception e) {
             Log.e("Error handling connection", e);
@@ -142,43 +165,6 @@ public class Server {
 
     private boolean isSlashOrQuestionMark(char c) {
         return c == '?' || c == '/';
-    }
-
-    private List<String> readHeaders(InputStream inputStream) throws IOException {
-        // Log.d();
-        byte[] buffer = new byte[20000];
-        int lineStart;
-        int readLength;
-        String lineInProgress = "";
-        ArrayList<String> toReturn = new ArrayList<String>();
-        do {
-            readLength = inputStream.read(buffer);
-            lineStart = 0;
-            for (int i = 0; i < readLength; ++i) {
-                if (i > 0 && buffer[i - 1] == '\r' && buffer[i] == '\n') {
-                    int length = i - lineStart - 1;
-                    if (length == 0) {
-                        return toReturn;
-                    } else {
-                        if (lineInProgress.length() != 0) {
-                            String newLine = lineInProgress + new String(buffer, lineStart, length);
-                            toReturn.add(newLine);
-                        } else {
-                            toReturn.add(new String(buffer, lineStart, length));
-                        }
-                        lineStart = i + 1;
-                    }
-                }
-            }
-            if (lineStart < readLength) {
-                lineInProgress += new String(buffer, lineStart, readLength - lineStart);
-            } else {
-                lineInProgress = "";
-            }
-
-        } while (lineInProgress.length() > 10000 || toReturn.size() > 100);
-
-        throw new IOException("Corrupt headers.");
     }
 
     private void close(Socket client) {
