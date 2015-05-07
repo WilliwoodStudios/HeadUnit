@@ -61,14 +61,15 @@ public class EventService extends AService {
                 ids = new HashSet<>();
                 mEventCodeAndIDs.put(eventCode, ids);
             }
+            getEventQueue(id,true);
             ids.add(id);
         }
     }
 
-    EventQueue getEventQueue(String id) {
+    EventQueue getEventQueue(String id, boolean allowCreation) {
         synchronized (mIDAndEventQueues) {
             EventQueue eventQueue = mIDAndEventQueues.get(id);
-            if (eventQueue == null) {
+            if (allowCreation && eventQueue == null) {
                 eventQueue = new EventQueue();
                 mIDAndEventQueues.put(id, eventQueue);
             }

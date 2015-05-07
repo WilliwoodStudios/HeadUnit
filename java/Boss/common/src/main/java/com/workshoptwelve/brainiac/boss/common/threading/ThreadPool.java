@@ -9,6 +9,8 @@ import java.util.concurrent.Executors;
  * Created by robwilliams on 15-05-06.
  */
 public class ThreadPool {
+    private static final Log log = Log.getLogger(ThreadPool.class);
+
     private final ExecutorService mThreadPool;
 
     public static ThreadPool getInstance() {
@@ -27,7 +29,7 @@ public class ThreadPool {
                 try {
                     runnable.run();
                 } catch (RuntimeException re) {
-                    Log.e("Near Fatal exception in runnable",re);
+                    log.e("Near Fatal exception in runnable",re);
                 }
             }
         });

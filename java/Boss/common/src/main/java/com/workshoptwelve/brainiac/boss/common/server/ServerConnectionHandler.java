@@ -19,6 +19,7 @@ import java.util.List;
  * Created by robwilliams on 15-05-06.
  */
 class ServerConnectionHandler implements Runnable {
+    private static final Log log = Log.getLogger(ServerConnectionHandler.class.getName());
     private static final int CLIENT_READ_TIMEOUT_MS = 20000;
     private Socket mClient;
     private List<AService> mServices;
@@ -50,6 +51,7 @@ class ServerConnectionHandler implements Runnable {
 
 
     private boolean mapToService() throws Exception {
+        log.v();
         String path = mHeaderZeroParts[1];
 
         boolean done = false;
@@ -89,6 +91,7 @@ class ServerConnectionHandler implements Runnable {
 
 
     public void run() {
+        log.v();
         try {
             configureSocket();
             obtainStreams();
@@ -99,7 +102,7 @@ class ServerConnectionHandler implements Runnable {
 
                 mHeaders = mHttpInputStream.readHeaders();
 
-                Log.d("Headers:", mHeaders);
+                log.v("Headers:", mHeaders);
 
                 if (mHeaders.size() == 0) {
                     throw new IOException("Not enough headers.");
@@ -119,7 +122,7 @@ class ServerConnectionHandler implements Runnable {
                     }
 
                 } catch (RuntimeException re) {
-                    Log.e("Error handling connection", re);
+                    log.e("Error handling connection", re);
 
                     mHttpOutputStream.setResponse(500, "Server Error");
                     mHttpOutputStream.write(re.getMessage().getBytes());
@@ -129,16 +132,15 @@ class ServerConnectionHandler implements Runnable {
                 }
             }
         } catch (Exception e) {
-            Log.e("Error handling connection", e);
+            log.e("Error handling connection", e);
         } finally {
             close();
         }
     }
 
     private void close() {
-        Log.d();
+        log.v();
         if (mClient != null) {
-            // Log.d();
             try {
                 mClient.shutdownInput();
             } catch (IOException ioe) {

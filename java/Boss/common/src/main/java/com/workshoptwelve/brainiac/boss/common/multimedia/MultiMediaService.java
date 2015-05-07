@@ -14,42 +14,43 @@ import java.util.List;
  * Created by robwilliams on 15-04-10.
  */
 public class MultiMediaService extends AService {
+    private static final Log log = Log.getLogger(MultiMediaService.class);
     private static MultiMediaService sInstance = new MultiMediaService();
-    protected EventType mPositionEventType = new EventType("Multi Media Position", "B:SYS:MM:POS");
+    protected EventType mPositionEventType = new EventType("Multi Media Position", "B:SYS:MM:POS"); // TODO manage in single file?
     private List<AEndPoint> mEndPoints;
     private AMultiMediaServiceImpl mMultiMediaServiceImpl;
     private AEndPoint mPlay = new AEndPoint("play") {
         @Override
         public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
-            Log.d("Play");
+            log.d("Play");
             return mMultiMediaServiceImpl.play();
         }
     };
     private AEndPoint mPause = new AEndPoint("pause") {
         @Override
         public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
-            Log.d("Pause");
+            log.d("Pause");
             return mMultiMediaServiceImpl.pause();
         }
     };
     private AEndPoint mResume = new AEndPoint("resume") {
         @Override
         public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
-            Log.d("resume");
+            log.d("resume");
             return mMultiMediaServiceImpl.resume();
         }
     };
     private AEndPoint mStop = new AEndPoint("stop") {
         @Override
         public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
-            Log.d("stop");
+            log.d("stop");
             return mMultiMediaServiceImpl.stop();
         }
     };
     private AEndPoint mSeek = new AEndPoint("seek") {
         @Override
         public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
-            Log.d("seek");
+            log.d("seek");
             int to = getInt(params, "to");
             return mMultiMediaServiceImpl.seek(to);
         }
@@ -57,14 +58,14 @@ public class MultiMediaService extends AService {
     private AEndPoint mGetStatus = new AEndPoint("getStatus") {
         @Override
         public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
-            Log.d("getStatus");
+            log.d("getStatus");
             return mMultiMediaServiceImpl.getStatus();
         }
     };
     private AEndPoint mGetPosition = new AEndPoint("getPosition") {
         @Override
         public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
-            Log.d("getPosition");
+            log.d("getPosition");
             return mMultiMediaServiceImpl.getStatus();
         }
     };

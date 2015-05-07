@@ -7,8 +7,10 @@ import java.io.PrintStream;
  * Created by robwilliams on 15-04-10.
  */
 public abstract class Logger {
+    private final boolean mForceMultiLine;
+
     public enum Level {
-        d, i, v, w, e
+        v, d, i, w, e
     }
 
     public void d(Object... toLog) {
@@ -33,8 +35,13 @@ public abstract class Logger {
 
     protected abstract void rawLog(Level level, StringBuilder toLog);
     protected abstract void getPrefix(Level level, StringBuilder prefix);
+    protected boolean forceMultiLine() { return true; }
+    
+    public Logger() {
+        mForceMultiLine = forceMultiLine();
+    }
 
-    private void log(Level level, Object... args) {
+    private synchronized void log(Level level, Object... args) {
         StringBuilder prefix = new StringBuilder();
         getPrefix(level, prefix);
 
@@ -44,7 +51,7 @@ public abstract class Logger {
         int startFrom = 0;
         int lastNewLine;
         do {
-            lastNewLine = allArgs.indexOf("\n", startFrom);
+            lastNewLine = mForceMultiLine ? allArgs.indexOf("\n", startFrom) : -1;
             if (lastNewLine == -1) {
                 // We are destroying the prefix - this is the last iteration.
                 prefix.append(allArgs.substring(startFrom));

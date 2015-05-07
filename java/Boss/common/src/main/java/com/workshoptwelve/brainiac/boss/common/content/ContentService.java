@@ -12,6 +12,7 @@ import java.util.List;
  * Created by robwilliams on 15-04-12.
  */
 public class ContentService extends AService {
+    private static final Log log = Log.getLogger(ContentService.class.getName());
     private static ContentService sInstance = new ContentService();
     private AContentServiceImpl mContentServiceImpl;
 
@@ -29,7 +30,7 @@ public class ContentService extends AService {
 
     @Override
     public void handleConnection(Socket connection, List<String> headers, String[] headerZero, HttpInputStream inputStream, HttpOutputStream outputStream) throws Exception {
-        Log.d("Path: " + headers);
+        log.d("Path",headers);
         String path = headerZero[1];
         if (path.startsWith("/www/")) {
             path = path.substring(5);

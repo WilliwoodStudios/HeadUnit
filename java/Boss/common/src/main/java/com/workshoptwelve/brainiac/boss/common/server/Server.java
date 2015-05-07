@@ -14,6 +14,8 @@ import java.util.ArrayList;
  * Created by robwilliams on 15-04-10.
  */
 public class Server {
+    private static final Log log = Log.getLogger(Server.class);
+
     private static Server sInstance = new Server();
     private ArrayList<AService> mServices = new ArrayList<AService>();
 
@@ -26,21 +28,21 @@ public class Server {
     }
 
     public static Server getInstance() {
-        Log.d();
+        log.d();
         return sInstance;
     }
 
     public void addService(AService service) {
-        Log.d();
+        log.d();
         mServices.add(service);
     }
 
     public synchronized boolean start() {
-        Log.d();
+        log.d();
         if (mListenRunnable == null) {
             ThreadPool.getInstance().run(mListenRunnable = new Runnable() {
                 public void run() {
-                    Log.d();
+                    log.d();
                     listen();
                     if (mListenRunnable == this) {
                         mListenRunnable = null;
@@ -53,7 +55,7 @@ public class Server {
     }
 
     private void listen() {
-        Log.d();
+        log.d();
         try {
             mServerSocket = new ServerSocket(9876);
             while (true) {
@@ -61,7 +63,7 @@ public class Server {
                 ThreadPool.getInstance().run(new ServerConnectionHandler(mServices,client));
             }
         } catch (IOException ioe) {
-            Log.e("Could not listen", ioe);
+            log.e("Could not listen", ioe);
             stop();
         }
     }

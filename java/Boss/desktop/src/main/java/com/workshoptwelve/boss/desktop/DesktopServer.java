@@ -10,15 +10,17 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 
 public class DesktopServer extends Application {
+    private static final Log log = Log.getLogger(DesktopServer.class);
+
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Log.d("Starting for a stage...");
+        log.d("Starting for a stage...");
     }
 
     public static void main(String[] args) {
         Log.setLogger(new DesktopLogger());
 
-        Log.i("About to start event server");
+        log.i("About to start event server");
 
         ContentService.getInstance().setContentServiceImpl(new DesktopContentServiceImpl("html/src"));
         MultiMediaService.getInstance().setMultiMediaServiceImpl(new DesktopMultiMediaService());

@@ -12,6 +12,8 @@ import java.io.IOException;
  * Created by robwilliams on 15-04-12.
  */
 public class DesktopContentServiceImpl extends AContentServiceImpl {
+    private static final Log log = Log.getLogger(DesktopContentServiceImpl.class);
+
     private final String mRootPath;
 
     public DesktopContentServiceImpl(String rootPath) {
@@ -23,7 +25,7 @@ public class DesktopContentServiceImpl extends AContentServiceImpl {
 
     @Override
     public void sendPathToStream(String path, HttpOutputStream outputStream) throws IOException {
-        Log.d(path);
+        log.d(path);
         File file = new File(mRootPath + path);
         if (file.exists()) {
             FileInputStream fis = new FileInputStream(file);

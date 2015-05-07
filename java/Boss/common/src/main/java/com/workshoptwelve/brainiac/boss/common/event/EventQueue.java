@@ -9,7 +9,10 @@ import java.util.List;
  * Created by robwilliams on 15-04-12.
  */
 public class EventQueue {
+    private static final Log log = Log.getLogger(EventQueue.class.getName());
+
     private static final int TIMEOUT_MS = 10 * 1000;
+    private static final int TIMEOUT_VARIANCE_MS = 10000;
     private List<byte[]> mQueue = new ArrayList<>();
     private boolean mIsShutdown = false;
     private Object mCountLock = new Object();
@@ -36,14 +39,14 @@ public class EventQueue {
     }
 
     public synchronized byte[][] getNextEventInternal() {
-        // Log.d();
         if (mQueue.size() > 0) {
             return available();
         }
         try {
-            wait(TIMEOUT_MS);
+            long timeToWait = TIMEOUT_MS + (long)(Math.random() * TIMEOUT_VARIANCE_MS);
+            wait(timeToWait);
         } catch (InterruptedException ie) {
-            Log.w("Timeout in wait", ie);
+            log.w("Timeout in wait", ie);
         }
         if (mQueue.size() > 0) {
             return available();

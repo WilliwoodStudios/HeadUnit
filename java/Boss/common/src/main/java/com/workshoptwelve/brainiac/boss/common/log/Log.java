@@ -1,53 +1,93 @@
 package com.workshoptwelve.brainiac.boss.common.log;
 
 /**
- * Created by robwilliams on 15-04-10.
+ * Created by robwilliams on 15-05-06.
  */
 public class Log {
+    private static final int sVOrd = Logger.Level.v.ordinal();
+    private static final int sDOrd = Logger.Level.d.ordinal();
+    private static final int sIOrd = Logger.Level.i.ordinal();
+    private static final int sWOrd = Logger.Level.w.ordinal();
+    private static final int sEOrd = Logger.Level.e.ordinal();
     private static Logger sLogger;
+    private Logger.Level mLevel;
+    private int mLevelOrd;
+
+    public Log(String name) {
+        setLogLevel(Logger.Level.d);
+    }
+
+    public static Log getLogger(String name) {
+        // TODO cache.
+        return new Log(name);
+    }
+
+    public static Log getLogger(Class klass) {
+        return getLogger(klass.getName());
+    }
 
     public static void setLogger(Logger logger) {
         sLogger = logger;
     }
 
-    public static void d(Object... args) {
-        sLogger.d(args);
+    public static void setLogLevel(String name, Logger.Level level) {
+        // TODO
     }
 
-    public static void i(Object... args) {
-        sLogger.i(args);
+    public void setLogLevel(Logger.Level level) {
+        if (level != null) {
+            mLevel = level;
+            mLevelOrd = level.ordinal();
+        }
     }
 
-    public static void v(Object... args) {
-        sLogger.v(args);
+    public void d(Object... args) {
+        if (sDOrd >= mLevelOrd) {
+            sLogger.d(args);
+        }
     }
 
-    public static void w(Object... args) {
-        sLogger.w(args);
+    public void i(Object... args) {
+        if (sIOrd >= mLevelOrd) {
+            sLogger.i(args);
+        }
     }
 
-    public static void e(Object... args) {
-        sLogger.e(args);
+    public void v(Object... args) {
+        if (sVOrd >= mLevelOrd) {
+            sLogger.v(args);
+        }
     }
 
-    public static boolean canD() {
-        return sLogger.canD();
+    public void w(Object... args) {
+        if (sWOrd >= mLevelOrd) {
+            sLogger.w(args);
+        }
     }
 
-    public static boolean canV() {
-        return sLogger.canV();
+    public void e(Object... args) {
+        if (sEOrd >= mLevelOrd) {
+            sLogger.e(args);
+        }
     }
 
-    public static boolean canI() {
-        return sLogger.canI();
+    public boolean canD() {
+        return mLevelOrd >= sDOrd && sLogger.canD();
     }
 
-    public static boolean canW() {
-        return sLogger.canW();
+    public boolean canI() {
+        return mLevelOrd >= sIOrd && sLogger.canI();
     }
 
-    public static boolean canE() {
-        return sLogger.canE();
+    public boolean canV() {
+        return mLevelOrd >= sVOrd && sLogger.canV();
     }
 
+    public boolean canW() {
+        return mLevelOrd >= sWOrd && sLogger.canW();
+    }
+
+    public boolean canE() {
+        return mLevelOrd >= sEOrd && sLogger.canE();
+    }
 }

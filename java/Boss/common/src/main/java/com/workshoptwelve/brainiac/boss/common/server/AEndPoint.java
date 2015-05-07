@@ -17,6 +17,7 @@ import java.util.List;
  * Created by robwilliams on 15-04-11.
  */
 public abstract class AEndPoint {
+    private static final Log log = Log.getLogger(AEndPoint.class.getName());
     private static final JSONObject RESULT_ONE = buildResultOne();
     private String mPath;
 
@@ -51,10 +52,10 @@ public abstract class AEndPoint {
                     } else if (nameValue.length == 2) {
                         params.put(unquote(nameValue[0]), unquote(nameValue[1]));
                     } else {
-                        Log.d("Invalid name value:", nameValue);
+                        log.d("Invalid name value:", nameValue);
                     }
                 } catch (UnsupportedEncodingException use) {
-                    Log.e("Could not decode URL parts", use);
+                    log.e("Could not decode URL parts", use);
                 }
             }
         }
@@ -68,7 +69,7 @@ public abstract class AEndPoint {
             toReturn.put("result", 1);
             return toReturn;
         } catch (JSONException je) {
-            Log.e("Could not create required static JSON object");
+            log.e("Could not create required static JSON object");
             return null;
         }
     }
@@ -78,7 +79,7 @@ public abstract class AEndPoint {
     }
 
     public void execute(Socket client, List<String> headers, String[] headerZeroParts, HttpInputStream inputStream, HttpOutputStream outputStream) {
-        Log.d();
+        log.v();
 
         HashMap<String, String> params = getParams(headerZeroParts);
 
@@ -90,7 +91,7 @@ public abstract class AEndPoint {
                     toReturn = RESULT_ONE;
                 }
             } catch (Exception e) {
-                Log.e("Could not execute: ", e);
+                log.e("Could not execute: ", e);
                 toReturn = new JSONObject();
                 toReturn.put("error", e.getClass().getName() + ": " + e.getMessage());
             }
@@ -99,10 +100,10 @@ public abstract class AEndPoint {
                 outputStream.setResponse(200,"OK");
                 outputStream.write(toReturn);
             } catch (Exception e) {
-                Log.e("Could not write response", e);
+                log.e("Could not write response", e);
             }
         } catch (JSONException je) {
-            Log.e("JSON exception trying to produce output", je);
+            log.e("JSON exception trying to produce output", je);
         }
     }
 
