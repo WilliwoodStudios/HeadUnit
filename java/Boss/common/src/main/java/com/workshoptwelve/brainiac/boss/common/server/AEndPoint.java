@@ -1,5 +1,7 @@
 package com.workshoptwelve.brainiac.boss.common.server;
 
+import com.workshoptwelve.brainiac.boss.common.error.BossError;
+import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.boss.common.server.stream.HttpInputStream;
 import com.workshoptwelve.brainiac.boss.common.server.stream.HttpOutputStream;
@@ -79,56 +81,46 @@ public abstract class AEndPoint {
         return mPath;
     }
 
-    public void execute(Socket client, List<String> headers, String[] headerZeroParts, HttpInputStream inputStream, HttpOutputStream outputStream) {
+    public void execute(Socket client, List<String> headers, String[] headerZeroParts, HttpInputStream inputStream, HttpOutputStream outputStream) throws JSONException, BossException {
         log.v();
 
         HashMap<String, String> params = getParams(headerZeroParts);
 
         JSONObject toReturn;
-        try {
-            try {
-                toReturn = execute(headers, params);
-                if (toReturn == null) {
-                    toReturn = RESULT_ONE;
-                }
-            } catch (Exception e) {
-                log.e("Could not execute: ", e);
-                toReturn = new JSONObject();
-                toReturn.put("error", e.getClass().getName() + ": " + e.getMessage());
-            }
+        toReturn = execute(headers, params);
+        if (toReturn == null) {
+            toReturn = RESULT_ONE;
+        }
 
-            try {
-                outputStream.setResponse(200,"OK");
-                outputStream.write(toReturn);
-            } catch (Exception e) {
-                log.e("Could not write response", e);
-            }
-        } catch (JSONException je) {
-            log.e("JSON exception trying to produce output", je);
+        try {
+            outputStream.setResponse(200, "OK");
+            outputStream.write(toReturn);
+        } catch (Exception e) {
+            log.e("Could not write response", e);
         }
     }
 
-    public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+    public JSONObject execute(List<String> headers, HashMap<String, String> params) throws BossException, JSONException {
         log.v();
         return buildResultOne();
     }
 
-    protected int getInt(HashMap<String, String> params, String name) throws MissingParameterException, BadParameterException {
+    protected int getInt(HashMap<String, String> params, String name) throws BossException {
         String value = params.get(name);
         if (value == null) {
-            throw new MissingParameterException(name);
+            throw new BossException(BossError.PARAMETER_MISSING, name);
         }
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException nfe) {
-            throw new BadParameterException(String.format("Param '%s' is not an integer", name));
+            throw new BossException(BossError.PARAMETER_BAD, String.format("Param '%s' is not an integer", name));
         }
     }
 
-    protected String getString(HashMap<String, String> params, String name) throws MissingParameterException {
+    protected String getString(HashMap<String, String> params, String name) throws BossException {
         String value = params.get(name);
         if (value == null) {
-            throw new MissingParameterException(name);
+            throw new BossException(BossError.PARAMETER_MISSING, name);
         }
         return value;
     }

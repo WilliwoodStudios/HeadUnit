@@ -1,6 +1,9 @@
 package com.workshoptwelve.brainiac.boss.common.server;
 
+import com.workshoptwelve.brainiac.boss.common.error.BossError;
+import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
+import com.workshoptwelve.brainiac.boss.common.log.Logger;
 import com.workshoptwelve.brainiac.boss.common.server.stream.HttpInputStream;
 import com.workshoptwelve.brainiac.boss.common.server.stream.HttpOutputStream;
 
@@ -116,17 +119,19 @@ class ServerConnectionHandler implements Runnable {
                 }
 
                 try {
-                    if (mapToService()) {
-                        // good.
-                    } else {
-                        showAllServices();
+                    try {
+                        if (mapToService()) {
+                            // good.
+                        } else {
+                            showAllServices();
+                        }
+                    } catch (JSONException je) {
+                        throw new BossException(BossError.UNHANDLED_EXCEPTION,je);
+                    } catch (RuntimeException re) {
+                        throw new BossException(BossError.UNHANDLED_EXCEPTION,re);
                     }
-
-                } catch (RuntimeException re) {
-                    log.e("Error handling connection", re);
-
-                    mHttpOutputStream.setResponse(500, "Server Error");
-                    mHttpOutputStream.write(re.getMessage().getBytes());
+                } catch (BossException bossException) {
+                    handleBossException(bossException);
                 } finally {
                     mHttpOutputStream.close();
                     mHttpInputStream.close();
@@ -139,6 +144,36 @@ class ServerConnectionHandler implements Runnable {
         } finally {
             close();
         }
+    }
+
+    private void handleBossException(BossException bossException) throws JSONException, IOException {
+        JSONObject response = new JSONObject();
+        BossError bossError = bossException.getBossError();
+        JSONObject jsonError = new JSONObject();
+        response.put("error",jsonError);
+
+        jsonError.put("description", bossError.getDescription());
+        jsonError.put("code",bossError.getErrorCode());
+        jsonError.put("enum",bossError.toString());
+
+        String message = bossException.getMessage();
+        if (message != null && message.length() > 0) {
+            jsonError.put("message", bossException.getMessage());
+        }
+
+        Throwable cause = bossException.getCause();
+        if (cause != null) {
+            JSONObject jsonCause = new JSONObject();
+            jsonError.put("errorCause", jsonCause);
+            jsonCause.put("message",cause.getMessage());
+            jsonCause.put("class", cause.getClass().getName());
+            StringBuilder stackTrace = new StringBuilder();
+            Logger.getExceptionTrace(cause, stackTrace);
+            jsonCause.put("stackTrace", stackTrace);
+        }
+
+        mHttpOutputStream.setResponse(200,"OK");
+        mHttpOutputStream.write(response.toString(3).getBytes());
     }
 
     private void close() {

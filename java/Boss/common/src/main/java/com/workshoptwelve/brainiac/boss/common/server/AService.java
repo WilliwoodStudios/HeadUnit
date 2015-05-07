@@ -1,12 +1,15 @@
 package com.workshoptwelve.brainiac.boss.common.server;
 
+import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.event.EventType;
 import com.workshoptwelve.brainiac.boss.common.server.stream.HttpInputStream;
 import com.workshoptwelve.brainiac.boss.common.server.stream.HttpOutputStream;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +48,7 @@ public abstract class AService {
         mEventTypes.add(eventType);
     }
 
-    public void handleConnection(Socket connection, List<String> headers, String[] headerZero, HttpInputStream inputStream, HttpOutputStream outputStream) throws Exception {
+    public void handleConnection(Socket connection, List<String> headers, String[] headerZero, HttpInputStream inputStream, HttpOutputStream outputStream) throws BossException, JSONException, IOException {
         // Log.d();
         int length = getPath().length();
         String remainingPath = headerZero[1].substring(length);

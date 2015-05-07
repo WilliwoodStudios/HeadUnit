@@ -1,5 +1,6 @@
 package com.workshoptwelve.brainiac.boss.common.event;
 
+import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.server.AEndPoint;
 import com.workshoptwelve.brainiac.boss.common.server.AService;
 
@@ -24,7 +25,7 @@ public class EventService extends AService {
     private Map<String, EventQueue> mIDAndEventQueues = new HashMap<>();
     private AEndPoint mAdd = new AEndPoint("addListener") {
         @Override
-        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws BossException {
             String id = getString(params, "id");
             String eventType = getString(params, "eventType");
             addListener(id, eventType);
@@ -33,7 +34,7 @@ public class EventService extends AService {
     };
     private AEndPoint mRemove = new AEndPoint("removeListener") {
         @Override
-        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws BossException {
             String id = getString(params, "id");
             String eventType = getString(params, "eventType");
             removeListener(id, eventType);

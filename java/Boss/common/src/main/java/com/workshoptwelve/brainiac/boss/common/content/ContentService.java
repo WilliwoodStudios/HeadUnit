@@ -5,6 +5,7 @@ import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.boss.common.server.stream.HttpInputStream;
 import com.workshoptwelve.brainiac.boss.common.server.stream.HttpOutputStream;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.util.List;
 
@@ -29,8 +30,8 @@ public class ContentService extends AService {
     }
 
     @Override
-    public void handleConnection(Socket connection, List<String> headers, String[] headerZero, HttpInputStream inputStream, HttpOutputStream outputStream) throws Exception {
-        log.d("Path",headers);
+    public void handleConnection(Socket connection, List<String> headers, String[] headerZero, HttpInputStream inputStream, HttpOutputStream outputStream) throws IOException {
+        log.v("Path",headers);
         String path = headerZero[1];
         if (path.startsWith("/www/")) {
             path = path.substring(5);

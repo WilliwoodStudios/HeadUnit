@@ -1,10 +1,12 @@
 package com.workshoptwelve.brainiac.boss.common.multimedia;
 
+import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.server.AEndPoint;
 import com.workshoptwelve.brainiac.boss.common.server.AService;
 import com.workshoptwelve.brainiac.boss.common.event.EventType;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -21,35 +23,35 @@ public class MultiMediaService extends AService {
     private AMultiMediaServiceImpl mMultiMediaServiceImpl;
     private AEndPoint mPlay = new AEndPoint("play") {
         @Override
-        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws JSONException {
             log.d("Play");
             return mMultiMediaServiceImpl.play();
         }
     };
     private AEndPoint mPause = new AEndPoint("pause") {
         @Override
-        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws JSONException {
             log.d("Pause");
             return mMultiMediaServiceImpl.pause();
         }
     };
     private AEndPoint mResume = new AEndPoint("resume") {
         @Override
-        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws JSONException {
             log.d("resume");
             return mMultiMediaServiceImpl.resume();
         }
     };
     private AEndPoint mStop = new AEndPoint("stop") {
         @Override
-        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws JSONException {
             log.d("stop");
             return mMultiMediaServiceImpl.stop();
         }
     };
     private AEndPoint mSeek = new AEndPoint("seek") {
         @Override
-        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws JSONException, BossException {
             log.d("seek");
             int to = getInt(params, "to");
             return mMultiMediaServiceImpl.seek(to);
@@ -57,14 +59,14 @@ public class MultiMediaService extends AService {
     };
     private AEndPoint mGetStatus = new AEndPoint("getStatus") {
         @Override
-        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws JSONException {
             log.d("getStatus");
             return mMultiMediaServiceImpl.getStatus();
         }
     };
     private AEndPoint mGetPosition = new AEndPoint("getPosition") {
         @Override
-        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws JSONException {
             log.d("getPosition");
             return mMultiMediaServiceImpl.getStatus();
         }

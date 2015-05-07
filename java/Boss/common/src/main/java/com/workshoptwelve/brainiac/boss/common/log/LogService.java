@@ -1,9 +1,11 @@
 package com.workshoptwelve.brainiac.boss.common.log;
 
+import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.server.AEndPoint;
 import com.workshoptwelve.brainiac.boss.common.server.AService;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -27,7 +29,7 @@ public class LogService extends AService {
 
     private AEndPoint mLogLevels = new AEndPoint("getLogLevels") {
         @Override
-        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws BossException, JSONException {
             Log [] getKnownLogs = Log.getKnownLogs();
             JSONObject toReturn = buildResultOne();
             JSONArray array = new JSONArray();
@@ -44,7 +46,7 @@ public class LogService extends AService {
 
     private AEndPoint mSetLogLevel = new AEndPoint("setLogLevel") {
         @Override
-        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws BossException {
             String name = getString(params,"name");
             String level = getString(params,"logLevel");
 

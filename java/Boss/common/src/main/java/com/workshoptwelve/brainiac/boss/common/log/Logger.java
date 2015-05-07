@@ -97,7 +97,7 @@ public abstract class Logger {
         return true;
     }
 
-    protected void getTrace(StringBuilder stringBuilder) {
+    public static void getTrace(StringBuilder stringBuilder) {
         int state = 0;
         for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
             String className = ste.getClassName();
@@ -121,7 +121,7 @@ public abstract class Logger {
         stringBuilder.append("unknown");
     }
 
-    protected void getExceptionTrace(Throwable t, StringBuilder stringBuilder) {
+    public static void getExceptionTrace(Throwable t, StringBuilder stringBuilder) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
         t.printStackTrace(ps);
