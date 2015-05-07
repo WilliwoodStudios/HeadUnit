@@ -9,9 +9,10 @@ public enum BossError {
      */
     UNSPECIFIED_ERROR(0, "Unspecified error"),
     UNHANDLED_EXCEPTION(1, "Unhandled exception"),
+    NOT_IMPLEMENTED(2,"The given feature is not currently implemented"),
 
-    PARAMETER_MISSING(2,"Missing parameter"),
-    PARAMETER_BAD(3,"Bad parameter given"),
+    PARAMETER_MISSING(3,"Missing parameter"),
+    PARAMETER_BAD(4,"Bad parameter given"),
 
     /**
      * ODBII errors.
