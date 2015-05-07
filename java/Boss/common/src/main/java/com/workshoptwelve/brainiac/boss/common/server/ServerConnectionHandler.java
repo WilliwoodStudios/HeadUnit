@@ -8,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -131,6 +132,8 @@ class ServerConnectionHandler implements Runnable {
                     mHttpInputStream.close();
                 }
             }
+        } catch (EOFException eof) {
+            log.v("Connection appears closed by peer");
         } catch (Exception e) {
             log.e("Error handling connection", e);
         } finally {

@@ -1,5 +1,6 @@
 package com.workshoptwelve.brainiac.boss.common.server.stream;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -30,7 +31,6 @@ public class HttpInputStream extends InputStream {
         if (mHeadersRead) {
             return mHeaders;
         }
-        // Log.d();
         byte[] buffer = mReadHeaderBuffer;
         int lineStart;
         int readLength;
@@ -38,6 +38,9 @@ public class HttpInputStream extends InputStream {
         ArrayList<String> toReturn = new ArrayList<String>();
         do {
             readLength = mBase.read(buffer);
+            if (readLength == -1) {
+                throw new EOFException("EOF");
+            }
             lineStart = 0;
             for (int i = 0; i < readLength; ++i) {
                 if (i > 0 && buffer[i - 1] == '\r' && buffer[i] == '\n') {
@@ -63,7 +66,7 @@ public class HttpInputStream extends InputStream {
                 lineInProgress = "";
             }
 
-        } while (lineInProgress.length() > 10000 || toReturn.size() > 100);
+        } while (lineInProgress.length() < 10000 && toReturn.size() < 100);
 
         throw new IOException("Corrupt headers.");
     }
