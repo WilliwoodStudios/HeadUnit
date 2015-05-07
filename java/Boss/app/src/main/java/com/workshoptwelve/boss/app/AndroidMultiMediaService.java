@@ -33,6 +33,7 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
             @Override
             public void onCompletion(MediaPlayer mp) {
                 if (mMediaPlayer == myMediaPlayer) {
+                    stopPolling();
                     mMediaPlayer = null;
                 }
             }
