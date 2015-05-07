@@ -1,5 +1,6 @@
 package com.workshoptwelve.boss.desktop.log;
 
+import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.boss.common.log.Logger;
 
 /**
@@ -7,12 +8,12 @@ import com.workshoptwelve.brainiac.boss.common.log.Logger;
  */
 public class DesktopLogger extends Logger {
     @Override
-    protected void rawLog(Level level, StringBuilder toLog) {
+    protected void rawLog(Log.Level level, StringBuilder toLog) {
         System.out.println(toLog);
     }
 
     @Override
-    protected void getPrefix(Level level, StringBuilder prefix) {
+    protected void getPrefix(Log.Level level, StringBuilder prefix) {
         prefix.append("DESKTOP LOGGER NEEDS WORK"); // TODO make work again.
     }
 }

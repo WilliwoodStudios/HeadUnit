@@ -9,39 +9,39 @@ import java.io.PrintStream;
 public abstract class Logger {
     private final boolean mForceMultiLine;
 
-    public enum Level {
-        v, d, i, w, e
-    }
-
     public void d(Object... toLog) {
-        if (canD()) log(Level.d, toLog);
+        if (canD()) log(Log.Level.d, toLog);
     }
 
     public void i(Object... toLog) {
-        if (canI()) log(Level.i, toLog);
+        if (canI()) log(Log.Level.i, toLog);
     }
 
     public void v(Object... toLog) {
-        if (canV()) log(Level.v, toLog);
+        if (canV()) log(Log.Level.v, toLog);
     }
 
     public void w(Object... toLog) {
-        if (canW()) log(Level.w, toLog);
+        if (canW()) log(Log.Level.w, toLog);
     }
 
     public void e(Object... toLog) {
-        if (canE()) log(Level.e, toLog);
+        if (canE()) log(Log.Level.e, toLog);
     }
 
-    protected abstract void rawLog(Level level, StringBuilder toLog);
-    protected abstract void getPrefix(Level level, StringBuilder prefix);
+    protected abstract void rawLog(Log.Level level, StringBuilder toLog);
+    protected abstract void getPrefix(Log.Level level, StringBuilder prefix);
     protected boolean forceMultiLine() { return true; }
     
     public Logger() {
         mForceMultiLine = forceMultiLine();
     }
 
-    private synchronized void log(Level level, Object... args) {
+    public Log.Level getLogLevel(String name) {
+        return Log.Level.d; // TODO make this programatic...
+    }
+
+    private synchronized void log(Log.Level level, Object... args) {
         StringBuilder prefix = new StringBuilder();
         getPrefix(level, prefix);
 

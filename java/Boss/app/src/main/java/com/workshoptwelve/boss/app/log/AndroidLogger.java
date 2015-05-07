@@ -3,6 +3,7 @@ package com.workshoptwelve.boss.app.log;
 import android.util.Log;
 
 import com.workshoptwelve.brainiac.boss.common.log.Logger;
+import com.workshoptwelve.brainiac.boss.common.log.Log.Level;
 
 /**
  * Created by robwilliams on 15-05-05.

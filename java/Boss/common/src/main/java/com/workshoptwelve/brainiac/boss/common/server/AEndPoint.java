@@ -63,7 +63,8 @@ public abstract class AEndPoint {
         return params;
     }
 
-    private static JSONObject buildResultOne() {
+    protected static JSONObject buildResultOne() {
+        log.v();
         try {
             JSONObject toReturn = new JSONObject();
             toReturn.put("result", 1);
@@ -108,7 +109,8 @@ public abstract class AEndPoint {
     }
 
     public JSONObject execute(List<String> headers, HashMap<String, String> params) throws Exception {
-        throw new IllegalStateException("Developer has not overloaded execute but has let it be called.");
+        log.v();
+        return buildResultOne();
     }
 
     protected int getInt(HashMap<String, String> params, String name) throws MissingParameterException, BadParameterException {
