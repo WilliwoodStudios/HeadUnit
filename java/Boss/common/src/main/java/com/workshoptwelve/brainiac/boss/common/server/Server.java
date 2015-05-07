@@ -2,6 +2,7 @@ package com.workshoptwelve.brainiac.boss.common.server;
 
 import com.workshoptwelve.brainiac.boss.common.content.ContentService;
 import com.workshoptwelve.brainiac.boss.common.event.EventService;
+import com.workshoptwelve.brainiac.boss.common.hardware.obdii.OBDService;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.boss.common.log.LogService;
 import com.workshoptwelve.brainiac.boss.common.threading.ThreadPool;
@@ -27,6 +28,7 @@ public class Server {
         addService(EventService.getInstance());
         addService(ContentService.getInstance());
         addService(LogService.getInstance());
+        addService(OBDService.getInstance());
     }
 
     public static Server getInstance() {
