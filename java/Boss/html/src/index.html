@@ -1,5 +1,6 @@
 <html>
 <head>
+    <script src="obd.js"></script>
     <script src="events.js"></script>
     <script src="mm.js"></script>
 </head>
@@ -14,6 +15,7 @@
         <canvas id="progressBarCanvas" width="800" height="32">
         </canvas>
     </div>
+    <div><pre id="speedGoesHere" />- km/h</pre></div>
 </body>
 <script>
 
@@ -38,6 +40,35 @@ _mm.onResult(function(error,result) {
         }
     }
 });
+
+function onSpeedUpdated(error, response) {
+    console.log("UPDATE");
+    var toUpdate = document.getElementById("speedGoesHere");
+
+    if (error == null) {
+        if ("obd" in response) {
+            var obd = response.obd;
+            if ("responseBytes" in obd) {
+                var responseBytes = obd.responseBytes;
+                if (responseBytes.length==3) {
+                    toUpdate.innerText = responseBytes[2] + " km/h";
+                }
+            }
+        }
+    } else {
+        var message = error != null ? JSON.stringify(error) : " no error ";
+        message += "|";
+        message += response != null ? JSON.stringify(response) : " no response ";
+
+        toUpdate.innerText = message;
+    }
+
+    window.setTimeout(requestSpeedUpdate,1000);
+}
+
+function requestSpeedUpdate() {
+    _obd.sendPID(onSpeedUpdated,1,0x0d);
+}
 
 function pad(val) {
     if (val < 10) {
@@ -102,5 +133,8 @@ _mm.onPositionChanged(function(position) {
         }
 
     });
+
+console.log("Going to call request speed update");
+requestSpeedUpdate();        
 </script>
 </html>
