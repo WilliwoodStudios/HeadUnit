@@ -3,39 +3,69 @@ package com.workshoptwelve.boss.app;
 import android.content.Context;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
+import com.workshoptwelve.boss.app.hardware.obdii.AndroidOBDServiceImpl;
+import com.workshoptwelve.boss.app.hardware.usb.BossUSBManager;
 import com.workshoptwelve.boss.app.log.AndroidLogger;
+import com.workshoptwelve.brainiac.boss.common.hardware.obdii.OBDService;
 import com.workshoptwelve.brainiac.boss.common.server.Server;
 import com.workshoptwelve.brainiac.boss.common.content.ContentService;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.boss.common.multimedia.MultiMediaService;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements AndroidLogger.AndroidLoggerListener {
+    private TextView mTextViewLog;
+
+    @Override
+    public void onLogAvailable(final Log.Level level, final StringBuilder toLog) {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                if (mTextViewLog.getLineCount() > 2000) {
+                    mTextViewLog.setText("");
+                }
+                mTextViewLog.append(toLog.toString());
+                mTextViewLog.append("\n");
+//                int count = mTextViewLog.getLineCount();
+//                mTextViewLog.scrollTo(0,mTextViewLog.getLineHeight() * count);
+            }
+        });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        initServices(this);
+        mTextViewLog = (TextView)findViewById(R.id.textViewLog);
+        mTextViewLog.setMovementMethod(new ScrollingMovementMethod());
+
+        initServices(this,this);
     }
 
-    private static synchronized void initServices(Context context) {
-        if (!sStarted) {
-            Log.setLogger(new AndroidLogger("boss"));
+    static AndroidLogger sAndroidLogger;
 
-            ContentService.getInstance().setContentServiceImpl(new AndroidContentServiceImpl(context,"html/src"));
+    private static synchronized void initServices(Context context,AndroidLogger.AndroidLoggerListener addLog) {
+        if (!sStarted) {
+            Log.setLogger(sAndroidLogger = new AndroidLogger("boss"));
+
+            ContentService.getInstance().setContentServiceImpl(new AndroidContentServiceImpl(context, "html/src"));
             MultiMediaService.getInstance().setMultiMediaServiceImpl(new AndroidMultiMediaService(context));
+            OBDService.getInstance().setOBDServiceImpl(new AndroidOBDServiceImpl());
 
             Server server = Server.getInstance();
             server.addService(MultiMediaService.getInstance());
             server.start();
 
+            BossUSBManager.getInstance().startup(context);
+
             sStarted = true;
         }
+        sAndroidLogger.setAndroidLoggerListener(addLog);
     }
     private static boolean sStarted;
 
