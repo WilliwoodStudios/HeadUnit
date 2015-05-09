@@ -21,7 +21,9 @@ public class OBDService extends AService {
         @Override
         public JSONObject execute(List<String> headers, HashMap<String, String> params) throws BossException, JSONException {
             checkImplementation();
-            return super.execute(headers, params);
+            int mode = getInt(params,"mode");
+            int pid = getInt(params,"pid");
+            return mOBDServiceImpl.sendPID(mode,pid);
         }
     };
 
