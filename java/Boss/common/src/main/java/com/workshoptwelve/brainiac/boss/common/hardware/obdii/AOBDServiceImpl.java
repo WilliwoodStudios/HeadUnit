@@ -9,8 +9,6 @@ import org.json.JSONObject;
  * Created by robwilliams on 15-05-07.
  */
 public abstract class AOBDServiceImpl {
-    public abstract boolean isDeviceFound();
-    public abstract boolean isVehicleConnected();
-
     public abstract JSONObject getStatus() throws BossException, JSONException;
+    public abstract JSONObject sendPID(int mode, int pid) throws BossException, JSONException;
 }
