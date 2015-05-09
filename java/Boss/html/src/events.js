@@ -75,7 +75,11 @@ var _events = new function() {
             this.mServerConnections.push(connection);
 
             connection.open("GET","/brainiac/events/listen?id=" + this.mId,true);
-            connection.send();
+            try {
+                connection.send();
+            } catch (e) {
+                console.log(e);
+            }
         };
 
         this.registerForEvent = function(type,callback) {
@@ -112,7 +116,11 @@ var _events = new function() {
             }
         };
         request.open("GET","/brainiac/events/" + what,true);
-        request.send();
+        try {
+            request.send();
+        } catch (e) {
+            console.log(e);
+        }
     }
 
     };
