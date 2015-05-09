@@ -17,10 +17,17 @@ public enum BossError {
     /**
      * ODBII errors.
      */
-    ODB_NO_DEVICE_CONNECTED(2000, "No device connected"),
-    ODB_VEHICLE_NOT_DETECTED(2001, "No vehicle on / connected"),
-    ODB_UNAVAILABLE(2002, "Device unavailable"),
-    ODB_NO_RESPONSE(2003, "No response");
+    OBD_NO_DEVICE_CONNECTED(2000, "No device connected"),
+    OBD_VEHICLE_NOT_DETECTED(2001, "No vehicle on / connected"),
+    OBD_UNAVAILABLE(2002, "Device unavailable"),
+    OBD_NO_RESPONSE(2003, "No response"),
+    OBD_MODE_NOT_SUPPORTED(2004, "Mode not supported"),
+    OBD_PID_NOT_SUPPORTED(2005, "PID not supported (yet)"),
+
+    /**
+     * USB errors
+     */
+    USB_DRIVER_ERROR(3000,"USB Driver Error");
 
     private int mErrorCode;
     private String mDescription;
