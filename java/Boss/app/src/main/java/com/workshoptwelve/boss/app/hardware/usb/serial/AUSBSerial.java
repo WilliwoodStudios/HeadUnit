@@ -5,6 +5,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
+import android.os.SystemClock;
 
 import com.workshoptwelve.boss.app.hardware.usb.AUSBDeviceDriver;
 import com.workshoptwelve.brainiac.boss.common.error.BossError;
@@ -97,10 +98,11 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
                 @Override
                 public void write(byte[] buffer, int offset, int count) throws IOException {
                     while (count > 0) {
+                        long started = SystemClock.elapsedRealtime();
                         int wrote = mDeviceConnection.bulkTransfer(mEndpointOut, buffer, offset, count, 1000);
+                        long finished = SystemClock.elapsedRealtime();
                         if (wrote < 0) {
-                            // TODO handle.
-                            throw new IOException("Not handled properly yet.");
+                            throw new IOException("Could not write.");
                         }
                         count -= wrote;
                         offset += wrote;

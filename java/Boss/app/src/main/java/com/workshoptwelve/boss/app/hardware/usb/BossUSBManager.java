@@ -17,6 +17,7 @@ import com.workshoptwelve.brainiac.boss.common.util.ForEachList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -47,7 +48,20 @@ public class BossUSBManager {
                 UsbDevice device = (UsbDevice) intent
                         .getParcelableExtra(UsbManager.EXTRA_DEVICE);
 
-                // TODO handle this tragic news.
+                if (device != null) {
+                    String vendorProduct = makeVendorProduct(device);
+                    List<AUSBDeviceDriver> devices = mConnectedDevices.get(vendorProduct);
+                    if (devices != null) {
+                        int deviceId = device.getDeviceId();
+                        for (Iterator<AUSBDeviceDriver> iterator = devices.iterator(); iterator.hasNext(); ) {
+                            AUSBDeviceDriver driver = iterator.next();
+                            if (driver.getDevice().getDeviceId() == deviceId) {
+                                driver.setConnected(false);
+                                iterator.remove();
+                            }
+                        }
+                    }
+                }
             }
         }
 

@@ -21,9 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Created by robwilliams on 15-05-08.
@@ -109,18 +107,23 @@ public class AndroidOBDServiceImpl extends AOBDServiceImpl {
         return toReturn;
     }
 
-    private void checkDevice() throws BossException {
-        if (!mDeviceFound) {
-            throw new BossException(BossError.OBD_NO_DEVICE_CONNECTED);
-        }
+    private void checkVehicle() throws BossException {
+        checkConnection();
         if (!mVehicleConnected) {
             throw new BossException(BossError.OBD_VEHICLE_NOT_DETECTED);
         }
     }
 
+    private void checkConnection() throws BossException {
+        if (!mDeviceFound) {
+            throw new BossException(BossError.OBD_NO_DEVICE_CONNECTED);
+        }
+    }
+
     @Override
     public JSONObject sendPID(int mode, int pid) throws JSONException, BossException {
-        checkDevice();
+        // Check vehicle before reporting about missing PID.
+        checkVehicle();
         if (mode != 1) {
             throw new BossException(BossError.OBD_MODE_NOT_SUPPORTED);
         }
@@ -129,7 +132,7 @@ public class AndroidOBDServiceImpl extends AOBDServiceImpl {
         }
 
         final BlockingFuture<String> response = new BlockingFuture<String>();
-        final String command = toCommand(mode,pid);
+        final String command = toCommand(mode, pid);
         mHandler.post(new Runnable() {
             public void run() {
                 mThreadedObject.sendCommand(command, response);
@@ -138,20 +141,20 @@ public class AndroidOBDServiceImpl extends AOBDServiceImpl {
         try {
             String toSend = response.get(5, TimeUnit.SECONDS);
             JSONObject toReturn = new JSONObject();
-            toReturn.put("result",1);
+            toReturn.put("result", 1);
             JSONObject obd = new JSONObject();
-            toReturn.put("obd",obd);
-            obd.put("response",toSend);
+            toReturn.put("obd", obd);
+            obd.put("response", toSend);
             return toReturn;
         } catch (Exception ce) {
             // consume
         }
-        checkDevice();
+        checkVehicle();
         throw new BossException(BossError.OBD_NO_RESPONSE);
     }
 
     private String toCommand(int mode, int pid) {
-        return String.format("%02X%02X",mode,pid);
+        return String.format("%02X%02X", mode, pid);
     }
 
     private String hex(char c) {
@@ -195,6 +198,15 @@ public class AndroidOBDServiceImpl extends AOBDServiceImpl {
                 getAvailablePID();
             }
         };
+        private Runnable mDisconnectedRunnable = new Runnable() {
+            public void run() {
+                mVehicleConnected = false;
+                mDeviceDriver = null;
+                mDeviceFound = false;
+                mOutputStream = null;
+                mInputStream = null;
+            }
+        };
         private Runnable mInitRunnable = new Runnable() {
             public void run() {
                 log.v("InitRunnable");
@@ -211,8 +223,18 @@ public class AndroidOBDServiceImpl extends AOBDServiceImpl {
         private void usbAvailable(final CH341 deviceDriver) {
             log.v();
 
+
             mDeviceDriver = deviceDriver;
             mDeviceFound = true;
+
+            deviceDriver.addUSBDeviceDriverListener(new AUSBDeviceDriver.USBDeviceDriverListener() {
+                @Override
+                public void onConnectedChanged(boolean connected) {
+                    if (!connected) {
+                        mHandler.post(mDisconnectedRunnable);
+                    }
+                }
+            });
 
             try {
                 deviceDriver.init();
@@ -228,9 +250,10 @@ public class AndroidOBDServiceImpl extends AOBDServiceImpl {
         }
 
         private void initDevice() throws BossException {
+            checkConnection();
             mDeviceDriver.setBaudRate(38400);
             mDeviceDriver.init();
-            String[] toSend = new String[]{"AT Z\r\n", "AT SP 00\r\n", "0100\r\n", "AT DP\r\n"};
+//            String[] toSend = new String[]{"AT Z\r\n", "AT SP 00\r\n", "0100\r\n", "AT DP\r\n"};
 
             try {
                 String response;
@@ -281,7 +304,7 @@ public class AndroidOBDServiceImpl extends AOBDServiceImpl {
 
                         int where = response.lastIndexOf('\r');
                         if (where != -1) {
-                            response = response.substring(where+1);
+                            response = response.substring(where + 1);
                         }
                         byte[] responseBytes = responseToBytes(response);
 
@@ -307,6 +330,10 @@ public class AndroidOBDServiceImpl extends AOBDServiceImpl {
 
             } catch (IOException ioe) {
                 log.d(ioe);
+                noteVehicleGone();
+            } catch (BossException be) {
+                log.d(be);
+                noteVehicleGone();
             }
         }
 
@@ -368,7 +395,9 @@ public class AndroidOBDServiceImpl extends AOBDServiceImpl {
         private void noteVehicleGone() {
             log.v();
             mHandler.removeCallbacks(mGetAvailablePIDRunnable);
-            mHandler.postDelayed(mGetAvailablePIDRunnable, 15000);
+            if (mDeviceFound) {
+                mHandler.postDelayed(mGetAvailablePIDRunnable, 15000);
+            }
             mVehicleConnected = false;
         }
 
@@ -412,7 +441,8 @@ public class AndroidOBDServiceImpl extends AOBDServiceImpl {
             }
         }
 
-        private String sendCommand(String command) throws IOException {
+        private String sendCommand(String command) throws IOException, BossException {
+            checkConnection();
             log.v(command);
             mOutputStream.write(command.getBytes());
             mOutputStream.write(13);
