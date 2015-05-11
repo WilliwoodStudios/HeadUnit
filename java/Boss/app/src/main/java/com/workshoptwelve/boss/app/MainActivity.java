@@ -30,8 +30,6 @@ public class MainActivity extends ActionBarActivity implements AndroidLogger.And
                 }
                 mTextViewLog.append(toLog.toString());
                 mTextViewLog.append("\n");
-//                int count = mTextViewLog.getLineCount();
-//                mTextViewLog.scrollTo(0,mTextViewLog.getLineHeight() * count);
             }
         });
     }
@@ -84,7 +82,8 @@ public class MainActivity extends ActionBarActivity implements AndroidLogger.And
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_clear) {
+            mTextViewLog.setText("");
             return true;
         }
 
