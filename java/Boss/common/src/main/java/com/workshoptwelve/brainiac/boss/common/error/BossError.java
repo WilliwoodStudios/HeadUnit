@@ -14,6 +14,8 @@ public enum BossError {
     PARAMETER_MISSING(3,"Missing parameter"),
     PARAMETER_BAD(4,"Bad parameter given"),
 
+    TIMEOUT(5,"Timeout"),
+
     /**
      * ODBII errors.
      */

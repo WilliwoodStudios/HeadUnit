@@ -16,6 +16,10 @@
         </canvas>
     </div>
     <div><pre id="speedGoesHere" />- km/h</pre></div>
+    <div>Get Error Codes
+        <p><input type='button' value='Get Codes' onClick='getDTC()' /></p>
+        <p id='dtcGoesHere'></p>
+    </div>
 </body>
 <script>
 
@@ -133,6 +137,10 @@ _mm.onPositionChanged(function(position) {
         }
 
     });
+
+function getDTC() {
+    _obd.getDTC();
+}
 
 console.log("Going to call request speed update");
 requestSpeedUpdate();        

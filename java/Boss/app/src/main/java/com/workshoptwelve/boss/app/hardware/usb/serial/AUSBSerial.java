@@ -69,10 +69,12 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
             throw new BossException(BossError.USB_DRIVER_ERROR, "Could not connect");
         }
 
-        boolean claimed = mDeviceConnection.claimInterface(mInterface, false);
+        boolean claimed = mDeviceConnection.claimInterface(mInterface, true);
         if (!claimed) {
             throw new BossException(BossError.USB_DRIVER_ERROR, "Could not claim USB interface");
         }
+
+        setConnected(true);
     }
 
     public void setBaudRate(int rate) {
@@ -139,6 +141,18 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
             };
         }
         return mInputStream;
+    }
+
+    @Override
+    public void restart() throws BossException {
+        mDeviceConnection.releaseInterface(mInterface);
+
+        mInterface = null;
+        mEndpointIn = null;
+        mEndpointOut = null;
+        mConnected = false;
+
+        setDevice(mManager, mDevice);
     }
 
     public abstract void init() throws BossException;

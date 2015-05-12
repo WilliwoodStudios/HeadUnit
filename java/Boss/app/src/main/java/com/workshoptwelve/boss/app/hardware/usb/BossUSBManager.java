@@ -64,7 +64,6 @@ public class BossUSBManager {
                 }
             }
         }
-
     };
     private final BroadcastReceiver mUsbPermissionReceiver = new BroadcastReceiver() {
 

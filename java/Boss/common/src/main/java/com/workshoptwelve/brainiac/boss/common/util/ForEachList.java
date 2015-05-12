@@ -15,7 +15,10 @@ public class ForEachList<T> extends ArrayList<T> {
             return;
         }
 
-        Object [] values = toArray();
+        Object [] values;
+        synchronized(this) {
+            values = toArray();
+        }
         for (Object o : values) {
             forEach.go((T)o);
         }

@@ -94,7 +94,17 @@ var _obd = new function() {
     }
 
     this.sendPID = function(callback, mode, pid) {
-        remoteCall(callback,"sendPID?mode="+mode+"&pid="+pid);
+        try {
+            mode = parseInt(mode);
+            pid = parseInt(pid);
+            remoteCall(callback,"sendPID?mode="+mode+"&pid="+pid);
+        } catch (e) {
+            callback(e,null);
+        }
+    }
+
+    this.getDTC = function(callback) {
+        remoteCall(callback,"getDTC");
     }
 
 }();

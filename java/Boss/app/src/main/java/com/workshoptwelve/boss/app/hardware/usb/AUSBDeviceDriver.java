@@ -11,15 +11,14 @@ import com.workshoptwelve.brainiac.boss.common.util.ForEachList;
  * Created by robwilliams on 15-05-08.
  */
 public abstract class AUSBDeviceDriver {
-    public interface USBDeviceDriverListener {
-        void onConnectedChanged(boolean connected);
-    }
     protected ForEachList<USBDeviceDriverListener> mListeners = new ForEachList<USBDeviceDriverListener>();
     protected UsbDevice mDevice;
     protected UsbDeviceConnection mDeviceConnection;
-    private boolean mConnected = true;
+    protected UsbManager mManager;
+    protected boolean mConnected = true;
 
     public void setDevice(UsbManager manager, UsbDevice device) throws BossException {
+        mManager = manager;
         mDevice = device;
     }
 
@@ -39,7 +38,17 @@ public abstract class AUSBDeviceDriver {
         }
     }
 
+    public abstract void restart() throws BossException;
+
     public void addUSBDeviceDriverListener(USBDeviceDriverListener listener) {
-        mListeners.add(listener);
+        synchronized (mListeners) {
+            if (mListeners.indexOf(listener) == -1) {
+                mListeners.add(listener);
+            }
+        }
+    }
+
+    public interface USBDeviceDriverListener {
+        void onConnectedChanged(boolean connected);
     }
 }
