@@ -25,6 +25,8 @@ public enum BossError {
     OBD_NO_RESPONSE(2003, "No response"),
     OBD_MODE_NOT_SUPPORTED(2004, "Mode not supported"),
     OBD_PID_NOT_SUPPORTED(2005, "PID not supported (yet)"),
+    OBD_NOT_ENOUGH_DATA(2006,"Not enough data returned"),
+    OBD_UNEXPECTED_RESPONSE(2007,"Unexpected response"),
 
     /**
      * USB errors
