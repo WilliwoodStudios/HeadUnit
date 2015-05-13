@@ -218,7 +218,7 @@ public class AndroidOBDConnection implements IOBDConnection {
                     if (where != -1) {
                         response = response.substring(where + 1);
                     }
-                    byte[] responseBytes = Hex.responseToBytes(response);
+                    byte[] responseBytes = Hex.hexToBytes(response);
 
                     if (responseBytes.length == 6) {
 
