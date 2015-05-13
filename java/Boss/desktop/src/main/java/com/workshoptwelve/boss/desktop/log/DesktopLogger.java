@@ -14,6 +14,11 @@ public class DesktopLogger extends Logger {
 
     @Override
     protected void getPrefix(Log.Level level, StringBuilder prefix) {
-        prefix.append("DESKTOP LOGGER NEEDS WORK"); // TODO make work again.
+        prefix.append(System.currentTimeMillis());
+        prefix.append(" ");
+        prefix.append(level.toString());
+        prefix.append(" ");
+        getTrace(prefix);
+        prefix.append(":");
     }
 }
