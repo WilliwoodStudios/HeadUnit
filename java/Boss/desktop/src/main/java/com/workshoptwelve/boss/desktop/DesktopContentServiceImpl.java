@@ -30,6 +30,7 @@ public class DesktopContentServiceImpl extends AContentServiceImpl {
         if (file.exists()) {
             FileInputStream fis = new FileInputStream(file);
             try {
+                outputStream.setResponse(200,"OK");
                 streamToStream(fis,outputStream);
             } finally {
                 close(fis);
