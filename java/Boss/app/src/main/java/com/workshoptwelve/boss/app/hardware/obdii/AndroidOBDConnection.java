@@ -37,6 +37,7 @@ public class AndroidOBDConnection implements IOBDConnection {
 
     private Runnable mDisconnectedRunnable = new Runnable() {
         public void run() {
+            log.v("Disconnected Runnable");
             mVehicleConnected = false;
             mDeviceDriver = null;
             mDeviceConnected = false;
@@ -55,6 +56,7 @@ public class AndroidOBDConnection implements IOBDConnection {
     private AUSBDeviceDriver.USBDeviceDriverListener mDeviceDriverListener = new AUSBDeviceDriver.USBDeviceDriverListener() {
         @Override
         public void onConnectedChanged(boolean connected) {
+            log.v();
             if (!connected) {
                 mHandler.post(mDisconnectedRunnable);
             }
@@ -91,6 +93,7 @@ public class AndroidOBDConnection implements IOBDConnection {
 
     public AndroidOBDConnection() {
         final BlockingFuture<Boolean> threadStarted = new BlockingFuture<>();
+        log.setLogLevel(Log.Level.v);
 
         ThreadPool.getInstance().run(new Runnable() {
             public void run() {
@@ -215,7 +218,7 @@ public class AndroidOBDConnection implements IOBDConnection {
                     if (where != -1) {
                         response = response.substring(where + 1);
                     }
-                    byte[] responseBytes = responseToBytes(response);
+                    byte[] responseBytes = Hex.responseToBytes(response);
 
                     if (responseBytes.length == 6) {
 
@@ -248,46 +251,6 @@ public class AndroidOBDConnection implements IOBDConnection {
             message += mSupportedPID[i] ? "1" : "0";
         }
         log.i("Supported PID", message);
-    }
-
-    private boolean isHex(char c) {
-        return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
-    }
-
-    private byte[] responseToBytes(String response) {
-        int nibbleCount = 0;
-        for (int i = 0; i < response.length(); ++i) {
-            if (isHex(response.charAt(i))) {
-                ++nibbleCount;
-            }
-        }
-        byte[] toReturn = new byte[nibbleCount / 2];
-        if (toReturn.length == 0) {
-            return toReturn;
-        }
-        int offset = 0;
-        int pos = 0;
-
-        for (int i = 0; i < response.length(); ++i) {
-            char c = response.charAt(i);
-            if (isHex(c)) {
-                if (c > 'Z') {
-                    c -= 32;
-                }
-                byte v = (byte) (c < 'A' ? c - '0' : c - 'A' + 10);
-                if (pos == 0) {
-                    toReturn[offset] = (byte) (v << 4);
-                    pos++;
-                } else if (pos == 1) {
-                    pos = 0;
-                    toReturn[offset++] |= v;
-                    if (offset == toReturn.length) {
-                        break;
-                    }
-                }
-            }
-        }
-        return toReturn;
     }
 
     private boolean isVehicleGoneResponse(String response) {
@@ -324,6 +287,7 @@ public class AndroidOBDConnection implements IOBDConnection {
         mHandler.post(new Runnable() {
             public void run() {
                 try {
+                    log.v("send command proper thread",command);
                     checkVehicle();
                     String response = sendCommand(command);
                     if (isVehicleGoneResponse(response)) {
@@ -332,8 +296,10 @@ public class AndroidOBDConnection implements IOBDConnection {
                     }
                     responseFuture.setResult(response);
                 } catch (BossException be) {
+                    log.v("Boss Exception",be);
                     responseFuture.setException(be);
                 } catch (IOException ioe) {
+                    log.v("IOException",ioe);
                     responseFuture.setException(new BossException(BossError.OBD_NO_RESPONSE, ioe));
                     try {
                         mDeviceDriver.restart();
@@ -353,7 +319,7 @@ public class AndroidOBDConnection implements IOBDConnection {
 
         String toReturn = readResponse();
         if (log.canV()) {
-            log.v("Response", Hex.dump(toReturn));
+            log.v("Response", "\n" + Hex.dump(toReturn));
         }
 
         return toReturn;

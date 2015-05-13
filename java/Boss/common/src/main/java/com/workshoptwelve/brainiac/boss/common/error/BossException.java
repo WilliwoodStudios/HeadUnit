@@ -20,6 +20,11 @@ public class BossException extends Exception {
         mBossError = error;
     }
 
+    @Override
+    public String getMessage() {
+        return String.valueOf(mBossError) + " " + super.getMessage();
+    }
+
     public BossError getBossError() {
         return mBossError;
     }

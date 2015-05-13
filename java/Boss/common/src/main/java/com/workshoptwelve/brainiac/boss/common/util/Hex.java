@@ -31,7 +31,7 @@ public class Hex {
         char[] line = new char[42];
         char[] chars = new char[16];
 
-        for (int i = 0; i < length; ++i) {
+        for (int i = 0; i < length; i+=16) {
             Arrays.fill(line, ' ');
             Arrays.fill(chars, ' ');
 
@@ -59,6 +59,46 @@ public class Hex {
             result.append(line);
             result.append(chars);
         }
+    }
+
+    public static boolean isHex(char c) {
+        return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
+    }
+
+    public static byte[] responseToBytes(String response) {
+        int nibbleCount = 0;
+        for (int i = 0; i < response.length(); ++i) {
+            if (isHex(response.charAt(i))) {
+                ++nibbleCount;
+            }
+        }
+        byte[] toReturn = new byte[nibbleCount / 2];
+        if (toReturn.length == 0) {
+            return toReturn;
+        }
+        int offset = 0;
+        int pos = 0;
+
+        for (int i = 0; i < response.length(); ++i) {
+            char c = response.charAt(i);
+            if (isHex(c)) {
+                if (c > 'Z') {
+                    c -= 32;
+                }
+                byte v = (byte) (c < 'A' ? c - '0' : c - 'A' + 10);
+                if (pos == 0) {
+                    toReturn[offset] = (byte) (v << 4);
+                    pos++;
+                } else if (pos == 1) {
+                    pos = 0;
+                    toReturn[offset++] |= v;
+                    if (offset == toReturn.length) {
+                        break;
+                    }
+                }
+            }
+        }
+        return toReturn;
     }
 
 

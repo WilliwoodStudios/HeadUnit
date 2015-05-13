@@ -15,15 +15,16 @@
         <canvas id="progressBarCanvas" width="800" height="32">
         </canvas>
     </div>
+    <h1>Speed</h1>
     <div><pre id="speedGoesHere" />- km/h</pre></div>
-    <div>Get Error Codes
-        <p><input type='button' value='Get Codes' onClick='getDTC()' /></p>
-        <p id='dtcGoesHere'></p>
-    </div>
+    <input type="checkbox" id="pollSpeed" onClick="toggleSpeed()" />
+    <h1>DTC</h1>
+    <p><input type='button' value='Get Codes' onClick='getDTC()' /></p>
+    <p id='dtcGoesHere'></p>
 </body>
 <script>
 
-_events.enableEvents();
+// _events.enableEvents();
 
 var mLastStatus;
 var mLastStatusFailureCount;
@@ -67,7 +68,11 @@ function onSpeedUpdated(error, response) {
         toUpdate.innerText = message;
     }
 
-    window.setTimeout(requestSpeedUpdate,1000);
+    if (document.getElementById("pollSpeed").checked) {
+        window.setTimeout(requestSpeedUpdate,1000);
+    } else {
+        console.log("Not polling speed again");
+    }
 }
 
 function requestSpeedUpdate() {
@@ -138,8 +143,17 @@ _mm.onPositionChanged(function(position) {
 
     });
 
+function onGetDTC(error, response) {
+    document.getElementById("dtcGoesHere").innerText = JSON.stringify(response) + "  | " + JSON.stringify(error);
+}
+
 function getDTC() {
-    _obd.getDTC();
+    _obd.getDTC(onGetDTC);
+}
+
+function toggleSpeed() {
+    var checked = document.getElementById("pollSpeed").checked;
+    requestSpeedUpdate();
 }
 
 console.log("Going to call request speed update");
