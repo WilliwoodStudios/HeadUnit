@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.3065*/
+/* $emulator VERSION: 1.0.0.3090*/
 body,
 html {
   padding: 0px;
@@ -929,7 +929,6 @@ div {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  -webkit-overflow-scrolling: -blackberry-touch;
 }
 .ui-window-pane.has-back > .inner {
   top: 60px;
@@ -1712,7 +1711,6 @@ div {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  -webkit-overflow-scrolling: -blackberry-touch;
 }
 .ui-window-pane.has-back > .inner {
   top: 60px;
@@ -1743,9 +1741,8 @@ div {
 .ui-browser > .browserDiv > iframe {
   position: relative;
   border: none;
-  height: 100%;
+  height: 99%;
   width: 100%;
-  display: none;
   z-index: 2;
 }
 .ui-browser > .chrome > .inputDiv {
@@ -3549,7 +3546,6 @@ div {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  -webkit-overflow-scrolling: -blackberry-touch;
 }
 .ui-window-pane.has-back > .inner {
   top: 60px;
@@ -3580,9 +3576,8 @@ div {
 .ui-browser > .browserDiv > iframe {
   position: relative;
   border: none;
-  height: 100%;
+  height: 99%;
   width: 100%;
-  display: none;
   z-index: 2;
 }
 .ui-browser > .chrome > .inputDiv {
@@ -4634,7 +4629,7 @@ div {
   background-size: 256px 256px;
 }
 .emulator-app-container > .inner > iframe {
-  height: 100%;
+  height: 99%;
   width: 100%;
   background-color: black;
   visibility: hidden;

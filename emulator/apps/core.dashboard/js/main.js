@@ -93,7 +93,7 @@ function main() {
 				abbreviation: 'MPG'
 			},
 			badgeInfo: {
-				img: 'img/badge_idle.png',
+				img: 'img/badge_idle_monochrome.png',
 				caption: '<large>27</large>min commute',
 				accent: 'Quickest trip to work!'
 			},

@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.3065*/
+/* $emulator VERSION: 1.0.0.3090*/
 
 /**
  * $ui provides an extendible out of the box UI framework which provides a pre-defined user experience.
@@ -6236,9 +6236,10 @@ function $ui_WindowPane(object, data) {
 			}
 		}
 		// Handle window pane resizes
-		object._onwindowpaneresize = function(screen, data) {
+		object._onwindowpaneresize = function() {
 			// Set our width to that of our parent
-			this.dom.style.width = this.container.dom.offsetWidth + 'px';
+			this.dom.style.width = '';
+			this.dom.style.right = '0px';
 		}
 		object._onwindowpaneresize = object._onwindowpaneresize.bind(object);
 		
@@ -10028,9 +10029,10 @@ function $ui_WindowPane(object, data) {
 			}
 		}
 		// Handle window pane resizes
-		object._onwindowpaneresize = function(screen, data) {
+		object._onwindowpaneresize = function() {
 			// Set our width to that of our parent
-			this.dom.style.width = this.container.dom.offsetWidth + 'px';
+			this.dom.style.width = '';
+			this.dom.style.right = '0px';
 		}
 		object._onwindowpaneresize = object._onwindowpaneresize.bind(object);
 		
@@ -10149,6 +10151,7 @@ function $ui_Browser(object, screen) {
 	if (object._isIFrame === true) {
 		object.dom.iframe = document.createElement('iframe');
 		object.dom.iframe.model = object;
+		object.dom.iframe.setAttribute('scrolling', 'yes');
 		object.dom.iframe.setAttribute('seamless','true');
 		object.dom.browserDiv.appendChild(object.dom.iframe);
 	}
@@ -10205,6 +10208,7 @@ function $ui_Browser(object, screen) {
 		if (this._isIFrame === true) {
 			this.dom.iframe.style.display = 'inline';
 			this.dom.iframe.onload = object._onload;
+			this.dom.iframe.style.height = '100%'; // Hack for iframe scrolling
 		}
 	}
 	object._onshow = object._onshow.bind(object);
@@ -12658,6 +12662,7 @@ var $emulator = {
 		$ui.addExtension(new UIExtension('WedgeTemperature',emulator_WedgeTemperature, $ui.UIExtensionType.SCREEN,def));
 		$ui.addExtension(new UIExtension('AppContainer', emulator_AppContainer, $ui.UIExtensionType.SCREEN));
 		
+		/*
 		// Handle our swipe gestures
 		$emulator._hammer = new Hammer.Manager(document.body);
 		$emulator._hammer.add( new Hammer.Pan({event: 'pan', pointers: 2, threshold: 20}));
@@ -12672,7 +12677,7 @@ var $emulator = {
 			if (distance % $emulator._panThreshold == 0) {
 				$emulator.chrome.volumeDown();
 			}
-		});
+		});*/
 	}
 }
 
@@ -16369,9 +16374,10 @@ function $ui_WindowPane(object, data) {
 			}
 		}
 		// Handle window pane resizes
-		object._onwindowpaneresize = function(screen, data) {
+		object._onwindowpaneresize = function() {
 			// Set our width to that of our parent
-			this.dom.style.width = this.container.dom.offsetWidth + 'px';
+			this.dom.style.width = '';
+			this.dom.style.right = '0px';
 		}
 		object._onwindowpaneresize = object._onwindowpaneresize.bind(object);
 		
@@ -16490,6 +16496,7 @@ function $ui_Browser(object, screen) {
 	if (object._isIFrame === true) {
 		object.dom.iframe = document.createElement('iframe');
 		object.dom.iframe.model = object;
+		object.dom.iframe.setAttribute('scrolling', 'yes');
 		object.dom.iframe.setAttribute('seamless','true');
 		object.dom.browserDiv.appendChild(object.dom.iframe);
 	}
@@ -16546,6 +16553,7 @@ function $ui_Browser(object, screen) {
 		if (this._isIFrame === true) {
 			this.dom.iframe.style.display = 'inline';
 			this.dom.iframe.onload = object._onload;
+			this.dom.iframe.style.height = '100%'; // Hack for iframe scrolling
 		}
 	}
 	object._onshow = object._onshow.bind(object);
@@ -18990,6 +18998,7 @@ function emulator_AppContainer(object, data) {
 		// Delay the visibilty so we don't get a white flash
 		object._delayedVisibility = function() {
 			this.dom.iframe.style.visibility = 'visible';
+			this.dom.iframe.style.height = '100%'; // NOTE: This is a a hack to solve an iframe issue in webkit. Otherwise it will not scroll
 		}
 		object._delayedVisibility = object._delayedVisibility.bind(object);
 		
@@ -19015,6 +19024,11 @@ function emulator_AppContainer(object, data) {
 		}
 		object._initialize = object._initialize.bind(object);
 
+		// Handle resizes
+		object._onresize = function(){
+			this.dom.style.width = window.innerWidth + 'px';
+		}
+		object._onresize = object._onresize.bind(object);
 		return object.dom;
 	}
 }
