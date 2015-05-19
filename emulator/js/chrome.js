@@ -1,8 +1,24 @@
 function screenChrome() {
 	this.disableAnimation = true;
 	this.component = $ui.HeadUnitChrome;
-	this.homeWindowPane = mainMenu;
-	//this.secondaryWindowPane = 'core.media.player';
+	this.primaryWindow ={
+		windowPane: mainMenu
+	};
+	
+	this.secondaryWindow = {
+		manifest: {
+			id: 'core.media.player',
+			name: 'music',
+			icon: 'img/icon-128x128.png',
+			iconSplash: 'img/icon-256x256.png',
+			content: 'index.html',
+			availability: {
+		        headUnit: true,
+		        driversDevice: true
+		    }
+		}
+	};
+	
 	this.hvac = {
 		visible: true,
 		driver: {

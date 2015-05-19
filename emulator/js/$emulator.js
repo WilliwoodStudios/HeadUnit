@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.2936*/
+/* $emulator VERSION: 1.0.0.3065*/
 
 /**
  * $ui provides an extendible out of the box UI framework which provides a pre-defined user experience.
@@ -24,7 +24,7 @@ var $ui = {
 	 * @namespace Size
 	 * @readonly
 	 * @memberof $ui
-	 */
+	 */ 
 	Size: {
 		/** Largest possible size */
 		HUGE: 'huge',
@@ -135,7 +135,12 @@ var $ui = {
 		},0);
 	},
 	
-	// Create any control that is passed in and return the DOM
+	
+	/** 
+	 * Create any control that is passed in and return the DOM.  This should only be called internally by control extensions
+	 * @param {object} control - Object definition of the control to create
+	 * @param {$ui.CoreScreen} screen - The screen to which the control belongs
+	 */
 	createControl: function(control, screen) {
 		if (control == undefined) {
 			throw '$ui.createControl: "control" is not defined';
@@ -158,7 +163,9 @@ var $ui = {
 		return controlDom;
 	},
 
-	// Check to see if this is a mobile device
+	/** 
+	 *  Check to see if this is a mobile device
+	 */
 	isMobileDevice: function() {
 		var check = false;
 		(function(a,b){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|android|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4)))check = true})(navigator.userAgent||navigator.vendor||window.opera);
@@ -253,16 +260,22 @@ var $ui = {
 	
 	/** 
 	 * To close the top-most screen on the stack you can call the pop() function.
+	 * @param {number} [numToPop=1] - This optional parameter allows you to specify the number of screens to pop off of the stack
 	 */
-	pop: function() {
+	pop: function(numToPop) {
+		if ($ui.screens.length == 0) return;
 		// Return if the screen is in transition.
 		if ($ui._protected.inScreenTransition === true) {
 			setTimeout(function() {
-				$ui.pop();
+				$ui.pop(numToPop);
 			}, 100);
 		} else {
 			$ui._blockAllTapEvent(true);
 			$ui._protected.inScreenTransition = true;
+			
+			// First remove screens below the topmost
+			$ui._popBelowTop(numToPop - 1);
+			
 			// Remove the top most screen
 			var screen = $ui.screens[$ui.screens.length-1];
 			if (screen.animated == true) {
@@ -294,13 +307,22 @@ var $ui = {
 		$ui.screens.splice(index, 1);
 	},
 
-	// Determines if an element has the class specified in it's class name
+ 
+	/** 
+	 * Determines if an element has the class specified in it's class name.  This should only be called internally by extension controls
+	 * @param {DOMElement} element - DOM element to be examined
+	 * @param {string} name - The class name to look for
+	 */
 	hasClass: function(element, name){
 		var re = new RegExp('(^| )' + name + '( |$)');
 		return re.test(element.className);
 	},
 	
-	// Adds a class name to an element
+	/** 
+	 * Adds a class name to an element.  This should only be called internally by extension controls
+	 * @param {DOMElement} element - DOM element to be modified
+	 * @param {string} name - The class name to add to the element
+	 */
 	addClass: function(element, name){
 		if (!$ui.hasClass(element, name)){
 			if (element.className) {
@@ -311,7 +333,11 @@ var $ui = {
 		}
 	},
 	
-	// Removes a class from an element
+	/** 
+	 * Removes a class from an element.  This should only be called internally by extension controls
+	 * @param {DOMElement} element - DOM element to be modified
+	 * @param {string} name - The class name to remove
+	 */
 	removeClass: function(element, name){
 		var re = new RegExp('(^| )' + name + '( |$)');
 		element.className = element.className.replace(re, ' ').replace(/^\s+|\s+$/g, "");
@@ -329,13 +355,15 @@ var $ui = {
 			return (h.charAt(0)=="#") ? h.substring(1,7):h
 		}
 		// convert the color
-		var R = parseInt((cutHex($ui.theme.color)).substring(0,2),16),
-			G = parseInt((cutHex($ui.theme.color)).substring(2,4),16),
-			B = parseInt((cutHex($ui.theme.color)).substring(4,6),16);
+		var R = parseInt((cutHex(value)).substring(0,2),16),
+			G = parseInt((cutHex(value)).substring(2,4),16),
+			B = parseInt((cutHex(value)).substring(4,6),16);
 		return { R: R, G: G, B: B};
 	},
 	
-	// guid(uuid) Generator
+	/**
+	* Generate a unique identifier
+	*/
 	guid: function() {
 	   function guidS4() {
 		   return (((1 + Math.random()) * 0x10000)|0).toString(16).substring(1);
@@ -1598,12 +1626,16 @@ function $ui_CoreComponent(object, screen) {
 							this._providerUpdate(data);
 						}
 						return;
+					} else {
+						if (this._providerUpdate) {
+							this._providerUpdate(undefined);
+						}
 					}
 				} else {
 					// If there was data we would not reach this point other wise it is undefined
 					// so we have to check to see if it is an initial load so that we don't trigger 
 					// the control's update unnecessarily 
-					if (!dataProvider._untouched && this._providerUpdate) {
+					if (this._providerUpdate) {
 						this._providerUpdate(undefined);
 					}
 				}
@@ -1708,7 +1740,18 @@ function $ui_CoreScreen(object, data) {
 	$ui_CoreComponent.call(this, object);
 	if (object) {
 		object.data = data;
+		
+		// Guid Property
 		object.guid = $ui.guid();
+		object._protected.guid = object.guid;
+		Object.defineProperty(object, 'guid', {
+			get: function() {return this._protected.guid;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','guid'));
+			},
+			configurable: false}
+		);
+		
 		object.children = []; // Contains all child controls in the screen
 		$ui.addClass(object.dom,'ui-core-screen');
 		
@@ -1995,7 +2038,8 @@ function InteractionEvent(screenId, controlId, interaction, component) {
 
 
 /**
- * A List object will display multiple list items based on the data provided to the control.  The type of item objects that are used should match the declaration of the <b>style</b> of the list control<br><br>
+ * A List object will display multiple list items based on the data provided to the control.  The type of item objects that are used should match the declaration of the <b>style</b> of the list control.<br><br>
+ * The type of data provider value for a list control should point to a property in the data provider that would follow the same rules as hard coding an array of items.<br><br>
  * <b>Sample Declaration</b><br>
  * <pre>
  * {
@@ -2016,20 +2060,24 @@ function InteractionEvent(screenId, controlId, interaction, component) {
  * @extends $ui.CoreComponent
  * @property {object[]} [items] - The items property is an array of objects who's definition matches that of the requirements of the <b>style</b> property of the list
  * @property {object} style - This is a list item decalaration so that the list knows how to render. For example this could be set to {@link $ui.GenericListItem}
- * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a list control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
  * @property {ListActionEvent} [onaction] - The onaction event will fire when an action from a list item is triggered. Some list items may have multiple actions that can be taken. When one of these actions is selected by the user the onaction event will fire.
  */
 function $ui_List(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-list');
 	
-	// Set our initial properties that can be modified
-	if (object.items) {
-		object._original.items = [];
-		for (var i = 0; i < object.items.length; i++) {
-			object._original.items.push(object.items[i]);
-		}
+	// Set our items property
+	if (object.items == undefined) {
+		object.items = [];
 	}
+	object._protected.items = object.items;
+	Object.defineProperty(object, 'items', {
+		get: function() {return this._protected.items;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','items'));
+		},
+		configurable: false}
+	);
 
 	// Broker the onaction from a list item
 	object._onaction = function(item, event) {
@@ -2077,10 +2125,6 @@ function $ui_List(object, screen) {
 	object.addItem = function(item) {
 		if (this._addItem(item)) {
 			this.items.push(item);
-			// if there is data provider, add the item to provider
-			if (this._providerItems != undefined) {
-				this._providerItems.push(item);
-			}
 			return true;
 		} else {
 			return false;
@@ -2104,10 +2148,6 @@ function $ui_List(object, screen) {
 			console.log('$ui.List: ' + ex);
 		}
 		this.items.splice(index, 1);
-		// See if we have items on a provider that we should remove
-		if (this._providerItems != undefined) {
-			this._providerItems.splice(index, 1);
-		}
 		if (item._destroy) {
 			item._destroy();
 		}
@@ -2136,10 +2176,6 @@ function $ui_List(object, screen) {
 				itemDom = this._createItemDom(item);
 			this.items.splice(index, 0, item);
 			this.dom.insertBefore(itemDom, existingItem.dom);
-			// if there is data provider, insert the item to provider
-			if (this._providerItems != undefined) {
-				this._providerItems.splice(index, 0, item);
-			}
 			return true;
 		} 
 		return false;
@@ -2170,10 +2206,6 @@ function $ui_List(object, screen) {
 					item._destroy();
 				}
 			}
-			// See if there is data from provider, and make it blank.
-			if (this._providerItems != undefined) {
-				this._providerItems = [];
-			}
 		}
 		this.addItemBatch(itemArray);
 	}
@@ -2188,9 +2220,6 @@ function $ui_List(object, screen) {
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
-		if (!this.items) {
-			this.items = [];
-		}
 		// Add all new items into the list
 		for (i = 0; i < itemArray.length; i++) {
 			item = itemArray[i];
@@ -2202,7 +2231,6 @@ function $ui_List(object, screen) {
 	// Private function to handle provider updates
 	object._providerUpdate = function(value) {
 		this.refreshItems(value);
-		this._providerItems = value;
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);
 	
@@ -2227,8 +2255,6 @@ function $ui_List(object, screen) {
 			item = object.items[i];
 			object._addItem(item);
 		}
-	} else {
-		object.items = [];
 	}
 	
 	return object.dom;
@@ -2289,7 +2315,20 @@ function ListEvent(target, eventType, data) {
  */
 function $ui_Spinner(object, screen){
 	$ui_CoreComponent.call(this, object, screen);
+	// Size property
 	object.size = (object.size) ? object.size : $ui.Size.NORMAL;
+	object._protected.size = object.size;
+	Object.defineProperty(object, 'size', {
+		get: function() {return this._protected.size;},
+		set: function(value) {
+			if (this._protected.size == value) return;
+			$ui.removeClass(this.dom, this._protected.size);
+			this._protected.size = value;
+			$ui.addClass(this.dom,value);			
+		},
+		configurable: false}
+	);
+	
 	$ui.addClass(object.dom, 'ui-spinner')
 	$ui.addClass(object.dom, object.size);
 	$ui.addClass(object.dom, 'center');
@@ -2299,7 +2338,8 @@ function $ui_Spinner(object, screen){
 	$ui.addClass(object.dom.innerDiv, 'inner');
 	object.dom.appendChild(object.dom.innerDiv);
 	
-	// Check our coloring
+	// forceColor property
+	object._protected.forceColor = object.forceColor;
 	if (object.forceColor) {
 		$ui.addClass(object.dom.innerDiv, object.forceColor);
 	} else {
@@ -2309,7 +2349,14 @@ function $ui_Spinner(object, screen){
 			$ui.addClass(object.dom.innerDiv, 'dark');
 		}
 	}
-
+	Object.defineProperty(object, 'forceColor', {
+		get: function() {return this._protected.forceColor;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','forceColor'));			
+		},
+		configurable: false}
+	);
+	
 	return object.dom
 }
 
@@ -2363,11 +2410,22 @@ function UIExtension(name, constructor, type, definition) {
 	}
 }
 function $ui_ExtendSDK() {
+	// Check to see if this is explicitly being used for general Use and not in an app
+	if ($ui.theme.generalUse == undefined) {
+		$ui.theme.generalUse = false;
+	}
+	
+	// Remove scrollbars on mobile devices and in the emulator
+	if (($ui.isMobileDevice() == true) || $ui.theme.generalUse == false) {
+		var style = document.createElement('style');
+		style.innerHTML = '::-webkit-scrollbar { width: 0 !important;height: 0 !important;}';
+		document.head.appendChild(style);
+	}
 	
 	// Play the touch sound
 	$ui.playTouchSound = function() {
 		if ($system && $system.audio) {
-			$system.audio.playSoundEffect($system.SoundEffect.TOUCH);
+			//$system.audio.playSoundEffect($system.SoundEffect.TOUCH);
 		}
 	}
 	$ui.playTouchSound = $ui.playTouchSound.bind($ui);
@@ -2466,16 +2524,18 @@ $ui.TileSize = {
 };
 
 /**
- * Theme properties that can be used with the {@link $ui}($ui.init()) function
- * @namespace TileSize
+ * Theme properties that can be used with the {@link $ui}.init() function
+ * @namespace Theme
  * @readonly
  * @memberof $ui
  */
 $ui.Theme = {
-	/** main root class for light, dark, normal or bold effects */
+	/** Main root class for light, dark, normal or bold effects */
 	rootClass: undefined,
-	/** main root class for light, dark, normal or bold effects */
-	color: '#D94646'
+	/** Main color used for the controls */
+	color: '#D94646',
+	/** Whether or not this is being used for general purpose display or in an app.  By default this is <b>false</b>*/
+	generalUse: false
 }
 
 // Graph Colors
@@ -3652,12 +3712,16 @@ function $ui_CoreComponent(object, screen) {
 							this._providerUpdate(data);
 						}
 						return;
+					} else {
+						if (this._providerUpdate) {
+							this._providerUpdate(undefined);
+						}
 					}
 				} else {
 					// If there was data we would not reach this point other wise it is undefined
 					// so we have to check to see if it is an initial load so that we don't trigger 
 					// the control's update unnecessarily 
-					if (!dataProvider._untouched && this._providerUpdate) {
+					if (this._providerUpdate) {
 						this._providerUpdate(undefined);
 					}
 				}
@@ -3762,7 +3826,18 @@ function $ui_CoreScreen(object, data) {
 	$ui_CoreComponent.call(this, object);
 	if (object) {
 		object.data = data;
+		
+		// Guid Property
 		object.guid = $ui.guid();
+		object._protected.guid = object.guid;
+		Object.defineProperty(object, 'guid', {
+			get: function() {return this._protected.guid;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','guid'));
+			},
+			configurable: false}
+		);
+		
 		object.children = []; // Contains all child controls in the screen
 		$ui.addClass(object.dom,'ui-core-screen');
 		
@@ -4049,7 +4124,8 @@ function InteractionEvent(screenId, controlId, interaction, component) {
 
 
 /**
- * A List object will display multiple list items based on the data provided to the control.  The type of item objects that are used should match the declaration of the <b>style</b> of the list control<br><br>
+ * A List object will display multiple list items based on the data provided to the control.  The type of item objects that are used should match the declaration of the <b>style</b> of the list control.<br><br>
+ * The type of data provider value for a list control should point to a property in the data provider that would follow the same rules as hard coding an array of items.<br><br>
  * <b>Sample Declaration</b><br>
  * <pre>
  * {
@@ -4070,20 +4146,24 @@ function InteractionEvent(screenId, controlId, interaction, component) {
  * @extends $ui.CoreComponent
  * @property {object[]} [items] - The items property is an array of objects who's definition matches that of the requirements of the <b>style</b> property of the list
  * @property {object} style - This is a list item decalaration so that the list knows how to render. For example this could be set to {@link $ui.GenericListItem}
- * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a list control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
  * @property {ListActionEvent} [onaction] - The onaction event will fire when an action from a list item is triggered. Some list items may have multiple actions that can be taken. When one of these actions is selected by the user the onaction event will fire.
  */
 function $ui_List(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-list');
 	
-	// Set our initial properties that can be modified
-	if (object.items) {
-		object._original.items = [];
-		for (var i = 0; i < object.items.length; i++) {
-			object._original.items.push(object.items[i]);
-		}
+	// Set our items property
+	if (object.items == undefined) {
+		object.items = [];
 	}
+	object._protected.items = object.items;
+	Object.defineProperty(object, 'items', {
+		get: function() {return this._protected.items;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','items'));
+		},
+		configurable: false}
+	);
 
 	// Broker the onaction from a list item
 	object._onaction = function(item, event) {
@@ -4131,10 +4211,6 @@ function $ui_List(object, screen) {
 	object.addItem = function(item) {
 		if (this._addItem(item)) {
 			this.items.push(item);
-			// if there is data provider, add the item to provider
-			if (this._providerItems != undefined) {
-				this._providerItems.push(item);
-			}
 			return true;
 		} else {
 			return false;
@@ -4158,10 +4234,6 @@ function $ui_List(object, screen) {
 			console.log('$ui.List: ' + ex);
 		}
 		this.items.splice(index, 1);
-		// See if we have items on a provider that we should remove
-		if (this._providerItems != undefined) {
-			this._providerItems.splice(index, 1);
-		}
 		if (item._destroy) {
 			item._destroy();
 		}
@@ -4190,10 +4262,6 @@ function $ui_List(object, screen) {
 				itemDom = this._createItemDom(item);
 			this.items.splice(index, 0, item);
 			this.dom.insertBefore(itemDom, existingItem.dom);
-			// if there is data provider, insert the item to provider
-			if (this._providerItems != undefined) {
-				this._providerItems.splice(index, 0, item);
-			}
 			return true;
 		} 
 		return false;
@@ -4224,10 +4292,6 @@ function $ui_List(object, screen) {
 					item._destroy();
 				}
 			}
-			// See if there is data from provider, and make it blank.
-			if (this._providerItems != undefined) {
-				this._providerItems = [];
-			}
 		}
 		this.addItemBatch(itemArray);
 	}
@@ -4242,9 +4306,6 @@ function $ui_List(object, screen) {
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
-		if (!this.items) {
-			this.items = [];
-		}
 		// Add all new items into the list
 		for (i = 0; i < itemArray.length; i++) {
 			item = itemArray[i];
@@ -4256,7 +4317,6 @@ function $ui_List(object, screen) {
 	// Private function to handle provider updates
 	object._providerUpdate = function(value) {
 		this.refreshItems(value);
-		this._providerItems = value;
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);
 	
@@ -4281,8 +4341,6 @@ function $ui_List(object, screen) {
 			item = object.items[i];
 			object._addItem(item);
 		}
-	} else {
-		object.items = [];
 	}
 	
 	return object.dom;
@@ -4343,7 +4401,20 @@ function ListEvent(target, eventType, data) {
  */
 function $ui_Spinner(object, screen){
 	$ui_CoreComponent.call(this, object, screen);
+	// Size property
 	object.size = (object.size) ? object.size : $ui.Size.NORMAL;
+	object._protected.size = object.size;
+	Object.defineProperty(object, 'size', {
+		get: function() {return this._protected.size;},
+		set: function(value) {
+			if (this._protected.size == value) return;
+			$ui.removeClass(this.dom, this._protected.size);
+			this._protected.size = value;
+			$ui.addClass(this.dom,value);			
+		},
+		configurable: false}
+	);
+	
 	$ui.addClass(object.dom, 'ui-spinner')
 	$ui.addClass(object.dom, object.size);
 	$ui.addClass(object.dom, 'center');
@@ -4353,7 +4424,8 @@ function $ui_Spinner(object, screen){
 	$ui.addClass(object.dom.innerDiv, 'inner');
 	object.dom.appendChild(object.dom.innerDiv);
 	
-	// Check our coloring
+	// forceColor property
+	object._protected.forceColor = object.forceColor;
 	if (object.forceColor) {
 		$ui.addClass(object.dom.innerDiv, object.forceColor);
 	} else {
@@ -4363,7 +4435,14 @@ function $ui_Spinner(object, screen){
 			$ui.addClass(object.dom.innerDiv, 'dark');
 		}
 	}
-
+	Object.defineProperty(object, 'forceColor', {
+		get: function() {return this._protected.forceColor;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','forceColor'));			
+		},
+		configurable: false}
+	);
+	
 	return object.dom
 }
 
@@ -4428,7 +4507,7 @@ function UIExtension(name, constructor, type, definition) {
 (function(){"use strict";var t=this,i=t.Chart,e=function(t){this.canvas=t.canvas,this.ctx=t;this.width=t.canvas.width,this.height=t.canvas.height;return this.aspectRatio=this.width/this.height,s.retinaScale(this),this};e.defaults={global:{animation:!0,animationSteps:60,animationEasing:"easeOutQuart",showScale:!0,scaleOverride:!1,scaleSteps:null,scaleStepWidth:null,scaleStartValue:null,scaleLineColor:"rgba(0,0,0,.1)",scaleLineWidth:1,scaleShowLabels:!0,scaleLabel:"<%=value%>",scaleIntegersOnly:!0,scaleBeginAtZero:!1,scaleFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",scaleFontSize:12,scaleFontStyle:"normal",scaleFontColor:"#666",responsive:!1,maintainAspectRatio:!0,showTooltips:!0,customTooltips:!1,tooltipEvents:["mousemove","touchstart","touchmove","mouseout"],tooltipFillColor:"rgba(0,0,0,0.8)",tooltipFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",tooltipFontSize:14,tooltipFontStyle:"normal",tooltipFontColor:"#fff",tooltipTitleFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",tooltipTitleFontSize:14,tooltipTitleFontStyle:"bold",tooltipTitleFontColor:"#fff",tooltipYPadding:6,tooltipXPadding:6,tooltipCaretSize:8,tooltipCornerRadius:6,tooltipXOffset:10,tooltipTemplate:"<%if (label){%><%=label%>: <%}%><%= value %>",multiTooltipTemplate:"<%= value %>",multiTooltipKeyBackground:"#fff",onAnimationProgress:function(){},onAnimationComplete:function(){}}},e.types={};var s=e.helpers={},n=s.each=function(t,i,e){var s=Array.prototype.slice.call(arguments,3);if(t)if(t.length===+t.length){var n;for(n=0;n<t.length;n++)i.apply(e,[t[n],n].concat(s))}else for(var o in t)i.apply(e,[t[o],o].concat(s))},o=s.clone=function(t){var i={};return n(t,function(e,s){t.hasOwnProperty(s)&&(i[s]=e)}),i},a=s.extend=function(t){return n(Array.prototype.slice.call(arguments,1),function(i){n(i,function(e,s){i.hasOwnProperty(s)&&(t[s]=e)})}),t},h=s.merge=function(){var t=Array.prototype.slice.call(arguments,0);return t.unshift({}),a.apply(null,t)},l=s.indexOf=function(t,i){if(Array.prototype.indexOf)return t.indexOf(i);for(var e=0;e<t.length;e++)if(t[e]===i)return e;return-1},r=(s.where=function(t,i){var e=[];return s.each(t,function(t){i(t)&&e.push(t)}),e},s.findNextWhere=function(t,i,e){e||(e=-1);for(var s=e+1;s<t.length;s++){var n=t[s];if(i(n))return n}},s.findPreviousWhere=function(t,i,e){e||(e=t.length);for(var s=e-1;s>=0;s--){var n=t[s];if(i(n))return n}},s.inherits=function(t){var i=this,e=t&&t.hasOwnProperty("constructor")?t.constructor:function(){return i.apply(this,arguments)},s=function(){this.constructor=e};return s.prototype=i.prototype,e.prototype=new s,e.extend=r,t&&a(e.prototype,t),e.__super__=i.prototype,e}),c=s.noop=function(){},u=s.uid=function(){var t=0;return function(){return"chart-"+t++}}(),d=s.warn=function(t){window.console&&"function"==typeof window.console.warn&&console.warn(t)},p=s.amd="function"==typeof define&&define.amd,f=s.isNumber=function(t){return!isNaN(parseFloat(t))&&isFinite(t)},g=s.max=function(t){return Math.max.apply(Math,t)},m=s.min=function(t){return Math.min.apply(Math,t)},v=(s.cap=function(t,i,e){if(f(i)){if(t>i)return i}else if(f(e)&&e>t)return e;return t},s.getDecimalPlaces=function(t){return t%1!==0&&f(t)?t.toString().split(".")[1].length:0}),S=s.radians=function(t){return t*(Math.PI/180)},x=(s.getAngleFromPoint=function(t,i){var e=i.x-t.x,s=i.y-t.y,n=Math.sqrt(e*e+s*s),o=2*Math.PI+Math.atan2(s,e);return 0>e&&0>s&&(o+=2*Math.PI),{angle:o,distance:n}},s.aliasPixel=function(t){return t%2===0?0:.5}),y=(s.splineCurve=function(t,i,e,s){var n=Math.sqrt(Math.pow(i.x-t.x,2)+Math.pow(i.y-t.y,2)),o=Math.sqrt(Math.pow(e.x-i.x,2)+Math.pow(e.y-i.y,2)),a=s*n/(n+o),h=s*o/(n+o);return{inner:{x:i.x-a*(e.x-t.x),y:i.y-a*(e.y-t.y)},outer:{x:i.x+h*(e.x-t.x),y:i.y+h*(e.y-t.y)}}},s.calculateOrderOfMagnitude=function(t){return Math.floor(Math.log(t)/Math.LN10)}),C=(s.calculateScaleRange=function(t,i,e,s,n){var o=2,a=Math.floor(i/(1.5*e)),h=o>=a,l=g(t),r=m(t);l===r&&(l+=.5,r>=.5&&!s?r-=.5:l+=.5);for(var c=Math.abs(l-r),u=y(c),d=Math.ceil(l/(1*Math.pow(10,u)))*Math.pow(10,u),p=s?0:Math.floor(r/(1*Math.pow(10,u)))*Math.pow(10,u),f=d-p,v=Math.pow(10,u),S=Math.round(f/v);(S>a||a>2*S)&&!h;)if(S>a)v*=2,S=Math.round(f/v),S%1!==0&&(h=!0);else if(n&&u>=0){if(v/2%1!==0)break;v/=2,S=Math.round(f/v)}else v/=2,S=Math.round(f/v);return h&&(S=o,v=f/S),{steps:S,stepValue:v,min:p,max:p+S*v}},s.template=function(t,i){function e(t,i){var e=/\W/.test(t)?new Function("obj","var p=[],print=function(){p.push.apply(p,arguments);};with(obj){p.push('"+t.replace(/[\r\t\n]/g," ").split("<%").join("	").replace(/((^|%>)[^\t]*)'/g,"$1\r").replace(/\t=(.*?)%>/g,"',$1,'").split("	").join("');").split("%>").join("p.push('").split("\r").join("\\'")+"');}return p.join('');"):s[t]=s[t];return i?e(i):e}if(t instanceof Function)return t(i);var s={};return e(t,i)}),w=(s.generateLabels=function(t,i,e,s){var o=new Array(i);return labelTemplateString&&n(o,function(i,n){o[n]=C(t,{value:e+s*(n+1)})}),o},s.easingEffects={linear:function(t){return t},easeInQuad:function(t){return t*t},easeOutQuad:function(t){return-1*t*(t-2)},easeInOutQuad:function(t){return(t/=.5)<1?.5*t*t:-0.5*(--t*(t-2)-1)},easeInCubic:function(t){return t*t*t},easeOutCubic:function(t){return 1*((t=t/1-1)*t*t+1)},easeInOutCubic:function(t){return(t/=.5)<1?.5*t*t*t:.5*((t-=2)*t*t+2)},easeInQuart:function(t){return t*t*t*t},easeOutQuart:function(t){return-1*((t=t/1-1)*t*t*t-1)},easeInOutQuart:function(t){return(t/=.5)<1?.5*t*t*t*t:-0.5*((t-=2)*t*t*t-2)},easeInQuint:function(t){return 1*(t/=1)*t*t*t*t},easeOutQuint:function(t){return 1*((t=t/1-1)*t*t*t*t+1)},easeInOutQuint:function(t){return(t/=.5)<1?.5*t*t*t*t*t:.5*((t-=2)*t*t*t*t+2)},easeInSine:function(t){return-1*Math.cos(t/1*(Math.PI/2))+1},easeOutSine:function(t){return 1*Math.sin(t/1*(Math.PI/2))},easeInOutSine:function(t){return-0.5*(Math.cos(Math.PI*t/1)-1)},easeInExpo:function(t){return 0===t?1:1*Math.pow(2,10*(t/1-1))},easeOutExpo:function(t){return 1===t?1:1*(-Math.pow(2,-10*t/1)+1)},easeInOutExpo:function(t){return 0===t?0:1===t?1:(t/=.5)<1?.5*Math.pow(2,10*(t-1)):.5*(-Math.pow(2,-10*--t)+2)},easeInCirc:function(t){return t>=1?t:-1*(Math.sqrt(1-(t/=1)*t)-1)},easeOutCirc:function(t){return 1*Math.sqrt(1-(t=t/1-1)*t)},easeInOutCirc:function(t){return(t/=.5)<1?-0.5*(Math.sqrt(1-t*t)-1):.5*(Math.sqrt(1-(t-=2)*t)+1)},easeInElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:1==(t/=1)?1:(e||(e=.3),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),-(s*Math.pow(2,10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e)))},easeOutElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:1==(t/=1)?1:(e||(e=.3),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),s*Math.pow(2,-10*t)*Math.sin(2*(1*t-i)*Math.PI/e)+1)},easeInOutElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:2==(t/=.5)?1:(e||(e=.3*1.5),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),1>t?-.5*s*Math.pow(2,10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e):s*Math.pow(2,-10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e)*.5+1)},easeInBack:function(t){var i=1.70158;return 1*(t/=1)*t*((i+1)*t-i)},easeOutBack:function(t){var i=1.70158;return 1*((t=t/1-1)*t*((i+1)*t+i)+1)},easeInOutBack:function(t){var i=1.70158;return(t/=.5)<1?.5*t*t*(((i*=1.525)+1)*t-i):.5*((t-=2)*t*(((i*=1.525)+1)*t+i)+2)},easeInBounce:function(t){return 1-w.easeOutBounce(1-t)},easeOutBounce:function(t){return(t/=1)<1/2.75?7.5625*t*t:2/2.75>t?1*(7.5625*(t-=1.5/2.75)*t+.75):2.5/2.75>t?1*(7.5625*(t-=2.25/2.75)*t+.9375):1*(7.5625*(t-=2.625/2.75)*t+.984375)},easeInOutBounce:function(t){return.5>t?.5*w.easeInBounce(2*t):.5*w.easeOutBounce(2*t-1)+.5}}),b=s.requestAnimFrame=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(t){return window.setTimeout(t,1e3/60)}}(),P=(s.cancelAnimFrame=function(){return window.cancelAnimationFrame||window.webkitCancelAnimationFrame||window.mozCancelAnimationFrame||window.oCancelAnimationFrame||window.msCancelAnimationFrame||function(t){return window.clearTimeout(t,1e3/60)}}(),s.animationLoop=function(t,i,e,s,n,o){var a=0,h=w[e]||w.linear,l=function(){a++;var e=a/i,r=h(e);t.call(o,r,e,a),s.call(o,r,e),i>a?o.animationFrame=b(l):n.apply(o)};b(l)},s.getRelativePosition=function(t){var i,e,s=t.originalEvent||t,n=t.currentTarget||t.srcElement,o=n.getBoundingClientRect();return s.touches?(i=s.touches[0].clientX-o.left,e=s.touches[0].clientY-o.top):(i=s.clientX-o.left,e=s.clientY-o.top),{x:i,y:e}},s.addEvent=function(t,i,e){t.addEventListener?t.addEventListener(i,e):t.attachEvent?t.attachEvent("on"+i,e):t["on"+i]=e}),L=s.removeEvent=function(t,i,e){t.removeEventListener?t.removeEventListener(i,e,!1):t.detachEvent?t.detachEvent("on"+i,e):t["on"+i]=c},k=(s.bindEvents=function(t,i,e){t.events||(t.events={}),n(i,function(i){t.events[i]=function(){e.apply(t,arguments)},P(t.chart.canvas,i,t.events[i])})},s.unbindEvents=function(t,i){n(i,function(i,e){L(t.chart.canvas,e,i)})}),F=s.getMaximumWidth=function(t){var i=t.parentNode;return i.clientWidth},R=s.getMaximumHeight=function(t){var i=t.parentNode;return i.clientHeight},T=(s.getMaximumSize=s.getMaximumWidth,s.retinaScale=function(t){var i=t.ctx,e=t.canvas.width,s=t.canvas.height;window.devicePixelRatio&&(i.canvas.style.width=e+"px",i.canvas.style.height=s+"px",i.canvas.height=s*window.devicePixelRatio,i.canvas.width=e*window.devicePixelRatio,i.scale(window.devicePixelRatio,window.devicePixelRatio))}),A=s.clear=function(t){t.ctx.clearRect(0,0,t.width,t.height)},M=s.fontString=function(t,i,e){return i+" "+t+"px "+e},W=s.longestText=function(t,i,e){t.font=i;var s=0;return n(e,function(i){var e=t.measureText(i).width;s=e>s?e:s}),s},z=s.drawRoundedRectangle=function(t,i,e,s,n,o){t.beginPath(),t.moveTo(i+o,e),t.lineTo(i+s-o,e),t.quadraticCurveTo(i+s,e,i+s,e+o),t.lineTo(i+s,e+n-o),t.quadraticCurveTo(i+s,e+n,i+s-o,e+n),t.lineTo(i+o,e+n),t.quadraticCurveTo(i,e+n,i,e+n-o),t.lineTo(i,e+o),t.quadraticCurveTo(i,e,i+o,e),t.closePath()};e.instances={},e.Type=function(t,i,s){this.options=i,this.chart=s,this.id=u(),e.instances[this.id]=this,i.responsive&&this.resize(),this.initialize.call(this,t)},a(e.Type.prototype,{initialize:function(){return this},clear:function(){return A(this.chart),this},stop:function(){return s.cancelAnimFrame.call(t,this.animationFrame),this},resize:function(t){this.stop();var i=this.chart.canvas,e=F(this.chart.canvas),s=this.options.maintainAspectRatio?e/this.chart.aspectRatio:R(this.chart.canvas);return i.width=this.chart.width=e,i.height=this.chart.height=s,T(this.chart),"function"==typeof t&&t.apply(this,Array.prototype.slice.call(arguments,1)),this},reflow:c,render:function(t){return t&&this.reflow(),this.options.animation&&!t?s.animationLoop(this.draw,this.options.animationSteps,this.options.animationEasing,this.options.onAnimationProgress,this.options.onAnimationComplete,this):(this.draw(),this.options.onAnimationComplete.call(this)),this},generateLegend:function(){return C(this.options.legendTemplate,this)},destroy:function(){this.clear(),k(this,this.events);var t=this.chart.canvas;t.width=this.chart.width,t.height=this.chart.height,t.style.removeProperty?(t.style.removeProperty("width"),t.style.removeProperty("height")):(t.style.removeAttribute("width"),t.style.removeAttribute("height")),delete e.instances[this.id]},showTooltip:function(t,i){"undefined"==typeof this.activeElements&&(this.activeElements=[]);var o=function(t){var i=!1;return t.length!==this.activeElements.length?i=!0:(n(t,function(t,e){t!==this.activeElements[e]&&(i=!0)},this),i)}.call(this,t);if(o||i){if(this.activeElements=t,this.draw(),this.options.customTooltips&&this.options.customTooltips(!1),t.length>0)if(this.datasets&&this.datasets.length>1){for(var a,h,r=this.datasets.length-1;r>=0&&(a=this.datasets[r].points||this.datasets[r].bars||this.datasets[r].segments,h=l(a,t[0]),-1===h);r--);var c=[],u=[],d=function(){var t,i,e,n,o,a=[],l=[],r=[];return s.each(this.datasets,function(i){t=i.points||i.bars||i.segments,t[h]&&t[h].hasValue()&&a.push(t[h])}),s.each(a,function(t){l.push(t.x),r.push(t.y),c.push(s.template(this.options.multiTooltipTemplate,t)),u.push({fill:t._saved.fillColor||t.fillColor,stroke:t._saved.strokeColor||t.strokeColor})},this),o=m(r),e=g(r),n=m(l),i=g(l),{x:n>this.chart.width/2?n:i,y:(o+e)/2}}.call(this,h);new e.MultiTooltip({x:d.x,y:d.y,xPadding:this.options.tooltipXPadding,yPadding:this.options.tooltipYPadding,xOffset:this.options.tooltipXOffset,fillColor:this.options.tooltipFillColor,textColor:this.options.tooltipFontColor,fontFamily:this.options.tooltipFontFamily,fontStyle:this.options.tooltipFontStyle,fontSize:this.options.tooltipFontSize,titleTextColor:this.options.tooltipTitleFontColor,titleFontFamily:this.options.tooltipTitleFontFamily,titleFontStyle:this.options.tooltipTitleFontStyle,titleFontSize:this.options.tooltipTitleFontSize,cornerRadius:this.options.tooltipCornerRadius,labels:c,legendColors:u,legendColorBackground:this.options.multiTooltipKeyBackground,title:t[0].label,chart:this.chart,ctx:this.chart.ctx,custom:this.options.customTooltips}).draw()}else n(t,function(t){var i=t.tooltipPosition();new e.Tooltip({x:Math.round(i.x),y:Math.round(i.y),xPadding:this.options.tooltipXPadding,yPadding:this.options.tooltipYPadding,fillColor:this.options.tooltipFillColor,textColor:this.options.tooltipFontColor,fontFamily:this.options.tooltipFontFamily,fontStyle:this.options.tooltipFontStyle,fontSize:this.options.tooltipFontSize,caretHeight:this.options.tooltipCaretSize,cornerRadius:this.options.tooltipCornerRadius,text:C(this.options.tooltipTemplate,t),chart:this.chart,custom:this.options.customTooltips}).draw()},this);return this}},toBase64Image:function(){return this.chart.canvas.toDataURL.apply(this.chart.canvas,arguments)}}),e.Type.extend=function(t){var i=this,s=function(){return i.apply(this,arguments)};if(s.prototype=o(i.prototype),a(s.prototype,t),s.extend=e.Type.extend,t.name||i.prototype.name){var n=t.name||i.prototype.name,l=e.defaults[i.prototype.name]?o(e.defaults[i.prototype.name]):{};e.defaults[n]=a(l,t.defaults),e.types[n]=s,e.prototype[n]=function(t,i){var o=h(e.defaults.global,e.defaults[n],i||{});return new s(t,o,this)}}else d("Name not provided for this chart, so it hasn't been registered");return i},e.Element=function(t){a(this,t),this.initialize.apply(this,arguments),this.save()},a(e.Element.prototype,{initialize:function(){},restore:function(t){return t?n(t,function(t){this[t]=this._saved[t]},this):a(this,this._saved),this},save:function(){return this._saved=o(this),delete this._saved._saved,this},update:function(t){return n(t,function(t,i){this._saved[i]=this[i],this[i]=t},this),this},transition:function(t,i){return n(t,function(t,e){this[e]=(t-this._saved[e])*i+this._saved[e]},this),this},tooltipPosition:function(){return{x:this.x,y:this.y}},hasValue:function(){return f(this.value)}}),e.Element.extend=r,e.Point=e.Element.extend({display:!0,inRange:function(t,i){var e=this.hitDetectionRadius+this.radius;return Math.pow(t-this.x,2)+Math.pow(i-this.y,2)<Math.pow(e,2)},draw:function(){if(this.display){var t=this.ctx;t.beginPath(),t.arc(this.x,this.y,this.radius,0,2*Math.PI),t.closePath(),t.strokeStyle=this.strokeColor,t.lineWidth=this.strokeWidth,t.fillStyle=this.fillColor,t.fill(),t.stroke()}}}),e.Arc=e.Element.extend({inRange:function(t,i){var e=s.getAngleFromPoint(this,{x:t,y:i}),n=e.angle>=this.startAngle&&e.angle<=this.endAngle,o=e.distance>=this.innerRadius&&e.distance<=this.outerRadius;return n&&o},tooltipPosition:function(){var t=this.startAngle+(this.endAngle-this.startAngle)/2,i=(this.outerRadius-this.innerRadius)/2+this.innerRadius;return{x:this.x+Math.cos(t)*i,y:this.y+Math.sin(t)*i}},draw:function(t){var i=this.ctx;i.beginPath(),i.arc(this.x,this.y,this.outerRadius,this.startAngle,this.endAngle),i.arc(this.x,this.y,this.innerRadius,this.endAngle,this.startAngle,!0),i.closePath(),i.strokeStyle=this.strokeColor,i.lineWidth=this.strokeWidth,i.fillStyle=this.fillColor,i.fill(),i.lineJoin="bevel",this.showStroke&&i.stroke()}}),e.Rectangle=e.Element.extend({draw:function(){var t=this.ctx,i=this.width/2,e=this.x-i,s=this.x+i,n=this.base-(this.base-this.y),o=this.strokeWidth/2;this.showStroke&&(e+=o,s-=o,n+=o),t.beginPath(),t.fillStyle=this.fillColor,t.strokeStyle=this.strokeColor,t.lineWidth=this.strokeWidth,t.moveTo(e,this.base),t.lineTo(e,n),t.lineTo(s,n),t.lineTo(s,this.base),t.fill(),this.showStroke&&t.stroke()},height:function(){return this.base-this.y},inRange:function(t,i){return t>=this.x-this.width/2&&t<=this.x+this.width/2&&i>=this.y&&i<=this.base}}),e.Tooltip=e.Element.extend({draw:function(){var t=this.chart.ctx;t.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.xAlign="center",this.yAlign="above";var i=this.caretPadding=2,e=t.measureText(this.text).width+2*this.xPadding,s=this.fontSize+2*this.yPadding,n=s+this.caretHeight+i;this.x+e/2>this.chart.width?this.xAlign="left":this.x-e/2<0&&(this.xAlign="right"),this.y-n<0&&(this.yAlign="below");var o=this.x-e/2,a=this.y-n;if(t.fillStyle=this.fillColor,this.custom)this.custom(this);else{switch(this.yAlign){case"above":t.beginPath(),t.moveTo(this.x,this.y-i),t.lineTo(this.x+this.caretHeight,this.y-(i+this.caretHeight)),t.lineTo(this.x-this.caretHeight,this.y-(i+this.caretHeight)),t.closePath(),t.fill();break;case"below":a=this.y+i+this.caretHeight,t.beginPath(),t.moveTo(this.x,this.y+i),t.lineTo(this.x+this.caretHeight,this.y+i+this.caretHeight),t.lineTo(this.x-this.caretHeight,this.y+i+this.caretHeight),t.closePath(),t.fill()}switch(this.xAlign){case"left":o=this.x-e+(this.cornerRadius+this.caretHeight);break;case"right":o=this.x-(this.cornerRadius+this.caretHeight)}z(t,o,a,e,s,this.cornerRadius),t.fill(),t.fillStyle=this.textColor,t.textAlign="center",t.textBaseline="middle",t.fillText(this.text,o+e/2,a+s/2)}}}),e.MultiTooltip=e.Element.extend({initialize:function(){this.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.titleFont=M(this.titleFontSize,this.titleFontStyle,this.titleFontFamily),this.height=this.labels.length*this.fontSize+(this.labels.length-1)*(this.fontSize/2)+2*this.yPadding+1.5*this.titleFontSize,this.ctx.font=this.titleFont;var t=this.ctx.measureText(this.title).width,i=W(this.ctx,this.font,this.labels)+this.fontSize+3,e=g([i,t]);this.width=e+2*this.xPadding;var s=this.height/2;this.y-s<0?this.y=s:this.y+s>this.chart.height&&(this.y=this.chart.height-s),this.x>this.chart.width/2?this.x-=this.xOffset+this.width:this.x+=this.xOffset},getLineHeight:function(t){var i=this.y-this.height/2+this.yPadding,e=t-1;return 0===t?i+this.titleFontSize/2:i+(1.5*this.fontSize*e+this.fontSize/2)+1.5*this.titleFontSize},draw:function(){if(this.custom)this.custom(this);else{z(this.ctx,this.x,this.y-this.height/2,this.width,this.height,this.cornerRadius);var t=this.ctx;t.fillStyle=this.fillColor,t.fill(),t.closePath(),t.textAlign="left",t.textBaseline="middle",t.fillStyle=this.titleTextColor,t.font=this.titleFont,t.fillText(this.title,this.x+this.xPadding,this.getLineHeight(0)),t.font=this.font,s.each(this.labels,function(i,e){t.fillStyle=this.textColor,t.fillText(i,this.x+this.xPadding+this.fontSize+3,this.getLineHeight(e+1)),t.fillStyle=this.legendColorBackground,t.fillRect(this.x+this.xPadding,this.getLineHeight(e+1)-this.fontSize/2,this.fontSize,this.fontSize),t.fillStyle=this.legendColors[e].fill,t.fillRect(this.x+this.xPadding,this.getLineHeight(e+1)-this.fontSize/2,this.fontSize,this.fontSize)},this)}}}),e.Scale=e.Element.extend({initialize:function(){this.fit()},buildYLabels:function(){this.yLabels=[];for(var t=v(this.stepValue),i=0;i<=this.steps;i++)this.yLabels.push(C(this.templateString,{value:(this.min+i*this.stepValue).toFixed(t)}));this.yLabelWidth=this.display&&this.showLabels?W(this.ctx,this.font,this.yLabels):0},addXLabel:function(t){this.xLabels.push(t),this.valuesCount++,this.fit()},removeXLabel:function(){this.xLabels.shift(),this.valuesCount--,this.fit()},fit:function(){this.startPoint=this.display?this.fontSize:0,this.endPoint=this.display?this.height-1.5*this.fontSize-5:this.height,this.startPoint+=this.padding,this.endPoint-=this.padding;var t,i=this.endPoint-this.startPoint;for(this.calculateYRange(i),this.buildYLabels(),this.calculateXLabelRotation();i>this.endPoint-this.startPoint;)i=this.endPoint-this.startPoint,t=this.yLabelWidth,this.calculateYRange(i),this.buildYLabels(),t<this.yLabelWidth&&this.calculateXLabelRotation()},calculateXLabelRotation:function(){this.ctx.font=this.font;var t,i,e=this.ctx.measureText(this.xLabels[0]).width,s=this.ctx.measureText(this.xLabels[this.xLabels.length-1]).width;if(this.xScalePaddingRight=s/2+3,this.xScalePaddingLeft=e/2>this.yLabelWidth+10?e/2:this.yLabelWidth+10,this.xLabelRotation=0,this.display){var n,o=W(this.ctx,this.font,this.xLabels);this.xLabelWidth=o;for(var a=Math.floor(this.calculateX(1)-this.calculateX(0))-6;this.xLabelWidth>a&&0===this.xLabelRotation||this.xLabelWidth>a&&this.xLabelRotation<=90&&this.xLabelRotation>0;)n=Math.cos(S(this.xLabelRotation)),t=n*e,i=n*s,t+this.fontSize/2>this.yLabelWidth+8&&(this.xScalePaddingLeft=t+this.fontSize/2),this.xScalePaddingRight=this.fontSize/2,this.xLabelRotation++,this.xLabelWidth=n*o;this.xLabelRotation>0&&(this.endPoint-=Math.sin(S(this.xLabelRotation))*o+3)}else this.xLabelWidth=0,this.xScalePaddingRight=this.padding,this.xScalePaddingLeft=this.padding},calculateYRange:c,drawingArea:function(){return this.startPoint-this.endPoint},calculateY:function(t){var i=this.drawingArea()/(this.min-this.max);return this.endPoint-i*(t-this.min)},calculateX:function(t){var i=(this.xLabelRotation>0,this.width-(this.xScalePaddingLeft+this.xScalePaddingRight)),e=i/(this.valuesCount-(this.offsetGridLines?0:1)),s=e*t+this.xScalePaddingLeft;return this.offsetGridLines&&(s+=e/2),Math.round(s)},update:function(t){s.extend(this,t),this.fit()},draw:function(){var t=this.ctx,i=(this.endPoint-this.startPoint)/this.steps,e=Math.round(this.xScalePaddingLeft);this.display&&(t.fillStyle=this.textColor,t.font=this.font,n(this.yLabels,function(n,o){var a=this.endPoint-i*o,h=Math.round(a),l=this.showHorizontalLines;t.textAlign="right",t.textBaseline="middle",this.showLabels&&t.fillText(n,e-10,a),0!==o||l||(l=!0),l&&t.beginPath(),o>0?(t.lineWidth=this.gridLineWidth,t.strokeStyle=this.gridLineColor):(t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor),h+=s.aliasPixel(t.lineWidth),l&&(t.moveTo(e,h),t.lineTo(this.width,h),t.stroke(),t.closePath()),t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor,t.beginPath(),t.moveTo(e-5,h),t.lineTo(e,h),t.stroke(),t.closePath()},this),n(this.xLabels,function(i,e){var s=this.calculateX(e)+x(this.lineWidth),n=this.calculateX(e-(this.offsetGridLines?.5:0))+x(this.lineWidth),o=this.xLabelRotation>0,a=this.showVerticalLines;0!==e||a||(a=!0),a&&t.beginPath(),e>0?(t.lineWidth=this.gridLineWidth,t.strokeStyle=this.gridLineColor):(t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor),a&&(t.moveTo(n,this.endPoint),t.lineTo(n,this.startPoint-3),t.stroke(),t.closePath()),t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor,t.beginPath(),t.moveTo(n,this.endPoint),t.lineTo(n,this.endPoint+5),t.stroke(),t.closePath(),t.save(),t.translate(s,o?this.endPoint+12:this.endPoint+8),t.rotate(-1*S(this.xLabelRotation)),t.font=this.font,t.textAlign=o?"right":"center",t.textBaseline=o?"middle":"top",t.fillText(i,0,0),t.restore()},this))}}),e.RadialScale=e.Element.extend({initialize:function(){this.size=m([this.height,this.width]),this.drawingArea=this.display?this.size/2-(this.fontSize/2+this.backdropPaddingY):this.size/2},calculateCenterOffset:function(t){var i=this.drawingArea/(this.max-this.min);return(t-this.min)*i},update:function(){this.lineArc?this.drawingArea=this.display?this.size/2-(this.fontSize/2+this.backdropPaddingY):this.size/2:this.setScaleSize(),this.buildYLabels()},buildYLabels:function(){this.yLabels=[];for(var t=v(this.stepValue),i=0;i<=this.steps;i++)this.yLabels.push(C(this.templateString,{value:(this.min+i*this.stepValue).toFixed(t)}))},getCircumference:function(){return 2*Math.PI/this.valuesCount},setScaleSize:function(){var t,i,e,s,n,o,a,h,l,r,c,u,d=m([this.height/2-this.pointLabelFontSize-5,this.width/2]),p=this.width,g=0;for(this.ctx.font=M(this.pointLabelFontSize,this.pointLabelFontStyle,this.pointLabelFontFamily),i=0;i<this.valuesCount;i++)t=this.getPointPosition(i,d),e=this.ctx.measureText(C(this.templateString,{value:this.labels[i]})).width+5,0===i||i===this.valuesCount/2?(s=e/2,t.x+s>p&&(p=t.x+s,n=i),t.x-s<g&&(g=t.x-s,a=i)):i<this.valuesCount/2?t.x+e>p&&(p=t.x+e,n=i):i>this.valuesCount/2&&t.x-e<g&&(g=t.x-e,a=i);l=g,r=Math.ceil(p-this.width),o=this.getIndexAngle(n),h=this.getIndexAngle(a),c=r/Math.sin(o+Math.PI/2),u=l/Math.sin(h+Math.PI/2),c=f(c)?c:0,u=f(u)?u:0,this.drawingArea=d-(u+c)/2,this.setCenterPoint(u,c)},setCenterPoint:function(t,i){var e=this.width-i-this.drawingArea,s=t+this.drawingArea;this.xCenter=(s+e)/2,this.yCenter=this.height/2},getIndexAngle:function(t){var i=2*Math.PI/this.valuesCount;return t*i-Math.PI/2},getPointPosition:function(t,i){var e=this.getIndexAngle(t);return{x:Math.cos(e)*i+this.xCenter,y:Math.sin(e)*i+this.yCenter}},draw:function(){if(this.display){var t=this.ctx;if(n(this.yLabels,function(i,e){if(e>0){var s,n=e*(this.drawingArea/this.steps),o=this.yCenter-n;if(this.lineWidth>0)if(t.strokeStyle=this.lineColor,t.lineWidth=this.lineWidth,this.lineArc)t.beginPath(),t.arc(this.xCenter,this.yCenter,n,0,2*Math.PI),t.closePath(),t.stroke();else{t.beginPath();for(var a=0;a<this.valuesCount;a++)s=this.getPointPosition(a,this.calculateCenterOffset(this.min+e*this.stepValue)),0===a?t.moveTo(s.x,s.y):t.lineTo(s.x,s.y);t.closePath(),t.stroke()}if(this.showLabels){if(t.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.showLabelBackdrop){var h=t.measureText(i).width;t.fillStyle=this.backdropColor,t.fillRect(this.xCenter-h/2-this.backdropPaddingX,o-this.fontSize/2-this.backdropPaddingY,h+2*this.backdropPaddingX,this.fontSize+2*this.backdropPaddingY)}t.textAlign="center",t.textBaseline="middle",t.fillStyle=this.fontColor,t.fillText(i,this.xCenter,o)}}},this),!this.lineArc){t.lineWidth=this.angleLineWidth,t.strokeStyle=this.angleLineColor;for(var i=this.valuesCount-1;i>=0;i--){if(this.angleLineWidth>0){var e=this.getPointPosition(i,this.calculateCenterOffset(this.max));t.beginPath(),t.moveTo(this.xCenter,this.yCenter),t.lineTo(e.x,e.y),t.stroke(),t.closePath()}var s=this.getPointPosition(i,this.calculateCenterOffset(this.max)+5);t.font=M(this.pointLabelFontSize,this.pointLabelFontStyle,this.pointLabelFontFamily),t.fillStyle=this.pointLabelFontColor;var o=this.labels.length,a=this.labels.length/2,h=a/2,l=h>i||i>o-h,r=i===h||i===o-h;t.textAlign=0===i?"center":i===a?"center":a>i?"left":"right",t.textBaseline=r?"middle":l?"bottom":"top",t.fillText(this.labels[i],s.x,s.y)}}}}}),s.addEvent(window,"resize",function(){var t;return function(){clearTimeout(t),t=setTimeout(function(){n(e.instances,function(t){t.options.responsive&&t.resize(t.render,!0)})},50)}}()),p?define(function(){return e}):"object"==typeof module&&module.exports&&(module.exports=e),t.Chart=e,e.noConflict=function(){return t.Chart=i,e}}).call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleBeginAtZero:!0,scaleShowGridLines:!0,scaleGridLineColor:"rgba(0,0,0,.05)",scaleGridLineWidth:1,scaleShowHorizontalLines:!0,scaleShowVerticalLines:!0,barShowStroke:!0,barStrokeWidth:2,barValueSpacing:5,barDatasetSpacing:1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].fillColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Bar",defaults:s,initialize:function(t){var s=this.options;this.ScaleClass=i.Scale.extend({offsetGridLines:!0,calculateBarX:function(t,i,e){var n=this.calculateBaseWidth(),o=this.calculateX(e)-n/2,a=this.calculateBarWidth(t);return o+a*i+i*s.barDatasetSpacing+a/2},calculateBaseWidth:function(){return this.calculateX(1)-this.calculateX(0)-2*s.barValueSpacing},calculateBarWidth:function(t){var i=this.calculateBaseWidth()-(t-1)*s.barDatasetSpacing;return i/t}}),this.datasets=[],this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getBarsAtEvent(t):[];this.eachBars(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),this.BarClass=i.Rectangle.extend({strokeWidth:this.options.barStrokeWidth,showStroke:this.options.barShowStroke,ctx:this.chart.ctx}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,bars:[]};this.datasets.push(s),e.each(i.data,function(e,n){s.bars.push(new this.BarClass({value:e,label:t.labels[n],datasetLabel:i.label,strokeColor:i.strokeColor,fillColor:i.fillColor,highlightFill:i.highlightFill||i.fillColor,highlightStroke:i.highlightStroke||i.strokeColor}))},this)},this),this.buildScale(t.labels),this.BarClass.prototype.base=this.scale.endPoint,this.eachBars(function(t,i,s){e.extend(t,{width:this.scale.calculateBarWidth(this.datasets.length),x:this.scale.calculateBarX(this.datasets.length,s,i),y:this.scale.endPoint}),t.save()},this),this.render()},update:function(){this.scale.update(),e.each(this.activeElements,function(t){t.restore(["fillColor","strokeColor"])}),this.eachBars(function(t){t.save()}),this.render()},eachBars:function(t){e.each(this.datasets,function(i,s){e.each(i.bars,t,this,s)},this)},getBarsAtEvent:function(t){for(var i,s=[],n=e.getRelativePosition(t),o=function(t){s.push(t.bars[i])},a=0;a<this.datasets.length;a++)for(i=0;i<this.datasets[a].bars.length;i++)if(this.datasets[a].bars[i].inRange(n.x,n.y))return e.each(this.datasets,o),s;return s},buildScale:function(t){var i=this,s=function(){var t=[];return i.eachBars(function(i){t.push(i.value)}),t},n={templateString:this.options.scaleLabel,height:this.chart.height,width:this.chart.width,ctx:this.chart.ctx,textColor:this.options.scaleFontColor,fontSize:this.options.scaleFontSize,fontStyle:this.options.scaleFontStyle,fontFamily:this.options.scaleFontFamily,valuesCount:t.length,beginAtZero:this.options.scaleBeginAtZero,integersOnly:this.options.scaleIntegersOnly,calculateYRange:function(t){var i=e.calculateScaleRange(s(),t,this.fontSize,this.beginAtZero,this.integersOnly);e.extend(this,i)},xLabels:t,font:e.fontString(this.options.scaleFontSize,this.options.scaleFontStyle,this.options.scaleFontFamily),lineWidth:this.options.scaleLineWidth,lineColor:this.options.scaleLineColor,showHorizontalLines:this.options.scaleShowHorizontalLines,showVerticalLines:this.options.scaleShowVerticalLines,gridLineWidth:this.options.scaleShowGridLines?this.options.scaleGridLineWidth:0,gridLineColor:this.options.scaleShowGridLines?this.options.scaleGridLineColor:"rgba(0,0,0,0)",padding:this.options.showScale?0:this.options.barShowStroke?this.options.barStrokeWidth:0,showLabels:this.options.scaleShowLabels,display:this.options.showScale};this.options.scaleOverride&&e.extend(n,{calculateYRange:e.noop,steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}),this.scale=new this.ScaleClass(n)},addData:function(t,i){e.each(t,function(t,e){this.datasets[e].bars.push(new this.BarClass({value:t,label:i,x:this.scale.calculateBarX(this.datasets.length,e,this.scale.valuesCount+1),y:this.scale.endPoint,width:this.scale.calculateBarWidth(this.datasets.length),base:this.scale.endPoint,strokeColor:this.datasets[e].strokeColor,fillColor:this.datasets[e].fillColor}))},this),this.scale.addXLabel(i),this.update()},removeData:function(){this.scale.removeXLabel(),e.each(this.datasets,function(t){t.bars.shift()},this),this.update()},reflow:function(){e.extend(this.BarClass.prototype,{y:this.scale.endPoint,base:this.scale.endPoint});
 var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.update(t)},draw:function(t){var i=t||1;this.clear();this.chart.ctx;this.scale.draw(i),e.each(this.datasets,function(t,s){e.each(t.bars,function(t,e){t.hasValue()&&(t.base=this.scale.endPoint,t.transition({x:this.scale.calculateBarX(this.datasets.length,s,e),y:this.scale.calculateY(t.value),width:this.scale.calculateBarWidth(this.datasets.length)},i).draw())},this)},this)}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={segmentShowStroke:!0,segmentStrokeColor:"#fff",segmentStrokeWidth:2,percentageInnerCutout:50,animationSteps:100,animationEasing:"easeOutBounce",animateRotate:!0,animateScale:!1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<segments.length; i++){%><li><span style="background-color:<%=segments[i].fillColor%>"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Doughnut",defaults:s,initialize:function(t){this.segments=[],this.outerRadius=(e.min([this.chart.width,this.chart.height])-this.options.segmentStrokeWidth/2)/2,this.SegmentArc=i.Arc.extend({ctx:this.chart.ctx,x:this.chart.width/2,y:this.chart.height/2}),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getSegmentsAtEvent(t):[];e.each(this.segments,function(t){t.restore(["fillColor"])}),e.each(i,function(t){t.fillColor=t.highlightColor}),this.showTooltip(i)}),this.calculateTotal(t),e.each(t,function(t,i){this.addData(t,i,!0)},this),this.render()},getSegmentsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.segments,function(t){t.inRange(s.x,s.y)&&i.push(t)},this),i},addData:function(t,i,e){var s=i||this.segments.length;this.segments.splice(s,0,new this.SegmentArc({value:t.value,outerRadius:this.options.animateScale?0:this.outerRadius,innerRadius:this.options.animateScale?0:this.outerRadius/100*this.options.percentageInnerCutout,fillColor:t.color,highlightColor:t.highlight||t.color,showStroke:this.options.segmentShowStroke,strokeWidth:this.options.segmentStrokeWidth,strokeColor:this.options.segmentStrokeColor,startAngle:1.5*Math.PI,circumference:this.options.animateRotate?0:this.calculateCircumference(t.value),label:t.label})),e||(this.reflow(),this.update())},calculateCircumference:function(t){return 2*Math.PI*(t/this.total)},calculateTotal:function(t){this.total=0,e.each(t,function(t){this.total+=t.value},this)},update:function(){this.calculateTotal(this.segments),e.each(this.activeElements,function(t){t.restore(["fillColor"])}),e.each(this.segments,function(t){t.save()}),this.render()},removeData:function(t){var i=e.isNumber(t)?t:this.segments.length-1;this.segments.splice(i,1),this.reflow(),this.update()},reflow:function(){e.extend(this.SegmentArc.prototype,{x:this.chart.width/2,y:this.chart.height/2}),this.outerRadius=(e.min([this.chart.width,this.chart.height])-this.options.segmentStrokeWidth/2)/2,e.each(this.segments,function(t){t.update({outerRadius:this.outerRadius,innerRadius:this.outerRadius/100*this.options.percentageInnerCutout})},this)},draw:function(t){var i=t?t:1;this.clear(),e.each(this.segments,function(t,e){t.transition({circumference:this.calculateCircumference(t.value),outerRadius:this.outerRadius,innerRadius:this.outerRadius/100*this.options.percentageInnerCutout},i),t.endAngle=t.startAngle+t.circumference,t.draw(),0===e&&(t.startAngle=1.5*Math.PI),e<this.segments.length-1&&(this.segments[e+1].startAngle=t.endAngle)},this)}}),i.types.Doughnut.extend({name:"Pie",defaults:e.merge(s,{percentageInnerCutout:0})})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleShowGridLines:!0,scaleGridLineColor:"rgba(0,0,0,.05)",scaleGridLineWidth:1,scaleShowHorizontalLines:!0,scaleShowVerticalLines:!0,bezierCurve:!0,bezierCurveTension:.4,pointDot:!0,pointDotRadius:4,pointDotStrokeWidth:1,pointHitDetectionRadius:20,datasetStroke:!0,datasetStrokeWidth:2,datasetFill:!0,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].strokeColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Line",defaults:s,initialize:function(t){this.PointClass=i.Point.extend({strokeWidth:this.options.pointDotStrokeWidth,radius:this.options.pointDotRadius,display:this.options.pointDot,hitDetectionRadius:this.options.pointHitDetectionRadius,ctx:this.chart.ctx,inRange:function(t){return Math.pow(t-this.x,2)<Math.pow(this.radius+this.hitDetectionRadius,2)}}),this.datasets=[],this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getPointsAtEvent(t):[];this.eachPoints(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,pointColor:i.pointColor,pointStrokeColor:i.pointStrokeColor,points:[]};this.datasets.push(s),e.each(i.data,function(e,n){s.points.push(new this.PointClass({value:e,label:t.labels[n],datasetLabel:i.label,strokeColor:i.pointStrokeColor,fillColor:i.pointColor,highlightFill:i.pointHighlightFill||i.pointColor,highlightStroke:i.pointHighlightStroke||i.pointStrokeColor}))},this),this.buildScale(t.labels),this.eachPoints(function(t,i){e.extend(t,{x:this.scale.calculateX(i),y:this.scale.endPoint}),t.save()},this)},this),this.render()},update:function(){this.scale.update(),e.each(this.activeElements,function(t){t.restore(["fillColor","strokeColor"])}),this.eachPoints(function(t){t.save()}),this.render()},eachPoints:function(t){e.each(this.datasets,function(i){e.each(i.points,t,this)},this)},getPointsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.datasets,function(t){e.each(t.points,function(t){t.inRange(s.x,s.y)&&i.push(t)})},this),i},buildScale:function(t){var s=this,n=function(){var t=[];return s.eachPoints(function(i){t.push(i.value)}),t},o={templateString:this.options.scaleLabel,height:this.chart.height,width:this.chart.width,ctx:this.chart.ctx,textColor:this.options.scaleFontColor,fontSize:this.options.scaleFontSize,fontStyle:this.options.scaleFontStyle,fontFamily:this.options.scaleFontFamily,valuesCount:t.length,beginAtZero:this.options.scaleBeginAtZero,integersOnly:this.options.scaleIntegersOnly,calculateYRange:function(t){var i=e.calculateScaleRange(n(),t,this.fontSize,this.beginAtZero,this.integersOnly);e.extend(this,i)},xLabels:t,font:e.fontString(this.options.scaleFontSize,this.options.scaleFontStyle,this.options.scaleFontFamily),lineWidth:this.options.scaleLineWidth,lineColor:this.options.scaleLineColor,showHorizontalLines:this.options.scaleShowHorizontalLines,showVerticalLines:this.options.scaleShowVerticalLines,gridLineWidth:this.options.scaleShowGridLines?this.options.scaleGridLineWidth:0,gridLineColor:this.options.scaleShowGridLines?this.options.scaleGridLineColor:"rgba(0,0,0,0)",padding:this.options.showScale?0:this.options.pointDotRadius+this.options.pointDotStrokeWidth,showLabels:this.options.scaleShowLabels,display:this.options.showScale};this.options.scaleOverride&&e.extend(o,{calculateYRange:e.noop,steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}),this.scale=new i.Scale(o)},addData:function(t,i){e.each(t,function(t,e){this.datasets[e].points.push(new this.PointClass({value:t,label:i,x:this.scale.calculateX(this.scale.valuesCount+1),y:this.scale.endPoint,strokeColor:this.datasets[e].pointStrokeColor,fillColor:this.datasets[e].pointColor}))},this),this.scale.addXLabel(i),this.update()},removeData:function(){this.scale.removeXLabel(),e.each(this.datasets,function(t){t.points.shift()},this),this.update()},reflow:function(){var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.update(t)},draw:function(t){var i=t||1;this.clear();var s=this.chart.ctx,n=function(t){return null!==t.value},o=function(t,i,s){return e.findNextWhere(i,n,s)||t},a=function(t,i,s){return e.findPreviousWhere(i,n,s)||t};this.scale.draw(i),e.each(this.datasets,function(t){var h=e.where(t.points,n);e.each(t.points,function(t,e){t.hasValue()&&t.transition({y:this.scale.calculateY(t.value),x:this.scale.calculateX(e)},i)},this),this.options.bezierCurve&&e.each(h,function(t,i){var s=i>0&&i<h.length-1?this.options.bezierCurveTension:0;t.controlPoints=e.splineCurve(a(t,h,i),t,o(t,h,i),s),t.controlPoints.outer.y>this.scale.endPoint?t.controlPoints.outer.y=this.scale.endPoint:t.controlPoints.outer.y<this.scale.startPoint&&(t.controlPoints.outer.y=this.scale.startPoint),t.controlPoints.inner.y>this.scale.endPoint?t.controlPoints.inner.y=this.scale.endPoint:t.controlPoints.inner.y<this.scale.startPoint&&(t.controlPoints.inner.y=this.scale.startPoint)},this),s.lineWidth=this.options.datasetStrokeWidth,s.strokeStyle=t.strokeColor,s.beginPath(),e.each(h,function(t,i){if(0===i)s.moveTo(t.x,t.y);else if(this.options.bezierCurve){var e=a(t,h,i);s.bezierCurveTo(e.controlPoints.outer.x,e.controlPoints.outer.y,t.controlPoints.inner.x,t.controlPoints.inner.y,t.x,t.y)}else s.lineTo(t.x,t.y)},this),s.stroke(),this.options.datasetFill&&h.length>0&&(s.lineTo(h[h.length-1].x,this.scale.endPoint),s.lineTo(h[0].x,this.scale.endPoint),s.fillStyle=t.fillColor,s.closePath(),s.fill()),e.each(h,function(t){t.draw()})},this)}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleShowLabelBackdrop:!0,scaleBackdropColor:"rgba(255,255,255,0.75)",scaleBeginAtZero:!0,scaleBackdropPaddingY:2,scaleBackdropPaddingX:2,scaleShowLine:!0,segmentShowStroke:!0,segmentStrokeColor:"#fff",segmentStrokeWidth:2,animationSteps:100,animationEasing:"easeOutBounce",animateRotate:!0,animateScale:!1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<segments.length; i++){%><li><span style="background-color:<%=segments[i].fillColor%>"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"PolarArea",defaults:s,initialize:function(t){this.segments=[],this.SegmentArc=i.Arc.extend({showStroke:this.options.segmentShowStroke,strokeWidth:this.options.segmentStrokeWidth,strokeColor:this.options.segmentStrokeColor,ctx:this.chart.ctx,innerRadius:0,x:this.chart.width/2,y:this.chart.height/2}),this.scale=new i.RadialScale({display:this.options.showScale,fontStyle:this.options.scaleFontStyle,fontSize:this.options.scaleFontSize,fontFamily:this.options.scaleFontFamily,fontColor:this.options.scaleFontColor,showLabels:this.options.scaleShowLabels,showLabelBackdrop:this.options.scaleShowLabelBackdrop,backdropColor:this.options.scaleBackdropColor,backdropPaddingY:this.options.scaleBackdropPaddingY,backdropPaddingX:this.options.scaleBackdropPaddingX,lineWidth:this.options.scaleShowLine?this.options.scaleLineWidth:0,lineColor:this.options.scaleLineColor,lineArc:!0,width:this.chart.width,height:this.chart.height,xCenter:this.chart.width/2,yCenter:this.chart.height/2,ctx:this.chart.ctx,templateString:this.options.scaleLabel,valuesCount:t.length}),this.updateScaleRange(t),this.scale.update(),e.each(t,function(t,i){this.addData(t,i,!0)},this),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getSegmentsAtEvent(t):[];e.each(this.segments,function(t){t.restore(["fillColor"])}),e.each(i,function(t){t.fillColor=t.highlightColor}),this.showTooltip(i)}),this.render()},getSegmentsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.segments,function(t){t.inRange(s.x,s.y)&&i.push(t)},this),i},addData:function(t,i,e){var s=i||this.segments.length;this.segments.splice(s,0,new this.SegmentArc({fillColor:t.color,highlightColor:t.highlight||t.color,label:t.label,value:t.value,outerRadius:this.options.animateScale?0:this.scale.calculateCenterOffset(t.value),circumference:this.options.animateRotate?0:this.scale.getCircumference(),startAngle:1.5*Math.PI})),e||(this.reflow(),this.update())},removeData:function(t){var i=e.isNumber(t)?t:this.segments.length-1;this.segments.splice(i,1),this.reflow(),this.update()},calculateTotal:function(t){this.total=0,e.each(t,function(t){this.total+=t.value},this),this.scale.valuesCount=this.segments.length},updateScaleRange:function(t){var i=[];e.each(t,function(t){i.push(t.value)});var s=this.options.scaleOverride?{steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}:e.calculateScaleRange(i,e.min([this.chart.width,this.chart.height])/2,this.options.scaleFontSize,this.options.scaleBeginAtZero,this.options.scaleIntegersOnly);e.extend(this.scale,s,{size:e.min([this.chart.width,this.chart.height]),xCenter:this.chart.width/2,yCenter:this.chart.height/2})},update:function(){this.calculateTotal(this.segments),e.each(this.segments,function(t){t.save()}),this.render()},reflow:function(){e.extend(this.SegmentArc.prototype,{x:this.chart.width/2,y:this.chart.height/2}),this.updateScaleRange(this.segments),this.scale.update(),e.extend(this.scale,{xCenter:this.chart.width/2,yCenter:this.chart.height/2}),e.each(this.segments,function(t){t.update({outerRadius:this.scale.calculateCenterOffset(t.value)})},this)},draw:function(t){var i=t||1;this.clear(),e.each(this.segments,function(t,e){t.transition({circumference:this.scale.getCircumference(),outerRadius:this.scale.calculateCenterOffset(t.value)},i),t.endAngle=t.startAngle+t.circumference,0===e&&(t.startAngle=1.5*Math.PI),e<this.segments.length-1&&(this.segments[e+1].startAngle=t.endAngle),t.draw()},this),this.scale.draw()}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers;i.Type.extend({name:"Radar",defaults:{scaleShowLine:!0,angleShowLineOut:!0,scaleShowLabels:!1,scaleBeginAtZero:!0,angleLineColor:"rgba(0,0,0,.1)",angleLineWidth:1,pointLabelFontFamily:"'Arial'",pointLabelFontStyle:"normal",pointLabelFontSize:10,pointLabelFontColor:"#666",pointDot:!0,pointDotRadius:3,pointDotStrokeWidth:1,pointHitDetectionRadius:20,datasetStroke:!0,datasetStrokeWidth:2,datasetFill:!0,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].strokeColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'},initialize:function(t){this.PointClass=i.Point.extend({strokeWidth:this.options.pointDotStrokeWidth,radius:this.options.pointDotRadius,display:this.options.pointDot,hitDetectionRadius:this.options.pointHitDetectionRadius,ctx:this.chart.ctx}),this.datasets=[],this.buildScale(t),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getPointsAtEvent(t):[];this.eachPoints(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,pointColor:i.pointColor,pointStrokeColor:i.pointStrokeColor,points:[]};this.datasets.push(s),e.each(i.data,function(e,n){var o;this.scale.animation||(o=this.scale.getPointPosition(n,this.scale.calculateCenterOffset(e))),s.points.push(new this.PointClass({value:e,label:t.labels[n],datasetLabel:i.label,x:this.options.animation?this.scale.xCenter:o.x,y:this.options.animation?this.scale.yCenter:o.y,strokeColor:i.pointStrokeColor,fillColor:i.pointColor,highlightFill:i.pointHighlightFill||i.pointColor,highlightStroke:i.pointHighlightStroke||i.pointStrokeColor}))},this)},this),this.render()},eachPoints:function(t){e.each(this.datasets,function(i){e.each(i.points,t,this)},this)},getPointsAtEvent:function(t){var i=e.getRelativePosition(t),s=e.getAngleFromPoint({x:this.scale.xCenter,y:this.scale.yCenter},i),n=2*Math.PI/this.scale.valuesCount,o=Math.round((s.angle-1.5*Math.PI)/n),a=[];return(o>=this.scale.valuesCount||0>o)&&(o=0),s.distance<=this.scale.drawingArea&&e.each(this.datasets,function(t){a.push(t.points[o])}),a},buildScale:function(t){this.scale=new i.RadialScale({display:this.options.showScale,fontStyle:this.options.scaleFontStyle,fontSize:this.options.scaleFontSize,fontFamily:this.options.scaleFontFamily,fontColor:this.options.scaleFontColor,showLabels:this.options.scaleShowLabels,showLabelBackdrop:this.options.scaleShowLabelBackdrop,backdropColor:this.options.scaleBackdropColor,backdropPaddingY:this.options.scaleBackdropPaddingY,backdropPaddingX:this.options.scaleBackdropPaddingX,lineWidth:this.options.scaleShowLine?this.options.scaleLineWidth:0,lineColor:this.options.scaleLineColor,angleLineColor:this.options.angleLineColor,angleLineWidth:this.options.angleShowLineOut?this.options.angleLineWidth:0,pointLabelFontColor:this.options.pointLabelFontColor,pointLabelFontSize:this.options.pointLabelFontSize,pointLabelFontFamily:this.options.pointLabelFontFamily,pointLabelFontStyle:this.options.pointLabelFontStyle,height:this.chart.height,width:this.chart.width,xCenter:this.chart.width/2,yCenter:this.chart.height/2,ctx:this.chart.ctx,templateString:this.options.scaleLabel,labels:t.labels,valuesCount:t.datasets[0].data.length}),this.scale.setScaleSize(),this.updateScaleRange(t.datasets),this.scale.buildYLabels()},updateScaleRange:function(t){var i=function(){var i=[];return e.each(t,function(t){t.data?i=i.concat(t.data):e.each(t.points,function(t){i.push(t.value)})}),i}(),s=this.options.scaleOverride?{steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}:e.calculateScaleRange(i,e.min([this.chart.width,this.chart.height])/2,this.options.scaleFontSize,this.options.scaleBeginAtZero,this.options.scaleIntegersOnly);e.extend(this.scale,s)},addData:function(t,i){this.scale.valuesCount++,e.each(t,function(t,e){var s=this.scale.getPointPosition(this.scale.valuesCount,this.scale.calculateCenterOffset(t));this.datasets[e].points.push(new this.PointClass({value:t,label:i,x:s.x,y:s.y,strokeColor:this.datasets[e].pointStrokeColor,fillColor:this.datasets[e].pointColor}))},this),this.scale.labels.push(i),this.reflow(),this.update()},removeData:function(){this.scale.valuesCount--,this.scale.labels.shift(),e.each(this.datasets,function(t){t.points.shift()},this),this.reflow(),this.update()},update:function(){this.eachPoints(function(t){t.save()}),this.reflow(),this.render()},reflow:function(){e.extend(this.scale,{width:this.chart.width,height:this.chart.height,size:e.min([this.chart.width,this.chart.height]),xCenter:this.chart.width/2,yCenter:this.chart.height/2}),this.updateScaleRange(this.datasets),this.scale.setScaleSize(),this.scale.buildYLabels()},draw:function(t){var i=t||1,s=this.chart.ctx;this.clear(),this.scale.draw(),e.each(this.datasets,function(t){e.each(t.points,function(t,e){t.hasValue()&&t.transition(this.scale.getPointPosition(e,this.scale.calculateCenterOffset(t.value)),i)},this),s.lineWidth=this.options.datasetStrokeWidth,s.strokeStyle=t.strokeColor,s.beginPath(),e.each(t.points,function(t,i){0===i?s.moveTo(t.x,t.y):s.lineTo(t.x,t.y)},this),s.closePath(),s.stroke(),s.fillStyle=t.fillColor,s.fill(),e.each(t.points,function(t){t.hasValue()&&t.draw()})},this)}})}.call(this);
 /**
- * The Circle Menu object represents a choice menu of multiple menu items.<br><br>
+ * The Circle Menu object represents a choice menu of multiple menu items. The type of data provider value for a circle menu control should point to a property in the data provider that would follow the same rules as hard coding an array of items.<br><br>
  * <b>Sample Declaration</b><br>
  * <pre>
  * {
@@ -4451,12 +4530,24 @@ var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.upd
  * @memberof $ui
  * @extends $ui.CoreComponent
  * @property {$ui.CircleMenuItem[]} [items] - The items property is an array of menu items to be displayed in the control
- * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a circle menu control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
  * @property {CircleMenuClickEvent} [onclick] - This event fires when an item in the menu is clicked. The parameter passed to the event is [the item]{@link $ui.CircleMenuItem} which was clicked.
  */
 function $ui_CircleMenu(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-circle-menu');
+	
+	// Items property
+	if (object.items == undefined) {
+		object.items = [];
+	}
+	object._protected.items = object.items;
+	Object.defineProperty(object, 'items', {
+		get: function() {return this._protected.items;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','items'));					
+		},
+		configurable: false}
+	);
 	
 	// Re layout the menu items
 	object._recalculateLayout = function() {
@@ -4623,9 +4714,6 @@ function $ui_CircleMenu(object, screen) {
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
-		if (!this.items) {
-			this.items = [];
-		}
 		// Add all new items into the list
 		for (i = 0; i < itemArray.length; i++) {
 			item = itemArray[i];
@@ -4705,7 +4793,6 @@ $ui_CircleMenu.prototype = new $ui_CoreComponent();
  * @memberof $ui
  * @extends $ui.CoreComponent
  * @property {string} caption - Text to appear on the menu item
- * @property {boolean} [visible=true] - Visibility state of the menu item
  * @property {string} img - Path to the image to be displayed in the menu item
  */
 function $ui_CircleMenuItem(object, screen) {
@@ -4746,18 +4833,46 @@ function $ui_CircleMenuItem(object, screen) {
 	$ui.addClass(object.dom.icon,'icon');
 	object.dom.inner.appendChild(object.dom.icon);
 	
-	// Set the image
+	// Image Property
 	if (object.img) {
 		object.dom.icon.style.backgroundImage = 'url("'+ object.img + '")';
 	}
+	object._protected.img = object.img;
+	Object.defineProperty(object, 'img', {
+		get: function() {return this._protected.img;},
+		set: function(value) {
+			if (value == this._protected.img) return;
+			this._protected.img = value;
+			if (value == undefined) {
+				this.dom.icon.style.backgroundImage = '';
+			} else {
+				this.dom.icon.style.backgroundImage = 'url("'+ value + '")';
+			}
+		},
+		configurable: false}
+	);
 	
-	// Add our caption
+	// Caption Property
 	object.dom.captionDiv = document.createElement('div');
 	$ui.addClass(object.dom.captionDiv,'caption');
 	object.dom.appendChild(object.dom.captionDiv);
 	if (object.caption) {
 		object.dom.captionDiv.textContent = object.caption;
 	}
+	object._protected.caption = object.caption;
+	Object.defineProperty(object, 'caption', {
+		get: function() {return this._protected.caption;},
+		set: function(value) {
+			if (value == this._protected.caption) return;
+			this._protected.caption = value;
+			if (value == undefined) {
+				this.dom.captionDiv.textContent = '';
+			} else {
+				this.dom.captionDiv.textContent = value;
+			}
+		},
+		configurable: false}
+	);
 	
 	// Returns the size of the menu item
 	object.getSize = function() {
@@ -4804,7 +4919,18 @@ function $ui_ControlGroup(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-control-group');
 	
-	// If there is no data provider then just create the items
+	// Content property
+	if (object.content == undefined) {
+		object.content = [];
+	}
+	object._protected.content = object.content;
+	Object.defineProperty(object, 'content', {
+		get: function() {return this._protected.content;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','content'));			
+		},
+		configurable: false}
+	);
 	if (object.content) {
 		var i,
 			item,
@@ -4848,6 +4974,14 @@ function $ui_CoreTile(object, screen) {
 		if (object._size && (object._size != $ui.TileSize.STANDARD)) {
 			$ui.addClass(object.dom, object._size);
 		}
+		object._protected._size = object._size;
+		Object.defineProperty(object, '_size', {
+			get: function() {return this._protected._size;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','_size'));			
+			},
+			configurable: false}
+		);
 		
 		// Create our loading area
 		object.dom.loadingDiv = document.createElement('div');
@@ -6142,6 +6276,9 @@ function $ui_ExtendWS12() {
 	$ui.addExtension(new UIExtension('DialPad', $ui_DialPad));	
 	$ui.addExtension(new UIExtension('Map', $ui_Map));	
 	$ui.addExtension(new UIExtension('MediaPlayer', $ui_MediaPlayer));	
+	$ui.addExtension(new UIExtension('ResponsiveLayout', $ui_ResponsiveLayout));
+	$ui.addExtension(new UIExtension('MenuItem', $ui_MenuItem));
+	$ui.addExtension(new UIExtension('RawContent', $ui_RawContent));
 	// Screen Extensions
 	$ui.addExtension(new UIExtension('OnlineScreen', $ui_OnlineScreen, $ui.UIExtensionType.SCREEN));	
 	// Custom Tiles
@@ -6196,8 +6333,9 @@ function $ui_ExtendWS12() {
 	};
 	$ui.addExtension(new UIExtension('PhoneLogListItem', $ui_PhoneLogListItem, $ui.UIExtensionType.LISTITEM, {ONCLICK: 'onclick',INCOMING: 'incoming',OUTGOING: 'outgoing',MISSED: 'missed'}));
 }
-
-$ui.extend($ui_ExtendWS12);
+// Register right away and don't use the extend() function so that all of our 
+// components are defined as soon as the toolkit javascript loads in the browser
+$ui_ExtendWS12();
 /**
  * @preserve FastClick: polyfill to remove click delays on browsers with touch UIs.
  *
@@ -7366,12 +7504,16 @@ function $ui_CoreComponent(object, screen) {
 							this._providerUpdate(data);
 						}
 						return;
+					} else {
+						if (this._providerUpdate) {
+							this._providerUpdate(undefined);
+						}
 					}
 				} else {
 					// If there was data we would not reach this point other wise it is undefined
 					// so we have to check to see if it is an initial load so that we don't trigger 
 					// the control's update unnecessarily 
-					if (!dataProvider._untouched && this._providerUpdate) {
+					if (this._providerUpdate) {
 						this._providerUpdate(undefined);
 					}
 				}
@@ -7476,7 +7618,18 @@ function $ui_CoreScreen(object, data) {
 	$ui_CoreComponent.call(this, object);
 	if (object) {
 		object.data = data;
+		
+		// Guid Property
 		object.guid = $ui.guid();
+		object._protected.guid = object.guid;
+		Object.defineProperty(object, 'guid', {
+			get: function() {return this._protected.guid;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','guid'));
+			},
+			configurable: false}
+		);
+		
 		object.children = []; // Contains all child controls in the screen
 		$ui.addClass(object.dom,'ui-core-screen');
 		
@@ -7763,7 +7916,8 @@ function InteractionEvent(screenId, controlId, interaction, component) {
 
 
 /**
- * A List object will display multiple list items based on the data provided to the control.  The type of item objects that are used should match the declaration of the <b>style</b> of the list control<br><br>
+ * A List object will display multiple list items based on the data provided to the control.  The type of item objects that are used should match the declaration of the <b>style</b> of the list control.<br><br>
+ * The type of data provider value for a list control should point to a property in the data provider that would follow the same rules as hard coding an array of items.<br><br>
  * <b>Sample Declaration</b><br>
  * <pre>
  * {
@@ -7784,20 +7938,24 @@ function InteractionEvent(screenId, controlId, interaction, component) {
  * @extends $ui.CoreComponent
  * @property {object[]} [items] - The items property is an array of objects who's definition matches that of the requirements of the <b>style</b> property of the list
  * @property {object} style - This is a list item decalaration so that the list knows how to render. For example this could be set to {@link $ui.GenericListItem}
- * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a list control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
  * @property {ListActionEvent} [onaction] - The onaction event will fire when an action from a list item is triggered. Some list items may have multiple actions that can be taken. When one of these actions is selected by the user the onaction event will fire.
  */
 function $ui_List(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-list');
 	
-	// Set our initial properties that can be modified
-	if (object.items) {
-		object._original.items = [];
-		for (var i = 0; i < object.items.length; i++) {
-			object._original.items.push(object.items[i]);
-		}
+	// Set our items property
+	if (object.items == undefined) {
+		object.items = [];
 	}
+	object._protected.items = object.items;
+	Object.defineProperty(object, 'items', {
+		get: function() {return this._protected.items;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','items'));
+		},
+		configurable: false}
+	);
 
 	// Broker the onaction from a list item
 	object._onaction = function(item, event) {
@@ -7845,10 +8003,6 @@ function $ui_List(object, screen) {
 	object.addItem = function(item) {
 		if (this._addItem(item)) {
 			this.items.push(item);
-			// if there is data provider, add the item to provider
-			if (this._providerItems != undefined) {
-				this._providerItems.push(item);
-			}
 			return true;
 		} else {
 			return false;
@@ -7872,10 +8026,6 @@ function $ui_List(object, screen) {
 			console.log('$ui.List: ' + ex);
 		}
 		this.items.splice(index, 1);
-		// See if we have items on a provider that we should remove
-		if (this._providerItems != undefined) {
-			this._providerItems.splice(index, 1);
-		}
 		if (item._destroy) {
 			item._destroy();
 		}
@@ -7904,10 +8054,6 @@ function $ui_List(object, screen) {
 				itemDom = this._createItemDom(item);
 			this.items.splice(index, 0, item);
 			this.dom.insertBefore(itemDom, existingItem.dom);
-			// if there is data provider, insert the item to provider
-			if (this._providerItems != undefined) {
-				this._providerItems.splice(index, 0, item);
-			}
 			return true;
 		} 
 		return false;
@@ -7938,10 +8084,6 @@ function $ui_List(object, screen) {
 					item._destroy();
 				}
 			}
-			// See if there is data from provider, and make it blank.
-			if (this._providerItems != undefined) {
-				this._providerItems = [];
-			}
 		}
 		this.addItemBatch(itemArray);
 	}
@@ -7956,9 +8098,6 @@ function $ui_List(object, screen) {
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
-		if (!this.items) {
-			this.items = [];
-		}
 		// Add all new items into the list
 		for (i = 0; i < itemArray.length; i++) {
 			item = itemArray[i];
@@ -7970,7 +8109,6 @@ function $ui_List(object, screen) {
 	// Private function to handle provider updates
 	object._providerUpdate = function(value) {
 		this.refreshItems(value);
-		this._providerItems = value;
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);
 	
@@ -7995,8 +8133,6 @@ function $ui_List(object, screen) {
 			item = object.items[i];
 			object._addItem(item);
 		}
-	} else {
-		object.items = [];
 	}
 	
 	return object.dom;
@@ -8057,7 +8193,20 @@ function ListEvent(target, eventType, data) {
  */
 function $ui_Spinner(object, screen){
 	$ui_CoreComponent.call(this, object, screen);
+	// Size property
 	object.size = (object.size) ? object.size : $ui.Size.NORMAL;
+	object._protected.size = object.size;
+	Object.defineProperty(object, 'size', {
+		get: function() {return this._protected.size;},
+		set: function(value) {
+			if (this._protected.size == value) return;
+			$ui.removeClass(this.dom, this._protected.size);
+			this._protected.size = value;
+			$ui.addClass(this.dom,value);			
+		},
+		configurable: false}
+	);
+	
 	$ui.addClass(object.dom, 'ui-spinner')
 	$ui.addClass(object.dom, object.size);
 	$ui.addClass(object.dom, 'center');
@@ -8067,7 +8216,8 @@ function $ui_Spinner(object, screen){
 	$ui.addClass(object.dom.innerDiv, 'inner');
 	object.dom.appendChild(object.dom.innerDiv);
 	
-	// Check our coloring
+	// forceColor property
+	object._protected.forceColor = object.forceColor;
 	if (object.forceColor) {
 		$ui.addClass(object.dom.innerDiv, object.forceColor);
 	} else {
@@ -8077,7 +8227,14 @@ function $ui_Spinner(object, screen){
 			$ui.addClass(object.dom.innerDiv, 'dark');
 		}
 	}
-
+	Object.defineProperty(object, 'forceColor', {
+		get: function() {return this._protected.forceColor;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','forceColor'));			
+		},
+		configurable: false}
+	);
+	
 	return object.dom
 }
 
@@ -8142,7 +8299,7 @@ function UIExtension(name, constructor, type, definition) {
 (function(){"use strict";var t=this,i=t.Chart,e=function(t){this.canvas=t.canvas,this.ctx=t;this.width=t.canvas.width,this.height=t.canvas.height;return this.aspectRatio=this.width/this.height,s.retinaScale(this),this};e.defaults={global:{animation:!0,animationSteps:60,animationEasing:"easeOutQuart",showScale:!0,scaleOverride:!1,scaleSteps:null,scaleStepWidth:null,scaleStartValue:null,scaleLineColor:"rgba(0,0,0,.1)",scaleLineWidth:1,scaleShowLabels:!0,scaleLabel:"<%=value%>",scaleIntegersOnly:!0,scaleBeginAtZero:!1,scaleFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",scaleFontSize:12,scaleFontStyle:"normal",scaleFontColor:"#666",responsive:!1,maintainAspectRatio:!0,showTooltips:!0,customTooltips:!1,tooltipEvents:["mousemove","touchstart","touchmove","mouseout"],tooltipFillColor:"rgba(0,0,0,0.8)",tooltipFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",tooltipFontSize:14,tooltipFontStyle:"normal",tooltipFontColor:"#fff",tooltipTitleFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",tooltipTitleFontSize:14,tooltipTitleFontStyle:"bold",tooltipTitleFontColor:"#fff",tooltipYPadding:6,tooltipXPadding:6,tooltipCaretSize:8,tooltipCornerRadius:6,tooltipXOffset:10,tooltipTemplate:"<%if (label){%><%=label%>: <%}%><%= value %>",multiTooltipTemplate:"<%= value %>",multiTooltipKeyBackground:"#fff",onAnimationProgress:function(){},onAnimationComplete:function(){}}},e.types={};var s=e.helpers={},n=s.each=function(t,i,e){var s=Array.prototype.slice.call(arguments,3);if(t)if(t.length===+t.length){var n;for(n=0;n<t.length;n++)i.apply(e,[t[n],n].concat(s))}else for(var o in t)i.apply(e,[t[o],o].concat(s))},o=s.clone=function(t){var i={};return n(t,function(e,s){t.hasOwnProperty(s)&&(i[s]=e)}),i},a=s.extend=function(t){return n(Array.prototype.slice.call(arguments,1),function(i){n(i,function(e,s){i.hasOwnProperty(s)&&(t[s]=e)})}),t},h=s.merge=function(){var t=Array.prototype.slice.call(arguments,0);return t.unshift({}),a.apply(null,t)},l=s.indexOf=function(t,i){if(Array.prototype.indexOf)return t.indexOf(i);for(var e=0;e<t.length;e++)if(t[e]===i)return e;return-1},r=(s.where=function(t,i){var e=[];return s.each(t,function(t){i(t)&&e.push(t)}),e},s.findNextWhere=function(t,i,e){e||(e=-1);for(var s=e+1;s<t.length;s++){var n=t[s];if(i(n))return n}},s.findPreviousWhere=function(t,i,e){e||(e=t.length);for(var s=e-1;s>=0;s--){var n=t[s];if(i(n))return n}},s.inherits=function(t){var i=this,e=t&&t.hasOwnProperty("constructor")?t.constructor:function(){return i.apply(this,arguments)},s=function(){this.constructor=e};return s.prototype=i.prototype,e.prototype=new s,e.extend=r,t&&a(e.prototype,t),e.__super__=i.prototype,e}),c=s.noop=function(){},u=s.uid=function(){var t=0;return function(){return"chart-"+t++}}(),d=s.warn=function(t){window.console&&"function"==typeof window.console.warn&&console.warn(t)},p=s.amd="function"==typeof define&&define.amd,f=s.isNumber=function(t){return!isNaN(parseFloat(t))&&isFinite(t)},g=s.max=function(t){return Math.max.apply(Math,t)},m=s.min=function(t){return Math.min.apply(Math,t)},v=(s.cap=function(t,i,e){if(f(i)){if(t>i)return i}else if(f(e)&&e>t)return e;return t},s.getDecimalPlaces=function(t){return t%1!==0&&f(t)?t.toString().split(".")[1].length:0}),S=s.radians=function(t){return t*(Math.PI/180)},x=(s.getAngleFromPoint=function(t,i){var e=i.x-t.x,s=i.y-t.y,n=Math.sqrt(e*e+s*s),o=2*Math.PI+Math.atan2(s,e);return 0>e&&0>s&&(o+=2*Math.PI),{angle:o,distance:n}},s.aliasPixel=function(t){return t%2===0?0:.5}),y=(s.splineCurve=function(t,i,e,s){var n=Math.sqrt(Math.pow(i.x-t.x,2)+Math.pow(i.y-t.y,2)),o=Math.sqrt(Math.pow(e.x-i.x,2)+Math.pow(e.y-i.y,2)),a=s*n/(n+o),h=s*o/(n+o);return{inner:{x:i.x-a*(e.x-t.x),y:i.y-a*(e.y-t.y)},outer:{x:i.x+h*(e.x-t.x),y:i.y+h*(e.y-t.y)}}},s.calculateOrderOfMagnitude=function(t){return Math.floor(Math.log(t)/Math.LN10)}),C=(s.calculateScaleRange=function(t,i,e,s,n){var o=2,a=Math.floor(i/(1.5*e)),h=o>=a,l=g(t),r=m(t);l===r&&(l+=.5,r>=.5&&!s?r-=.5:l+=.5);for(var c=Math.abs(l-r),u=y(c),d=Math.ceil(l/(1*Math.pow(10,u)))*Math.pow(10,u),p=s?0:Math.floor(r/(1*Math.pow(10,u)))*Math.pow(10,u),f=d-p,v=Math.pow(10,u),S=Math.round(f/v);(S>a||a>2*S)&&!h;)if(S>a)v*=2,S=Math.round(f/v),S%1!==0&&(h=!0);else if(n&&u>=0){if(v/2%1!==0)break;v/=2,S=Math.round(f/v)}else v/=2,S=Math.round(f/v);return h&&(S=o,v=f/S),{steps:S,stepValue:v,min:p,max:p+S*v}},s.template=function(t,i){function e(t,i){var e=/\W/.test(t)?new Function("obj","var p=[],print=function(){p.push.apply(p,arguments);};with(obj){p.push('"+t.replace(/[\r\t\n]/g," ").split("<%").join("	").replace(/((^|%>)[^\t]*)'/g,"$1\r").replace(/\t=(.*?)%>/g,"',$1,'").split("	").join("');").split("%>").join("p.push('").split("\r").join("\\'")+"');}return p.join('');"):s[t]=s[t];return i?e(i):e}if(t instanceof Function)return t(i);var s={};return e(t,i)}),w=(s.generateLabels=function(t,i,e,s){var o=new Array(i);return labelTemplateString&&n(o,function(i,n){o[n]=C(t,{value:e+s*(n+1)})}),o},s.easingEffects={linear:function(t){return t},easeInQuad:function(t){return t*t},easeOutQuad:function(t){return-1*t*(t-2)},easeInOutQuad:function(t){return(t/=.5)<1?.5*t*t:-0.5*(--t*(t-2)-1)},easeInCubic:function(t){return t*t*t},easeOutCubic:function(t){return 1*((t=t/1-1)*t*t+1)},easeInOutCubic:function(t){return(t/=.5)<1?.5*t*t*t:.5*((t-=2)*t*t+2)},easeInQuart:function(t){return t*t*t*t},easeOutQuart:function(t){return-1*((t=t/1-1)*t*t*t-1)},easeInOutQuart:function(t){return(t/=.5)<1?.5*t*t*t*t:-0.5*((t-=2)*t*t*t-2)},easeInQuint:function(t){return 1*(t/=1)*t*t*t*t},easeOutQuint:function(t){return 1*((t=t/1-1)*t*t*t*t+1)},easeInOutQuint:function(t){return(t/=.5)<1?.5*t*t*t*t*t:.5*((t-=2)*t*t*t*t+2)},easeInSine:function(t){return-1*Math.cos(t/1*(Math.PI/2))+1},easeOutSine:function(t){return 1*Math.sin(t/1*(Math.PI/2))},easeInOutSine:function(t){return-0.5*(Math.cos(Math.PI*t/1)-1)},easeInExpo:function(t){return 0===t?1:1*Math.pow(2,10*(t/1-1))},easeOutExpo:function(t){return 1===t?1:1*(-Math.pow(2,-10*t/1)+1)},easeInOutExpo:function(t){return 0===t?0:1===t?1:(t/=.5)<1?.5*Math.pow(2,10*(t-1)):.5*(-Math.pow(2,-10*--t)+2)},easeInCirc:function(t){return t>=1?t:-1*(Math.sqrt(1-(t/=1)*t)-1)},easeOutCirc:function(t){return 1*Math.sqrt(1-(t=t/1-1)*t)},easeInOutCirc:function(t){return(t/=.5)<1?-0.5*(Math.sqrt(1-t*t)-1):.5*(Math.sqrt(1-(t-=2)*t)+1)},easeInElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:1==(t/=1)?1:(e||(e=.3),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),-(s*Math.pow(2,10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e)))},easeOutElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:1==(t/=1)?1:(e||(e=.3),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),s*Math.pow(2,-10*t)*Math.sin(2*(1*t-i)*Math.PI/e)+1)},easeInOutElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:2==(t/=.5)?1:(e||(e=.3*1.5),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),1>t?-.5*s*Math.pow(2,10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e):s*Math.pow(2,-10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e)*.5+1)},easeInBack:function(t){var i=1.70158;return 1*(t/=1)*t*((i+1)*t-i)},easeOutBack:function(t){var i=1.70158;return 1*((t=t/1-1)*t*((i+1)*t+i)+1)},easeInOutBack:function(t){var i=1.70158;return(t/=.5)<1?.5*t*t*(((i*=1.525)+1)*t-i):.5*((t-=2)*t*(((i*=1.525)+1)*t+i)+2)},easeInBounce:function(t){return 1-w.easeOutBounce(1-t)},easeOutBounce:function(t){return(t/=1)<1/2.75?7.5625*t*t:2/2.75>t?1*(7.5625*(t-=1.5/2.75)*t+.75):2.5/2.75>t?1*(7.5625*(t-=2.25/2.75)*t+.9375):1*(7.5625*(t-=2.625/2.75)*t+.984375)},easeInOutBounce:function(t){return.5>t?.5*w.easeInBounce(2*t):.5*w.easeOutBounce(2*t-1)+.5}}),b=s.requestAnimFrame=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(t){return window.setTimeout(t,1e3/60)}}(),P=(s.cancelAnimFrame=function(){return window.cancelAnimationFrame||window.webkitCancelAnimationFrame||window.mozCancelAnimationFrame||window.oCancelAnimationFrame||window.msCancelAnimationFrame||function(t){return window.clearTimeout(t,1e3/60)}}(),s.animationLoop=function(t,i,e,s,n,o){var a=0,h=w[e]||w.linear,l=function(){a++;var e=a/i,r=h(e);t.call(o,r,e,a),s.call(o,r,e),i>a?o.animationFrame=b(l):n.apply(o)};b(l)},s.getRelativePosition=function(t){var i,e,s=t.originalEvent||t,n=t.currentTarget||t.srcElement,o=n.getBoundingClientRect();return s.touches?(i=s.touches[0].clientX-o.left,e=s.touches[0].clientY-o.top):(i=s.clientX-o.left,e=s.clientY-o.top),{x:i,y:e}},s.addEvent=function(t,i,e){t.addEventListener?t.addEventListener(i,e):t.attachEvent?t.attachEvent("on"+i,e):t["on"+i]=e}),L=s.removeEvent=function(t,i,e){t.removeEventListener?t.removeEventListener(i,e,!1):t.detachEvent?t.detachEvent("on"+i,e):t["on"+i]=c},k=(s.bindEvents=function(t,i,e){t.events||(t.events={}),n(i,function(i){t.events[i]=function(){e.apply(t,arguments)},P(t.chart.canvas,i,t.events[i])})},s.unbindEvents=function(t,i){n(i,function(i,e){L(t.chart.canvas,e,i)})}),F=s.getMaximumWidth=function(t){var i=t.parentNode;return i.clientWidth},R=s.getMaximumHeight=function(t){var i=t.parentNode;return i.clientHeight},T=(s.getMaximumSize=s.getMaximumWidth,s.retinaScale=function(t){var i=t.ctx,e=t.canvas.width,s=t.canvas.height;window.devicePixelRatio&&(i.canvas.style.width=e+"px",i.canvas.style.height=s+"px",i.canvas.height=s*window.devicePixelRatio,i.canvas.width=e*window.devicePixelRatio,i.scale(window.devicePixelRatio,window.devicePixelRatio))}),A=s.clear=function(t){t.ctx.clearRect(0,0,t.width,t.height)},M=s.fontString=function(t,i,e){return i+" "+t+"px "+e},W=s.longestText=function(t,i,e){t.font=i;var s=0;return n(e,function(i){var e=t.measureText(i).width;s=e>s?e:s}),s},z=s.drawRoundedRectangle=function(t,i,e,s,n,o){t.beginPath(),t.moveTo(i+o,e),t.lineTo(i+s-o,e),t.quadraticCurveTo(i+s,e,i+s,e+o),t.lineTo(i+s,e+n-o),t.quadraticCurveTo(i+s,e+n,i+s-o,e+n),t.lineTo(i+o,e+n),t.quadraticCurveTo(i,e+n,i,e+n-o),t.lineTo(i,e+o),t.quadraticCurveTo(i,e,i+o,e),t.closePath()};e.instances={},e.Type=function(t,i,s){this.options=i,this.chart=s,this.id=u(),e.instances[this.id]=this,i.responsive&&this.resize(),this.initialize.call(this,t)},a(e.Type.prototype,{initialize:function(){return this},clear:function(){return A(this.chart),this},stop:function(){return s.cancelAnimFrame.call(t,this.animationFrame),this},resize:function(t){this.stop();var i=this.chart.canvas,e=F(this.chart.canvas),s=this.options.maintainAspectRatio?e/this.chart.aspectRatio:R(this.chart.canvas);return i.width=this.chart.width=e,i.height=this.chart.height=s,T(this.chart),"function"==typeof t&&t.apply(this,Array.prototype.slice.call(arguments,1)),this},reflow:c,render:function(t){return t&&this.reflow(),this.options.animation&&!t?s.animationLoop(this.draw,this.options.animationSteps,this.options.animationEasing,this.options.onAnimationProgress,this.options.onAnimationComplete,this):(this.draw(),this.options.onAnimationComplete.call(this)),this},generateLegend:function(){return C(this.options.legendTemplate,this)},destroy:function(){this.clear(),k(this,this.events);var t=this.chart.canvas;t.width=this.chart.width,t.height=this.chart.height,t.style.removeProperty?(t.style.removeProperty("width"),t.style.removeProperty("height")):(t.style.removeAttribute("width"),t.style.removeAttribute("height")),delete e.instances[this.id]},showTooltip:function(t,i){"undefined"==typeof this.activeElements&&(this.activeElements=[]);var o=function(t){var i=!1;return t.length!==this.activeElements.length?i=!0:(n(t,function(t,e){t!==this.activeElements[e]&&(i=!0)},this),i)}.call(this,t);if(o||i){if(this.activeElements=t,this.draw(),this.options.customTooltips&&this.options.customTooltips(!1),t.length>0)if(this.datasets&&this.datasets.length>1){for(var a,h,r=this.datasets.length-1;r>=0&&(a=this.datasets[r].points||this.datasets[r].bars||this.datasets[r].segments,h=l(a,t[0]),-1===h);r--);var c=[],u=[],d=function(){var t,i,e,n,o,a=[],l=[],r=[];return s.each(this.datasets,function(i){t=i.points||i.bars||i.segments,t[h]&&t[h].hasValue()&&a.push(t[h])}),s.each(a,function(t){l.push(t.x),r.push(t.y),c.push(s.template(this.options.multiTooltipTemplate,t)),u.push({fill:t._saved.fillColor||t.fillColor,stroke:t._saved.strokeColor||t.strokeColor})},this),o=m(r),e=g(r),n=m(l),i=g(l),{x:n>this.chart.width/2?n:i,y:(o+e)/2}}.call(this,h);new e.MultiTooltip({x:d.x,y:d.y,xPadding:this.options.tooltipXPadding,yPadding:this.options.tooltipYPadding,xOffset:this.options.tooltipXOffset,fillColor:this.options.tooltipFillColor,textColor:this.options.tooltipFontColor,fontFamily:this.options.tooltipFontFamily,fontStyle:this.options.tooltipFontStyle,fontSize:this.options.tooltipFontSize,titleTextColor:this.options.tooltipTitleFontColor,titleFontFamily:this.options.tooltipTitleFontFamily,titleFontStyle:this.options.tooltipTitleFontStyle,titleFontSize:this.options.tooltipTitleFontSize,cornerRadius:this.options.tooltipCornerRadius,labels:c,legendColors:u,legendColorBackground:this.options.multiTooltipKeyBackground,title:t[0].label,chart:this.chart,ctx:this.chart.ctx,custom:this.options.customTooltips}).draw()}else n(t,function(t){var i=t.tooltipPosition();new e.Tooltip({x:Math.round(i.x),y:Math.round(i.y),xPadding:this.options.tooltipXPadding,yPadding:this.options.tooltipYPadding,fillColor:this.options.tooltipFillColor,textColor:this.options.tooltipFontColor,fontFamily:this.options.tooltipFontFamily,fontStyle:this.options.tooltipFontStyle,fontSize:this.options.tooltipFontSize,caretHeight:this.options.tooltipCaretSize,cornerRadius:this.options.tooltipCornerRadius,text:C(this.options.tooltipTemplate,t),chart:this.chart,custom:this.options.customTooltips}).draw()},this);return this}},toBase64Image:function(){return this.chart.canvas.toDataURL.apply(this.chart.canvas,arguments)}}),e.Type.extend=function(t){var i=this,s=function(){return i.apply(this,arguments)};if(s.prototype=o(i.prototype),a(s.prototype,t),s.extend=e.Type.extend,t.name||i.prototype.name){var n=t.name||i.prototype.name,l=e.defaults[i.prototype.name]?o(e.defaults[i.prototype.name]):{};e.defaults[n]=a(l,t.defaults),e.types[n]=s,e.prototype[n]=function(t,i){var o=h(e.defaults.global,e.defaults[n],i||{});return new s(t,o,this)}}else d("Name not provided for this chart, so it hasn't been registered");return i},e.Element=function(t){a(this,t),this.initialize.apply(this,arguments),this.save()},a(e.Element.prototype,{initialize:function(){},restore:function(t){return t?n(t,function(t){this[t]=this._saved[t]},this):a(this,this._saved),this},save:function(){return this._saved=o(this),delete this._saved._saved,this},update:function(t){return n(t,function(t,i){this._saved[i]=this[i],this[i]=t},this),this},transition:function(t,i){return n(t,function(t,e){this[e]=(t-this._saved[e])*i+this._saved[e]},this),this},tooltipPosition:function(){return{x:this.x,y:this.y}},hasValue:function(){return f(this.value)}}),e.Element.extend=r,e.Point=e.Element.extend({display:!0,inRange:function(t,i){var e=this.hitDetectionRadius+this.radius;return Math.pow(t-this.x,2)+Math.pow(i-this.y,2)<Math.pow(e,2)},draw:function(){if(this.display){var t=this.ctx;t.beginPath(),t.arc(this.x,this.y,this.radius,0,2*Math.PI),t.closePath(),t.strokeStyle=this.strokeColor,t.lineWidth=this.strokeWidth,t.fillStyle=this.fillColor,t.fill(),t.stroke()}}}),e.Arc=e.Element.extend({inRange:function(t,i){var e=s.getAngleFromPoint(this,{x:t,y:i}),n=e.angle>=this.startAngle&&e.angle<=this.endAngle,o=e.distance>=this.innerRadius&&e.distance<=this.outerRadius;return n&&o},tooltipPosition:function(){var t=this.startAngle+(this.endAngle-this.startAngle)/2,i=(this.outerRadius-this.innerRadius)/2+this.innerRadius;return{x:this.x+Math.cos(t)*i,y:this.y+Math.sin(t)*i}},draw:function(t){var i=this.ctx;i.beginPath(),i.arc(this.x,this.y,this.outerRadius,this.startAngle,this.endAngle),i.arc(this.x,this.y,this.innerRadius,this.endAngle,this.startAngle,!0),i.closePath(),i.strokeStyle=this.strokeColor,i.lineWidth=this.strokeWidth,i.fillStyle=this.fillColor,i.fill(),i.lineJoin="bevel",this.showStroke&&i.stroke()}}),e.Rectangle=e.Element.extend({draw:function(){var t=this.ctx,i=this.width/2,e=this.x-i,s=this.x+i,n=this.base-(this.base-this.y),o=this.strokeWidth/2;this.showStroke&&(e+=o,s-=o,n+=o),t.beginPath(),t.fillStyle=this.fillColor,t.strokeStyle=this.strokeColor,t.lineWidth=this.strokeWidth,t.moveTo(e,this.base),t.lineTo(e,n),t.lineTo(s,n),t.lineTo(s,this.base),t.fill(),this.showStroke&&t.stroke()},height:function(){return this.base-this.y},inRange:function(t,i){return t>=this.x-this.width/2&&t<=this.x+this.width/2&&i>=this.y&&i<=this.base}}),e.Tooltip=e.Element.extend({draw:function(){var t=this.chart.ctx;t.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.xAlign="center",this.yAlign="above";var i=this.caretPadding=2,e=t.measureText(this.text).width+2*this.xPadding,s=this.fontSize+2*this.yPadding,n=s+this.caretHeight+i;this.x+e/2>this.chart.width?this.xAlign="left":this.x-e/2<0&&(this.xAlign="right"),this.y-n<0&&(this.yAlign="below");var o=this.x-e/2,a=this.y-n;if(t.fillStyle=this.fillColor,this.custom)this.custom(this);else{switch(this.yAlign){case"above":t.beginPath(),t.moveTo(this.x,this.y-i),t.lineTo(this.x+this.caretHeight,this.y-(i+this.caretHeight)),t.lineTo(this.x-this.caretHeight,this.y-(i+this.caretHeight)),t.closePath(),t.fill();break;case"below":a=this.y+i+this.caretHeight,t.beginPath(),t.moveTo(this.x,this.y+i),t.lineTo(this.x+this.caretHeight,this.y+i+this.caretHeight),t.lineTo(this.x-this.caretHeight,this.y+i+this.caretHeight),t.closePath(),t.fill()}switch(this.xAlign){case"left":o=this.x-e+(this.cornerRadius+this.caretHeight);break;case"right":o=this.x-(this.cornerRadius+this.caretHeight)}z(t,o,a,e,s,this.cornerRadius),t.fill(),t.fillStyle=this.textColor,t.textAlign="center",t.textBaseline="middle",t.fillText(this.text,o+e/2,a+s/2)}}}),e.MultiTooltip=e.Element.extend({initialize:function(){this.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.titleFont=M(this.titleFontSize,this.titleFontStyle,this.titleFontFamily),this.height=this.labels.length*this.fontSize+(this.labels.length-1)*(this.fontSize/2)+2*this.yPadding+1.5*this.titleFontSize,this.ctx.font=this.titleFont;var t=this.ctx.measureText(this.title).width,i=W(this.ctx,this.font,this.labels)+this.fontSize+3,e=g([i,t]);this.width=e+2*this.xPadding;var s=this.height/2;this.y-s<0?this.y=s:this.y+s>this.chart.height&&(this.y=this.chart.height-s),this.x>this.chart.width/2?this.x-=this.xOffset+this.width:this.x+=this.xOffset},getLineHeight:function(t){var i=this.y-this.height/2+this.yPadding,e=t-1;return 0===t?i+this.titleFontSize/2:i+(1.5*this.fontSize*e+this.fontSize/2)+1.5*this.titleFontSize},draw:function(){if(this.custom)this.custom(this);else{z(this.ctx,this.x,this.y-this.height/2,this.width,this.height,this.cornerRadius);var t=this.ctx;t.fillStyle=this.fillColor,t.fill(),t.closePath(),t.textAlign="left",t.textBaseline="middle",t.fillStyle=this.titleTextColor,t.font=this.titleFont,t.fillText(this.title,this.x+this.xPadding,this.getLineHeight(0)),t.font=this.font,s.each(this.labels,function(i,e){t.fillStyle=this.textColor,t.fillText(i,this.x+this.xPadding+this.fontSize+3,this.getLineHeight(e+1)),t.fillStyle=this.legendColorBackground,t.fillRect(this.x+this.xPadding,this.getLineHeight(e+1)-this.fontSize/2,this.fontSize,this.fontSize),t.fillStyle=this.legendColors[e].fill,t.fillRect(this.x+this.xPadding,this.getLineHeight(e+1)-this.fontSize/2,this.fontSize,this.fontSize)},this)}}}),e.Scale=e.Element.extend({initialize:function(){this.fit()},buildYLabels:function(){this.yLabels=[];for(var t=v(this.stepValue),i=0;i<=this.steps;i++)this.yLabels.push(C(this.templateString,{value:(this.min+i*this.stepValue).toFixed(t)}));this.yLabelWidth=this.display&&this.showLabels?W(this.ctx,this.font,this.yLabels):0},addXLabel:function(t){this.xLabels.push(t),this.valuesCount++,this.fit()},removeXLabel:function(){this.xLabels.shift(),this.valuesCount--,this.fit()},fit:function(){this.startPoint=this.display?this.fontSize:0,this.endPoint=this.display?this.height-1.5*this.fontSize-5:this.height,this.startPoint+=this.padding,this.endPoint-=this.padding;var t,i=this.endPoint-this.startPoint;for(this.calculateYRange(i),this.buildYLabels(),this.calculateXLabelRotation();i>this.endPoint-this.startPoint;)i=this.endPoint-this.startPoint,t=this.yLabelWidth,this.calculateYRange(i),this.buildYLabels(),t<this.yLabelWidth&&this.calculateXLabelRotation()},calculateXLabelRotation:function(){this.ctx.font=this.font;var t,i,e=this.ctx.measureText(this.xLabels[0]).width,s=this.ctx.measureText(this.xLabels[this.xLabels.length-1]).width;if(this.xScalePaddingRight=s/2+3,this.xScalePaddingLeft=e/2>this.yLabelWidth+10?e/2:this.yLabelWidth+10,this.xLabelRotation=0,this.display){var n,o=W(this.ctx,this.font,this.xLabels);this.xLabelWidth=o;for(var a=Math.floor(this.calculateX(1)-this.calculateX(0))-6;this.xLabelWidth>a&&0===this.xLabelRotation||this.xLabelWidth>a&&this.xLabelRotation<=90&&this.xLabelRotation>0;)n=Math.cos(S(this.xLabelRotation)),t=n*e,i=n*s,t+this.fontSize/2>this.yLabelWidth+8&&(this.xScalePaddingLeft=t+this.fontSize/2),this.xScalePaddingRight=this.fontSize/2,this.xLabelRotation++,this.xLabelWidth=n*o;this.xLabelRotation>0&&(this.endPoint-=Math.sin(S(this.xLabelRotation))*o+3)}else this.xLabelWidth=0,this.xScalePaddingRight=this.padding,this.xScalePaddingLeft=this.padding},calculateYRange:c,drawingArea:function(){return this.startPoint-this.endPoint},calculateY:function(t){var i=this.drawingArea()/(this.min-this.max);return this.endPoint-i*(t-this.min)},calculateX:function(t){var i=(this.xLabelRotation>0,this.width-(this.xScalePaddingLeft+this.xScalePaddingRight)),e=i/(this.valuesCount-(this.offsetGridLines?0:1)),s=e*t+this.xScalePaddingLeft;return this.offsetGridLines&&(s+=e/2),Math.round(s)},update:function(t){s.extend(this,t),this.fit()},draw:function(){var t=this.ctx,i=(this.endPoint-this.startPoint)/this.steps,e=Math.round(this.xScalePaddingLeft);this.display&&(t.fillStyle=this.textColor,t.font=this.font,n(this.yLabels,function(n,o){var a=this.endPoint-i*o,h=Math.round(a),l=this.showHorizontalLines;t.textAlign="right",t.textBaseline="middle",this.showLabels&&t.fillText(n,e-10,a),0!==o||l||(l=!0),l&&t.beginPath(),o>0?(t.lineWidth=this.gridLineWidth,t.strokeStyle=this.gridLineColor):(t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor),h+=s.aliasPixel(t.lineWidth),l&&(t.moveTo(e,h),t.lineTo(this.width,h),t.stroke(),t.closePath()),t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor,t.beginPath(),t.moveTo(e-5,h),t.lineTo(e,h),t.stroke(),t.closePath()},this),n(this.xLabels,function(i,e){var s=this.calculateX(e)+x(this.lineWidth),n=this.calculateX(e-(this.offsetGridLines?.5:0))+x(this.lineWidth),o=this.xLabelRotation>0,a=this.showVerticalLines;0!==e||a||(a=!0),a&&t.beginPath(),e>0?(t.lineWidth=this.gridLineWidth,t.strokeStyle=this.gridLineColor):(t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor),a&&(t.moveTo(n,this.endPoint),t.lineTo(n,this.startPoint-3),t.stroke(),t.closePath()),t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor,t.beginPath(),t.moveTo(n,this.endPoint),t.lineTo(n,this.endPoint+5),t.stroke(),t.closePath(),t.save(),t.translate(s,o?this.endPoint+12:this.endPoint+8),t.rotate(-1*S(this.xLabelRotation)),t.font=this.font,t.textAlign=o?"right":"center",t.textBaseline=o?"middle":"top",t.fillText(i,0,0),t.restore()},this))}}),e.RadialScale=e.Element.extend({initialize:function(){this.size=m([this.height,this.width]),this.drawingArea=this.display?this.size/2-(this.fontSize/2+this.backdropPaddingY):this.size/2},calculateCenterOffset:function(t){var i=this.drawingArea/(this.max-this.min);return(t-this.min)*i},update:function(){this.lineArc?this.drawingArea=this.display?this.size/2-(this.fontSize/2+this.backdropPaddingY):this.size/2:this.setScaleSize(),this.buildYLabels()},buildYLabels:function(){this.yLabels=[];for(var t=v(this.stepValue),i=0;i<=this.steps;i++)this.yLabels.push(C(this.templateString,{value:(this.min+i*this.stepValue).toFixed(t)}))},getCircumference:function(){return 2*Math.PI/this.valuesCount},setScaleSize:function(){var t,i,e,s,n,o,a,h,l,r,c,u,d=m([this.height/2-this.pointLabelFontSize-5,this.width/2]),p=this.width,g=0;for(this.ctx.font=M(this.pointLabelFontSize,this.pointLabelFontStyle,this.pointLabelFontFamily),i=0;i<this.valuesCount;i++)t=this.getPointPosition(i,d),e=this.ctx.measureText(C(this.templateString,{value:this.labels[i]})).width+5,0===i||i===this.valuesCount/2?(s=e/2,t.x+s>p&&(p=t.x+s,n=i),t.x-s<g&&(g=t.x-s,a=i)):i<this.valuesCount/2?t.x+e>p&&(p=t.x+e,n=i):i>this.valuesCount/2&&t.x-e<g&&(g=t.x-e,a=i);l=g,r=Math.ceil(p-this.width),o=this.getIndexAngle(n),h=this.getIndexAngle(a),c=r/Math.sin(o+Math.PI/2),u=l/Math.sin(h+Math.PI/2),c=f(c)?c:0,u=f(u)?u:0,this.drawingArea=d-(u+c)/2,this.setCenterPoint(u,c)},setCenterPoint:function(t,i){var e=this.width-i-this.drawingArea,s=t+this.drawingArea;this.xCenter=(s+e)/2,this.yCenter=this.height/2},getIndexAngle:function(t){var i=2*Math.PI/this.valuesCount;return t*i-Math.PI/2},getPointPosition:function(t,i){var e=this.getIndexAngle(t);return{x:Math.cos(e)*i+this.xCenter,y:Math.sin(e)*i+this.yCenter}},draw:function(){if(this.display){var t=this.ctx;if(n(this.yLabels,function(i,e){if(e>0){var s,n=e*(this.drawingArea/this.steps),o=this.yCenter-n;if(this.lineWidth>0)if(t.strokeStyle=this.lineColor,t.lineWidth=this.lineWidth,this.lineArc)t.beginPath(),t.arc(this.xCenter,this.yCenter,n,0,2*Math.PI),t.closePath(),t.stroke();else{t.beginPath();for(var a=0;a<this.valuesCount;a++)s=this.getPointPosition(a,this.calculateCenterOffset(this.min+e*this.stepValue)),0===a?t.moveTo(s.x,s.y):t.lineTo(s.x,s.y);t.closePath(),t.stroke()}if(this.showLabels){if(t.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.showLabelBackdrop){var h=t.measureText(i).width;t.fillStyle=this.backdropColor,t.fillRect(this.xCenter-h/2-this.backdropPaddingX,o-this.fontSize/2-this.backdropPaddingY,h+2*this.backdropPaddingX,this.fontSize+2*this.backdropPaddingY)}t.textAlign="center",t.textBaseline="middle",t.fillStyle=this.fontColor,t.fillText(i,this.xCenter,o)}}},this),!this.lineArc){t.lineWidth=this.angleLineWidth,t.strokeStyle=this.angleLineColor;for(var i=this.valuesCount-1;i>=0;i--){if(this.angleLineWidth>0){var e=this.getPointPosition(i,this.calculateCenterOffset(this.max));t.beginPath(),t.moveTo(this.xCenter,this.yCenter),t.lineTo(e.x,e.y),t.stroke(),t.closePath()}var s=this.getPointPosition(i,this.calculateCenterOffset(this.max)+5);t.font=M(this.pointLabelFontSize,this.pointLabelFontStyle,this.pointLabelFontFamily),t.fillStyle=this.pointLabelFontColor;var o=this.labels.length,a=this.labels.length/2,h=a/2,l=h>i||i>o-h,r=i===h||i===o-h;t.textAlign=0===i?"center":i===a?"center":a>i?"left":"right",t.textBaseline=r?"middle":l?"bottom":"top",t.fillText(this.labels[i],s.x,s.y)}}}}}),s.addEvent(window,"resize",function(){var t;return function(){clearTimeout(t),t=setTimeout(function(){n(e.instances,function(t){t.options.responsive&&t.resize(t.render,!0)})},50)}}()),p?define(function(){return e}):"object"==typeof module&&module.exports&&(module.exports=e),t.Chart=e,e.noConflict=function(){return t.Chart=i,e}}).call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleBeginAtZero:!0,scaleShowGridLines:!0,scaleGridLineColor:"rgba(0,0,0,.05)",scaleGridLineWidth:1,scaleShowHorizontalLines:!0,scaleShowVerticalLines:!0,barShowStroke:!0,barStrokeWidth:2,barValueSpacing:5,barDatasetSpacing:1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].fillColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Bar",defaults:s,initialize:function(t){var s=this.options;this.ScaleClass=i.Scale.extend({offsetGridLines:!0,calculateBarX:function(t,i,e){var n=this.calculateBaseWidth(),o=this.calculateX(e)-n/2,a=this.calculateBarWidth(t);return o+a*i+i*s.barDatasetSpacing+a/2},calculateBaseWidth:function(){return this.calculateX(1)-this.calculateX(0)-2*s.barValueSpacing},calculateBarWidth:function(t){var i=this.calculateBaseWidth()-(t-1)*s.barDatasetSpacing;return i/t}}),this.datasets=[],this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getBarsAtEvent(t):[];this.eachBars(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),this.BarClass=i.Rectangle.extend({strokeWidth:this.options.barStrokeWidth,showStroke:this.options.barShowStroke,ctx:this.chart.ctx}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,bars:[]};this.datasets.push(s),e.each(i.data,function(e,n){s.bars.push(new this.BarClass({value:e,label:t.labels[n],datasetLabel:i.label,strokeColor:i.strokeColor,fillColor:i.fillColor,highlightFill:i.highlightFill||i.fillColor,highlightStroke:i.highlightStroke||i.strokeColor}))},this)},this),this.buildScale(t.labels),this.BarClass.prototype.base=this.scale.endPoint,this.eachBars(function(t,i,s){e.extend(t,{width:this.scale.calculateBarWidth(this.datasets.length),x:this.scale.calculateBarX(this.datasets.length,s,i),y:this.scale.endPoint}),t.save()},this),this.render()},update:function(){this.scale.update(),e.each(this.activeElements,function(t){t.restore(["fillColor","strokeColor"])}),this.eachBars(function(t){t.save()}),this.render()},eachBars:function(t){e.each(this.datasets,function(i,s){e.each(i.bars,t,this,s)},this)},getBarsAtEvent:function(t){for(var i,s=[],n=e.getRelativePosition(t),o=function(t){s.push(t.bars[i])},a=0;a<this.datasets.length;a++)for(i=0;i<this.datasets[a].bars.length;i++)if(this.datasets[a].bars[i].inRange(n.x,n.y))return e.each(this.datasets,o),s;return s},buildScale:function(t){var i=this,s=function(){var t=[];return i.eachBars(function(i){t.push(i.value)}),t},n={templateString:this.options.scaleLabel,height:this.chart.height,width:this.chart.width,ctx:this.chart.ctx,textColor:this.options.scaleFontColor,fontSize:this.options.scaleFontSize,fontStyle:this.options.scaleFontStyle,fontFamily:this.options.scaleFontFamily,valuesCount:t.length,beginAtZero:this.options.scaleBeginAtZero,integersOnly:this.options.scaleIntegersOnly,calculateYRange:function(t){var i=e.calculateScaleRange(s(),t,this.fontSize,this.beginAtZero,this.integersOnly);e.extend(this,i)},xLabels:t,font:e.fontString(this.options.scaleFontSize,this.options.scaleFontStyle,this.options.scaleFontFamily),lineWidth:this.options.scaleLineWidth,lineColor:this.options.scaleLineColor,showHorizontalLines:this.options.scaleShowHorizontalLines,showVerticalLines:this.options.scaleShowVerticalLines,gridLineWidth:this.options.scaleShowGridLines?this.options.scaleGridLineWidth:0,gridLineColor:this.options.scaleShowGridLines?this.options.scaleGridLineColor:"rgba(0,0,0,0)",padding:this.options.showScale?0:this.options.barShowStroke?this.options.barStrokeWidth:0,showLabels:this.options.scaleShowLabels,display:this.options.showScale};this.options.scaleOverride&&e.extend(n,{calculateYRange:e.noop,steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}),this.scale=new this.ScaleClass(n)},addData:function(t,i){e.each(t,function(t,e){this.datasets[e].bars.push(new this.BarClass({value:t,label:i,x:this.scale.calculateBarX(this.datasets.length,e,this.scale.valuesCount+1),y:this.scale.endPoint,width:this.scale.calculateBarWidth(this.datasets.length),base:this.scale.endPoint,strokeColor:this.datasets[e].strokeColor,fillColor:this.datasets[e].fillColor}))},this),this.scale.addXLabel(i),this.update()},removeData:function(){this.scale.removeXLabel(),e.each(this.datasets,function(t){t.bars.shift()},this),this.update()},reflow:function(){e.extend(this.BarClass.prototype,{y:this.scale.endPoint,base:this.scale.endPoint});
 var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.update(t)},draw:function(t){var i=t||1;this.clear();this.chart.ctx;this.scale.draw(i),e.each(this.datasets,function(t,s){e.each(t.bars,function(t,e){t.hasValue()&&(t.base=this.scale.endPoint,t.transition({x:this.scale.calculateBarX(this.datasets.length,s,e),y:this.scale.calculateY(t.value),width:this.scale.calculateBarWidth(this.datasets.length)},i).draw())},this)},this)}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={segmentShowStroke:!0,segmentStrokeColor:"#fff",segmentStrokeWidth:2,percentageInnerCutout:50,animationSteps:100,animationEasing:"easeOutBounce",animateRotate:!0,animateScale:!1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<segments.length; i++){%><li><span style="background-color:<%=segments[i].fillColor%>"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Doughnut",defaults:s,initialize:function(t){this.segments=[],this.outerRadius=(e.min([this.chart.width,this.chart.height])-this.options.segmentStrokeWidth/2)/2,this.SegmentArc=i.Arc.extend({ctx:this.chart.ctx,x:this.chart.width/2,y:this.chart.height/2}),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getSegmentsAtEvent(t):[];e.each(this.segments,function(t){t.restore(["fillColor"])}),e.each(i,function(t){t.fillColor=t.highlightColor}),this.showTooltip(i)}),this.calculateTotal(t),e.each(t,function(t,i){this.addData(t,i,!0)},this),this.render()},getSegmentsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.segments,function(t){t.inRange(s.x,s.y)&&i.push(t)},this),i},addData:function(t,i,e){var s=i||this.segments.length;this.segments.splice(s,0,new this.SegmentArc({value:t.value,outerRadius:this.options.animateScale?0:this.outerRadius,innerRadius:this.options.animateScale?0:this.outerRadius/100*this.options.percentageInnerCutout,fillColor:t.color,highlightColor:t.highlight||t.color,showStroke:this.options.segmentShowStroke,strokeWidth:this.options.segmentStrokeWidth,strokeColor:this.options.segmentStrokeColor,startAngle:1.5*Math.PI,circumference:this.options.animateRotate?0:this.calculateCircumference(t.value),label:t.label})),e||(this.reflow(),this.update())},calculateCircumference:function(t){return 2*Math.PI*(t/this.total)},calculateTotal:function(t){this.total=0,e.each(t,function(t){this.total+=t.value},this)},update:function(){this.calculateTotal(this.segments),e.each(this.activeElements,function(t){t.restore(["fillColor"])}),e.each(this.segments,function(t){t.save()}),this.render()},removeData:function(t){var i=e.isNumber(t)?t:this.segments.length-1;this.segments.splice(i,1),this.reflow(),this.update()},reflow:function(){e.extend(this.SegmentArc.prototype,{x:this.chart.width/2,y:this.chart.height/2}),this.outerRadius=(e.min([this.chart.width,this.chart.height])-this.options.segmentStrokeWidth/2)/2,e.each(this.segments,function(t){t.update({outerRadius:this.outerRadius,innerRadius:this.outerRadius/100*this.options.percentageInnerCutout})},this)},draw:function(t){var i=t?t:1;this.clear(),e.each(this.segments,function(t,e){t.transition({circumference:this.calculateCircumference(t.value),outerRadius:this.outerRadius,innerRadius:this.outerRadius/100*this.options.percentageInnerCutout},i),t.endAngle=t.startAngle+t.circumference,t.draw(),0===e&&(t.startAngle=1.5*Math.PI),e<this.segments.length-1&&(this.segments[e+1].startAngle=t.endAngle)},this)}}),i.types.Doughnut.extend({name:"Pie",defaults:e.merge(s,{percentageInnerCutout:0})})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleShowGridLines:!0,scaleGridLineColor:"rgba(0,0,0,.05)",scaleGridLineWidth:1,scaleShowHorizontalLines:!0,scaleShowVerticalLines:!0,bezierCurve:!0,bezierCurveTension:.4,pointDot:!0,pointDotRadius:4,pointDotStrokeWidth:1,pointHitDetectionRadius:20,datasetStroke:!0,datasetStrokeWidth:2,datasetFill:!0,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].strokeColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Line",defaults:s,initialize:function(t){this.PointClass=i.Point.extend({strokeWidth:this.options.pointDotStrokeWidth,radius:this.options.pointDotRadius,display:this.options.pointDot,hitDetectionRadius:this.options.pointHitDetectionRadius,ctx:this.chart.ctx,inRange:function(t){return Math.pow(t-this.x,2)<Math.pow(this.radius+this.hitDetectionRadius,2)}}),this.datasets=[],this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getPointsAtEvent(t):[];this.eachPoints(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,pointColor:i.pointColor,pointStrokeColor:i.pointStrokeColor,points:[]};this.datasets.push(s),e.each(i.data,function(e,n){s.points.push(new this.PointClass({value:e,label:t.labels[n],datasetLabel:i.label,strokeColor:i.pointStrokeColor,fillColor:i.pointColor,highlightFill:i.pointHighlightFill||i.pointColor,highlightStroke:i.pointHighlightStroke||i.pointStrokeColor}))},this),this.buildScale(t.labels),this.eachPoints(function(t,i){e.extend(t,{x:this.scale.calculateX(i),y:this.scale.endPoint}),t.save()},this)},this),this.render()},update:function(){this.scale.update(),e.each(this.activeElements,function(t){t.restore(["fillColor","strokeColor"])}),this.eachPoints(function(t){t.save()}),this.render()},eachPoints:function(t){e.each(this.datasets,function(i){e.each(i.points,t,this)},this)},getPointsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.datasets,function(t){e.each(t.points,function(t){t.inRange(s.x,s.y)&&i.push(t)})},this),i},buildScale:function(t){var s=this,n=function(){var t=[];return s.eachPoints(function(i){t.push(i.value)}),t},o={templateString:this.options.scaleLabel,height:this.chart.height,width:this.chart.width,ctx:this.chart.ctx,textColor:this.options.scaleFontColor,fontSize:this.options.scaleFontSize,fontStyle:this.options.scaleFontStyle,fontFamily:this.options.scaleFontFamily,valuesCount:t.length,beginAtZero:this.options.scaleBeginAtZero,integersOnly:this.options.scaleIntegersOnly,calculateYRange:function(t){var i=e.calculateScaleRange(n(),t,this.fontSize,this.beginAtZero,this.integersOnly);e.extend(this,i)},xLabels:t,font:e.fontString(this.options.scaleFontSize,this.options.scaleFontStyle,this.options.scaleFontFamily),lineWidth:this.options.scaleLineWidth,lineColor:this.options.scaleLineColor,showHorizontalLines:this.options.scaleShowHorizontalLines,showVerticalLines:this.options.scaleShowVerticalLines,gridLineWidth:this.options.scaleShowGridLines?this.options.scaleGridLineWidth:0,gridLineColor:this.options.scaleShowGridLines?this.options.scaleGridLineColor:"rgba(0,0,0,0)",padding:this.options.showScale?0:this.options.pointDotRadius+this.options.pointDotStrokeWidth,showLabels:this.options.scaleShowLabels,display:this.options.showScale};this.options.scaleOverride&&e.extend(o,{calculateYRange:e.noop,steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}),this.scale=new i.Scale(o)},addData:function(t,i){e.each(t,function(t,e){this.datasets[e].points.push(new this.PointClass({value:t,label:i,x:this.scale.calculateX(this.scale.valuesCount+1),y:this.scale.endPoint,strokeColor:this.datasets[e].pointStrokeColor,fillColor:this.datasets[e].pointColor}))},this),this.scale.addXLabel(i),this.update()},removeData:function(){this.scale.removeXLabel(),e.each(this.datasets,function(t){t.points.shift()},this),this.update()},reflow:function(){var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.update(t)},draw:function(t){var i=t||1;this.clear();var s=this.chart.ctx,n=function(t){return null!==t.value},o=function(t,i,s){return e.findNextWhere(i,n,s)||t},a=function(t,i,s){return e.findPreviousWhere(i,n,s)||t};this.scale.draw(i),e.each(this.datasets,function(t){var h=e.where(t.points,n);e.each(t.points,function(t,e){t.hasValue()&&t.transition({y:this.scale.calculateY(t.value),x:this.scale.calculateX(e)},i)},this),this.options.bezierCurve&&e.each(h,function(t,i){var s=i>0&&i<h.length-1?this.options.bezierCurveTension:0;t.controlPoints=e.splineCurve(a(t,h,i),t,o(t,h,i),s),t.controlPoints.outer.y>this.scale.endPoint?t.controlPoints.outer.y=this.scale.endPoint:t.controlPoints.outer.y<this.scale.startPoint&&(t.controlPoints.outer.y=this.scale.startPoint),t.controlPoints.inner.y>this.scale.endPoint?t.controlPoints.inner.y=this.scale.endPoint:t.controlPoints.inner.y<this.scale.startPoint&&(t.controlPoints.inner.y=this.scale.startPoint)},this),s.lineWidth=this.options.datasetStrokeWidth,s.strokeStyle=t.strokeColor,s.beginPath(),e.each(h,function(t,i){if(0===i)s.moveTo(t.x,t.y);else if(this.options.bezierCurve){var e=a(t,h,i);s.bezierCurveTo(e.controlPoints.outer.x,e.controlPoints.outer.y,t.controlPoints.inner.x,t.controlPoints.inner.y,t.x,t.y)}else s.lineTo(t.x,t.y)},this),s.stroke(),this.options.datasetFill&&h.length>0&&(s.lineTo(h[h.length-1].x,this.scale.endPoint),s.lineTo(h[0].x,this.scale.endPoint),s.fillStyle=t.fillColor,s.closePath(),s.fill()),e.each(h,function(t){t.draw()})},this)}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleShowLabelBackdrop:!0,scaleBackdropColor:"rgba(255,255,255,0.75)",scaleBeginAtZero:!0,scaleBackdropPaddingY:2,scaleBackdropPaddingX:2,scaleShowLine:!0,segmentShowStroke:!0,segmentStrokeColor:"#fff",segmentStrokeWidth:2,animationSteps:100,animationEasing:"easeOutBounce",animateRotate:!0,animateScale:!1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<segments.length; i++){%><li><span style="background-color:<%=segments[i].fillColor%>"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"PolarArea",defaults:s,initialize:function(t){this.segments=[],this.SegmentArc=i.Arc.extend({showStroke:this.options.segmentShowStroke,strokeWidth:this.options.segmentStrokeWidth,strokeColor:this.options.segmentStrokeColor,ctx:this.chart.ctx,innerRadius:0,x:this.chart.width/2,y:this.chart.height/2}),this.scale=new i.RadialScale({display:this.options.showScale,fontStyle:this.options.scaleFontStyle,fontSize:this.options.scaleFontSize,fontFamily:this.options.scaleFontFamily,fontColor:this.options.scaleFontColor,showLabels:this.options.scaleShowLabels,showLabelBackdrop:this.options.scaleShowLabelBackdrop,backdropColor:this.options.scaleBackdropColor,backdropPaddingY:this.options.scaleBackdropPaddingY,backdropPaddingX:this.options.scaleBackdropPaddingX,lineWidth:this.options.scaleShowLine?this.options.scaleLineWidth:0,lineColor:this.options.scaleLineColor,lineArc:!0,width:this.chart.width,height:this.chart.height,xCenter:this.chart.width/2,yCenter:this.chart.height/2,ctx:this.chart.ctx,templateString:this.options.scaleLabel,valuesCount:t.length}),this.updateScaleRange(t),this.scale.update(),e.each(t,function(t,i){this.addData(t,i,!0)},this),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getSegmentsAtEvent(t):[];e.each(this.segments,function(t){t.restore(["fillColor"])}),e.each(i,function(t){t.fillColor=t.highlightColor}),this.showTooltip(i)}),this.render()},getSegmentsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.segments,function(t){t.inRange(s.x,s.y)&&i.push(t)},this),i},addData:function(t,i,e){var s=i||this.segments.length;this.segments.splice(s,0,new this.SegmentArc({fillColor:t.color,highlightColor:t.highlight||t.color,label:t.label,value:t.value,outerRadius:this.options.animateScale?0:this.scale.calculateCenterOffset(t.value),circumference:this.options.animateRotate?0:this.scale.getCircumference(),startAngle:1.5*Math.PI})),e||(this.reflow(),this.update())},removeData:function(t){var i=e.isNumber(t)?t:this.segments.length-1;this.segments.splice(i,1),this.reflow(),this.update()},calculateTotal:function(t){this.total=0,e.each(t,function(t){this.total+=t.value},this),this.scale.valuesCount=this.segments.length},updateScaleRange:function(t){var i=[];e.each(t,function(t){i.push(t.value)});var s=this.options.scaleOverride?{steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}:e.calculateScaleRange(i,e.min([this.chart.width,this.chart.height])/2,this.options.scaleFontSize,this.options.scaleBeginAtZero,this.options.scaleIntegersOnly);e.extend(this.scale,s,{size:e.min([this.chart.width,this.chart.height]),xCenter:this.chart.width/2,yCenter:this.chart.height/2})},update:function(){this.calculateTotal(this.segments),e.each(this.segments,function(t){t.save()}),this.render()},reflow:function(){e.extend(this.SegmentArc.prototype,{x:this.chart.width/2,y:this.chart.height/2}),this.updateScaleRange(this.segments),this.scale.update(),e.extend(this.scale,{xCenter:this.chart.width/2,yCenter:this.chart.height/2}),e.each(this.segments,function(t){t.update({outerRadius:this.scale.calculateCenterOffset(t.value)})},this)},draw:function(t){var i=t||1;this.clear(),e.each(this.segments,function(t,e){t.transition({circumference:this.scale.getCircumference(),outerRadius:this.scale.calculateCenterOffset(t.value)},i),t.endAngle=t.startAngle+t.circumference,0===e&&(t.startAngle=1.5*Math.PI),e<this.segments.length-1&&(this.segments[e+1].startAngle=t.endAngle),t.draw()},this),this.scale.draw()}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers;i.Type.extend({name:"Radar",defaults:{scaleShowLine:!0,angleShowLineOut:!0,scaleShowLabels:!1,scaleBeginAtZero:!0,angleLineColor:"rgba(0,0,0,.1)",angleLineWidth:1,pointLabelFontFamily:"'Arial'",pointLabelFontStyle:"normal",pointLabelFontSize:10,pointLabelFontColor:"#666",pointDot:!0,pointDotRadius:3,pointDotStrokeWidth:1,pointHitDetectionRadius:20,datasetStroke:!0,datasetStrokeWidth:2,datasetFill:!0,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].strokeColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'},initialize:function(t){this.PointClass=i.Point.extend({strokeWidth:this.options.pointDotStrokeWidth,radius:this.options.pointDotRadius,display:this.options.pointDot,hitDetectionRadius:this.options.pointHitDetectionRadius,ctx:this.chart.ctx}),this.datasets=[],this.buildScale(t),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getPointsAtEvent(t):[];this.eachPoints(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,pointColor:i.pointColor,pointStrokeColor:i.pointStrokeColor,points:[]};this.datasets.push(s),e.each(i.data,function(e,n){var o;this.scale.animation||(o=this.scale.getPointPosition(n,this.scale.calculateCenterOffset(e))),s.points.push(new this.PointClass({value:e,label:t.labels[n],datasetLabel:i.label,x:this.options.animation?this.scale.xCenter:o.x,y:this.options.animation?this.scale.yCenter:o.y,strokeColor:i.pointStrokeColor,fillColor:i.pointColor,highlightFill:i.pointHighlightFill||i.pointColor,highlightStroke:i.pointHighlightStroke||i.pointStrokeColor}))},this)},this),this.render()},eachPoints:function(t){e.each(this.datasets,function(i){e.each(i.points,t,this)},this)},getPointsAtEvent:function(t){var i=e.getRelativePosition(t),s=e.getAngleFromPoint({x:this.scale.xCenter,y:this.scale.yCenter},i),n=2*Math.PI/this.scale.valuesCount,o=Math.round((s.angle-1.5*Math.PI)/n),a=[];return(o>=this.scale.valuesCount||0>o)&&(o=0),s.distance<=this.scale.drawingArea&&e.each(this.datasets,function(t){a.push(t.points[o])}),a},buildScale:function(t){this.scale=new i.RadialScale({display:this.options.showScale,fontStyle:this.options.scaleFontStyle,fontSize:this.options.scaleFontSize,fontFamily:this.options.scaleFontFamily,fontColor:this.options.scaleFontColor,showLabels:this.options.scaleShowLabels,showLabelBackdrop:this.options.scaleShowLabelBackdrop,backdropColor:this.options.scaleBackdropColor,backdropPaddingY:this.options.scaleBackdropPaddingY,backdropPaddingX:this.options.scaleBackdropPaddingX,lineWidth:this.options.scaleShowLine?this.options.scaleLineWidth:0,lineColor:this.options.scaleLineColor,angleLineColor:this.options.angleLineColor,angleLineWidth:this.options.angleShowLineOut?this.options.angleLineWidth:0,pointLabelFontColor:this.options.pointLabelFontColor,pointLabelFontSize:this.options.pointLabelFontSize,pointLabelFontFamily:this.options.pointLabelFontFamily,pointLabelFontStyle:this.options.pointLabelFontStyle,height:this.chart.height,width:this.chart.width,xCenter:this.chart.width/2,yCenter:this.chart.height/2,ctx:this.chart.ctx,templateString:this.options.scaleLabel,labels:t.labels,valuesCount:t.datasets[0].data.length}),this.scale.setScaleSize(),this.updateScaleRange(t.datasets),this.scale.buildYLabels()},updateScaleRange:function(t){var i=function(){var i=[];return e.each(t,function(t){t.data?i=i.concat(t.data):e.each(t.points,function(t){i.push(t.value)})}),i}(),s=this.options.scaleOverride?{steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}:e.calculateScaleRange(i,e.min([this.chart.width,this.chart.height])/2,this.options.scaleFontSize,this.options.scaleBeginAtZero,this.options.scaleIntegersOnly);e.extend(this.scale,s)},addData:function(t,i){this.scale.valuesCount++,e.each(t,function(t,e){var s=this.scale.getPointPosition(this.scale.valuesCount,this.scale.calculateCenterOffset(t));this.datasets[e].points.push(new this.PointClass({value:t,label:i,x:s.x,y:s.y,strokeColor:this.datasets[e].pointStrokeColor,fillColor:this.datasets[e].pointColor}))},this),this.scale.labels.push(i),this.reflow(),this.update()},removeData:function(){this.scale.valuesCount--,this.scale.labels.shift(),e.each(this.datasets,function(t){t.points.shift()},this),this.reflow(),this.update()},update:function(){this.eachPoints(function(t){t.save()}),this.reflow(),this.render()},reflow:function(){e.extend(this.scale,{width:this.chart.width,height:this.chart.height,size:e.min([this.chart.width,this.chart.height]),xCenter:this.chart.width/2,yCenter:this.chart.height/2}),this.updateScaleRange(this.datasets),this.scale.setScaleSize(),this.scale.buildYLabels()},draw:function(t){var i=t||1,s=this.chart.ctx;this.clear(),this.scale.draw(),e.each(this.datasets,function(t){e.each(t.points,function(t,e){t.hasValue()&&t.transition(this.scale.getPointPosition(e,this.scale.calculateCenterOffset(t.value)),i)},this),s.lineWidth=this.options.datasetStrokeWidth,s.strokeStyle=t.strokeColor,s.beginPath(),e.each(t.points,function(t,i){0===i?s.moveTo(t.x,t.y):s.lineTo(t.x,t.y)},this),s.closePath(),s.stroke(),s.fillStyle=t.fillColor,s.fill(),e.each(t.points,function(t){t.hasValue()&&t.draw()})},this)}})}.call(this);
 /**
- * The Circle Menu object represents a choice menu of multiple menu items.<br><br>
+ * The Circle Menu object represents a choice menu of multiple menu items. The type of data provider value for a circle menu control should point to a property in the data provider that would follow the same rules as hard coding an array of items.<br><br>
  * <b>Sample Declaration</b><br>
  * <pre>
  * {
@@ -8165,12 +8322,24 @@ var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.upd
  * @memberof $ui
  * @extends $ui.CoreComponent
  * @property {$ui.CircleMenuItem[]} [items] - The items property is an array of menu items to be displayed in the control
- * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a circle menu control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
  * @property {CircleMenuClickEvent} [onclick] - This event fires when an item in the menu is clicked. The parameter passed to the event is [the item]{@link $ui.CircleMenuItem} which was clicked.
  */
 function $ui_CircleMenu(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-circle-menu');
+	
+	// Items property
+	if (object.items == undefined) {
+		object.items = [];
+	}
+	object._protected.items = object.items;
+	Object.defineProperty(object, 'items', {
+		get: function() {return this._protected.items;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','items'));					
+		},
+		configurable: false}
+	);
 	
 	// Re layout the menu items
 	object._recalculateLayout = function() {
@@ -8337,9 +8506,6 @@ function $ui_CircleMenu(object, screen) {
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
-		if (!this.items) {
-			this.items = [];
-		}
 		// Add all new items into the list
 		for (i = 0; i < itemArray.length; i++) {
 			item = itemArray[i];
@@ -8419,7 +8585,6 @@ $ui_CircleMenu.prototype = new $ui_CoreComponent();
  * @memberof $ui
  * @extends $ui.CoreComponent
  * @property {string} caption - Text to appear on the menu item
- * @property {boolean} [visible=true] - Visibility state of the menu item
  * @property {string} img - Path to the image to be displayed in the menu item
  */
 function $ui_CircleMenuItem(object, screen) {
@@ -8460,18 +8625,46 @@ function $ui_CircleMenuItem(object, screen) {
 	$ui.addClass(object.dom.icon,'icon');
 	object.dom.inner.appendChild(object.dom.icon);
 	
-	// Set the image
+	// Image Property
 	if (object.img) {
 		object.dom.icon.style.backgroundImage = 'url("'+ object.img + '")';
 	}
+	object._protected.img = object.img;
+	Object.defineProperty(object, 'img', {
+		get: function() {return this._protected.img;},
+		set: function(value) {
+			if (value == this._protected.img) return;
+			this._protected.img = value;
+			if (value == undefined) {
+				this.dom.icon.style.backgroundImage = '';
+			} else {
+				this.dom.icon.style.backgroundImage = 'url("'+ value + '")';
+			}
+		},
+		configurable: false}
+	);
 	
-	// Add our caption
+	// Caption Property
 	object.dom.captionDiv = document.createElement('div');
 	$ui.addClass(object.dom.captionDiv,'caption');
 	object.dom.appendChild(object.dom.captionDiv);
 	if (object.caption) {
 		object.dom.captionDiv.textContent = object.caption;
 	}
+	object._protected.caption = object.caption;
+	Object.defineProperty(object, 'caption', {
+		get: function() {return this._protected.caption;},
+		set: function(value) {
+			if (value == this._protected.caption) return;
+			this._protected.caption = value;
+			if (value == undefined) {
+				this.dom.captionDiv.textContent = '';
+			} else {
+				this.dom.captionDiv.textContent = value;
+			}
+		},
+		configurable: false}
+	);
 	
 	// Returns the size of the menu item
 	object.getSize = function() {
@@ -8518,7 +8711,18 @@ function $ui_ControlGroup(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-control-group');
 	
-	// If there is no data provider then just create the items
+	// Content property
+	if (object.content == undefined) {
+		object.content = [];
+	}
+	object._protected.content = object.content;
+	Object.defineProperty(object, 'content', {
+		get: function() {return this._protected.content;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','content'));			
+		},
+		configurable: false}
+	);
 	if (object.content) {
 		var i,
 			item,
@@ -8562,6 +8766,14 @@ function $ui_CoreTile(object, screen) {
 		if (object._size && (object._size != $ui.TileSize.STANDARD)) {
 			$ui.addClass(object.dom, object._size);
 		}
+		object._protected._size = object._size;
+		Object.defineProperty(object, '_size', {
+			get: function() {return this._protected._size;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','_size'));			
+			},
+			configurable: false}
+		);
 		
 		// Create our loading area
 		object.dom.loadingDiv = document.createElement('div');
@@ -10561,16 +10773,188 @@ function $ui_MediaPlayer(object, screen) {
 
 $ui_MediaPlayer.prototype = new $ui_CoreComponent();
 
+/**
+ * The MenuItem control represents a menu option in a menu for a {@link $ui.OnlineScreen}.  It can only be used in a menu and cannot be instantiated on its own.
+ * @namespace
+ * @name MenuItem
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} caption - The Caption to display on this menu item
+ * @property {boolean} [selected=false] - Set to <b>true</b> to make this menu item the selected item in the menu.  Only one menu item can be selected at once.  When a menu renders it will select the first menu item that has selected set to true and ignore the rest.
+ * @property {GenericEvent} [onclick] - Event that will fire when the user clicks the menu item
+ */
+function $ui_MenuItem(object, screen) {
+	$ui_CoreComponent.call(this, object, screen);
+	if (object.inMenu != true) {
+		console.log('ERROR: A "MenuItem" can only be created as part of a menu in an "OnlineScreen"');
+		return;
+	}
+	$ui.addClass(object.dom,'ui-menu-item');
+	
+	// Selected property
+	if (object.selected == true) {
+		$ui.addClass(object.dom,'selected');
+	} else {
+		object.selected = false;
+	}
+	object._protected.selected = object.selected;
+	Object.defineProperty(object, 'selected', {
+		get: function() {return this._protected.selected;},
+		set: function(value) {
+			if (value == this._protected.selected) return;
+			this._protected.selected = value;
+			if (value == true) {
+				$ui.addClass(object.dom,'selected');
+			} else {
+				$ui.removeClass(object.dom,'selected');
+			}
+		},
+		configurable: false}
+	);
+	
+	// Caption Property
+	if (object.caption) {
+		object.dom.textContent = object.caption;
+	}
+	object._protected.caption = object.caption;
+	Object.defineProperty(object, 'caption', {
+		get: function() {return this._protected.caption;},
+		set: function(value) {
+			if (value == this._protected.caption) return;
+			this._protected.caption = value;
+			this.dom.textContent = value;
+		},
+		configurable: false}
+	);
+	
+	// Handle the click
+	object.dom.onclick = function() {
+		if (this.model.selected == true) return;
+		this.model.selected = true;
+		// Un-select the other items
+		var i,
+			item,
+			menu = this.model.parent.menu;
+		for (i = 0; i < menu.length; i++) {
+			item = menu[i];
+			if (item != this.model) {
+				item.selected = false;
+			}
+		}
+		// Fire our onclick
+		if (this.model.onclick) {
+			this.model.onclick();
+		}
+	}
+	
+	// Add our mouse handling
+	object.dom.onmouseenter = function() {
+		this.style.color = $ui.theme.color;
+	}
+	object.dom.onmouseleave = function() {
+		this.style.color = '';
+	}
+	
+	return object.dom;
+}
+
+$ui_MenuItem.prototype = new $ui_CoreComponent();
+/**
+ * The OnlineScreen represents a screen that will be hosted on the web site providing both desktop and mobile viewing
+ * @namespace OnlineScreen
+ * @memberof $ui
+ * @extends $ui.CoreScreen
+ * @property {$ui.MenuItem[]} [menu] - Optional list of menu items to appear in the screen
+ * @property {$ui.CoreComponent[]} [content] - Content to display in the screen
+ */
 function $ui_OnlineScreen(object, data) {
 	$ui_CoreScreen.call(this, object, data);
 	
 	if (object) {
 		$ui.addClass(object.dom,'ui-online-screen');
 
+		// Create our title bar
+		object.dom.titleBar = document.createElement('div');
+		$ui.addClass(object.dom.titleBar, 'title-bar');
+		object.dom.appendChild(object.dom.titleBar);
+		
+		// Create our menu 
+		object.dom.menu = document.createElement('div');
+		$ui.addClass(object.dom.menu, 'menu');
+		object.dom.titleBar.appendChild(object.dom.menu);
+		
+		// Create the login/logout button
+		object.dom.login = document.createElement('div');
+		$ui.addClass(object.dom.login, 'login');
+		object.dom.menu.appendChild(object.dom.login);
+		object.dom.login.textContent = 'Log in / Setup';
+		object.dom.login.style.backgroundColor = $ui.theme.color;
+		
 		// Create our content div for the controls
 		object.dom.contentDiv = document.createElement('div');
 		$ui.addClass(object.dom.contentDiv, 'inner');
 		object.dom.appendChild(object.dom.contentDiv);
+		
+		// Title Bar property
+		object._protected.titleBar = object.titleBar;
+		Object.defineProperty(object, 'titleBar', {
+			get: function() {return this._protected.titleBar;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','titleBar'));
+			},
+			configurable: false}
+		);
+		
+		// Menu property
+		if (object.menu == undefined) {
+			object.menu = [];
+		}
+		object._protected.menu = object.menu;
+		Object.defineProperty(object, 'menu', {
+			get: function() {return this._protected.menu;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','menu'));
+			},
+			configurable: false}
+		);
+		
+		// Content property
+		if (object.content == undefined) {
+			object.content = [];
+		}
+		object._protected.content = object.content;
+		Object.defineProperty(object, 'content', {
+			get: function() {return this._protected.content;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','content'));
+			},
+			configurable: false}
+		);
+		
+		// Cycle through menu
+		if (object.menu) {
+			var i,
+				control,
+				controlDom,
+				selectedFound = false;
+			for (i = 0; i < object.menu.length; i++) {
+				control = object.menu[i];
+				if (control.component != $ui.MenuItem) continue;
+				control.inMenu = true;
+				control.parent = object;
+				if (control.selected == true) {
+					if (selectedFound == true) {
+						control.selected = false;
+					} else {
+						selectedFound = true;
+					}
+				}
+				controlDom = $ui.createControl(control, object);
+				if (controlDom) {
+					object.dom.menu.appendChild(controlDom);
+				}
+			}
+		}
 		
 		// Cycle through content
 		if (object.content) {
@@ -10586,6 +10970,7 @@ function $ui_OnlineScreen(object, data) {
 			}
 		}
 		
+		// Now add our footer
 		
 		return object.dom;
 	}
@@ -10671,6 +11056,120 @@ function $ui_PhoneLogListItem(object, screen) {
 }
 
 $ui_PhoneLogListItem.prototype = new $ui_CoreComponent();
+/**
+ * The RawContent object represents an area where you can load in HTML from a source to be displayed <br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.RawContent,
+ *    src: 'my/path/file.html'
+ *}
+ * @namespace RawContent
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} [src] - The path to the raw content you wish to load
+*/
+function $ui_RawContent(object, screen) {
+	$ui_CoreComponent.call(this, object, screen);
+	$ui.addClass(object.dom,'ui-raw-content');
+	
+	// Create our XHR
+	object._protected.xhr = new XMLHttpRequest();
+	object._protected.xhr.model = object;
+	
+	// Handle our state changes
+	object._protected.xhr.onreadystatechange = function () {
+		/* On readyState is 4, Determine if the request was successful or not. */
+		if(this.readyState == 4) {
+			if (this.status == 200) {
+				this.model.dom.innerHTML = this.responseText;
+			} else if(this.status != 0) {
+				console.log('ERROR: XHR returned status code: ' + this.status);
+			}
+		}
+	}
+	// Src Property
+	if (object.src) {
+		object._protected.xhr.open('GET', object.src, true);
+		object._protected.xhr.send();
+	}
+	object._protected.src = object.src;
+	Object.defineProperty(object, 'src', {
+		get: function() {return this._protected.src;},
+		set: function(value) {
+			if (value == this._protected.src) return;
+			this._protected.src = value;
+			this._protected.xhr.open('GET', value, true);
+			this._protected.xhr.send();
+		},
+		configurable: false}
+	);
+	
+	return object.dom;
+}
+
+$ui_RawContent.prototype = new $ui_CoreComponent();
+/**
+ * The ResponsiveLayout object represents a grouping of multiple different controls in a section that will size itself based on the screen in which it is displayed. <br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.ResponsiveLayout,
+ *    id: 'myGrouping',
+ *    content: [
+ *       {
+ *           component: $ui.Header,
+ *           caption: 'My Header',
+ *       },
+ *       {
+ *           component: $ui.List,
+ *           style: $ui.GenericListItem
+ *       }
+ *    ]
+ *}
+ * @namespace ResponsiveLayout
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreComponent[]} [content] - The content property is an array of control definitions to be displayed in the control
+*/
+function $ui_ResponsiveLayout(object, screen) {
+	$ui_CoreComponent.call(this, object, screen);
+	$ui.addClass(object.dom,'ui-responsive-layout');
+	
+	// Create our inner area that holds the content of the layout
+	object.dom.inner = document.createElement('div');
+	$ui.addClass(object.dom.inner,'inner');
+	object.dom.appendChild(object.dom.inner);
+	
+	// Content property
+	if (object.content == undefined) {
+		object.content = [];
+	}
+	object._protected.content = object.content;
+	Object.defineProperty(object, 'content', {
+		get: function() {return this._protected.content;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','content'));			
+		},
+		configurable: false}
+	);
+	if (object.content) {
+		var i,
+			item,
+			itemDom;
+		for (i = 0; i < object.content.length; i++) {
+			item = object.content[i];
+			itemDom = $ui.createControl(item, object.screen);
+			if (itemDom) {
+				object.dom.inner.appendChild(itemDom);
+			}
+		}
+	}	
+	
+	return object.dom;
+}
+
+$ui_ResponsiveLayout.prototype = new $ui_CoreComponent();
 /**
  * The TileAcceleration represents the tile that shows Acceleration in G-forces..
  * <br><br><b>Sample Declaration</b>
@@ -11375,8 +11874,8 @@ $ui_TileMPG.prototype = new $ui_CoreTileDonutChart();
  * @memberof $ui
  * @extends $ui.CoreTile
  * @property {string} [backgroundImg] - This is the path to the background image the user has chosen for their profile.
- * @property {string} [userName] - This is the path to the avatar image the user has chosen for their profile.
- * @property {string} [avatar] - This string value represents the Miles per gallon or KM per liter abbreviation
+ * @property {string} [userName] - This is the user's profile name
+ * @property {string} [avatar] - This string value represents the path to the user's avatar picture
  * @property {$ui.TileProfile.ProfileStats} [stats] - This object represents the participation statistics for the user
  */
 function $ui_TileProfile(object, screen) {
@@ -11392,7 +11891,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.wedge, 'wedge');
 	object.dom.contentDiv.appendChild(object.dom.wedge);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.wedge.style.backgroundColor = $ui.theme.color;
 	} else {
 		object.dom.wedge.style.backgroundColor = profileTileColor;
@@ -11454,7 +11953,7 @@ function $ui_TileProfile(object, screen) {
 	object.dom.stats = document.createElement('div');
 	$ui.addClass(object.dom.stats, 'stats');
 	object.dom.contentDiv.appendChild(object.dom.stats);
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.stats.style.borderColor = $ui.theme.color;
 	}
 	
@@ -11470,7 +11969,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.score.number, 'number');
 	object.dom.score.appendChild(object.dom.score.number);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.score.style.borderColor = $ui.theme.color;
 		object.dom.score.number.style.color = $ui.theme.color;
 	} else {
@@ -11490,7 +11989,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.friends.number, 'number');
 	object.dom.friends.appendChild(object.dom.friends.number);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.friends.style.borderColor = $ui.theme.color;
 		object.dom.friends.number.style.color = $ui.theme.color;
 	} else {
@@ -11510,7 +12009,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.groups.number, 'number');
 	object.dom.groups.appendChild(object.dom.groups.number);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.groups.style.borderColor = $ui.theme.color;
 		object.dom.groups.number.style.color = $ui.theme.color;
 	} else {
@@ -11522,7 +12021,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.avatar, 'avatar');
 	object.dom.contentDiv.appendChild(object.dom.avatar);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.avatar.style.borderColor = $ui.theme.color;
 	}
 	
@@ -11537,7 +12036,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.rank, 'rank');
 	object.dom.contentDiv.appendChild(object.dom.rank);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.rank.style.backgroundColor = $ui.theme.color;
 	} else {
 		object.dom.rank.style.backgroundColor = profileTileColor;
@@ -11550,7 +12049,7 @@ function $ui_TileProfile(object, screen) {
 	object.dom.findFriend.textContent = 'Find a Friend';
 	object.dom.contentDiv.appendChild(object.dom.findFriend);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.findFriend.style.backgroundColor = $ui.theme.color;
 	} else {
 		object.dom.findFriend.style.backgroundColor = profileTileColor;
@@ -11563,7 +12062,7 @@ function $ui_TileProfile(object, screen) {
 	object.dom.findGroup.textContent = 'Join a Group';
 	object.dom.contentDiv.appendChild(object.dom.findGroup);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.findGroup.style.backgroundColor = $ui.theme.color;
 	} else {
 		object.dom.findGroup.style.backgroundColor = profileTileColor;
@@ -13346,12 +13845,16 @@ function $ui_CoreComponent(object, screen) {
 							this._providerUpdate(data);
 						}
 						return;
+					} else {
+						if (this._providerUpdate) {
+							this._providerUpdate(undefined);
+						}
 					}
 				} else {
 					// If there was data we would not reach this point other wise it is undefined
 					// so we have to check to see if it is an initial load so that we don't trigger 
 					// the control's update unnecessarily 
-					if (!dataProvider._untouched && this._providerUpdate) {
+					if (this._providerUpdate) {
 						this._providerUpdate(undefined);
 					}
 				}
@@ -13456,7 +13959,18 @@ function $ui_CoreScreen(object, data) {
 	$ui_CoreComponent.call(this, object);
 	if (object) {
 		object.data = data;
+		
+		// Guid Property
 		object.guid = $ui.guid();
+		object._protected.guid = object.guid;
+		Object.defineProperty(object, 'guid', {
+			get: function() {return this._protected.guid;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','guid'));
+			},
+			configurable: false}
+		);
+		
 		object.children = []; // Contains all child controls in the screen
 		$ui.addClass(object.dom,'ui-core-screen');
 		
@@ -13743,7 +14257,8 @@ function InteractionEvent(screenId, controlId, interaction, component) {
 
 
 /**
- * A List object will display multiple list items based on the data provided to the control.  The type of item objects that are used should match the declaration of the <b>style</b> of the list control<br><br>
+ * A List object will display multiple list items based on the data provided to the control.  The type of item objects that are used should match the declaration of the <b>style</b> of the list control.<br><br>
+ * The type of data provider value for a list control should point to a property in the data provider that would follow the same rules as hard coding an array of items.<br><br>
  * <b>Sample Declaration</b><br>
  * <pre>
  * {
@@ -13764,20 +14279,24 @@ function InteractionEvent(screenId, controlId, interaction, component) {
  * @extends $ui.CoreComponent
  * @property {object[]} [items] - The items property is an array of objects who's definition matches that of the requirements of the <b>style</b> property of the list
  * @property {object} style - This is a list item decalaration so that the list knows how to render. For example this could be set to {@link $ui.GenericListItem}
- * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a list control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
  * @property {ListActionEvent} [onaction] - The onaction event will fire when an action from a list item is triggered. Some list items may have multiple actions that can be taken. When one of these actions is selected by the user the onaction event will fire.
  */
 function $ui_List(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-list');
 	
-	// Set our initial properties that can be modified
-	if (object.items) {
-		object._original.items = [];
-		for (var i = 0; i < object.items.length; i++) {
-			object._original.items.push(object.items[i]);
-		}
+	// Set our items property
+	if (object.items == undefined) {
+		object.items = [];
 	}
+	object._protected.items = object.items;
+	Object.defineProperty(object, 'items', {
+		get: function() {return this._protected.items;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','items'));
+		},
+		configurable: false}
+	);
 
 	// Broker the onaction from a list item
 	object._onaction = function(item, event) {
@@ -13825,10 +14344,6 @@ function $ui_List(object, screen) {
 	object.addItem = function(item) {
 		if (this._addItem(item)) {
 			this.items.push(item);
-			// if there is data provider, add the item to provider
-			if (this._providerItems != undefined) {
-				this._providerItems.push(item);
-			}
 			return true;
 		} else {
 			return false;
@@ -13852,10 +14367,6 @@ function $ui_List(object, screen) {
 			console.log('$ui.List: ' + ex);
 		}
 		this.items.splice(index, 1);
-		// See if we have items on a provider that we should remove
-		if (this._providerItems != undefined) {
-			this._providerItems.splice(index, 1);
-		}
 		if (item._destroy) {
 			item._destroy();
 		}
@@ -13884,10 +14395,6 @@ function $ui_List(object, screen) {
 				itemDom = this._createItemDom(item);
 			this.items.splice(index, 0, item);
 			this.dom.insertBefore(itemDom, existingItem.dom);
-			// if there is data provider, insert the item to provider
-			if (this._providerItems != undefined) {
-				this._providerItems.splice(index, 0, item);
-			}
 			return true;
 		} 
 		return false;
@@ -13918,10 +14425,6 @@ function $ui_List(object, screen) {
 					item._destroy();
 				}
 			}
-			// See if there is data from provider, and make it blank.
-			if (this._providerItems != undefined) {
-				this._providerItems = [];
-			}
 		}
 		this.addItemBatch(itemArray);
 	}
@@ -13936,9 +14439,6 @@ function $ui_List(object, screen) {
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
-		if (!this.items) {
-			this.items = [];
-		}
 		// Add all new items into the list
 		for (i = 0; i < itemArray.length; i++) {
 			item = itemArray[i];
@@ -13950,7 +14450,6 @@ function $ui_List(object, screen) {
 	// Private function to handle provider updates
 	object._providerUpdate = function(value) {
 		this.refreshItems(value);
-		this._providerItems = value;
 	}
 	object._providerUpdate = object._providerUpdate.bind(object);
 	
@@ -13975,8 +14474,6 @@ function $ui_List(object, screen) {
 			item = object.items[i];
 			object._addItem(item);
 		}
-	} else {
-		object.items = [];
 	}
 	
 	return object.dom;
@@ -14037,7 +14534,20 @@ function ListEvent(target, eventType, data) {
  */
 function $ui_Spinner(object, screen){
 	$ui_CoreComponent.call(this, object, screen);
+	// Size property
 	object.size = (object.size) ? object.size : $ui.Size.NORMAL;
+	object._protected.size = object.size;
+	Object.defineProperty(object, 'size', {
+		get: function() {return this._protected.size;},
+		set: function(value) {
+			if (this._protected.size == value) return;
+			$ui.removeClass(this.dom, this._protected.size);
+			this._protected.size = value;
+			$ui.addClass(this.dom,value);			
+		},
+		configurable: false}
+	);
+	
 	$ui.addClass(object.dom, 'ui-spinner')
 	$ui.addClass(object.dom, object.size);
 	$ui.addClass(object.dom, 'center');
@@ -14047,7 +14557,8 @@ function $ui_Spinner(object, screen){
 	$ui.addClass(object.dom.innerDiv, 'inner');
 	object.dom.appendChild(object.dom.innerDiv);
 	
-	// Check our coloring
+	// forceColor property
+	object._protected.forceColor = object.forceColor;
 	if (object.forceColor) {
 		$ui.addClass(object.dom.innerDiv, object.forceColor);
 	} else {
@@ -14057,7 +14568,14 @@ function $ui_Spinner(object, screen){
 			$ui.addClass(object.dom.innerDiv, 'dark');
 		}
 	}
-
+	Object.defineProperty(object, 'forceColor', {
+		get: function() {return this._protected.forceColor;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','forceColor'));			
+		},
+		configurable: false}
+	);
+	
 	return object.dom
 }
 
@@ -14122,7 +14640,7 @@ function UIExtension(name, constructor, type, definition) {
 (function(){"use strict";var t=this,i=t.Chart,e=function(t){this.canvas=t.canvas,this.ctx=t;this.width=t.canvas.width,this.height=t.canvas.height;return this.aspectRatio=this.width/this.height,s.retinaScale(this),this};e.defaults={global:{animation:!0,animationSteps:60,animationEasing:"easeOutQuart",showScale:!0,scaleOverride:!1,scaleSteps:null,scaleStepWidth:null,scaleStartValue:null,scaleLineColor:"rgba(0,0,0,.1)",scaleLineWidth:1,scaleShowLabels:!0,scaleLabel:"<%=value%>",scaleIntegersOnly:!0,scaleBeginAtZero:!1,scaleFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",scaleFontSize:12,scaleFontStyle:"normal",scaleFontColor:"#666",responsive:!1,maintainAspectRatio:!0,showTooltips:!0,customTooltips:!1,tooltipEvents:["mousemove","touchstart","touchmove","mouseout"],tooltipFillColor:"rgba(0,0,0,0.8)",tooltipFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",tooltipFontSize:14,tooltipFontStyle:"normal",tooltipFontColor:"#fff",tooltipTitleFontFamily:"'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",tooltipTitleFontSize:14,tooltipTitleFontStyle:"bold",tooltipTitleFontColor:"#fff",tooltipYPadding:6,tooltipXPadding:6,tooltipCaretSize:8,tooltipCornerRadius:6,tooltipXOffset:10,tooltipTemplate:"<%if (label){%><%=label%>: <%}%><%= value %>",multiTooltipTemplate:"<%= value %>",multiTooltipKeyBackground:"#fff",onAnimationProgress:function(){},onAnimationComplete:function(){}}},e.types={};var s=e.helpers={},n=s.each=function(t,i,e){var s=Array.prototype.slice.call(arguments,3);if(t)if(t.length===+t.length){var n;for(n=0;n<t.length;n++)i.apply(e,[t[n],n].concat(s))}else for(var o in t)i.apply(e,[t[o],o].concat(s))},o=s.clone=function(t){var i={};return n(t,function(e,s){t.hasOwnProperty(s)&&(i[s]=e)}),i},a=s.extend=function(t){return n(Array.prototype.slice.call(arguments,1),function(i){n(i,function(e,s){i.hasOwnProperty(s)&&(t[s]=e)})}),t},h=s.merge=function(){var t=Array.prototype.slice.call(arguments,0);return t.unshift({}),a.apply(null,t)},l=s.indexOf=function(t,i){if(Array.prototype.indexOf)return t.indexOf(i);for(var e=0;e<t.length;e++)if(t[e]===i)return e;return-1},r=(s.where=function(t,i){var e=[];return s.each(t,function(t){i(t)&&e.push(t)}),e},s.findNextWhere=function(t,i,e){e||(e=-1);for(var s=e+1;s<t.length;s++){var n=t[s];if(i(n))return n}},s.findPreviousWhere=function(t,i,e){e||(e=t.length);for(var s=e-1;s>=0;s--){var n=t[s];if(i(n))return n}},s.inherits=function(t){var i=this,e=t&&t.hasOwnProperty("constructor")?t.constructor:function(){return i.apply(this,arguments)},s=function(){this.constructor=e};return s.prototype=i.prototype,e.prototype=new s,e.extend=r,t&&a(e.prototype,t),e.__super__=i.prototype,e}),c=s.noop=function(){},u=s.uid=function(){var t=0;return function(){return"chart-"+t++}}(),d=s.warn=function(t){window.console&&"function"==typeof window.console.warn&&console.warn(t)},p=s.amd="function"==typeof define&&define.amd,f=s.isNumber=function(t){return!isNaN(parseFloat(t))&&isFinite(t)},g=s.max=function(t){return Math.max.apply(Math,t)},m=s.min=function(t){return Math.min.apply(Math,t)},v=(s.cap=function(t,i,e){if(f(i)){if(t>i)return i}else if(f(e)&&e>t)return e;return t},s.getDecimalPlaces=function(t){return t%1!==0&&f(t)?t.toString().split(".")[1].length:0}),S=s.radians=function(t){return t*(Math.PI/180)},x=(s.getAngleFromPoint=function(t,i){var e=i.x-t.x,s=i.y-t.y,n=Math.sqrt(e*e+s*s),o=2*Math.PI+Math.atan2(s,e);return 0>e&&0>s&&(o+=2*Math.PI),{angle:o,distance:n}},s.aliasPixel=function(t){return t%2===0?0:.5}),y=(s.splineCurve=function(t,i,e,s){var n=Math.sqrt(Math.pow(i.x-t.x,2)+Math.pow(i.y-t.y,2)),o=Math.sqrt(Math.pow(e.x-i.x,2)+Math.pow(e.y-i.y,2)),a=s*n/(n+o),h=s*o/(n+o);return{inner:{x:i.x-a*(e.x-t.x),y:i.y-a*(e.y-t.y)},outer:{x:i.x+h*(e.x-t.x),y:i.y+h*(e.y-t.y)}}},s.calculateOrderOfMagnitude=function(t){return Math.floor(Math.log(t)/Math.LN10)}),C=(s.calculateScaleRange=function(t,i,e,s,n){var o=2,a=Math.floor(i/(1.5*e)),h=o>=a,l=g(t),r=m(t);l===r&&(l+=.5,r>=.5&&!s?r-=.5:l+=.5);for(var c=Math.abs(l-r),u=y(c),d=Math.ceil(l/(1*Math.pow(10,u)))*Math.pow(10,u),p=s?0:Math.floor(r/(1*Math.pow(10,u)))*Math.pow(10,u),f=d-p,v=Math.pow(10,u),S=Math.round(f/v);(S>a||a>2*S)&&!h;)if(S>a)v*=2,S=Math.round(f/v),S%1!==0&&(h=!0);else if(n&&u>=0){if(v/2%1!==0)break;v/=2,S=Math.round(f/v)}else v/=2,S=Math.round(f/v);return h&&(S=o,v=f/S),{steps:S,stepValue:v,min:p,max:p+S*v}},s.template=function(t,i){function e(t,i){var e=/\W/.test(t)?new Function("obj","var p=[],print=function(){p.push.apply(p,arguments);};with(obj){p.push('"+t.replace(/[\r\t\n]/g," ").split("<%").join("	").replace(/((^|%>)[^\t]*)'/g,"$1\r").replace(/\t=(.*?)%>/g,"',$1,'").split("	").join("');").split("%>").join("p.push('").split("\r").join("\\'")+"');}return p.join('');"):s[t]=s[t];return i?e(i):e}if(t instanceof Function)return t(i);var s={};return e(t,i)}),w=(s.generateLabels=function(t,i,e,s){var o=new Array(i);return labelTemplateString&&n(o,function(i,n){o[n]=C(t,{value:e+s*(n+1)})}),o},s.easingEffects={linear:function(t){return t},easeInQuad:function(t){return t*t},easeOutQuad:function(t){return-1*t*(t-2)},easeInOutQuad:function(t){return(t/=.5)<1?.5*t*t:-0.5*(--t*(t-2)-1)},easeInCubic:function(t){return t*t*t},easeOutCubic:function(t){return 1*((t=t/1-1)*t*t+1)},easeInOutCubic:function(t){return(t/=.5)<1?.5*t*t*t:.5*((t-=2)*t*t+2)},easeInQuart:function(t){return t*t*t*t},easeOutQuart:function(t){return-1*((t=t/1-1)*t*t*t-1)},easeInOutQuart:function(t){return(t/=.5)<1?.5*t*t*t*t:-0.5*((t-=2)*t*t*t-2)},easeInQuint:function(t){return 1*(t/=1)*t*t*t*t},easeOutQuint:function(t){return 1*((t=t/1-1)*t*t*t*t+1)},easeInOutQuint:function(t){return(t/=.5)<1?.5*t*t*t*t*t:.5*((t-=2)*t*t*t*t+2)},easeInSine:function(t){return-1*Math.cos(t/1*(Math.PI/2))+1},easeOutSine:function(t){return 1*Math.sin(t/1*(Math.PI/2))},easeInOutSine:function(t){return-0.5*(Math.cos(Math.PI*t/1)-1)},easeInExpo:function(t){return 0===t?1:1*Math.pow(2,10*(t/1-1))},easeOutExpo:function(t){return 1===t?1:1*(-Math.pow(2,-10*t/1)+1)},easeInOutExpo:function(t){return 0===t?0:1===t?1:(t/=.5)<1?.5*Math.pow(2,10*(t-1)):.5*(-Math.pow(2,-10*--t)+2)},easeInCirc:function(t){return t>=1?t:-1*(Math.sqrt(1-(t/=1)*t)-1)},easeOutCirc:function(t){return 1*Math.sqrt(1-(t=t/1-1)*t)},easeInOutCirc:function(t){return(t/=.5)<1?-0.5*(Math.sqrt(1-t*t)-1):.5*(Math.sqrt(1-(t-=2)*t)+1)},easeInElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:1==(t/=1)?1:(e||(e=.3),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),-(s*Math.pow(2,10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e)))},easeOutElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:1==(t/=1)?1:(e||(e=.3),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),s*Math.pow(2,-10*t)*Math.sin(2*(1*t-i)*Math.PI/e)+1)},easeInOutElastic:function(t){var i=1.70158,e=0,s=1;return 0===t?0:2==(t/=.5)?1:(e||(e=.3*1.5),s<Math.abs(1)?(s=1,i=e/4):i=e/(2*Math.PI)*Math.asin(1/s),1>t?-.5*s*Math.pow(2,10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e):s*Math.pow(2,-10*(t-=1))*Math.sin(2*(1*t-i)*Math.PI/e)*.5+1)},easeInBack:function(t){var i=1.70158;return 1*(t/=1)*t*((i+1)*t-i)},easeOutBack:function(t){var i=1.70158;return 1*((t=t/1-1)*t*((i+1)*t+i)+1)},easeInOutBack:function(t){var i=1.70158;return(t/=.5)<1?.5*t*t*(((i*=1.525)+1)*t-i):.5*((t-=2)*t*(((i*=1.525)+1)*t+i)+2)},easeInBounce:function(t){return 1-w.easeOutBounce(1-t)},easeOutBounce:function(t){return(t/=1)<1/2.75?7.5625*t*t:2/2.75>t?1*(7.5625*(t-=1.5/2.75)*t+.75):2.5/2.75>t?1*(7.5625*(t-=2.25/2.75)*t+.9375):1*(7.5625*(t-=2.625/2.75)*t+.984375)},easeInOutBounce:function(t){return.5>t?.5*w.easeInBounce(2*t):.5*w.easeOutBounce(2*t-1)+.5}}),b=s.requestAnimFrame=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(t){return window.setTimeout(t,1e3/60)}}(),P=(s.cancelAnimFrame=function(){return window.cancelAnimationFrame||window.webkitCancelAnimationFrame||window.mozCancelAnimationFrame||window.oCancelAnimationFrame||window.msCancelAnimationFrame||function(t){return window.clearTimeout(t,1e3/60)}}(),s.animationLoop=function(t,i,e,s,n,o){var a=0,h=w[e]||w.linear,l=function(){a++;var e=a/i,r=h(e);t.call(o,r,e,a),s.call(o,r,e),i>a?o.animationFrame=b(l):n.apply(o)};b(l)},s.getRelativePosition=function(t){var i,e,s=t.originalEvent||t,n=t.currentTarget||t.srcElement,o=n.getBoundingClientRect();return s.touches?(i=s.touches[0].clientX-o.left,e=s.touches[0].clientY-o.top):(i=s.clientX-o.left,e=s.clientY-o.top),{x:i,y:e}},s.addEvent=function(t,i,e){t.addEventListener?t.addEventListener(i,e):t.attachEvent?t.attachEvent("on"+i,e):t["on"+i]=e}),L=s.removeEvent=function(t,i,e){t.removeEventListener?t.removeEventListener(i,e,!1):t.detachEvent?t.detachEvent("on"+i,e):t["on"+i]=c},k=(s.bindEvents=function(t,i,e){t.events||(t.events={}),n(i,function(i){t.events[i]=function(){e.apply(t,arguments)},P(t.chart.canvas,i,t.events[i])})},s.unbindEvents=function(t,i){n(i,function(i,e){L(t.chart.canvas,e,i)})}),F=s.getMaximumWidth=function(t){var i=t.parentNode;return i.clientWidth},R=s.getMaximumHeight=function(t){var i=t.parentNode;return i.clientHeight},T=(s.getMaximumSize=s.getMaximumWidth,s.retinaScale=function(t){var i=t.ctx,e=t.canvas.width,s=t.canvas.height;window.devicePixelRatio&&(i.canvas.style.width=e+"px",i.canvas.style.height=s+"px",i.canvas.height=s*window.devicePixelRatio,i.canvas.width=e*window.devicePixelRatio,i.scale(window.devicePixelRatio,window.devicePixelRatio))}),A=s.clear=function(t){t.ctx.clearRect(0,0,t.width,t.height)},M=s.fontString=function(t,i,e){return i+" "+t+"px "+e},W=s.longestText=function(t,i,e){t.font=i;var s=0;return n(e,function(i){var e=t.measureText(i).width;s=e>s?e:s}),s},z=s.drawRoundedRectangle=function(t,i,e,s,n,o){t.beginPath(),t.moveTo(i+o,e),t.lineTo(i+s-o,e),t.quadraticCurveTo(i+s,e,i+s,e+o),t.lineTo(i+s,e+n-o),t.quadraticCurveTo(i+s,e+n,i+s-o,e+n),t.lineTo(i+o,e+n),t.quadraticCurveTo(i,e+n,i,e+n-o),t.lineTo(i,e+o),t.quadraticCurveTo(i,e,i+o,e),t.closePath()};e.instances={},e.Type=function(t,i,s){this.options=i,this.chart=s,this.id=u(),e.instances[this.id]=this,i.responsive&&this.resize(),this.initialize.call(this,t)},a(e.Type.prototype,{initialize:function(){return this},clear:function(){return A(this.chart),this},stop:function(){return s.cancelAnimFrame.call(t,this.animationFrame),this},resize:function(t){this.stop();var i=this.chart.canvas,e=F(this.chart.canvas),s=this.options.maintainAspectRatio?e/this.chart.aspectRatio:R(this.chart.canvas);return i.width=this.chart.width=e,i.height=this.chart.height=s,T(this.chart),"function"==typeof t&&t.apply(this,Array.prototype.slice.call(arguments,1)),this},reflow:c,render:function(t){return t&&this.reflow(),this.options.animation&&!t?s.animationLoop(this.draw,this.options.animationSteps,this.options.animationEasing,this.options.onAnimationProgress,this.options.onAnimationComplete,this):(this.draw(),this.options.onAnimationComplete.call(this)),this},generateLegend:function(){return C(this.options.legendTemplate,this)},destroy:function(){this.clear(),k(this,this.events);var t=this.chart.canvas;t.width=this.chart.width,t.height=this.chart.height,t.style.removeProperty?(t.style.removeProperty("width"),t.style.removeProperty("height")):(t.style.removeAttribute("width"),t.style.removeAttribute("height")),delete e.instances[this.id]},showTooltip:function(t,i){"undefined"==typeof this.activeElements&&(this.activeElements=[]);var o=function(t){var i=!1;return t.length!==this.activeElements.length?i=!0:(n(t,function(t,e){t!==this.activeElements[e]&&(i=!0)},this),i)}.call(this,t);if(o||i){if(this.activeElements=t,this.draw(),this.options.customTooltips&&this.options.customTooltips(!1),t.length>0)if(this.datasets&&this.datasets.length>1){for(var a,h,r=this.datasets.length-1;r>=0&&(a=this.datasets[r].points||this.datasets[r].bars||this.datasets[r].segments,h=l(a,t[0]),-1===h);r--);var c=[],u=[],d=function(){var t,i,e,n,o,a=[],l=[],r=[];return s.each(this.datasets,function(i){t=i.points||i.bars||i.segments,t[h]&&t[h].hasValue()&&a.push(t[h])}),s.each(a,function(t){l.push(t.x),r.push(t.y),c.push(s.template(this.options.multiTooltipTemplate,t)),u.push({fill:t._saved.fillColor||t.fillColor,stroke:t._saved.strokeColor||t.strokeColor})},this),o=m(r),e=g(r),n=m(l),i=g(l),{x:n>this.chart.width/2?n:i,y:(o+e)/2}}.call(this,h);new e.MultiTooltip({x:d.x,y:d.y,xPadding:this.options.tooltipXPadding,yPadding:this.options.tooltipYPadding,xOffset:this.options.tooltipXOffset,fillColor:this.options.tooltipFillColor,textColor:this.options.tooltipFontColor,fontFamily:this.options.tooltipFontFamily,fontStyle:this.options.tooltipFontStyle,fontSize:this.options.tooltipFontSize,titleTextColor:this.options.tooltipTitleFontColor,titleFontFamily:this.options.tooltipTitleFontFamily,titleFontStyle:this.options.tooltipTitleFontStyle,titleFontSize:this.options.tooltipTitleFontSize,cornerRadius:this.options.tooltipCornerRadius,labels:c,legendColors:u,legendColorBackground:this.options.multiTooltipKeyBackground,title:t[0].label,chart:this.chart,ctx:this.chart.ctx,custom:this.options.customTooltips}).draw()}else n(t,function(t){var i=t.tooltipPosition();new e.Tooltip({x:Math.round(i.x),y:Math.round(i.y),xPadding:this.options.tooltipXPadding,yPadding:this.options.tooltipYPadding,fillColor:this.options.tooltipFillColor,textColor:this.options.tooltipFontColor,fontFamily:this.options.tooltipFontFamily,fontStyle:this.options.tooltipFontStyle,fontSize:this.options.tooltipFontSize,caretHeight:this.options.tooltipCaretSize,cornerRadius:this.options.tooltipCornerRadius,text:C(this.options.tooltipTemplate,t),chart:this.chart,custom:this.options.customTooltips}).draw()},this);return this}},toBase64Image:function(){return this.chart.canvas.toDataURL.apply(this.chart.canvas,arguments)}}),e.Type.extend=function(t){var i=this,s=function(){return i.apply(this,arguments)};if(s.prototype=o(i.prototype),a(s.prototype,t),s.extend=e.Type.extend,t.name||i.prototype.name){var n=t.name||i.prototype.name,l=e.defaults[i.prototype.name]?o(e.defaults[i.prototype.name]):{};e.defaults[n]=a(l,t.defaults),e.types[n]=s,e.prototype[n]=function(t,i){var o=h(e.defaults.global,e.defaults[n],i||{});return new s(t,o,this)}}else d("Name not provided for this chart, so it hasn't been registered");return i},e.Element=function(t){a(this,t),this.initialize.apply(this,arguments),this.save()},a(e.Element.prototype,{initialize:function(){},restore:function(t){return t?n(t,function(t){this[t]=this._saved[t]},this):a(this,this._saved),this},save:function(){return this._saved=o(this),delete this._saved._saved,this},update:function(t){return n(t,function(t,i){this._saved[i]=this[i],this[i]=t},this),this},transition:function(t,i){return n(t,function(t,e){this[e]=(t-this._saved[e])*i+this._saved[e]},this),this},tooltipPosition:function(){return{x:this.x,y:this.y}},hasValue:function(){return f(this.value)}}),e.Element.extend=r,e.Point=e.Element.extend({display:!0,inRange:function(t,i){var e=this.hitDetectionRadius+this.radius;return Math.pow(t-this.x,2)+Math.pow(i-this.y,2)<Math.pow(e,2)},draw:function(){if(this.display){var t=this.ctx;t.beginPath(),t.arc(this.x,this.y,this.radius,0,2*Math.PI),t.closePath(),t.strokeStyle=this.strokeColor,t.lineWidth=this.strokeWidth,t.fillStyle=this.fillColor,t.fill(),t.stroke()}}}),e.Arc=e.Element.extend({inRange:function(t,i){var e=s.getAngleFromPoint(this,{x:t,y:i}),n=e.angle>=this.startAngle&&e.angle<=this.endAngle,o=e.distance>=this.innerRadius&&e.distance<=this.outerRadius;return n&&o},tooltipPosition:function(){var t=this.startAngle+(this.endAngle-this.startAngle)/2,i=(this.outerRadius-this.innerRadius)/2+this.innerRadius;return{x:this.x+Math.cos(t)*i,y:this.y+Math.sin(t)*i}},draw:function(t){var i=this.ctx;i.beginPath(),i.arc(this.x,this.y,this.outerRadius,this.startAngle,this.endAngle),i.arc(this.x,this.y,this.innerRadius,this.endAngle,this.startAngle,!0),i.closePath(),i.strokeStyle=this.strokeColor,i.lineWidth=this.strokeWidth,i.fillStyle=this.fillColor,i.fill(),i.lineJoin="bevel",this.showStroke&&i.stroke()}}),e.Rectangle=e.Element.extend({draw:function(){var t=this.ctx,i=this.width/2,e=this.x-i,s=this.x+i,n=this.base-(this.base-this.y),o=this.strokeWidth/2;this.showStroke&&(e+=o,s-=o,n+=o),t.beginPath(),t.fillStyle=this.fillColor,t.strokeStyle=this.strokeColor,t.lineWidth=this.strokeWidth,t.moveTo(e,this.base),t.lineTo(e,n),t.lineTo(s,n),t.lineTo(s,this.base),t.fill(),this.showStroke&&t.stroke()},height:function(){return this.base-this.y},inRange:function(t,i){return t>=this.x-this.width/2&&t<=this.x+this.width/2&&i>=this.y&&i<=this.base}}),e.Tooltip=e.Element.extend({draw:function(){var t=this.chart.ctx;t.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.xAlign="center",this.yAlign="above";var i=this.caretPadding=2,e=t.measureText(this.text).width+2*this.xPadding,s=this.fontSize+2*this.yPadding,n=s+this.caretHeight+i;this.x+e/2>this.chart.width?this.xAlign="left":this.x-e/2<0&&(this.xAlign="right"),this.y-n<0&&(this.yAlign="below");var o=this.x-e/2,a=this.y-n;if(t.fillStyle=this.fillColor,this.custom)this.custom(this);else{switch(this.yAlign){case"above":t.beginPath(),t.moveTo(this.x,this.y-i),t.lineTo(this.x+this.caretHeight,this.y-(i+this.caretHeight)),t.lineTo(this.x-this.caretHeight,this.y-(i+this.caretHeight)),t.closePath(),t.fill();break;case"below":a=this.y+i+this.caretHeight,t.beginPath(),t.moveTo(this.x,this.y+i),t.lineTo(this.x+this.caretHeight,this.y+i+this.caretHeight),t.lineTo(this.x-this.caretHeight,this.y+i+this.caretHeight),t.closePath(),t.fill()}switch(this.xAlign){case"left":o=this.x-e+(this.cornerRadius+this.caretHeight);break;case"right":o=this.x-(this.cornerRadius+this.caretHeight)}z(t,o,a,e,s,this.cornerRadius),t.fill(),t.fillStyle=this.textColor,t.textAlign="center",t.textBaseline="middle",t.fillText(this.text,o+e/2,a+s/2)}}}),e.MultiTooltip=e.Element.extend({initialize:function(){this.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.titleFont=M(this.titleFontSize,this.titleFontStyle,this.titleFontFamily),this.height=this.labels.length*this.fontSize+(this.labels.length-1)*(this.fontSize/2)+2*this.yPadding+1.5*this.titleFontSize,this.ctx.font=this.titleFont;var t=this.ctx.measureText(this.title).width,i=W(this.ctx,this.font,this.labels)+this.fontSize+3,e=g([i,t]);this.width=e+2*this.xPadding;var s=this.height/2;this.y-s<0?this.y=s:this.y+s>this.chart.height&&(this.y=this.chart.height-s),this.x>this.chart.width/2?this.x-=this.xOffset+this.width:this.x+=this.xOffset},getLineHeight:function(t){var i=this.y-this.height/2+this.yPadding,e=t-1;return 0===t?i+this.titleFontSize/2:i+(1.5*this.fontSize*e+this.fontSize/2)+1.5*this.titleFontSize},draw:function(){if(this.custom)this.custom(this);else{z(this.ctx,this.x,this.y-this.height/2,this.width,this.height,this.cornerRadius);var t=this.ctx;t.fillStyle=this.fillColor,t.fill(),t.closePath(),t.textAlign="left",t.textBaseline="middle",t.fillStyle=this.titleTextColor,t.font=this.titleFont,t.fillText(this.title,this.x+this.xPadding,this.getLineHeight(0)),t.font=this.font,s.each(this.labels,function(i,e){t.fillStyle=this.textColor,t.fillText(i,this.x+this.xPadding+this.fontSize+3,this.getLineHeight(e+1)),t.fillStyle=this.legendColorBackground,t.fillRect(this.x+this.xPadding,this.getLineHeight(e+1)-this.fontSize/2,this.fontSize,this.fontSize),t.fillStyle=this.legendColors[e].fill,t.fillRect(this.x+this.xPadding,this.getLineHeight(e+1)-this.fontSize/2,this.fontSize,this.fontSize)},this)}}}),e.Scale=e.Element.extend({initialize:function(){this.fit()},buildYLabels:function(){this.yLabels=[];for(var t=v(this.stepValue),i=0;i<=this.steps;i++)this.yLabels.push(C(this.templateString,{value:(this.min+i*this.stepValue).toFixed(t)}));this.yLabelWidth=this.display&&this.showLabels?W(this.ctx,this.font,this.yLabels):0},addXLabel:function(t){this.xLabels.push(t),this.valuesCount++,this.fit()},removeXLabel:function(){this.xLabels.shift(),this.valuesCount--,this.fit()},fit:function(){this.startPoint=this.display?this.fontSize:0,this.endPoint=this.display?this.height-1.5*this.fontSize-5:this.height,this.startPoint+=this.padding,this.endPoint-=this.padding;var t,i=this.endPoint-this.startPoint;for(this.calculateYRange(i),this.buildYLabels(),this.calculateXLabelRotation();i>this.endPoint-this.startPoint;)i=this.endPoint-this.startPoint,t=this.yLabelWidth,this.calculateYRange(i),this.buildYLabels(),t<this.yLabelWidth&&this.calculateXLabelRotation()},calculateXLabelRotation:function(){this.ctx.font=this.font;var t,i,e=this.ctx.measureText(this.xLabels[0]).width,s=this.ctx.measureText(this.xLabels[this.xLabels.length-1]).width;if(this.xScalePaddingRight=s/2+3,this.xScalePaddingLeft=e/2>this.yLabelWidth+10?e/2:this.yLabelWidth+10,this.xLabelRotation=0,this.display){var n,o=W(this.ctx,this.font,this.xLabels);this.xLabelWidth=o;for(var a=Math.floor(this.calculateX(1)-this.calculateX(0))-6;this.xLabelWidth>a&&0===this.xLabelRotation||this.xLabelWidth>a&&this.xLabelRotation<=90&&this.xLabelRotation>0;)n=Math.cos(S(this.xLabelRotation)),t=n*e,i=n*s,t+this.fontSize/2>this.yLabelWidth+8&&(this.xScalePaddingLeft=t+this.fontSize/2),this.xScalePaddingRight=this.fontSize/2,this.xLabelRotation++,this.xLabelWidth=n*o;this.xLabelRotation>0&&(this.endPoint-=Math.sin(S(this.xLabelRotation))*o+3)}else this.xLabelWidth=0,this.xScalePaddingRight=this.padding,this.xScalePaddingLeft=this.padding},calculateYRange:c,drawingArea:function(){return this.startPoint-this.endPoint},calculateY:function(t){var i=this.drawingArea()/(this.min-this.max);return this.endPoint-i*(t-this.min)},calculateX:function(t){var i=(this.xLabelRotation>0,this.width-(this.xScalePaddingLeft+this.xScalePaddingRight)),e=i/(this.valuesCount-(this.offsetGridLines?0:1)),s=e*t+this.xScalePaddingLeft;return this.offsetGridLines&&(s+=e/2),Math.round(s)},update:function(t){s.extend(this,t),this.fit()},draw:function(){var t=this.ctx,i=(this.endPoint-this.startPoint)/this.steps,e=Math.round(this.xScalePaddingLeft);this.display&&(t.fillStyle=this.textColor,t.font=this.font,n(this.yLabels,function(n,o){var a=this.endPoint-i*o,h=Math.round(a),l=this.showHorizontalLines;t.textAlign="right",t.textBaseline="middle",this.showLabels&&t.fillText(n,e-10,a),0!==o||l||(l=!0),l&&t.beginPath(),o>0?(t.lineWidth=this.gridLineWidth,t.strokeStyle=this.gridLineColor):(t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor),h+=s.aliasPixel(t.lineWidth),l&&(t.moveTo(e,h),t.lineTo(this.width,h),t.stroke(),t.closePath()),t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor,t.beginPath(),t.moveTo(e-5,h),t.lineTo(e,h),t.stroke(),t.closePath()},this),n(this.xLabels,function(i,e){var s=this.calculateX(e)+x(this.lineWidth),n=this.calculateX(e-(this.offsetGridLines?.5:0))+x(this.lineWidth),o=this.xLabelRotation>0,a=this.showVerticalLines;0!==e||a||(a=!0),a&&t.beginPath(),e>0?(t.lineWidth=this.gridLineWidth,t.strokeStyle=this.gridLineColor):(t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor),a&&(t.moveTo(n,this.endPoint),t.lineTo(n,this.startPoint-3),t.stroke(),t.closePath()),t.lineWidth=this.lineWidth,t.strokeStyle=this.lineColor,t.beginPath(),t.moveTo(n,this.endPoint),t.lineTo(n,this.endPoint+5),t.stroke(),t.closePath(),t.save(),t.translate(s,o?this.endPoint+12:this.endPoint+8),t.rotate(-1*S(this.xLabelRotation)),t.font=this.font,t.textAlign=o?"right":"center",t.textBaseline=o?"middle":"top",t.fillText(i,0,0),t.restore()},this))}}),e.RadialScale=e.Element.extend({initialize:function(){this.size=m([this.height,this.width]),this.drawingArea=this.display?this.size/2-(this.fontSize/2+this.backdropPaddingY):this.size/2},calculateCenterOffset:function(t){var i=this.drawingArea/(this.max-this.min);return(t-this.min)*i},update:function(){this.lineArc?this.drawingArea=this.display?this.size/2-(this.fontSize/2+this.backdropPaddingY):this.size/2:this.setScaleSize(),this.buildYLabels()},buildYLabels:function(){this.yLabels=[];for(var t=v(this.stepValue),i=0;i<=this.steps;i++)this.yLabels.push(C(this.templateString,{value:(this.min+i*this.stepValue).toFixed(t)}))},getCircumference:function(){return 2*Math.PI/this.valuesCount},setScaleSize:function(){var t,i,e,s,n,o,a,h,l,r,c,u,d=m([this.height/2-this.pointLabelFontSize-5,this.width/2]),p=this.width,g=0;for(this.ctx.font=M(this.pointLabelFontSize,this.pointLabelFontStyle,this.pointLabelFontFamily),i=0;i<this.valuesCount;i++)t=this.getPointPosition(i,d),e=this.ctx.measureText(C(this.templateString,{value:this.labels[i]})).width+5,0===i||i===this.valuesCount/2?(s=e/2,t.x+s>p&&(p=t.x+s,n=i),t.x-s<g&&(g=t.x-s,a=i)):i<this.valuesCount/2?t.x+e>p&&(p=t.x+e,n=i):i>this.valuesCount/2&&t.x-e<g&&(g=t.x-e,a=i);l=g,r=Math.ceil(p-this.width),o=this.getIndexAngle(n),h=this.getIndexAngle(a),c=r/Math.sin(o+Math.PI/2),u=l/Math.sin(h+Math.PI/2),c=f(c)?c:0,u=f(u)?u:0,this.drawingArea=d-(u+c)/2,this.setCenterPoint(u,c)},setCenterPoint:function(t,i){var e=this.width-i-this.drawingArea,s=t+this.drawingArea;this.xCenter=(s+e)/2,this.yCenter=this.height/2},getIndexAngle:function(t){var i=2*Math.PI/this.valuesCount;return t*i-Math.PI/2},getPointPosition:function(t,i){var e=this.getIndexAngle(t);return{x:Math.cos(e)*i+this.xCenter,y:Math.sin(e)*i+this.yCenter}},draw:function(){if(this.display){var t=this.ctx;if(n(this.yLabels,function(i,e){if(e>0){var s,n=e*(this.drawingArea/this.steps),o=this.yCenter-n;if(this.lineWidth>0)if(t.strokeStyle=this.lineColor,t.lineWidth=this.lineWidth,this.lineArc)t.beginPath(),t.arc(this.xCenter,this.yCenter,n,0,2*Math.PI),t.closePath(),t.stroke();else{t.beginPath();for(var a=0;a<this.valuesCount;a++)s=this.getPointPosition(a,this.calculateCenterOffset(this.min+e*this.stepValue)),0===a?t.moveTo(s.x,s.y):t.lineTo(s.x,s.y);t.closePath(),t.stroke()}if(this.showLabels){if(t.font=M(this.fontSize,this.fontStyle,this.fontFamily),this.showLabelBackdrop){var h=t.measureText(i).width;t.fillStyle=this.backdropColor,t.fillRect(this.xCenter-h/2-this.backdropPaddingX,o-this.fontSize/2-this.backdropPaddingY,h+2*this.backdropPaddingX,this.fontSize+2*this.backdropPaddingY)}t.textAlign="center",t.textBaseline="middle",t.fillStyle=this.fontColor,t.fillText(i,this.xCenter,o)}}},this),!this.lineArc){t.lineWidth=this.angleLineWidth,t.strokeStyle=this.angleLineColor;for(var i=this.valuesCount-1;i>=0;i--){if(this.angleLineWidth>0){var e=this.getPointPosition(i,this.calculateCenterOffset(this.max));t.beginPath(),t.moveTo(this.xCenter,this.yCenter),t.lineTo(e.x,e.y),t.stroke(),t.closePath()}var s=this.getPointPosition(i,this.calculateCenterOffset(this.max)+5);t.font=M(this.pointLabelFontSize,this.pointLabelFontStyle,this.pointLabelFontFamily),t.fillStyle=this.pointLabelFontColor;var o=this.labels.length,a=this.labels.length/2,h=a/2,l=h>i||i>o-h,r=i===h||i===o-h;t.textAlign=0===i?"center":i===a?"center":a>i?"left":"right",t.textBaseline=r?"middle":l?"bottom":"top",t.fillText(this.labels[i],s.x,s.y)}}}}}),s.addEvent(window,"resize",function(){var t;return function(){clearTimeout(t),t=setTimeout(function(){n(e.instances,function(t){t.options.responsive&&t.resize(t.render,!0)})},50)}}()),p?define(function(){return e}):"object"==typeof module&&module.exports&&(module.exports=e),t.Chart=e,e.noConflict=function(){return t.Chart=i,e}}).call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleBeginAtZero:!0,scaleShowGridLines:!0,scaleGridLineColor:"rgba(0,0,0,.05)",scaleGridLineWidth:1,scaleShowHorizontalLines:!0,scaleShowVerticalLines:!0,barShowStroke:!0,barStrokeWidth:2,barValueSpacing:5,barDatasetSpacing:1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].fillColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Bar",defaults:s,initialize:function(t){var s=this.options;this.ScaleClass=i.Scale.extend({offsetGridLines:!0,calculateBarX:function(t,i,e){var n=this.calculateBaseWidth(),o=this.calculateX(e)-n/2,a=this.calculateBarWidth(t);return o+a*i+i*s.barDatasetSpacing+a/2},calculateBaseWidth:function(){return this.calculateX(1)-this.calculateX(0)-2*s.barValueSpacing},calculateBarWidth:function(t){var i=this.calculateBaseWidth()-(t-1)*s.barDatasetSpacing;return i/t}}),this.datasets=[],this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getBarsAtEvent(t):[];this.eachBars(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),this.BarClass=i.Rectangle.extend({strokeWidth:this.options.barStrokeWidth,showStroke:this.options.barShowStroke,ctx:this.chart.ctx}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,bars:[]};this.datasets.push(s),e.each(i.data,function(e,n){s.bars.push(new this.BarClass({value:e,label:t.labels[n],datasetLabel:i.label,strokeColor:i.strokeColor,fillColor:i.fillColor,highlightFill:i.highlightFill||i.fillColor,highlightStroke:i.highlightStroke||i.strokeColor}))},this)},this),this.buildScale(t.labels),this.BarClass.prototype.base=this.scale.endPoint,this.eachBars(function(t,i,s){e.extend(t,{width:this.scale.calculateBarWidth(this.datasets.length),x:this.scale.calculateBarX(this.datasets.length,s,i),y:this.scale.endPoint}),t.save()},this),this.render()},update:function(){this.scale.update(),e.each(this.activeElements,function(t){t.restore(["fillColor","strokeColor"])}),this.eachBars(function(t){t.save()}),this.render()},eachBars:function(t){e.each(this.datasets,function(i,s){e.each(i.bars,t,this,s)},this)},getBarsAtEvent:function(t){for(var i,s=[],n=e.getRelativePosition(t),o=function(t){s.push(t.bars[i])},a=0;a<this.datasets.length;a++)for(i=0;i<this.datasets[a].bars.length;i++)if(this.datasets[a].bars[i].inRange(n.x,n.y))return e.each(this.datasets,o),s;return s},buildScale:function(t){var i=this,s=function(){var t=[];return i.eachBars(function(i){t.push(i.value)}),t},n={templateString:this.options.scaleLabel,height:this.chart.height,width:this.chart.width,ctx:this.chart.ctx,textColor:this.options.scaleFontColor,fontSize:this.options.scaleFontSize,fontStyle:this.options.scaleFontStyle,fontFamily:this.options.scaleFontFamily,valuesCount:t.length,beginAtZero:this.options.scaleBeginAtZero,integersOnly:this.options.scaleIntegersOnly,calculateYRange:function(t){var i=e.calculateScaleRange(s(),t,this.fontSize,this.beginAtZero,this.integersOnly);e.extend(this,i)},xLabels:t,font:e.fontString(this.options.scaleFontSize,this.options.scaleFontStyle,this.options.scaleFontFamily),lineWidth:this.options.scaleLineWidth,lineColor:this.options.scaleLineColor,showHorizontalLines:this.options.scaleShowHorizontalLines,showVerticalLines:this.options.scaleShowVerticalLines,gridLineWidth:this.options.scaleShowGridLines?this.options.scaleGridLineWidth:0,gridLineColor:this.options.scaleShowGridLines?this.options.scaleGridLineColor:"rgba(0,0,0,0)",padding:this.options.showScale?0:this.options.barShowStroke?this.options.barStrokeWidth:0,showLabels:this.options.scaleShowLabels,display:this.options.showScale};this.options.scaleOverride&&e.extend(n,{calculateYRange:e.noop,steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}),this.scale=new this.ScaleClass(n)},addData:function(t,i){e.each(t,function(t,e){this.datasets[e].bars.push(new this.BarClass({value:t,label:i,x:this.scale.calculateBarX(this.datasets.length,e,this.scale.valuesCount+1),y:this.scale.endPoint,width:this.scale.calculateBarWidth(this.datasets.length),base:this.scale.endPoint,strokeColor:this.datasets[e].strokeColor,fillColor:this.datasets[e].fillColor}))},this),this.scale.addXLabel(i),this.update()},removeData:function(){this.scale.removeXLabel(),e.each(this.datasets,function(t){t.bars.shift()},this),this.update()},reflow:function(){e.extend(this.BarClass.prototype,{y:this.scale.endPoint,base:this.scale.endPoint});
 var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.update(t)},draw:function(t){var i=t||1;this.clear();this.chart.ctx;this.scale.draw(i),e.each(this.datasets,function(t,s){e.each(t.bars,function(t,e){t.hasValue()&&(t.base=this.scale.endPoint,t.transition({x:this.scale.calculateBarX(this.datasets.length,s,e),y:this.scale.calculateY(t.value),width:this.scale.calculateBarWidth(this.datasets.length)},i).draw())},this)},this)}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={segmentShowStroke:!0,segmentStrokeColor:"#fff",segmentStrokeWidth:2,percentageInnerCutout:50,animationSteps:100,animationEasing:"easeOutBounce",animateRotate:!0,animateScale:!1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<segments.length; i++){%><li><span style="background-color:<%=segments[i].fillColor%>"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Doughnut",defaults:s,initialize:function(t){this.segments=[],this.outerRadius=(e.min([this.chart.width,this.chart.height])-this.options.segmentStrokeWidth/2)/2,this.SegmentArc=i.Arc.extend({ctx:this.chart.ctx,x:this.chart.width/2,y:this.chart.height/2}),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getSegmentsAtEvent(t):[];e.each(this.segments,function(t){t.restore(["fillColor"])}),e.each(i,function(t){t.fillColor=t.highlightColor}),this.showTooltip(i)}),this.calculateTotal(t),e.each(t,function(t,i){this.addData(t,i,!0)},this),this.render()},getSegmentsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.segments,function(t){t.inRange(s.x,s.y)&&i.push(t)},this),i},addData:function(t,i,e){var s=i||this.segments.length;this.segments.splice(s,0,new this.SegmentArc({value:t.value,outerRadius:this.options.animateScale?0:this.outerRadius,innerRadius:this.options.animateScale?0:this.outerRadius/100*this.options.percentageInnerCutout,fillColor:t.color,highlightColor:t.highlight||t.color,showStroke:this.options.segmentShowStroke,strokeWidth:this.options.segmentStrokeWidth,strokeColor:this.options.segmentStrokeColor,startAngle:1.5*Math.PI,circumference:this.options.animateRotate?0:this.calculateCircumference(t.value),label:t.label})),e||(this.reflow(),this.update())},calculateCircumference:function(t){return 2*Math.PI*(t/this.total)},calculateTotal:function(t){this.total=0,e.each(t,function(t){this.total+=t.value},this)},update:function(){this.calculateTotal(this.segments),e.each(this.activeElements,function(t){t.restore(["fillColor"])}),e.each(this.segments,function(t){t.save()}),this.render()},removeData:function(t){var i=e.isNumber(t)?t:this.segments.length-1;this.segments.splice(i,1),this.reflow(),this.update()},reflow:function(){e.extend(this.SegmentArc.prototype,{x:this.chart.width/2,y:this.chart.height/2}),this.outerRadius=(e.min([this.chart.width,this.chart.height])-this.options.segmentStrokeWidth/2)/2,e.each(this.segments,function(t){t.update({outerRadius:this.outerRadius,innerRadius:this.outerRadius/100*this.options.percentageInnerCutout})},this)},draw:function(t){var i=t?t:1;this.clear(),e.each(this.segments,function(t,e){t.transition({circumference:this.calculateCircumference(t.value),outerRadius:this.outerRadius,innerRadius:this.outerRadius/100*this.options.percentageInnerCutout},i),t.endAngle=t.startAngle+t.circumference,t.draw(),0===e&&(t.startAngle=1.5*Math.PI),e<this.segments.length-1&&(this.segments[e+1].startAngle=t.endAngle)},this)}}),i.types.Doughnut.extend({name:"Pie",defaults:e.merge(s,{percentageInnerCutout:0})})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleShowGridLines:!0,scaleGridLineColor:"rgba(0,0,0,.05)",scaleGridLineWidth:1,scaleShowHorizontalLines:!0,scaleShowVerticalLines:!0,bezierCurve:!0,bezierCurveTension:.4,pointDot:!0,pointDotRadius:4,pointDotStrokeWidth:1,pointHitDetectionRadius:20,datasetStroke:!0,datasetStrokeWidth:2,datasetFill:!0,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].strokeColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"Line",defaults:s,initialize:function(t){this.PointClass=i.Point.extend({strokeWidth:this.options.pointDotStrokeWidth,radius:this.options.pointDotRadius,display:this.options.pointDot,hitDetectionRadius:this.options.pointHitDetectionRadius,ctx:this.chart.ctx,inRange:function(t){return Math.pow(t-this.x,2)<Math.pow(this.radius+this.hitDetectionRadius,2)}}),this.datasets=[],this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getPointsAtEvent(t):[];this.eachPoints(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,pointColor:i.pointColor,pointStrokeColor:i.pointStrokeColor,points:[]};this.datasets.push(s),e.each(i.data,function(e,n){s.points.push(new this.PointClass({value:e,label:t.labels[n],datasetLabel:i.label,strokeColor:i.pointStrokeColor,fillColor:i.pointColor,highlightFill:i.pointHighlightFill||i.pointColor,highlightStroke:i.pointHighlightStroke||i.pointStrokeColor}))},this),this.buildScale(t.labels),this.eachPoints(function(t,i){e.extend(t,{x:this.scale.calculateX(i),y:this.scale.endPoint}),t.save()},this)},this),this.render()},update:function(){this.scale.update(),e.each(this.activeElements,function(t){t.restore(["fillColor","strokeColor"])}),this.eachPoints(function(t){t.save()}),this.render()},eachPoints:function(t){e.each(this.datasets,function(i){e.each(i.points,t,this)},this)},getPointsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.datasets,function(t){e.each(t.points,function(t){t.inRange(s.x,s.y)&&i.push(t)})},this),i},buildScale:function(t){var s=this,n=function(){var t=[];return s.eachPoints(function(i){t.push(i.value)}),t},o={templateString:this.options.scaleLabel,height:this.chart.height,width:this.chart.width,ctx:this.chart.ctx,textColor:this.options.scaleFontColor,fontSize:this.options.scaleFontSize,fontStyle:this.options.scaleFontStyle,fontFamily:this.options.scaleFontFamily,valuesCount:t.length,beginAtZero:this.options.scaleBeginAtZero,integersOnly:this.options.scaleIntegersOnly,calculateYRange:function(t){var i=e.calculateScaleRange(n(),t,this.fontSize,this.beginAtZero,this.integersOnly);e.extend(this,i)},xLabels:t,font:e.fontString(this.options.scaleFontSize,this.options.scaleFontStyle,this.options.scaleFontFamily),lineWidth:this.options.scaleLineWidth,lineColor:this.options.scaleLineColor,showHorizontalLines:this.options.scaleShowHorizontalLines,showVerticalLines:this.options.scaleShowVerticalLines,gridLineWidth:this.options.scaleShowGridLines?this.options.scaleGridLineWidth:0,gridLineColor:this.options.scaleShowGridLines?this.options.scaleGridLineColor:"rgba(0,0,0,0)",padding:this.options.showScale?0:this.options.pointDotRadius+this.options.pointDotStrokeWidth,showLabels:this.options.scaleShowLabels,display:this.options.showScale};this.options.scaleOverride&&e.extend(o,{calculateYRange:e.noop,steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}),this.scale=new i.Scale(o)},addData:function(t,i){e.each(t,function(t,e){this.datasets[e].points.push(new this.PointClass({value:t,label:i,x:this.scale.calculateX(this.scale.valuesCount+1),y:this.scale.endPoint,strokeColor:this.datasets[e].pointStrokeColor,fillColor:this.datasets[e].pointColor}))},this),this.scale.addXLabel(i),this.update()},removeData:function(){this.scale.removeXLabel(),e.each(this.datasets,function(t){t.points.shift()},this),this.update()},reflow:function(){var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.update(t)},draw:function(t){var i=t||1;this.clear();var s=this.chart.ctx,n=function(t){return null!==t.value},o=function(t,i,s){return e.findNextWhere(i,n,s)||t},a=function(t,i,s){return e.findPreviousWhere(i,n,s)||t};this.scale.draw(i),e.each(this.datasets,function(t){var h=e.where(t.points,n);e.each(t.points,function(t,e){t.hasValue()&&t.transition({y:this.scale.calculateY(t.value),x:this.scale.calculateX(e)},i)},this),this.options.bezierCurve&&e.each(h,function(t,i){var s=i>0&&i<h.length-1?this.options.bezierCurveTension:0;t.controlPoints=e.splineCurve(a(t,h,i),t,o(t,h,i),s),t.controlPoints.outer.y>this.scale.endPoint?t.controlPoints.outer.y=this.scale.endPoint:t.controlPoints.outer.y<this.scale.startPoint&&(t.controlPoints.outer.y=this.scale.startPoint),t.controlPoints.inner.y>this.scale.endPoint?t.controlPoints.inner.y=this.scale.endPoint:t.controlPoints.inner.y<this.scale.startPoint&&(t.controlPoints.inner.y=this.scale.startPoint)},this),s.lineWidth=this.options.datasetStrokeWidth,s.strokeStyle=t.strokeColor,s.beginPath(),e.each(h,function(t,i){if(0===i)s.moveTo(t.x,t.y);else if(this.options.bezierCurve){var e=a(t,h,i);s.bezierCurveTo(e.controlPoints.outer.x,e.controlPoints.outer.y,t.controlPoints.inner.x,t.controlPoints.inner.y,t.x,t.y)}else s.lineTo(t.x,t.y)},this),s.stroke(),this.options.datasetFill&&h.length>0&&(s.lineTo(h[h.length-1].x,this.scale.endPoint),s.lineTo(h[0].x,this.scale.endPoint),s.fillStyle=t.fillColor,s.closePath(),s.fill()),e.each(h,function(t){t.draw()})},this)}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers,s={scaleShowLabelBackdrop:!0,scaleBackdropColor:"rgba(255,255,255,0.75)",scaleBeginAtZero:!0,scaleBackdropPaddingY:2,scaleBackdropPaddingX:2,scaleShowLine:!0,segmentShowStroke:!0,segmentStrokeColor:"#fff",segmentStrokeWidth:2,animationSteps:100,animationEasing:"easeOutBounce",animateRotate:!0,animateScale:!1,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<segments.length; i++){%><li><span style="background-color:<%=segments[i].fillColor%>"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>'};i.Type.extend({name:"PolarArea",defaults:s,initialize:function(t){this.segments=[],this.SegmentArc=i.Arc.extend({showStroke:this.options.segmentShowStroke,strokeWidth:this.options.segmentStrokeWidth,strokeColor:this.options.segmentStrokeColor,ctx:this.chart.ctx,innerRadius:0,x:this.chart.width/2,y:this.chart.height/2}),this.scale=new i.RadialScale({display:this.options.showScale,fontStyle:this.options.scaleFontStyle,fontSize:this.options.scaleFontSize,fontFamily:this.options.scaleFontFamily,fontColor:this.options.scaleFontColor,showLabels:this.options.scaleShowLabels,showLabelBackdrop:this.options.scaleShowLabelBackdrop,backdropColor:this.options.scaleBackdropColor,backdropPaddingY:this.options.scaleBackdropPaddingY,backdropPaddingX:this.options.scaleBackdropPaddingX,lineWidth:this.options.scaleShowLine?this.options.scaleLineWidth:0,lineColor:this.options.scaleLineColor,lineArc:!0,width:this.chart.width,height:this.chart.height,xCenter:this.chart.width/2,yCenter:this.chart.height/2,ctx:this.chart.ctx,templateString:this.options.scaleLabel,valuesCount:t.length}),this.updateScaleRange(t),this.scale.update(),e.each(t,function(t,i){this.addData(t,i,!0)},this),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getSegmentsAtEvent(t):[];e.each(this.segments,function(t){t.restore(["fillColor"])}),e.each(i,function(t){t.fillColor=t.highlightColor}),this.showTooltip(i)}),this.render()},getSegmentsAtEvent:function(t){var i=[],s=e.getRelativePosition(t);return e.each(this.segments,function(t){t.inRange(s.x,s.y)&&i.push(t)},this),i},addData:function(t,i,e){var s=i||this.segments.length;this.segments.splice(s,0,new this.SegmentArc({fillColor:t.color,highlightColor:t.highlight||t.color,label:t.label,value:t.value,outerRadius:this.options.animateScale?0:this.scale.calculateCenterOffset(t.value),circumference:this.options.animateRotate?0:this.scale.getCircumference(),startAngle:1.5*Math.PI})),e||(this.reflow(),this.update())},removeData:function(t){var i=e.isNumber(t)?t:this.segments.length-1;this.segments.splice(i,1),this.reflow(),this.update()},calculateTotal:function(t){this.total=0,e.each(t,function(t){this.total+=t.value},this),this.scale.valuesCount=this.segments.length},updateScaleRange:function(t){var i=[];e.each(t,function(t){i.push(t.value)});var s=this.options.scaleOverride?{steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}:e.calculateScaleRange(i,e.min([this.chart.width,this.chart.height])/2,this.options.scaleFontSize,this.options.scaleBeginAtZero,this.options.scaleIntegersOnly);e.extend(this.scale,s,{size:e.min([this.chart.width,this.chart.height]),xCenter:this.chart.width/2,yCenter:this.chart.height/2})},update:function(){this.calculateTotal(this.segments),e.each(this.segments,function(t){t.save()}),this.render()},reflow:function(){e.extend(this.SegmentArc.prototype,{x:this.chart.width/2,y:this.chart.height/2}),this.updateScaleRange(this.segments),this.scale.update(),e.extend(this.scale,{xCenter:this.chart.width/2,yCenter:this.chart.height/2}),e.each(this.segments,function(t){t.update({outerRadius:this.scale.calculateCenterOffset(t.value)})},this)},draw:function(t){var i=t||1;this.clear(),e.each(this.segments,function(t,e){t.transition({circumference:this.scale.getCircumference(),outerRadius:this.scale.calculateCenterOffset(t.value)},i),t.endAngle=t.startAngle+t.circumference,0===e&&(t.startAngle=1.5*Math.PI),e<this.segments.length-1&&(this.segments[e+1].startAngle=t.endAngle),t.draw()},this),this.scale.draw()}})}.call(this),function(){"use strict";var t=this,i=t.Chart,e=i.helpers;i.Type.extend({name:"Radar",defaults:{scaleShowLine:!0,angleShowLineOut:!0,scaleShowLabels:!1,scaleBeginAtZero:!0,angleLineColor:"rgba(0,0,0,.1)",angleLineWidth:1,pointLabelFontFamily:"'Arial'",pointLabelFontStyle:"normal",pointLabelFontSize:10,pointLabelFontColor:"#666",pointDot:!0,pointDotRadius:3,pointDotStrokeWidth:1,pointHitDetectionRadius:20,datasetStroke:!0,datasetStrokeWidth:2,datasetFill:!0,legendTemplate:'<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].strokeColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'},initialize:function(t){this.PointClass=i.Point.extend({strokeWidth:this.options.pointDotStrokeWidth,radius:this.options.pointDotRadius,display:this.options.pointDot,hitDetectionRadius:this.options.pointHitDetectionRadius,ctx:this.chart.ctx}),this.datasets=[],this.buildScale(t),this.options.showTooltips&&e.bindEvents(this,this.options.tooltipEvents,function(t){var i="mouseout"!==t.type?this.getPointsAtEvent(t):[];this.eachPoints(function(t){t.restore(["fillColor","strokeColor"])}),e.each(i,function(t){t.fillColor=t.highlightFill,t.strokeColor=t.highlightStroke}),this.showTooltip(i)}),e.each(t.datasets,function(i){var s={label:i.label||null,fillColor:i.fillColor,strokeColor:i.strokeColor,pointColor:i.pointColor,pointStrokeColor:i.pointStrokeColor,points:[]};this.datasets.push(s),e.each(i.data,function(e,n){var o;this.scale.animation||(o=this.scale.getPointPosition(n,this.scale.calculateCenterOffset(e))),s.points.push(new this.PointClass({value:e,label:t.labels[n],datasetLabel:i.label,x:this.options.animation?this.scale.xCenter:o.x,y:this.options.animation?this.scale.yCenter:o.y,strokeColor:i.pointStrokeColor,fillColor:i.pointColor,highlightFill:i.pointHighlightFill||i.pointColor,highlightStroke:i.pointHighlightStroke||i.pointStrokeColor}))},this)},this),this.render()},eachPoints:function(t){e.each(this.datasets,function(i){e.each(i.points,t,this)},this)},getPointsAtEvent:function(t){var i=e.getRelativePosition(t),s=e.getAngleFromPoint({x:this.scale.xCenter,y:this.scale.yCenter},i),n=2*Math.PI/this.scale.valuesCount,o=Math.round((s.angle-1.5*Math.PI)/n),a=[];return(o>=this.scale.valuesCount||0>o)&&(o=0),s.distance<=this.scale.drawingArea&&e.each(this.datasets,function(t){a.push(t.points[o])}),a},buildScale:function(t){this.scale=new i.RadialScale({display:this.options.showScale,fontStyle:this.options.scaleFontStyle,fontSize:this.options.scaleFontSize,fontFamily:this.options.scaleFontFamily,fontColor:this.options.scaleFontColor,showLabels:this.options.scaleShowLabels,showLabelBackdrop:this.options.scaleShowLabelBackdrop,backdropColor:this.options.scaleBackdropColor,backdropPaddingY:this.options.scaleBackdropPaddingY,backdropPaddingX:this.options.scaleBackdropPaddingX,lineWidth:this.options.scaleShowLine?this.options.scaleLineWidth:0,lineColor:this.options.scaleLineColor,angleLineColor:this.options.angleLineColor,angleLineWidth:this.options.angleShowLineOut?this.options.angleLineWidth:0,pointLabelFontColor:this.options.pointLabelFontColor,pointLabelFontSize:this.options.pointLabelFontSize,pointLabelFontFamily:this.options.pointLabelFontFamily,pointLabelFontStyle:this.options.pointLabelFontStyle,height:this.chart.height,width:this.chart.width,xCenter:this.chart.width/2,yCenter:this.chart.height/2,ctx:this.chart.ctx,templateString:this.options.scaleLabel,labels:t.labels,valuesCount:t.datasets[0].data.length}),this.scale.setScaleSize(),this.updateScaleRange(t.datasets),this.scale.buildYLabels()},updateScaleRange:function(t){var i=function(){var i=[];return e.each(t,function(t){t.data?i=i.concat(t.data):e.each(t.points,function(t){i.push(t.value)})}),i}(),s=this.options.scaleOverride?{steps:this.options.scaleSteps,stepValue:this.options.scaleStepWidth,min:this.options.scaleStartValue,max:this.options.scaleStartValue+this.options.scaleSteps*this.options.scaleStepWidth}:e.calculateScaleRange(i,e.min([this.chart.width,this.chart.height])/2,this.options.scaleFontSize,this.options.scaleBeginAtZero,this.options.scaleIntegersOnly);e.extend(this.scale,s)},addData:function(t,i){this.scale.valuesCount++,e.each(t,function(t,e){var s=this.scale.getPointPosition(this.scale.valuesCount,this.scale.calculateCenterOffset(t));this.datasets[e].points.push(new this.PointClass({value:t,label:i,x:s.x,y:s.y,strokeColor:this.datasets[e].pointStrokeColor,fillColor:this.datasets[e].pointColor}))},this),this.scale.labels.push(i),this.reflow(),this.update()},removeData:function(){this.scale.valuesCount--,this.scale.labels.shift(),e.each(this.datasets,function(t){t.points.shift()},this),this.reflow(),this.update()},update:function(){this.eachPoints(function(t){t.save()}),this.reflow(),this.render()},reflow:function(){e.extend(this.scale,{width:this.chart.width,height:this.chart.height,size:e.min([this.chart.width,this.chart.height]),xCenter:this.chart.width/2,yCenter:this.chart.height/2}),this.updateScaleRange(this.datasets),this.scale.setScaleSize(),this.scale.buildYLabels()},draw:function(t){var i=t||1,s=this.chart.ctx;this.clear(),this.scale.draw(),e.each(this.datasets,function(t){e.each(t.points,function(t,e){t.hasValue()&&t.transition(this.scale.getPointPosition(e,this.scale.calculateCenterOffset(t.value)),i)},this),s.lineWidth=this.options.datasetStrokeWidth,s.strokeStyle=t.strokeColor,s.beginPath(),e.each(t.points,function(t,i){0===i?s.moveTo(t.x,t.y):s.lineTo(t.x,t.y)},this),s.closePath(),s.stroke(),s.fillStyle=t.fillColor,s.fill(),e.each(t.points,function(t){t.hasValue()&&t.draw()})},this)}})}.call(this);
 /**
- * The Circle Menu object represents a choice menu of multiple menu items.<br><br>
+ * The Circle Menu object represents a choice menu of multiple menu items. The type of data provider value for a circle menu control should point to a property in the data provider that would follow the same rules as hard coding an array of items.<br><br>
  * <b>Sample Declaration</b><br>
  * <pre>
  * {
@@ -14145,12 +14663,24 @@ var t=e.extend({height:this.chart.height,width:this.chart.width});this.scale.upd
  * @memberof $ui
  * @extends $ui.CoreComponent
  * @property {$ui.CircleMenuItem[]} [items] - The items property is an array of menu items to be displayed in the control
- * @property {$ui.DataProviderLink} [provider] - The type of data provider value for a circle menu control should point to a property in the data provider that would follow the same rules as hard coding an array of items.
  * @property {CircleMenuClickEvent} [onclick] - This event fires when an item in the menu is clicked. The parameter passed to the event is [the item]{@link $ui.CircleMenuItem} which was clicked.
  */
 function $ui_CircleMenu(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-circle-menu');
+	
+	// Items property
+	if (object.items == undefined) {
+		object.items = [];
+	}
+	object._protected.items = object.items;
+	Object.defineProperty(object, 'items', {
+		get: function() {return this._protected.items;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','items'));					
+		},
+		configurable: false}
+	);
 	
 	// Re layout the menu items
 	object._recalculateLayout = function() {
@@ -14317,9 +14847,6 @@ function $ui_CircleMenu(object, screen) {
 	object.addItemBatch = function(itemArray) {
 		var i,
 			item;
-		if (!this.items) {
-			this.items = [];
-		}
 		// Add all new items into the list
 		for (i = 0; i < itemArray.length; i++) {
 			item = itemArray[i];
@@ -14399,7 +14926,6 @@ $ui_CircleMenu.prototype = new $ui_CoreComponent();
  * @memberof $ui
  * @extends $ui.CoreComponent
  * @property {string} caption - Text to appear on the menu item
- * @property {boolean} [visible=true] - Visibility state of the menu item
  * @property {string} img - Path to the image to be displayed in the menu item
  */
 function $ui_CircleMenuItem(object, screen) {
@@ -14440,18 +14966,46 @@ function $ui_CircleMenuItem(object, screen) {
 	$ui.addClass(object.dom.icon,'icon');
 	object.dom.inner.appendChild(object.dom.icon);
 	
-	// Set the image
+	// Image Property
 	if (object.img) {
 		object.dom.icon.style.backgroundImage = 'url("'+ object.img + '")';
 	}
+	object._protected.img = object.img;
+	Object.defineProperty(object, 'img', {
+		get: function() {return this._protected.img;},
+		set: function(value) {
+			if (value == this._protected.img) return;
+			this._protected.img = value;
+			if (value == undefined) {
+				this.dom.icon.style.backgroundImage = '';
+			} else {
+				this.dom.icon.style.backgroundImage = 'url("'+ value + '")';
+			}
+		},
+		configurable: false}
+	);
 	
-	// Add our caption
+	// Caption Property
 	object.dom.captionDiv = document.createElement('div');
 	$ui.addClass(object.dom.captionDiv,'caption');
 	object.dom.appendChild(object.dom.captionDiv);
 	if (object.caption) {
 		object.dom.captionDiv.textContent = object.caption;
 	}
+	object._protected.caption = object.caption;
+	Object.defineProperty(object, 'caption', {
+		get: function() {return this._protected.caption;},
+		set: function(value) {
+			if (value == this._protected.caption) return;
+			this._protected.caption = value;
+			if (value == undefined) {
+				this.dom.captionDiv.textContent = '';
+			} else {
+				this.dom.captionDiv.textContent = value;
+			}
+		},
+		configurable: false}
+	);
 	
 	// Returns the size of the menu item
 	object.getSize = function() {
@@ -14498,7 +15052,18 @@ function $ui_ControlGroup(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
 	$ui.addClass(object.dom,'ui-control-group');
 	
-	// If there is no data provider then just create the items
+	// Content property
+	if (object.content == undefined) {
+		object.content = [];
+	}
+	object._protected.content = object.content;
+	Object.defineProperty(object, 'content', {
+		get: function() {return this._protected.content;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','content'));			
+		},
+		configurable: false}
+	);
 	if (object.content) {
 		var i,
 			item,
@@ -14542,6 +15107,14 @@ function $ui_CoreTile(object, screen) {
 		if (object._size && (object._size != $ui.TileSize.STANDARD)) {
 			$ui.addClass(object.dom, object._size);
 		}
+		object._protected._size = object._size;
+		Object.defineProperty(object, '_size', {
+			get: function() {return this._protected._size;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','_size'));			
+			},
+			configurable: false}
+		);
 		
 		// Create our loading area
 		object.dom.loadingDiv = document.createElement('div');
@@ -16541,16 +17114,188 @@ function $ui_MediaPlayer(object, screen) {
 
 $ui_MediaPlayer.prototype = new $ui_CoreComponent();
 
+/**
+ * The MenuItem control represents a menu option in a menu for a {@link $ui.OnlineScreen}.  It can only be used in a menu and cannot be instantiated on its own.
+ * @namespace
+ * @name MenuItem
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} caption - The Caption to display on this menu item
+ * @property {boolean} [selected=false] - Set to <b>true</b> to make this menu item the selected item in the menu.  Only one menu item can be selected at once.  When a menu renders it will select the first menu item that has selected set to true and ignore the rest.
+ * @property {GenericEvent} [onclick] - Event that will fire when the user clicks the menu item
+ */
+function $ui_MenuItem(object, screen) {
+	$ui_CoreComponent.call(this, object, screen);
+	if (object.inMenu != true) {
+		console.log('ERROR: A "MenuItem" can only be created as part of a menu in an "OnlineScreen"');
+		return;
+	}
+	$ui.addClass(object.dom,'ui-menu-item');
+	
+	// Selected property
+	if (object.selected == true) {
+		$ui.addClass(object.dom,'selected');
+	} else {
+		object.selected = false;
+	}
+	object._protected.selected = object.selected;
+	Object.defineProperty(object, 'selected', {
+		get: function() {return this._protected.selected;},
+		set: function(value) {
+			if (value == this._protected.selected) return;
+			this._protected.selected = value;
+			if (value == true) {
+				$ui.addClass(object.dom,'selected');
+			} else {
+				$ui.removeClass(object.dom,'selected');
+			}
+		},
+		configurable: false}
+	);
+	
+	// Caption Property
+	if (object.caption) {
+		object.dom.textContent = object.caption;
+	}
+	object._protected.caption = object.caption;
+	Object.defineProperty(object, 'caption', {
+		get: function() {return this._protected.caption;},
+		set: function(value) {
+			if (value == this._protected.caption) return;
+			this._protected.caption = value;
+			this.dom.textContent = value;
+		},
+		configurable: false}
+	);
+	
+	// Handle the click
+	object.dom.onclick = function() {
+		if (this.model.selected == true) return;
+		this.model.selected = true;
+		// Un-select the other items
+		var i,
+			item,
+			menu = this.model.parent.menu;
+		for (i = 0; i < menu.length; i++) {
+			item = menu[i];
+			if (item != this.model) {
+				item.selected = false;
+			}
+		}
+		// Fire our onclick
+		if (this.model.onclick) {
+			this.model.onclick();
+		}
+	}
+	
+	// Add our mouse handling
+	object.dom.onmouseenter = function() {
+		this.style.color = $ui.theme.color;
+	}
+	object.dom.onmouseleave = function() {
+		this.style.color = '';
+	}
+	
+	return object.dom;
+}
+
+$ui_MenuItem.prototype = new $ui_CoreComponent();
+/**
+ * The OnlineScreen represents a screen that will be hosted on the web site providing both desktop and mobile viewing
+ * @namespace OnlineScreen
+ * @memberof $ui
+ * @extends $ui.CoreScreen
+ * @property {$ui.MenuItem[]} [menu] - Optional list of menu items to appear in the screen
+ * @property {$ui.CoreComponent[]} [content] - Content to display in the screen
+ */
 function $ui_OnlineScreen(object, data) {
 	$ui_CoreScreen.call(this, object, data);
 	
 	if (object) {
 		$ui.addClass(object.dom,'ui-online-screen');
 
+		// Create our title bar
+		object.dom.titleBar = document.createElement('div');
+		$ui.addClass(object.dom.titleBar, 'title-bar');
+		object.dom.appendChild(object.dom.titleBar);
+		
+		// Create our menu 
+		object.dom.menu = document.createElement('div');
+		$ui.addClass(object.dom.menu, 'menu');
+		object.dom.titleBar.appendChild(object.dom.menu);
+		
+		// Create the login/logout button
+		object.dom.login = document.createElement('div');
+		$ui.addClass(object.dom.login, 'login');
+		object.dom.menu.appendChild(object.dom.login);
+		object.dom.login.textContent = 'Log in / Setup';
+		object.dom.login.style.backgroundColor = $ui.theme.color;
+		
 		// Create our content div for the controls
 		object.dom.contentDiv = document.createElement('div');
 		$ui.addClass(object.dom.contentDiv, 'inner');
 		object.dom.appendChild(object.dom.contentDiv);
+		
+		// Title Bar property
+		object._protected.titleBar = object.titleBar;
+		Object.defineProperty(object, 'titleBar', {
+			get: function() {return this._protected.titleBar;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','titleBar'));
+			},
+			configurable: false}
+		);
+		
+		// Menu property
+		if (object.menu == undefined) {
+			object.menu = [];
+		}
+		object._protected.menu = object.menu;
+		Object.defineProperty(object, 'menu', {
+			get: function() {return this._protected.menu;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','menu'));
+			},
+			configurable: false}
+		);
+		
+		// Content property
+		if (object.content == undefined) {
+			object.content = [];
+		}
+		object._protected.content = object.content;
+		Object.defineProperty(object, 'content', {
+			get: function() {return this._protected.content;},
+			set: function() {
+				console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','content'));
+			},
+			configurable: false}
+		);
+		
+		// Cycle through menu
+		if (object.menu) {
+			var i,
+				control,
+				controlDom,
+				selectedFound = false;
+			for (i = 0; i < object.menu.length; i++) {
+				control = object.menu[i];
+				if (control.component != $ui.MenuItem) continue;
+				control.inMenu = true;
+				control.parent = object;
+				if (control.selected == true) {
+					if (selectedFound == true) {
+						control.selected = false;
+					} else {
+						selectedFound = true;
+					}
+				}
+				controlDom = $ui.createControl(control, object);
+				if (controlDom) {
+					object.dom.menu.appendChild(controlDom);
+				}
+			}
+		}
 		
 		// Cycle through content
 		if (object.content) {
@@ -16566,6 +17311,7 @@ function $ui_OnlineScreen(object, data) {
 			}
 		}
 		
+		// Now add our footer
 		
 		return object.dom;
 	}
@@ -16651,6 +17397,120 @@ function $ui_PhoneLogListItem(object, screen) {
 }
 
 $ui_PhoneLogListItem.prototype = new $ui_CoreComponent();
+/**
+ * The RawContent object represents an area where you can load in HTML from a source to be displayed <br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.RawContent,
+ *    src: 'my/path/file.html'
+ *}
+ * @namespace RawContent
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {string} [src] - The path to the raw content you wish to load
+*/
+function $ui_RawContent(object, screen) {
+	$ui_CoreComponent.call(this, object, screen);
+	$ui.addClass(object.dom,'ui-raw-content');
+	
+	// Create our XHR
+	object._protected.xhr = new XMLHttpRequest();
+	object._protected.xhr.model = object;
+	
+	// Handle our state changes
+	object._protected.xhr.onreadystatechange = function () {
+		/* On readyState is 4, Determine if the request was successful or not. */
+		if(this.readyState == 4) {
+			if (this.status == 200) {
+				this.model.dom.innerHTML = this.responseText;
+			} else if(this.status != 0) {
+				console.log('ERROR: XHR returned status code: ' + this.status);
+			}
+		}
+	}
+	// Src Property
+	if (object.src) {
+		object._protected.xhr.open('GET', object.src, true);
+		object._protected.xhr.send();
+	}
+	object._protected.src = object.src;
+	Object.defineProperty(object, 'src', {
+		get: function() {return this._protected.src;},
+		set: function(value) {
+			if (value == this._protected.src) return;
+			this._protected.src = value;
+			this._protected.xhr.open('GET', value, true);
+			this._protected.xhr.send();
+		},
+		configurable: false}
+	);
+	
+	return object.dom;
+}
+
+$ui_RawContent.prototype = new $ui_CoreComponent();
+/**
+ * The ResponsiveLayout object represents a grouping of multiple different controls in a section that will size itself based on the screen in which it is displayed. <br><br>
+ * <b>Sample Declaration</b><br>
+ * <pre>
+ * {
+ *   component: $ui.ResponsiveLayout,
+ *    id: 'myGrouping',
+ *    content: [
+ *       {
+ *           component: $ui.Header,
+ *           caption: 'My Header',
+ *       },
+ *       {
+ *           component: $ui.List,
+ *           style: $ui.GenericListItem
+ *       }
+ *    ]
+ *}
+ * @namespace ResponsiveLayout
+ * @memberof $ui
+ * @extends $ui.CoreComponent
+ * @property {$ui.CoreComponent[]} [content] - The content property is an array of control definitions to be displayed in the control
+*/
+function $ui_ResponsiveLayout(object, screen) {
+	$ui_CoreComponent.call(this, object, screen);
+	$ui.addClass(object.dom,'ui-responsive-layout');
+	
+	// Create our inner area that holds the content of the layout
+	object.dom.inner = document.createElement('div');
+	$ui.addClass(object.dom.inner,'inner');
+	object.dom.appendChild(object.dom.inner);
+	
+	// Content property
+	if (object.content == undefined) {
+		object.content = [];
+	}
+	object._protected.content = object.content;
+	Object.defineProperty(object, 'content', {
+		get: function() {return this._protected.content;},
+		set: function() {
+			console.log($ui._protected.PROPERTY_WARNING.replace('[prop]','content'));			
+		},
+		configurable: false}
+	);
+	if (object.content) {
+		var i,
+			item,
+			itemDom;
+		for (i = 0; i < object.content.length; i++) {
+			item = object.content[i];
+			itemDom = $ui.createControl(item, object.screen);
+			if (itemDom) {
+				object.dom.inner.appendChild(itemDom);
+			}
+		}
+	}	
+	
+	return object.dom;
+}
+
+$ui_ResponsiveLayout.prototype = new $ui_CoreComponent();
 /**
  * The TileAcceleration represents the tile that shows Acceleration in G-forces..
  * <br><br><b>Sample Declaration</b>
@@ -17355,8 +18215,8 @@ $ui_TileMPG.prototype = new $ui_CoreTileDonutChart();
  * @memberof $ui
  * @extends $ui.CoreTile
  * @property {string} [backgroundImg] - This is the path to the background image the user has chosen for their profile.
- * @property {string} [userName] - This is the path to the avatar image the user has chosen for their profile.
- * @property {string} [avatar] - This string value represents the Miles per gallon or KM per liter abbreviation
+ * @property {string} [userName] - This is the user's profile name
+ * @property {string} [avatar] - This string value represents the path to the user's avatar picture
  * @property {$ui.TileProfile.ProfileStats} [stats] - This object represents the participation statistics for the user
  */
 function $ui_TileProfile(object, screen) {
@@ -17372,7 +18232,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.wedge, 'wedge');
 	object.dom.contentDiv.appendChild(object.dom.wedge);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.wedge.style.backgroundColor = $ui.theme.color;
 	} else {
 		object.dom.wedge.style.backgroundColor = profileTileColor;
@@ -17434,7 +18294,7 @@ function $ui_TileProfile(object, screen) {
 	object.dom.stats = document.createElement('div');
 	$ui.addClass(object.dom.stats, 'stats');
 	object.dom.contentDiv.appendChild(object.dom.stats);
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.stats.style.borderColor = $ui.theme.color;
 	}
 	
@@ -17450,7 +18310,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.score.number, 'number');
 	object.dom.score.appendChild(object.dom.score.number);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.score.style.borderColor = $ui.theme.color;
 		object.dom.score.number.style.color = $ui.theme.color;
 	} else {
@@ -17470,7 +18330,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.friends.number, 'number');
 	object.dom.friends.appendChild(object.dom.friends.number);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.friends.style.borderColor = $ui.theme.color;
 		object.dom.friends.number.style.color = $ui.theme.color;
 	} else {
@@ -17490,7 +18350,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.groups.number, 'number');
 	object.dom.groups.appendChild(object.dom.groups.number);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.groups.style.borderColor = $ui.theme.color;
 		object.dom.groups.number.style.color = $ui.theme.color;
 	} else {
@@ -17502,7 +18362,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.avatar, 'avatar');
 	object.dom.contentDiv.appendChild(object.dom.avatar);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.avatar.style.borderColor = $ui.theme.color;
 	}
 	
@@ -17517,7 +18377,7 @@ function $ui_TileProfile(object, screen) {
 	$ui.addClass(object.dom.rank, 'rank');
 	object.dom.contentDiv.appendChild(object.dom.rank);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.rank.style.backgroundColor = $ui.theme.color;
 	} else {
 		object.dom.rank.style.backgroundColor = profileTileColor;
@@ -17530,7 +18390,7 @@ function $ui_TileProfile(object, screen) {
 	object.dom.findFriend.textContent = 'Find a Friend';
 	object.dom.contentDiv.appendChild(object.dom.findFriend);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.findFriend.style.backgroundColor = $ui.theme.color;
 	} else {
 		object.dom.findFriend.style.backgroundColor = profileTileColor;
@@ -17543,7 +18403,7 @@ function $ui_TileProfile(object, screen) {
 	object.dom.findGroup.textContent = 'Join a Group';
 	object.dom.contentDiv.appendChild(object.dom.findGroup);
 	// Set our coloring
-	if ($ui.getThemeStyle() == $ui.ThemeStyle.DARK) {
+	if ($ui.theme.rootClass && $ui.theme.rootClass.indexOf('ui-theme-dark') > -1) {
 		object.dom.findGroup.style.backgroundColor = $ui.theme.color;
 	} else {
 		object.dom.findGroup.style.backgroundColor = profileTileColor;
@@ -18114,6 +18974,7 @@ function emulator_AppContainer(object, data) {
 	
 	if (object) {
 		$ui.addClass(object.dom,'emulator-app-container');
+		object._protected.firstLoad = true;
 		
 		// Set the width
 		object.dom.style.width = (object.width == undefined) ? window.innerWidth + 'px' : object.width + 'px';
@@ -18127,13 +18988,18 @@ function emulator_AppContainer(object, data) {
 		}
 		
 		// Delay the visibilty so we don't get a white flash
-		object._delayedVisibility = function(screen, data) {
+		object._delayedVisibility = function() {
 			this.dom.iframe.style.visibility = 'visible';
 		}
 		object._delayedVisibility = object._delayedVisibility.bind(object);
 		
 		// Make the iframe area visible on load
 		object._iframeLoad = function(screen, data) {
+			// onload triggers twice.. we want the second load
+			if (this._protected.firstLoad) {
+				this._protected.firstLoad = false;
+				return;
+			}
 			setTimeout(this._delayedVisibility, 500);
 		}
 		object._iframeLoad = object._iframeLoad.bind(object);
@@ -18315,8 +19181,8 @@ emulator_CoreWedgeScreen.prototype = new $ui_CoreScreen();
  * @memberof $ui
  * @extends $ui.CoreScreen
  * @property {$ui.HVAC} [hvac] - This represents the HVAC controls that are shown in the emulator.
- * @property {$ui.WindowPane} homeWindowPane - This property represents the {@link $ui.WindowPane} you wish to use as the home pane
- * @property {$ui.WindowPane} secondaryWindowPane - This property represents the {@link $ui.WindowPane} you wish to use as the secondary display. This area will only be visible if the dualView property evaluates to true
+ * @property {$ui.WindowPane} primaryWindow - This property represents the {@link $ui.Window} that displays the main content
+ * @property {$ui.WindowPane} secondaryWindow - This property represents the {@link $ui.Window} you wish to use as the secondary display. This area will only be visible if <b>isDualView()</b> evaluates to true
  */
 function emulator_HeadUnitChrome(object, data) {
 	$ui_CoreScreen.call(this, object);
@@ -18342,10 +19208,10 @@ function emulator_HeadUnitChrome(object, data) {
 			if (this.hvac) {
 				if (this.hvac.visible == true) {
 					if ((this.isDualView == false) || ($system.isClientDevice == true)) {
-						this._primaryWindow.dom.style.bottom = this.hvac._getHeight()+'px';
-						this._primaryWindow.dom.style.height = 'inherit';
-					} else if (this._secondaryWindow) {
-						this._secondaryWindow.dom.style.bottom = this.hvac._getHeight()+'px';
+						this.primaryWindow.dom.style.bottom = this.hvac._getHeight()+'px';
+						this.primaryWindow.dom.style.height = 'inherit';
+					} else if (this.secondaryWindow) {
+						this.secondaryWindow.dom.style.bottom = this.hvac._getHeight()+'px';
 					}
 				}
 			} 
@@ -18353,19 +19219,25 @@ function emulator_HeadUnitChrome(object, data) {
 		object._recalculateLayout = object._recalculateLayout.bind(object);
 		
 		// Create our primary window area
-		object._primaryWindow = {parent: object};
-		var dom = new emulator_Window(object._primaryWindow,object);
+		if (object.primaryWindow == undefined) {
+			object.primaryWindow = {};
+		}
+		object.primaryWindow.parent = object;
+		var dom = new emulator_Window(object.primaryWindow,object);
 		$ui.addClass(dom,'primary');
 		dom.style.borderBottomColor = $ui.theme.color;
 		object.dom.appendChild(dom);
 		
+		
 		// Create our secondary view area
-		if (object.isDualView == true) {
-			object._secondaryWindow = {parent: object};
-			dom = new emulator_Window(object._secondaryWindow,object);
-			$ui.addClass(dom,'secondary');
-			object.dom.appendChild(dom);
+		if (object.secondaryWindow == undefined) {
+			object.secondaryWindow = {};
 		}
+		object.secondaryWindow.parent = object;
+		dom = new emulator_Window(object.secondaryWindow,object);
+		$ui.addClass(dom,'secondary');
+		object.dom.appendChild(dom);
+		
 		
 		// Create our navigation bar
 		object._navigation = {};
@@ -18378,31 +19250,7 @@ function emulator_HeadUnitChrome(object, data) {
 			dom = new emulator_HVACBar(object.hvac,object);
 			object.dom.appendChild(dom);
 		}
-		
-		// Get our home window pane
-		if (object.homeWindowPane) {
-			// We open on another thread so that the root HeadUnitChrome has been inserted into the DOM
-			setTimeout(function(){
-				//object.homeWindowPane.width = object._primaryWindow.dom.offsetWidth;
-				object._primaryWindow.push(object.homeWindowPane);
-			},0);
-		}
-		
-		// Get our secondary window pane
-		if (object.secondaryWindowPane && (object.isDualView == true)) {
-			// Create the app viewer for the defined secondary pane
-			var app = function() {
-				this.component = $ui.AppContainer;
-				this.disableAnimation = true;
-			};
-			app.prototype.src = object.secondaryWindowPane;
-			// We open on another thread so that the root HeadUnitChrome has been inserted into the DOM
-			setTimeout(function() {
-				app.prototype.width = object._secondaryWindow.dom.offsetWidth;
-				object._secondaryWindow.push(app);
-			},0);
-		}
-		
+	
 		// Assign the middle navigation menu to the window pane provided
 		object._setNavigationMenu = object._navigation._setNavigationMenu;
 		
@@ -18942,7 +19790,7 @@ function emulator_NavigationBar(object, screen) {
 		}
 		this.model.dom.centerBtn._hide();
 		// Clear out existing screens in the primary display
-		this.model._chrome._primaryWindow.popToHome();
+		this.model._chrome.primaryWindow.popToHome();
 		$ui.playTouchSound();
 	}
 	
@@ -19214,153 +20062,131 @@ emulator_WedgeTemperatureButton.prototype = new $ui_CoreComponent();
  * @namespace Window
  * @memberof $ui
  * @extends $ui.CoreComponent
+ * @property {$ui.WindowPane} [windowPane] - The initial WindowPane to load into this windowed area
+ * @property {object} [manifest] - The manifest of the application to open in this windowed area.
  */
 function emulator_Window(object, screen) {
 	$ui_CoreComponent.call(this, object, screen);
-	$ui.addClass(object.dom,'emulator-window');
-	
-	object.screens = [];
-	
-	/**
-	* This function will push a new window pane onto the stack for display inside the Windowed area
-	* @function push
-	* @memberof $ui.Window
-	* @param {$ui.WindowPane} windowPane - Window to push onto the stack
-	* @param {object} data - Data to be passed to the new window
-	*/
-	object.push = function(screen, data) {
-		screen = new screen();
-		screen.container = this;
-		screen.chrome = this.parent;
-		if (!screen.width) {
-			screen.width = this.dom.offsetWidth;
-		}
-		if (screen.component == $ui.AppContainer) {
-			var dom = new emulator_AppContainer(screen, data);
-		} else if (screen.component == $ui.WindowPane) {
-			var dom = new $ui_WindowPane(screen, data);
-		} else {
-			return;
-		}
-		this.screens.push(screen);
-		// See if we have an icon to set
-		if (screen.icon) {
-			this.screen._setNavigationMenu(screen); // this.screen is the HeadUnitChrome
-		}
-		this.dom.appendChild(dom);
-		screen.initialize();
-	}
-	object.push = object.push.bind(object);
-
-	// This will pop/destroy all of the screens stacked in this window except the first one
-	object.popToHome = function() {
-		if (this.screens.length <= 1) return;
-		$ui.inScreenTransition = true;
-		$ui._blockAllTapEvent(true);
-		this.screens[0].dom.style.visibility = '';
-		if (this.screens.length > 1) {
-			var screen = this.screens[this.screens.length - 1];
-			// Let the top most screen know it is going to be popped
-			if (screen.onbeforepop) {
-				screen.onbeforepop();
+	if (object) {
+		$ui.addClass(object.dom,'emulator-window');
+		
+		object.screens = [];
+		
+		/**
+		* This function will push a new window pane onto the stack for display inside the Windowed area
+		* @function push
+		* @memberof $ui.Window
+		* @param {$ui.WindowPane} windowPane - Window to push onto the stack
+		* @param {object} data - Data to be passed to the new window
+		*/
+		object.push = function(screen, data) {
+			screen = new screen();
+			screen.container = this;
+			screen.chrome = this.parent;
+			if (!screen.width) {
+				screen.width = this.dom.offsetWidth;
 			}
-		}
-		setTimeout(this._popToHome, 0);
-	}
-	object.popToHome = object.popToHome.bind(object);
-	
-	// Internal function to do the dirty work after the root page has been re-drawn
-	object._popToHome = function() {
-		if (this.screens.length <= 1) return;
-		var i,
-			screen;
-		// Take the top most screen and animate out it as long as animation is not disabled
-		screen = this.screens[this.screens.length-1];
-		this._removeScreen(screen);
-		$ui.inScreenTransition = false;
-		$ui._blockAllTapEvent(false);
-		// Remove all the middle screens
-		for (i = this.screens.length - 2; i > 0; i--) {
-			this._removeScreen(this.screens[i]);
-		}
-	}
-	object._popToHome = object._popToHome.bind(object);
-	
-	/*
-	// Public function to pop the top most screen
-	object.pop = function() {
-		console.log('$ui.Window.pop()');
-		if (this.screens.length <= 1) return;
-		$ui.inScreenTransition = true;
-		$ui._blockAllTapEvent(true);
-		var screenBelow = this.screens[this.screens.length-2];
-		screenBelow.dom.style.visibility = '';
-		// See if we have an icon to set
-		if (screenBelow.menuImgClass) {
-			this.screen._setNavigationMenu(screenBelow); // this.screen is the HeadUnitChrome
-		}
-		if (this.screens.length > 1) {
-			var screen = this.screens[this.screens.length - 1];
-			// Let the top most screen know it is going to be popped
-			if (screen._onbeforepop) {
-				screen._onbeforepop();
-			}
-			// Clear the screen
-			if (screen.disableAnimation === true) {
-				this._removeScreen(screen);
-				$ui.inScreenTransition = false;
-				$ui._blockAllTapEvent(false);
+			if (screen.component == $ui.AppContainer) {
+				var dom = new emulator_AppContainer(screen, data);
+			} else if (screen.component == $ui.WindowPane) {
+				var dom = new $ui_WindowPane(screen, data);
 			} else {
-				screen.dom.style['-webkit-animation-delay'] = '';
-				screen.dom.style['-webkit-animation-name'] = 'pane-slide-right';
-				screen.dom.addEventListener('webkitAnimationEnd', function(e) {
-					this.model.container._removeScreen(this.model);
-					$ui.inScreenTransition = false;
-					$ui._blockAllTapEvent(false);
-				}, false);
+				return;
 			}
+			this.screens.push(screen);
+			// See if we have an icon to set
+			if (screen.icon) {
+				this.screen._setNavigationMenu(screen); // this.screen is the HeadUnitChrome
+			}
+			this.dom.appendChild(dom);
+			screen.initialize();
+		}
+		object.push = object.push.bind(object);
+	
+		// This will pop/destroy all of the screens stacked in this window except the first one
+		object.popToHome = function() {
+			if (this.screens.length <= 1) return;
+			$ui.inScreenTransition = true;
+			$ui._blockAllTapEvent(true);
+			this.screens[0].dom.style.visibility = '';
+			if (this.screens.length > 1) {
+				var screen = this.screens[this.screens.length - 1];
+				// Let the top most screen know it is going to be popped
+				if (screen.onbeforepop) {
+					screen.onbeforepop();
+				}
+			}
+			setTimeout(this._popToHome, 0);
+		}
+		object.popToHome = object.popToHome.bind(object);
+		
+		// Internal function to do the dirty work after the root page has been re-drawn
+		object._popToHome = function() {
+			if (this.screens.length <= 1) return;
+			var i,
+				screen;
+			// Take the top most screen and animate out it as long as animation is not disabled
+			screen = this.screens[this.screens.length-1];
+			this._removeScreen(screen);
+			$ui.inScreenTransition = false;
+			$ui._blockAllTapEvent(false);
+			// Remove all the middle screens
+			for (i = this.screens.length - 2; i > 0; i--) {
+				this._removeScreen(this.screens[i]);
+			}
+		}
+		object._popToHome = object._popToHome.bind(object);
+		
+		// Remove the screen from the dom and the array
+		object._removeScreen = function(screen) {
+			screen.dom.style.display = 'none';
+			this.dom.removeChild(screen.dom);
+			// Remove any global event listeners
+			$system.removeEventListenersForScreen(screen);
+			screen.destroy();
+			this.screens.pop();
+		}
+		object._removeScreen = object._removeScreen.bind(object);
+		
+	
+		// Dispatch the resize event to nested screens
+		object._resizeListener = function() {
+			// Fire any screen resize events needed
+			var i, 
+				screen;
+			for (i = 0; i < this.screens.length; i++) {
+				screen = this.screens[i];
+				// Run internal resize
+				if (screen._onresize) {
+					screen._onresize();
+				}
+				// Run internal Window pane resize
+				if (screen._onwindowpaneresize) {
+					screen._onwindowpaneresize();
+				}
+				// Fire the screen's public event
+				if (screen.onresize) {
+					screen.onresize();
+				}
+			}
+		}
+		object._resizeListener = object._resizeListener.bind(object);
+		window.addEventListener('resize', object._resizeListener, false);
+		
+		if (object.windowPane) {
+			// We open on another thread so that the root HeadUnitChrome has been inserted into the DOM
+			setTimeout(function(){
+				object.push(object.windowPane);
+			},0);
+		} else if (object.manifest) {
+			// We open on another thread so that the root HeadUnitChrome has been inserted into the DOM
+			setTimeout(function(){
+				$core.openApp(object.manifest, object);
+			},0);
 		}
 		
+		return object.dom;
 	}
-	object.pop = object.pop.bind(object);
-	*/
-	// Remove the screen from the dom and the array
-	object._removeScreen = function(screen) {
-		screen.dom.style.display = 'none';
-		this.dom.removeChild(screen.dom);
-		// Remove any global event listeners
-		$system.removeEventListenersForScreen(screen);
-		screen.destroy();
-		this.screens.pop();
-	}
-	object._removeScreen = object._removeScreen.bind(object);
-	
-
-	// Dispatch the resize event to nested screens
-	object._resizeListener = function() {
-		// Fire any screen resize events needed
-		var i, 
-			screen;
-		for (i = 0; i < this.screens.length; i++) {
-			screen = this.screens[i];
-			// Run internal resize
-			if (screen._onresize) {
-				screen._onresize();
-			}
-			// Run internal Window pane resize
-			if (screen._onwindowpaneresize) {
-				screen._onwindowpaneresize();
-			}
-			// Fire the screen's public event
-			if (screen.onresize) {
-				screen.onresize();
-			}
-		}
-	}
-	object._resizeListener = object._resizeListener.bind(object);
-	window.addEventListener('resize', object._resizeListener, false);
-	
-	return object.dom;
 }
 
 emulator_Window.prototype = new $ui_CoreComponent();
