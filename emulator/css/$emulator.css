@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.3090*/
+/* $emulator VERSION: 1.0.0.3109*/
 body,
 html {
   padding: 0px;
@@ -1737,13 +1737,14 @@ div {
   bottom: 0px;
   top: 60px;
   background-color: white;
+  overflow: auto;
 }
 .ui-browser > .browserDiv > iframe {
-  position: relative;
-  border: none;
-  height: 99%;
+  height: 100%;
   width: 100%;
-  z-index: 2;
+  overflow: auto !important;
+  visibility: hidden;
+  z-index: 3;
 }
 .ui-browser > .chrome > .inputDiv {
   position: absolute;
@@ -3572,13 +3573,14 @@ div {
   bottom: 0px;
   top: 60px;
   background-color: white;
+  overflow: auto;
 }
 .ui-browser > .browserDiv > iframe {
-  position: relative;
-  border: none;
-  height: 99%;
+  height: 100%;
   width: 100%;
-  z-index: 2;
+  overflow: auto !important;
+  visibility: hidden;
+  z-index: 3;
 }
 .ui-browser > .chrome > .inputDiv {
   position: absolute;

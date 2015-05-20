@@ -1,4 +1,4 @@
-/* $emulator VERSION: 1.0.0.3090*/
+/* $emulator VERSION: 1.0.0.3109*/
 
 /**
  * $ui provides an extendible out of the box UI framework which provides a pre-defined user experience.
@@ -10146,13 +10146,12 @@ function $ui_Browser(object, screen) {
 	object.dom.browserDiv = document.createElement('div');
 	$ui.addClass(object.dom.browserDiv,'browserDiv');
 	object.dom.appendChild(object.dom.browserDiv);
+	object.dom.browserDiv.model = object;
 	
 	// If we are displaying in an iframe for demo purposes
 	if (object._isIFrame === true) {
 		object.dom.iframe = document.createElement('iframe');
 		object.dom.iframe.model = object;
-		object.dom.iframe.setAttribute('scrolling', 'yes');
-		object.dom.iframe.setAttribute('seamless','true');
 		object.dom.browserDiv.appendChild(object.dom.iframe);
 	}
 	
@@ -10186,6 +10185,9 @@ function $ui_Browser(object, screen) {
 		this.dom.spinner.style.display = 'none';
 		$ui.addClass(this.dom.icon,'page');
 		this._refreshBtn.setStyle('refresh');
+		if (this._isIFrame === true) {
+			console.log(this.dom.iframe.location)	
+		}
 	}
 	object._onload = object._onload.bind(object);
 	
@@ -10206,9 +10208,8 @@ function $ui_Browser(object, screen) {
 		// Need to add detection here. If added to the iframe before inserted into
 		// the DOM, it will fire twice
 		if (this._isIFrame === true) {
-			this.dom.iframe.style.display = 'inline';
+			this.dom.iframe.style.visibility = 'visible';
 			this.dom.iframe.onload = object._onload;
-			this.dom.iframe.style.height = '100%'; // Hack for iframe scrolling
 		}
 	}
 	object._onshow = object._onshow.bind(object);
@@ -16491,13 +16492,12 @@ function $ui_Browser(object, screen) {
 	object.dom.browserDiv = document.createElement('div');
 	$ui.addClass(object.dom.browserDiv,'browserDiv');
 	object.dom.appendChild(object.dom.browserDiv);
+	object.dom.browserDiv.model = object;
 	
 	// If we are displaying in an iframe for demo purposes
 	if (object._isIFrame === true) {
 		object.dom.iframe = document.createElement('iframe');
 		object.dom.iframe.model = object;
-		object.dom.iframe.setAttribute('scrolling', 'yes');
-		object.dom.iframe.setAttribute('seamless','true');
 		object.dom.browserDiv.appendChild(object.dom.iframe);
 	}
 	
@@ -16531,6 +16531,9 @@ function $ui_Browser(object, screen) {
 		this.dom.spinner.style.display = 'none';
 		$ui.addClass(this.dom.icon,'page');
 		this._refreshBtn.setStyle('refresh');
+		if (this._isIFrame === true) {
+			console.log(this.dom.iframe.location)	
+		}
 	}
 	object._onload = object._onload.bind(object);
 	
@@ -16551,9 +16554,8 @@ function $ui_Browser(object, screen) {
 		// Need to add detection here. If added to the iframe before inserted into
 		// the DOM, it will fire twice
 		if (this._isIFrame === true) {
-			this.dom.iframe.style.display = 'inline';
+			this.dom.iframe.style.visibility = 'visible';
 			this.dom.iframe.onload = object._onload;
-			this.dom.iframe.style.height = '100%'; // Hack for iframe scrolling
 		}
 	}
 	object._onshow = object._onshow.bind(object);
