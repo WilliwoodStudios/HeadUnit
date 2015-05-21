@@ -8,32 +8,12 @@
 		<link rel="stylesheet" type="text/css" href="$ws12/$ws12.css"></link>
 		
 		<!-- App Code -->
+		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript" src="js/main.js"></script>
 			
 		<!-- viewport -->
 		<meta name="viewport" content="initial-scale=1.0,user-scalable=no">
 
-		<script>
-			var $system;
-			function onDeviceReady() {
-				var theme;
-				if (!$system) {
-					if (window.location !== window.parent.location) {
-						// We are in the emulator
-						$system = window.parent.$system;
-						theme = $system.config.theme;
-					} else {
-						console.log('WARNING: $system not defined');
-					}
-				} 
-				// Initialize
-				$ui.init(main, theme);	
-			}
-			// Initialize our toolkit
-			window.onload = function() {
-				onDeviceReady();
-			}
-		</script>
     </head>
     <body style="background-color:black">
     </body>
