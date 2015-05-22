@@ -11,6 +11,11 @@ window.onload = function() {
 	$system.init(config);
 	
 	// Initialize UI
-	$ui.init(screenChrome, config.theme);
-	$emulator.chrome = $ui.screens[0];
+	$ui.init(chromeApp, config.theme);
+}
+
+// Main Chrome definition
+function chromeApp() {
+	this.component = $ui.ChromeApp;
+	
 }
