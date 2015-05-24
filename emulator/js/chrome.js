@@ -20,7 +20,7 @@ function screenChrome() {
 	};
 	
 	this.hvac = {
-		visible: true,
+		visible: (window.innerHeight > 600),
 		driver: {
 			temperature: {
 				value: 75,
