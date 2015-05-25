@@ -35,13 +35,13 @@ function main() {
 	];
 	
 	this.onshow = function() {
-		//$data.addEventListener('onbookmark', this.onbookmark);
+		$data.addEventListener('onbookmark', this.onbookmark);
 	}
 	
 	// Handle the user selecting a bookmarl
-	this.onbookmark = function(data) {
-		console.log(data);
-		this.browser.src = data;
+	this.onbookmark = function(event) {
+		console.log(event);
+		this.browser.src = event.data;
 	}
 	this.onbookmark = this.onbookmark.$bind(this);
 	
