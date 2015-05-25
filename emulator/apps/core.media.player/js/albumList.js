@@ -1,7 +1,7 @@
 function albumList() {
 	this.component = $ui.WindowPane;
 	this.animated = true;
-	this.backCaption = 'Back',
+	this.backCaption = 'Back';
 	
 	this.content = [
 		{
