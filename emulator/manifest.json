@@ -10,5 +10,5 @@
 		      "scripts": ["js/background.js"]
 		 }
 	},
-	"permissions": ["webview", "pointerLock", "geolocation", "videoCapture"]
+	"permissions": ["webview", "pointerLock", "geolocation", "videoCapture", "storage"]
 }

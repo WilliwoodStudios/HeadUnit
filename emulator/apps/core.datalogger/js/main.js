@@ -48,6 +48,10 @@ function main() {
 	
 	];
 	
+	this.oncreate = function() {
+		console.log('oncreate')	
+	};
+	
 	this.onshow = function() {
 		// Get our background image
 		var backgroundImg = $core.getBackgroundImage($ui.theme.color);
