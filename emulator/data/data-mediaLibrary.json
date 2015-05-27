@@ -54,14 +54,16 @@
 			"name": "So What Cha Want",
 			"duration": 217,
 			"albumUid": "u3459ijf983u",
-			"path": "data/media/Beastie%20Boys/License%20To%20Ill/SoWhatChaWant.mp3"
+			"path": "data/media/Beastie%20Boys/License%20To%20Ill/SoWhatChaWant.mp3",
+			"playCount": 42
 		},
 		{
 			"uid": "sjdlkfjsio89",
 			"name": "Rusted from the Rain",
 			"duration": 253,
 			"albumUid": "9879ehfjidhf98",
-			"path": "data/media/Billy%Talent/Billy%20Talent%20III/RustedFromTheRain.m4a"
+			"path": "data/media/Billy%Talent/Billy%20Talent%20III/RustedFromTheRain.m4a",
+			"playCount": 83
 		}
 	],
 	
@@ -69,32 +71,38 @@
 		{
 			"uid": "s09wdfu09jeopj",
 			"name": "Beastie Boys",
-			"genreUid": "28937549023hkjdh"
+			"genreUid": "28937549023hkjdh",
+			"playCount": 143
 		},
 		{
 			"uid": "98237hjkhds9",
 			"name": "Billy Talent",
-			"genreUid": "2165465sfsdjh"
+			"genreUid": "2165465sfsdjh",
+			"playCount": 90
 		},
 		{
 			"uid": "4398hgdioh",
 			"name": "AC/DC",
-			"genreUid": "98wd7hhhky"
+			"genreUid": "98wd7hhhky",
+			"playCount": 203
 		},
 		{
 			"uid": "948ungfih",
 			"name": "Eminem",
-			"genreUid": "28937549023hkjdh"
+			"genreUid": "28937549023hkjdh",
+			"playCount": 57
 		},
 		{
 			"uid": "98759843",
 			"name": "USS",
-			"genreUid": "2165465sfsdjh"
+			"genreUid": "2165465sfsdjh",
+			"playCount": 52
 		},
 		{
 			"uid": "2398579",
 			"name": "Ludacris",
-			"genreUid": "28937549023hkjdh"
+			"genreUid": "28937549023hkjdh",
+			"playCount": 62
 		}
 	],
 	
