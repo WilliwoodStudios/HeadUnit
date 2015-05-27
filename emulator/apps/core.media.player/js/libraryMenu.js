@@ -25,7 +25,7 @@ function libraryMenu() {
 				{
 					caption: 'artist',
 					img: 'img/ic_artist.png',
-					identifier: 'menuitem.artist'
+					identifier: 'menuitem.artists'
 				},
 				{
 					caption: 'songs',
@@ -37,10 +37,17 @@ function libraryMenu() {
 			onclick: function(item) {
 				if (item.identifier == 'menuitem.albums') {
 					$ui.push(albumList);
+				} else if (item.identifier == 'menuitem.artists') {
+					$ui.push(artistList);
+				} else if (item.identifier == 'menuitem.genre') {
+					$ui.push(genreList);
+				} else if (item.identifier === 'menuitem.songs') {
+					$ui.push(sharedDetail,{ sharedDetailMode: "song" });
+				} else {
+					console.log("Not yet handling " + item.identifier);
 				}
 			}
 		}
-	
 	];
 	
 	this.onshow = function() {
@@ -49,5 +56,5 @@ function libraryMenu() {
 		if (backgroundImg) {
 			this.setBackground(new ScreenBackground('../../'+backgroundImg));
 		}
-	}
+	};
 }

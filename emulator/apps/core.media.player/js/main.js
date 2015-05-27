@@ -22,7 +22,20 @@ function main() {
 				if (mediaSource && (mediaSource.type == $system.MediaSourceType.PLAYER)) {
 					mediaSource.pause();
 				}
+			},
+			onskipback: function() {
+				var mediaSource = $system.audio.getActiveMediaSource();
+				if (mediaSource && (mediaSource.type == $system.MediaSourceType.PLAYER)) {
+					mediaSource.skipBack();
+				}
+			},
+			onskipforward: function() {
+				var mediaSource = $system.audio.getActiveMediaSource();
+				if (mediaSource && (mediaSource.type == $system.MediaSourceType.PLAYER)) {
+					mediaSource.skipForward();
+				}
 			}
+
 		}	
 	];
 	

@@ -1,7 +1,7 @@
 function albumList() {
 	this.component = $ui.WindowPane;
 	this.animated = true;
-	this.backCaption = 'Back',
+	this.backCaption = 'My Library',
 	
 	this.content = [
 		{
@@ -19,6 +19,10 @@ function albumList() {
 					provider: {
 						id: 'topPlayedProvider',
 						property: 'items'
+					},
+					onaction: function(event) {
+						event.target.sharedDetailMode = "album";
+                        $ui.push(sharedDetail,event.target);
 					}
 				}
 			]
@@ -29,6 +33,10 @@ function albumList() {
 			provider: {
 				id: 'entryProvider',
 				property: 'items'
+			},
+			onaction: function(event) {
+				event.target.sharedDetailMode = "album";
+                $ui.push(sharedDetail,event.target);
 			}
 		}
 	
@@ -49,8 +57,10 @@ function albumList() {
 				for (i = 0; i < this.data.items.length; i++) {
 					item = this.data.items[i];
 					item.title = item.name;
-					item.img = item.albumArt;
-					item.accent = item.genre;
+					item.img = item.artwork;
+					item.accent = item.artistName + " - " + item.genre;
+					item.accent += " - ";
+					item.accent += item.songCount + " " + (item.songCount == 1 ? "Song" : "Songs");
 					if (item.title && item.title.length > 0) {
 						firstLetter = item.title[0].toUpperCase();
 						if (letters.indexOf(firstLetter) < 0) {
