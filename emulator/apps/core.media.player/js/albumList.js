@@ -85,7 +85,7 @@ function albumList() {
 				for (i = 0; i < this.data.items.length; i++) {
 					item = this.data.items[i];
 					item.caption = item.name;
-					item.img = item.albumArt;
+					item.img = item.artwork;
 				}
 			}
 		}
