@@ -67,7 +67,7 @@ function sharedDetail() {
 
                 item.img = item.artwork;
 
-                if (this.viewMode === "genre" || this.viewMode === "song") {
+                if (this.viewMode === "genre" || this.viewMode === "song" || this.viewMode === "playlist") {
                     item.caption = item.albumName + " - " + item.artistName;
                     if (this.data.items.length > 15) {
                         if (item.name.length > 1) {
@@ -104,6 +104,8 @@ function sharedDetail() {
             this.backCaption = "Albums";
         } else if (this.viewMode == "genre") {
             this.backCaption = "Genres";
+        } else if (this.viewMode == "playlist") {
+            this.backCaption = "Playlists";
         } else {
             this.backCaption = "Back";
         }
@@ -139,6 +141,9 @@ function sharedDetail() {
             } else if (this.viewMode == "genre") {
                 songs = mediaSource.getGenreSongs(item.uid);
                 emptyMessage = "No songs for this sample genre...";
+            } else if (this.viewMode === "playlist") {
+                songs = mediaSource.getPlaylistSongs(item.uid);
+                emptyMessage = "No songs for this sample playlist...";
             } else if (this.viewMode === "song") {
                 songs = mediaSource.getSongs();
                 emptyMessage = "No songs in the library...";
