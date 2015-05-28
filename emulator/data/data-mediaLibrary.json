@@ -2,7 +2,6 @@
 	"currentSong": {
 		"uid": "skdjhfiweurw97"
 	},
-	
 	"albums": [
 		{
 			"uid": "u3459ijf983u",
@@ -47,7 +46,40 @@
 			"artwork": "../../data/img/coverart/album_wordofmouf.jpg"
 		}
 	],
-	
+	"playlists": [
+		{
+			"uid": "playlist1",
+			"name": "Pump Up",
+			"playCount": 13,
+			"songs": [
+				"sjdlkfjsio89",
+				"skdjhfiweurw97",
+				"sjdlkfjsio89",
+				"sjdlkfjsio89",
+				"skdjhfiweurw97"
+			]
+		},
+		{
+			"uid": "playlist2",
+			"name": "Settle Down",
+			"playCount": 2,
+			"songs": [
+				"skdjhfiweurw97",
+				"skdjhfiweurw97",
+				"sjdlkfjsio89"
+			]
+		},
+		{
+			"uid": "playlist3",
+			"name": "Almost There",
+			"playCount": 64,
+			"songs": [
+				"skdjhfiweurw97",
+				"sjdlkfjsio89",
+				"skdjhfiweurw97"
+			]
+		}
+	],
 	"songs": [
 		{
 			"uid": "skdjhfiweurw97",
@@ -66,7 +98,6 @@
 			"playCount": 83
 		}
 	],
-	
 	"artists": [
 		{
 			"uid": "s09wdfu09jeopj",
@@ -105,7 +136,6 @@
 			"playCount": 62
 		}
 	],
-	
 	"genres": [
 		{
 			"uid": "28937549023hkjdh",
