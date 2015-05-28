@@ -5,3 +5,4 @@ emulator/js/$system*
 emulator/css/$emulator*
 **/$ws12
 **/$data*
+**/.DS_Store
