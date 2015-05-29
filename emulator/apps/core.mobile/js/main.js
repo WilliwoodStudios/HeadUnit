@@ -9,12 +9,12 @@ function main() {
 					user: 'brcewane',
 					avatar: 'img/avatar.jpg',
 					img: 'img/engine.jpg',
-					caption: 'After a lot of hard work, the engine bay shave and wire tuck is finished!',
+					caption: 'After a lot of hard work, the engine bay shave and wire tuck is complete!',
 					title: 'Engine Bay Finished!',
 					numLikes: 112,
 					numComments: 12,
 					liked: false,
-					time: 'Thur Jan 17 2013 08:36:53 GMT-0500'
+					time: 'Fri May 29 2015 12:44:16 GMT-0400'
 				},
 				{
 					user: 'brcewane',
@@ -25,7 +25,7 @@ function main() {
 					numLikes: 112,
 					numComments: 12,
 					liked: false,
-					time: 'Thur Jan 17 2013 08:36:53 GMT-0500'
+					time: 'Fri May 29 2015 12:00:16 GMT-0400'
 				}
 			]
 		}
