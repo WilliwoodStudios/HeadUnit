@@ -30,8 +30,12 @@ function mainMenu() {
 					item.img = 'apps/'+item.id+'/'+item.icon;
 					if ($system.isClientDevice == true) {
 						item.visible = (item.availability.driversDevice == true);
-					} else if (item.id == 'core.media.player') {
-						item.visible = window.innerWidth > window.innerHeight;
+					} else {
+						if (item.availability.headUnit == false) {
+							item.visible = false;
+						} else if (item.id == 'core.media.player') {
+							item.visible = window.innerWidth > window.innerHeight;
+						}
 					} 
 				}
 			}
