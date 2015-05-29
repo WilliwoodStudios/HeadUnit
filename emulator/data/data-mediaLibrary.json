@@ -2,152 +2,275 @@
 	"currentSong": {
 		"uid": "skdjhfiweurw97"
 	},
-	"albums": [
-		{
-			"uid": "u3459ijf983u",
-			"name": "License To Ill",
-			"artistUid": "s09wdfu09jeopj",
-			"year": 1992,
-			"artwork": "../../data/img/coverart/licensed_to_ill.jpg"
-		},
-		{
-			"uid": "9879ehfjidhf98",
-			"name": "Billy Talent III",
-			"artistUid": "98237hjkhds9",
-			"year": 2009,
-			"artwork": "../../data/img/coverart/album_billytalent.jpg"
-		},
-		{
-			"uid": "4957jf98yf8wh",
-			"name": "Back in Black",
-			"artistUid": "4398hgdioh",
-			"year": 1980,
-			"artwork": "../../data/img/coverart/album_back_in_black.jpg"
-		},
-		{
-			"uid": "498357hnfiuhf87",
-			"name": "The Marshal Mathers LP 2",
-			"artistUid": "948ungfih",
-			"year": 2013,
-			"artwork": "../../data/img/coverart/album_berzerk.jpg"
-		},
-		{
-			"uid": "2398fnoihfiu",
-			"name": "Advanced Basics",
-			"artistUid": "98759843",
-			"year": 2014,
-			"artwork": "../../data/img/coverart/album_uss.jpg"
-		},
-		{
-			"uid": "2098340jfkj",
-			"name": "Word of Mouf",
-			"artistUid": "2398579",
-			"year": 2001,
-			"artwork": "../../data/img/coverart/album_wordofmouf.jpg"
-		}
-	],
-	"playlists": [
-		{
-			"uid": "playlist1",
-			"name": "Pump Up",
-			"playCount": 13,
-			"songs": [
-				"sjdlkfjsio89",
-				"skdjhfiweurw97",
-				"sjdlkfjsio89",
-				"sjdlkfjsio89",
-				"skdjhfiweurw97"
-			]
-		},
-		{
-			"uid": "playlist2",
-			"name": "Settle Down",
-			"playCount": 2,
-			"songs": [
-				"skdjhfiweurw97",
-				"skdjhfiweurw97",
-				"sjdlkfjsio89"
-			]
-		},
-		{
-			"uid": "playlist3",
-			"name": "Almost There",
-			"playCount": 64,
-			"songs": [
-				"skdjhfiweurw97",
-				"sjdlkfjsio89",
-				"skdjhfiweurw97"
-			]
-		}
-	],
-	"songs": [
-		{
+	"albums": [{
+		"uid": "stsfx1",
+		"name": "ST Sound FX",
+		"artistUid": "stsfxartist1",
+		"year": "1994",
+		"artwork": "../../data/img/coverart/sfx.jpg"
+	}, {
+		"uid": "u3459ijf983u",
+		"name": "License To Ill",
+		"artistUid": "s09wdfu09jeopj",
+		"year": 1992,
+		"artwork": "../../data/img/coverart/licensed_to_ill.jpg"
+	}, {
+		"uid": "9879ehfjidhf98",
+		"name": "Billy Talent III",
+		"artistUid": "98237hjkhds9",
+		"year": 2009,
+		"artwork": "../../data/img/coverart/album_billytalent.jpg"
+	}, {
+		"uid": "4957jf98yf8wh",
+		"name": "Back in Black",
+		"artistUid": "4398hgdioh",
+		"year": 1980,
+		"artwork": "../../data/img/coverart/album_back_in_black.jpg"
+	}, {
+		"uid": "498357hnfiuhf87",
+		"name": "The Marshal Mathers LP 2",
+		"artistUid": "948ungfih",
+		"year": 2013,
+		"artwork": "../../data/img/coverart/album_berzerk.jpg"
+	}, {
+		"uid": "2398fnoihfiu",
+		"name": "Advanced Basics",
+		"artistUid": "98759843",
+		"year": 2014,
+		"artwork": "../../data/img/coverart/album_uss.jpg"
+	}, {
+		"uid": "2098340jfkj",
+		"name": "Word of Mouf",
+		"artistUid": "2398579",
+		"year": 2001,
+		"artwork": "../../data/img/coverart/album_wordofmouf.jpg"
+	}],
+	"playlists": [{
+		"uid": "playlist1",
+		"name": "Pump Up",
+		"playCount": 13,
+		"songs": [
+			"sjdlkfjsio89",
+			"skdjhfiweurw97",
+			"sjdlkfjsio89",
+			"sjdlkfjsio89",
+			"skdjhfiweurw97"
+		]
+	}, {
+		"uid": "playlist2",
+		"name": "Settle Down",
+		"playCount": 2,
+		"songs": [
+			"skdjhfiweurw97",
+			"skdjhfiweurw97",
+			"sjdlkfjsio89"
+		]
+	}, {
+		"uid": "playlist3",
+		"name": "Almost There",
+		"playCount": 64,
+		"songs": [
+			"skdjhfiweurw97",
+			"sjdlkfjsio89",
+			"skdjhfiweurw97"
+		]
+	}],
+	"songs": [{
 			"uid": "skdjhfiweurw97",
 			"name": "So What Cha Want",
 			"duration": 217,
 			"albumUid": "u3459ijf983u",
 			"path": "data/media/Beastie%20Boys/License%20To%20Ill/SoWhatChaWant.mp3",
 			"playCount": 42
-		},
-		{
+		}, {
 			"uid": "sjdlkfjsio89",
 			"name": "Rusted from the Rain",
 			"duration": 253,
 			"albumUid": "9879ehfjidhf98",
 			"path": "data/media/Billy%Talent/Billy%20Talent%20III/RustedFromTheRain.m4a",
 			"playCount": 83
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/17.mp3",
+			"name": "17.mp3",
+			"duration": 13,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/17.mp3",
+			"playCount": 18
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/18.mp3",
+			"name": "18.mp3",
+			"duration": 14,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/18.mp3",
+			"playCount": 6
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/19.mp3",
+			"name": "19.mp3",
+			"duration": 14,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/19.mp3",
+			"playCount": 14
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/21.mp3",
+			"name": "21.mp3",
+			"duration": 16,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/21.mp3",
+			"playCount": 7
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/22.mp3",
+			"name": "22.mp3",
+			"duration": 13,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/22.mp3",
+			"playCount": 11
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/23.mp3",
+			"name": "23.mp3",
+			"duration": 19,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/23.mp3",
+			"playCount": 24
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/24.mp3",
+			"name": "24.mp3",
+			"duration": 17,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/24.mp3",
+			"playCount": 5
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/25.mp3",
+			"name": "25.mp3",
+			"duration": 13,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/25.mp3",
+			"playCount": 24
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/26.mp3",
+			"name": "26.mp3",
+			"duration": 12,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/26.mp3",
+			"playCount": 21
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/27.mp3",
+			"name": "27.mp3",
+			"duration": 13,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/27.mp3",
+			"playCount": 23
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/28.mp3",
+			"name": "28.mp3",
+			"duration": 16,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/28.mp3",
+			"playCount": 18
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/30.mp3",
+			"name": "30.mp3",
+			"duration": 12,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/30.mp3",
+			"playCount": 16
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/31.mp3",
+			"name": "31.mp3",
+			"duration": 10,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/31.mp3",
+			"playCount": 23
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/32.mp3",
+			"name": "32.mp3",
+			"duration": 12,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/32.mp3",
+			"playCount": 18
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/33.mp3",
+			"name": "33.mp3",
+			"duration": 16,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/33.mp3",
+			"playCount": 7
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/34.mp3",
+			"name": "34.mp3",
+			"duration": 11,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/34.mp3",
+			"playCount": 23
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/35.mp3",
+			"name": "35.mp3",
+			"duration": 11,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/35.mp3",
+			"playCount": 16
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/36.mp3",
+			"name": "36.mp3",
+			"duration": 11,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/36.mp3",
+			"playCount": 17
+		}, {
+			"uid": "stsfxdata/media/Star Trek/Generations/38.mp3",
+			"name": "38.mp3",
+			"duration": 16,
+			"albumUid": "stsfx1",
+			"path": "data/media/Star Trek/Generations/38.mp3",
+			"playCount": 15
 		}
 	],
-	"artists": [
-		{
-			"uid": "s09wdfu09jeopj",
-			"name": "Beastie Boys",
-			"genreUid": "28937549023hkjdh",
-			"playCount": 143
-		},
-		{
-			"uid": "98237hjkhds9",
-			"name": "Billy Talent",
-			"genreUid": "2165465sfsdjh",
-			"playCount": 90
-		},
-		{
-			"uid": "4398hgdioh",
-			"name": "AC/DC",
-			"genreUid": "98wd7hhhky",
-			"playCount": 203
-		},
-		{
-			"uid": "948ungfih",
-			"name": "Eminem",
-			"genreUid": "28937549023hkjdh",
-			"playCount": 57
-		},
-		{
-			"uid": "98759843",
-			"name": "USS",
-			"genreUid": "2165465sfsdjh",
-			"playCount": 52
-		},
-		{
-			"uid": "2398579",
-			"name": "Ludacris",
-			"genreUid": "28937549023hkjdh",
-			"playCount": 62
-		}
-	],
-	"genres": [
-		{
-			"uid": "28937549023hkjdh",
-			"name": "Hip Hop/Rap"
-		},
-		{
-			"uid": "2165465sfsdjh",
-			"name": "Alternative"
-		},
-		{
-			"uid": "98wd7hhhky",
-			"name": "Rock"
-		}
-	]
+	"artists": [{
+		"uid": "s09wdfu09jeopj",
+		"name": "Beastie Boys",
+		"genreUid": "28937549023hkjdh",
+		"playCount": 143
+	}, {
+		"uid": "98237hjkhds9",
+		"name": "Billy Talent",
+		"genreUid": "2165465sfsdjh",
+		"playCount": 90
+	}, {
+		"uid": "4398hgdioh",
+		"name": "AC/DC",
+		"genreUid": "98wd7hhhky",
+		"playCount": 203
+	}, {
+		"uid": "948ungfih",
+		"name": "Eminem",
+		"genreUid": "28937549023hkjdh",
+		"playCount": 57
+	}, {
+		"uid": "98759843",
+		"name": "USS",
+		"genreUid": "2165465sfsdjh",
+		"playCount": 52
+	}, {
+		"uid": "2398579",
+		"name": "Ludacris",
+		"genreUid": "28937549023hkjdh",
+		"playCount": 62
+	}, {
+		"uid": "stsfxartist1",
+		"name": "Paramount",
+		"genreUid": "stsfxgenre",
+		"playCount": 32
+	}],
+	"genres": [{
+		"uid": "28937549023hkjdh",
+		"name": "Hip Hop/Rap"
+	}, {
+		"uid": "2165465sfsdjh",
+		"name": "Alternative"
+	}, {
+		"uid": "98wd7hhhky",
+		"name": "Rock"
+	}, {
+		"uid": "stsfxgenre",
+		"name": "Sound Effects (SFX)"
+	}]
 }

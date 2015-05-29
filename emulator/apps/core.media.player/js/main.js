@@ -95,6 +95,15 @@ function main() {
 	this.onRepeatChanged = function(event) {
 		self.mediaPlayer.setRepeat(event.data);
 	};
+	
+	this.onPlaybackEnded = function(event) {
+		this.mediaPlayer.setPaused(true);
+	}.$bind(this);
+	
+	this.onPlaybackStarted = function(event) {
+		this.mediaPlayer.setPaused(false);
+	}.$bind(this);
+
 
 	this.onshow = function () {
 		// Set our current media
@@ -105,6 +114,8 @@ function main() {
 		$data.addEventListener($system.songHistory.MEDIA_SONG_CHANGED, this.onCurrentSongChanged);
 		$data.addEventListener($system.songHistory.MEDIA_SHUFFLE_CHANGED,this.onShuffleChanged);
 		$data.addEventListener($system.songHistory.MEDIA_REPEAT_CHANGED,this.onRepeatChanged);
+		$data.addEventListener("mediaPlaybackStarted",this.onPlaybackStarted);
+		$data.addEventListener("mediaPlaybackEnded",this.onPlaybackEnded);
 	};
 
 }
