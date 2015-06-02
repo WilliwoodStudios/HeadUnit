@@ -67,15 +67,17 @@ function screenChrome() {
 		}
 	}
 	
+	this.onsettingsclick = function() {
+		 $core.openSettings();
+	}
+	
 	// Update the driver temperature setting
 	this.ondrivertempchange = function(data) {
 		this.hvac.driver.temperature.setTemperature(data.temperature);
-	}
-	this.ondrivertempchange = this.ondrivertempchange.bind(this);
+	}.$bind(this);
 	
 	// Update the passenger temperature setting
 	this.onpassengertempchange = function(data) {
 		this.hvac.passenger.temperature.setTemperature(data.temperature);
-	}
-	this.onpassengertempchange = this.onpassengertempchange.bind(this);
+	}.$bind(this);
 }

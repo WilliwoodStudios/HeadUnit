@@ -76,6 +76,16 @@
 		        "headUnit": false,
 		        "driversDevice": true
 		    }
+		},
+		{
+			"id":"core.settings",
+			"name": "settings",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
+			"availability": {
+		        "headUnit": false,
+		        "driversDevice": false
+		    }
 		}
 	]
 }
