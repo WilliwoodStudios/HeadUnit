@@ -18,13 +18,16 @@ function zeroToSixty() {
 					onrecord: function() {
 						this.screen.timerTile.start();
 						$system.audio.playSoundEffect($system.SoundEffect.HORN);
-						// Fake out reaching 60 mph in 4.9 seconds
-						window.setTimeout(function() {
-							if ($core) {
-								var systemEvent = new $core.SystemEvent($system.EventType.ONSPEEDCHANGE, {speed: 60});
-								$core.raiseEvent(systemEvent);
-							}
-						},4900);
+						// Fake out reaching 60 mph in 4.9 seconds in the emulator
+						if ($system.config.isEmulator == true) {
+							$ui.toast('The emulator simulates a 4.9 second 0-60');
+							window.setTimeout(function() {
+								if ($core) {
+									var systemEvent = new $core.SystemEvent($system.EventType.ONSPEEDCHANGE, {speed: 60});
+									$core.raiseEvent(systemEvent);
+								}
+							},4900);
+						}
 					},
 					oncountdown: function() {
 						$system.audio.playSoundEffect($system.SoundEffect.BLIP);
