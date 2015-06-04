@@ -53,7 +53,8 @@ function screenChrome() {
 		},
 		fans: {
 			onclick: function() {
-				console.log('fans click');
+				$ui.playTouchSound();
+				$ui.push(popupHvac);
 			}
 		}
 		//showDefrostOnBar: true
