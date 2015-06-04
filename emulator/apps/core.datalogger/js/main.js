@@ -11,9 +11,9 @@ function main() {
 					identifier: 'logger.zero.to.sixty'
 				},
 				{
-					caption: 'horsepower',
+					caption: 'dyno',
 					img: 'img/ic_horsepower.png',
-					identifier: 'logger.horsepower'
+					identifier: 'logger.dyno'
 				},
 				{
 					caption: 'drift angle',
@@ -42,6 +42,8 @@ function main() {
 					$ui.push(zeroToSixty);
 				} else if (item.identifier == 'logger.quarter.mile') {
 					$ui.push(quarterMile);
+				} else if (item.identifier == 'logger.dyno') {
+					$ui.push(horsepower);
 				}
 			}
 		}

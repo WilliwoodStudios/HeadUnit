@@ -103,7 +103,6 @@ function zeroToSixty() {
 			// Re-populate the data provider
 			this.zeroToSixtyProvider.data = data; 
 		}
-	}
-	this.onspeedchange = this.onspeedchange.bind(this);
+	}.$bind(this);
 }
 
