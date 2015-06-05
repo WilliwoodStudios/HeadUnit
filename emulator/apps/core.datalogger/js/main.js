@@ -44,10 +44,11 @@ function main() {
 					$ui.push(quarterMile);
 				} else if (item.identifier == 'logger.dyno') {
 					$ui.push(horsepower);
+				} else if (item.identifier == 'logger.drift.angle') {
+					$ui.push(driftAngle);
 				}
 			}
 		}
-	
 	];
 	
 	this.onshow = function() {
