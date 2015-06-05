@@ -46,30 +46,30 @@ function lateralGs() {
 					component: $ui.TileTimeDonut,
 					targetHigh: true,
 					provider: {
-						id: 'angleProvider',
-						property: 'longestDrift'
+						id: 'lateralProvider',
+						property: 'slipAngle'
 					}
 				},
 				{
 					component: $ui.TileTimeDonut,
 					targetHigh: true,
 					provider: {
-						id: 'angleProvider',
-						property: 'angle'
+						id: 'lateralProvider',
+						property: 'force'
 					}
 				},
 				{
 					component: $ui.TileTimeHistory,
 					provider: {
-						id: 'angleProvider',
-						property: 'angleHistory'
+						id: 'lateralProvider',
+						property: 'forceHistory'
 					}
 				}
 			],
 			attachedObjects: [
 				{
 					component: $ui.DataProvider,
-					id: 'angleProvider'
+					id: 'lateralProvider'
 				},
 			]
 		}	
@@ -81,26 +81,26 @@ function lateralGs() {
 		
 		// Set the screen data
 		var data = {
-			longestDrift: {
-				target: 6,
-				value: 4,
-				accent: 'Your Longest Drift',
-				caption: 'sec'
+			slipAngle: {
+				target: 1.5,
+				value: 1.10,
+				accent: 'Your Best Slip Angle',
+				caption: 'deg'
 			},
-			angle: {
-				target: 90,
-				value: 72.5,
-				accent: 'Your Largest Angle',
-				caption: 'degrees'
+			force: {
+				target: 1.1,
+				value: 0.99,
+				accent: 'Your Best G-Force',
+				caption: 'g(s)'
 			},
-			angleHistory: {
+			forceHistory: {
 				labels: ['Apr 10/14','May 12/14','Jul 18/14','Aug 22/14'],
-				data: [10,40,37,55],
-				caption: 'Recorded Drift Angles'
+				data: [0.8,0.92,1.03,0.99],
+				caption: 'Recorded Lateral Gs'
 			}
 		}
 		// Populate the data provider
-		this.angleProvider.data = data; 
+		this.lateralProvider.data = data; 
 	};
 	
 	// Do clean up
@@ -115,16 +115,17 @@ function lateralGs() {
 			months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
 			formattedDate = months[date.getMonth()] +' ' + date.getDate() + '/' + (date.getFullYear() - 2000);
 		// Add new data to the provider
-		var existing = this.angleProvider.data,
+		var existing = this.lateralProvider.data,
 			data = {
-				longestDrift: existing.longestDrift,
-				angle: existing.angle,
-				angleHistory: existing.angleHistory,
+				force: existing.force,
+				slipAngle: existing.slipAngle,
+				forceHistory: existing.forceHistory,
 			};
-		data.angle.value = 75.2;
-		data.angleHistory.labels.push(formattedDate);
-		data.angleHistory.data.push(data.angle.value);
-		this.angleProvider.data = data;
+		data.force.value = 1.03;
+		data.slipAngle.value = 1.18;
+		data.forceHistory.labels.push(formattedDate);
+		data.forceHistory.data.push(data.force.value);
+		this.lateralProvider.data = data;
 	}.$bind(this);
 }
 
