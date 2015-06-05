@@ -53,7 +53,6 @@ function screenChrome() {
 		},
 		fans: {
 			onclick: function() {
-				$ui.playTouchSound();
 				$ui.push(popupHvac);
 			}
 		}
