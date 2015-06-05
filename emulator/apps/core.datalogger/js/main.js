@@ -46,7 +46,10 @@ function main() {
 					$ui.push(horsepower);
 				} else if (item.identifier == 'logger.drift.angle') {
 					$ui.push(driftAngle);
-				}
+				} else if (item.identifier == 'logger.g.forces') {
+					$ui.push(lateralGs);
+				} 
+				
 			}
 		}
 	];
