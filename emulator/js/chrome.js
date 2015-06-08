@@ -68,7 +68,7 @@ function screenChrome() {
 	}
 	
 	this.onsettingsclick = function() {
-		 $core.openSettings();
+		$core.openSettings();
 	}
 	
 	// Update the driver temperature setting
