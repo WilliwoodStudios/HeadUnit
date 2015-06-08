@@ -118,6 +118,11 @@ function main() {
 								$system.audio.playSoundEffect($system.SoundEffect.TONE_ASTERIK);
 								break;
 						}
+					},
+					number: {
+						ondeleteclick: function() {
+							console.log("Delete clicked.");
+						}
 					}
 				}
 			]
