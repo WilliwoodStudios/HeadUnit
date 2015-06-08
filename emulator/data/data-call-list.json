@@ -1,11 +1,12 @@
 {
 	"calls": [
 		{
-			"title": "Anzor",
-			"caption": "Mobile: (555) 659-9874"
+			"title": "Rob Williams",
+			"caption": "Mobile: (555) 659-9874",
+			"style": "incoming"
 		},
 		{
-			"title": "Anzor",
+			"title": "Rob Williams",
 			"caption": "Home: (555) 659-1212",
 			"style": "outgoing"
 		},
@@ -16,7 +17,7 @@
 		{
 			"title": "Unknown",
 			"caption": "Toronto, ON",
-			"accent": "missed"
+			"style": "missed"
 		}
 	]
 }
