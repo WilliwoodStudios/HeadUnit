@@ -37,7 +37,7 @@ function genreList() {
                     continue;
                 }
                 item.title = item.name;
-                item.img = item.artwork;
+                item.img = "/apps/core.media.player/img/ic_genre.png";
                 item.accent = item.artistCount + " " + (item.artistCount == 1 ? "Artist" : "Artists");
                 item.accent += " - ";
                 item.accent += item.songCount + " " + (item.songCount == 1 ? "Song" : "Songs");
