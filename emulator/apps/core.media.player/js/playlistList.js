@@ -1,4 +1,4 @@
-function albumList() {
+function playlistList() {
 	this.component = $ui.WindowPane;
 	this.animated = true;
 	this.backCaption = 'My Library',
@@ -11,7 +11,7 @@ function albumList() {
 			content: [
 				{
 					component: $ui.Header,
-					caption: 'Top Played Albums'
+					caption: 'Top Played Playlists'
 				},
 				{
 					component: $ui.List,
@@ -21,7 +21,7 @@ function albumList() {
 						property: 'items'
 					},
 					onaction: function(event) {
-						event.target.sharedDetailMode = "album";
+						event.target.sharedDetailMode = "playlist";
                         $ui.push(sharedDetail,event.target);
 					}
 				}
@@ -35,7 +35,7 @@ function albumList() {
 				property: 'items'
 			},
 			onaction: function(event) {
-				event.target.sharedDetailMode = "album";
+				event.target.sharedDetailMode = "playlist";
                 $ui.push(sharedDetail,event.target);
 			}
 		}
@@ -95,14 +95,14 @@ function albumList() {
 		var mediaSource = $system.audio.getActiveMediaSource();
 		if (mediaSource) {
 			// Get our top played albums
-			var topPlayed = mediaSource.getMostPlayedAlbums();
+			var topPlayed = mediaSource.getMostPlayedPlaylists();
 			if (topPlayed && (topPlayed.length > 0)) {
 				this.topPlayedProvider.data = {items: topPlayed};
 				this.topPlayed.visible = true;
 			}
 			// Retrieve our list of all albums
-			var albums = mediaSource.getAlbums();
-			this.entryProvider.data = {items: albums};
+			var playlists = mediaSource.getPlaylists();
+			this.entryProvider.data = {items: playlists};
 		}
 	}
 }

@@ -15,17 +15,17 @@ function libraryMenu() {
 				{
 					caption: 'playlist',
 					img: 'img/ic_playlist.png',
-					identifier: 'menuitem.playlist'
+					identifier: 'menuitem.playlists'
 				},
 				{
 					caption: 'genre',
 					img: 'img/ic_genre.png',
-					identifier: 'menuitem.genre'
+					identifier: 'menuitem.genres'
 				},
 				{
 					caption: 'artist',
 					img: 'img/ic_artist.png',
-					identifier: 'menuitem.artist'
+					identifier: 'menuitem.artists'
 				},
 				{
 					caption: 'songs',
@@ -37,10 +37,19 @@ function libraryMenu() {
 			onclick: function(item) {
 				if (item.identifier == 'menuitem.albums') {
 					$ui.push(albumList);
+				} else if (item.identifier == 'menuitem.artists') {
+					$ui.push(artistList);
+				} else if (item.identifier == 'menuitem.genres') {
+					$ui.push(genreList);
+				} else if (item.identifier === 'menuitem.songs') {
+					$ui.push(sharedDetail,{ sharedDetailMode: "song" });
+				} else if (item.identifier === 'menuitem.playlists') {
+					$ui.push(playlistList);
+				} else {
+					console.log("Not yet handling " + item.identifier);
 				}
 			}
 		}
-	
 	];
 	
 	this.onshow = function() {
@@ -49,5 +58,5 @@ function libraryMenu() {
 		if (backgroundImg) {
 			this.setBackground(new ScreenBackground('../../'+backgroundImg));
 		}
-	}
+	};
 }
