@@ -1,5 +1,7 @@
 package com.workshoptwelve.boss.desktop;
 
+import com.workshoptwelve.brainiac.boss.common.error.BossError;
+import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.multimedia.AMultiMediaServiceImpl;
 
 import org.json.JSONException;
@@ -102,5 +104,10 @@ public class DesktopMultiMediaService extends AMultiMediaServiceImpl {
         }
 
         return toReturn;
+    }
+
+    @Override
+    public JSONObject getLibrary() throws JSONException, BossException {
+        throw new BossException(BossError.NOT_IMPLEMENTED);
     }
 }

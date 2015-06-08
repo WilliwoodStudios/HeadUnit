@@ -1,0 +1,5 @@
+<resources>
+    <string name="media_unknown_artist">Unknown Artist</string>
+    <string name="media_unknown_album">Unknown Album</string>
+    <string name="media_unknown_genre">Unknown Genre</string>
+</resources>

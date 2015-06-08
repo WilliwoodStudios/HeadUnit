@@ -71,6 +71,13 @@ public class MultiMediaService extends AService {
             return mMultiMediaServiceImpl.getStatus();
         }
     };
+    private AEndPoint mGetLibrary = new AEndPoint("getLibrary") {
+        @Override
+        public JSONObject execute(List<String> headers, HashMap<String, String> params) throws JSONException, BossException {
+            log.d("getLibrary");
+            return mMultiMediaServiceImpl.getLibrary();
+        }
+    };
 
     MultiMediaService() {
         super("/brainiac/service/mm");
@@ -82,6 +89,7 @@ public class MultiMediaService extends AService {
         addEndPoint(mSeek);
         addEndPoint(mGetStatus);
         addEndPoint(mGetPosition);
+        addEndPoint(mGetLibrary);
 
         addEventType(mPositionEventType);
     }

@@ -1,5 +1,6 @@
 package com.workshoptwelve.brainiac.boss.common.multimedia;
 
+import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.event.Event;
 import com.workshoptwelve.brainiac.boss.common.event.EventService;
 import com.workshoptwelve.brainiac.boss.common.event.EventType;
@@ -53,6 +54,8 @@ public abstract class AMultiMediaServiceImpl {
         log.v(to);
         return getStatus();
     }
+
+    abstract public JSONObject getLibrary() throws JSONException, BossException;
 
     protected void firePositionEvent(long position) {
         if (mPositionEventType == null) {

@@ -11,6 +11,7 @@ import android.widget.TextView;
 import com.workshoptwelve.boss.app.hardware.obdii.AndroidOBDConnection;
 import com.workshoptwelve.boss.app.hardware.usb.BossUSBManager;
 import com.workshoptwelve.boss.app.log.AndroidLogger;
+import com.workshoptwelve.boss.app.media.AndroidMultiMediaService;
 import com.workshoptwelve.brainiac.boss.common.hardware.obdii.OBDService;
 import com.workshoptwelve.brainiac.boss.common.server.Server;
 import com.workshoptwelve.brainiac.boss.common.content.ContentService;

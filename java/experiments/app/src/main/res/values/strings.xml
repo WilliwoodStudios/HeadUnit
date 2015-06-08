@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">MediaScanner</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="media.artist.unknown">Unknown Artist</string>
+    <string name="media.album.unknown">Unknown Album</string>
+    <string name="media.genre.unknown">Unknown Genre</string>
+
+</resources>

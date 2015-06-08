@@ -1,8 +1,14 @@
-package com.workshoptwelve.boss.app;
+package com.workshoptwelve.boss.app.media;
 
 import android.content.Context;
 import android.media.MediaPlayer;
 
+import com.workshoptwelve.boss.app.R;
+import com.workshoptwelve.boss.app.media.jdo.Album;
+import com.workshoptwelve.boss.app.media.jdo.Artist;
+import com.workshoptwelve.boss.app.media.jdo.Genre;
+import com.workshoptwelve.boss.app.media.jdo.Song;
+import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.boss.common.multimedia.AMultiMediaServiceImpl;
 import com.workshoptwelve.brainiac.boss.common.threading.ThreadPool;
 
@@ -14,12 +20,35 @@ import org.json.JSONObject;
  */
 public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
 
+    private static Log log = Log.getLogger(AndroidMultiMediaService.class);
+
     private final Context mContext;
+    private final MediaScanner mScanner;
     private MediaPlayer mMediaPlayer;
     private Runnable mPollingRunnable;
 
     public AndroidMultiMediaService(Context context) {
+        log.setLogLevel(Log.Level.v);
         mContext = context;
+        mScanner = new MediaScanner(context);
+        mScanner.startScan();
+    }
+
+    @Override
+    public JSONObject getLibrary() throws JSONException {
+        JSONObject toReturn = new JSONObject();
+        JSONObject media = new JSONObject();
+        toReturn.put("media", media);
+        JSONObject library = new JSONObject();
+        media.put("library", library);
+
+        library.put("songs", Song.getAllSongAsJSON());
+        library.put("genres", Genre.getAllGenreAsJSON());
+        library.put("artists", Artist.getAllArtistAsJSON());
+        library.put("albums", Album.getAllAlbumAsJSON());
+        // media.put("currentSong", null);
+
+        return toReturn;
     }
 
     @Override
@@ -42,6 +71,7 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
         startPolling();
         return super.play();
     }
+
 
     private synchronized void stopPolling() {
         mPollingRunnable = null;
