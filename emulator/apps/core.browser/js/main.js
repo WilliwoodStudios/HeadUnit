@@ -21,6 +21,7 @@ function main() {
 				}
 				if (found == false) {
 					items.push({
+						title: 'Untitled',
 						img: 'img/icon-128x128.png',
 						caption: this.src
 					})
@@ -28,7 +29,7 @@ function main() {
 				
 			},
 			onbookmarksclick: function() {
-				$ui.push(bookmarks, this.screen.bookmarks)
+				$ui.push(bookmarks, this.screen.bookmarks);
 			}
 		}
 	
