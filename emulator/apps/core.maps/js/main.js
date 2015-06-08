@@ -9,7 +9,4 @@ function main() {
 	
 	];
 	
-	this.onshow = function() {
-		console.log('maps onshow');
-	}
 }

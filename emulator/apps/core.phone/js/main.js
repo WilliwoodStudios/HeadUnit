@@ -50,6 +50,9 @@ function main() {
 											provider: {
 												id: 'contactProvider',
 												property: 'contacts'
+											},
+											onaction: function(event) {
+												$system.initiateCall({name: event.target.title, phoneNumber: event.target.accent,img: event.target.img});
 											}
 										}
 									]

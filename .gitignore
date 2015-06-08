@@ -1,5 +1,6 @@
 emulator/js/$emulator*
 emulator/js/$core*
+emulator/js/$data*
 emulator/js/$system*
 emulator/css/$emulator*
 **/$ws12

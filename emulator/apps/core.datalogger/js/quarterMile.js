@@ -18,11 +18,14 @@ function quarterMile() {
 					onrecord: function() {
 						this.screen.timerTile.start();
 						$system.audio.playSoundEffect($system.SoundEffect.HORN);
-						var screen = this.screen;
-						// Fake out reaching 60 mph in 4.9 seconds
-						window.setTimeout(function() {
-							screen.fakeout();
-						},1000);
+						// Fake out a 10 second run in the emulator
+						if ($system.config.isEmulator == true) {
+							$ui.toast('The emulator simulates a 10 second 1/4 mile.');
+							var screen = this.screen;
+							window.setTimeout(function() {
+								screen.fakeout();
+							},10000);
+						}
 					},
 					oncountdown: function() {
 						$system.audio.playSoundEffect($system.SoundEffect.BLIP);
@@ -31,27 +34,6 @@ function quarterMile() {
 				{
 					component: $ui.TileTimer,
 					id: 'timerTile'
-				}
-			]
-		},
-		{
-			component: $ui.TileGroup,
-			id: 'currentRun',
-			visible: false,
-			tiles: [
-				{
-					component: $ui.TileTimeDonut,
-					provider: {
-						id: 'quarterMileRun',
-						property: 'result'
-					}
-				},
-				{
-					component: $ui.TileTimeHistory,
-					provider: {
-						id: 'quarterMileRun',
-						property: 'stages'
-					}
 				}
 			]
 		},
@@ -74,6 +56,21 @@ function quarterMile() {
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'quarterMileHistory'
+					}
+				},
+				{
+					component: $ui.TileTimeDonut,
+					targetHigh: true,
+					provider: {
+						id: 'quarterMileProvider',
+						property: 'quarterMileMPH'
+					}
+				},
+				{
+					component: $ui.TileTimeHistory,
+					provider: {
+						id: 'quarterMileProvider',
+						property: 'quarterMileMPHHistory'
 					}
 				},
 				{
@@ -103,16 +100,55 @@ function quarterMile() {
 						id: 'quarterMileProvider',
 						property: 'sixtyFootHistory'
 					}
+				},
+				{
+					component: $ui.TileTimeDonut,
+					provider: {
+						id: 'quarterMileProvider',
+						property: 'threeThirtyFoot'
+					}
+				},
+				{
+					component: $ui.TileTimeHistory,
+					provider: {
+						id: 'quarterMileProvider',
+						property: 'threeThirtyFootHistory'
+					}
+				},
+				{
+					component: $ui.TileTimeDonut,
+					provider: {
+						id: 'quarterMileProvider',
+						property: 'eighthMile'
+					}
+				},
+				{
+					component: $ui.TileTimeHistory,
+					provider: {
+						id: 'quarterMileProvider',
+						property: 'eighthMileHistory'
+					}
+				},
+				{
+					component: $ui.TileTimeDonut,
+					targetHigh: true,
+					provider: {
+						id: 'quarterMileProvider',
+						property: 'eighthMileMPH'
+					}
+				},
+				{
+					component: $ui.TileTimeHistory,
+					provider: {
+						id: 'quarterMileProvider',
+						property: 'eighthMileMPHHistory'
+					}
 				}
 			],
 			attachedObjects: [
 				{
 					component: $ui.DataProvider,
 					id: 'quarterMileProvider'
-				},
-				{
-					component: $ui.DataProvider,
-					id: 'quarterMileRun'
 				}
 			]
 		}	
@@ -131,6 +167,17 @@ function quarterMile() {
 				labels: ['Apr 10/14','May 12/14','Jul 18/14','Aug 22/14'],
 				data: [14.4,13.5,13.9,13.21],
 				caption: '1/4 mile times (sec)'
+			},
+			quarterMileMPH: {
+				target: 130,
+				value: 117.06,
+				accent: 'Your Best Speed',
+				caption: 'mph 1/4 mile'
+			},
+			quarterMileMPHHistory: {
+				labels: ['Apr 10/14','May 12/14','Jul 18/14','Aug 22/14'],
+				data: [105,116.2,112.56,117.06],
+				caption: '1/4 mile speed (mph)'
 			},
 			reactionTime: {
 				target: 0.4,
@@ -154,7 +201,40 @@ function quarterMile() {
 				data: [3,2.5,2.7,2.481],
 				caption: 'Sixty Foot times (sec)'
 			},
-		}
+			threeThirtyFoot: {
+				target: 4,
+				value: 4.8,
+				accent: 'Best 330 ft Time',
+				caption: 'sec 330 ft'
+			},
+			threeThirtyFootHistory: {
+				labels: ['Apr 10/14','May 12/14','Jul 18/14','Aug 22/14'],
+				data: [5.5,6,4.8,5],
+				caption: '330 Foot times (sec)'
+			},
+			eighthMile: {
+				target: 7,
+				value: 7.21,
+				accent: 'Best 1/8 mile Time',
+				caption: 'sec 1/8 mile'
+			},
+			eighthMileHistory: {
+				labels: ['Apr 10/14','May 12/14','Jul 18/14','Aug 22/14'],
+				data: [9.1,8.3,8.2,7.21],
+				caption: '1/8 mile times (sec)'
+			},
+			eighthMileMPH: {
+				target: 102,
+				value: 98.25,
+				accent: 'Your Best Speed',
+				caption: 'mph 1/8 mile'
+			},
+			eighthMileMPHHistory: {
+				labels: ['Apr 10/14','May 12/14','Jul 18/14','Aug 22/14'],
+				data: [98,97,95,98.25],
+				caption: '1/8 mile speed (mph)'
+			},
+		};
 		// Populate the data provider
 		this.quarterMileProvider.data = data; 
 	};
@@ -164,24 +244,50 @@ function quarterMile() {
 		// Stop and reset our tiles
 		this.timerTile.stop();
 		this.recordTile.reset();
-		this.currentRun.setVisible(true);
-		var data = {
-			result: {
-				target: 12.4,
-				value: 13.21,
-				accent: 'This Race',
-				caption: 'sec 1/4 mile'
-			},
-			stages: {
-				labels: ['R/T','60','330','1/8','1000','1/4'],
-				data: [1.353,2.481,6.151,8.934,11.261,13.21],
-				caption: 'Time points (sec)'
-			},
-		}
-		
+		var date = new Date(),
+			months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+			formattedDate = months[date.getMonth()] +' ' + date.getDate() + '/' + (date.getFullYear() - 2000),
+			existing = this.quarterMileProvider.data,
+			data = { // Retrieve the existing data
+				quarterMile: existing.quarterMile,
+				quarterMileHistory: existing.quarterMileHistory,
+				quarterMileMPH: existing.quarterMileMPH,
+				quarterMileMPHHistory: existing.quarterMileMPHHistory,
+				reactionTime: existing.reactionTime,
+				reactionTimeHistory: existing.reactionTimeHistory,
+				sixtyFoot: existing.sixtyFoot,
+				sixtyFootHistory: existing.sixtyFootHistory,
+				threeThirtyFoot: existing.threeThirtyFoot,
+				threeThirtyFootHistory: existing.threeThirtyFootHistory,
+				eighthMile: existing.eighthMile,
+				eighthMileHistory: existing.eighthMileHistory,
+				eighthMileMPH: existing.eighthMileMPH,
+				eighthMileMPHHistory: existing.eighthMileMPHHistory
+			};
+		// Set our new values
+		data.quarterMile.value = this.timerTile.getSeconds();
+		data.quarterMileHistory.labels.push(formattedDate);
+		data.quarterMileMPH.value = 127.08;
+		data.quarterMileMPHHistory.labels.push(formattedDate);
+		data.quarterMileMPHHistory.data.push(data.quarterMileMPH.value);
+		data.quarterMileHistory.data.push(data.quarterMile.value);
+		data.reactionTime.value = 0.749;
+		data.reactionTimeHistory.labels.push(formattedDate);
+		data.reactionTimeHistory.data.push(data.reactionTime.value);
+		data.sixtyFoot.value = 1.667;
+		data.sixtyFootHistory.labels.push(formattedDate);
+		data.sixtyFootHistory.data.push(data.sixtyFoot.value);
+		data.threeThirtyFoot.value = 4.615;
+		data.threeThirtyFootHistory.labels.push(formattedDate);
+		data.threeThirtyFootHistory.data.push(data.threeThirtyFoot.value);
+		data.eighthMile.value = 7.04;
+		data.eighthMileHistory.labels.push(formattedDate);
+		data.eighthMileHistory.data.push(data.eighthMile.value);
+		data.eighthMileMPH.value = 100.28;
+		data.eighthMileMPHHistory.labels.push(formattedDate);
+		data.eighthMileMPHHistory.data.push(data.eighthMileMPH.value);
 		// Populate the data provider
-		this.quarterMileRun.data = data; 
-	}
-	this.fakeout = this.fakeout.bind(this);
+		this.quarterMileProvider.data = data; 
+	}.$bind(this);
 }
 
