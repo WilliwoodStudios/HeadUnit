@@ -108,8 +108,6 @@ function main() {
 	this.onshow = function () {
 		// Set our current media
 		this.onCurrentSongChanged();
-		console.log("Going to add event listener");
-		console.log("$data: " + $data);
 		
 		$data.addEventListener($system.songHistory.MEDIA_SONG_CHANGED, this.onCurrentSongChanged);
 		$data.addEventListener($system.songHistory.MEDIA_SHUFFLE_CHANGED,this.onShuffleChanged);

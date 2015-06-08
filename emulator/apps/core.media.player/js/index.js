@@ -2,9 +2,7 @@ var $core;
 var $system;
 
 // Initialize our toolkit
-console.log("Index.js");
 window.onload = function () {
-	console.log("Index.js: window.onload");
 	var theme;
 	// Get the core object
 	if (window.parent.$core) {

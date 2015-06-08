@@ -116,11 +116,9 @@ function sharedDetail() {
      * @param item.sharedDetailMode
      */
     this.oncreate = function (item) {
-        console.log("oncreate " + item);
         if (item && item.sharedDetailMode) {
             this.viewMode = item.sharedDetailMode;
         } else {
-            console.log("Setting to default - song");
             this.viewMode = "song";
         }
         this.setBackCaption();
