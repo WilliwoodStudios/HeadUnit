@@ -1,3 +1,4 @@
+/* Copyright (c) 2015 Workshop 12 Inc. */
 function libraryMenu() {
 	this.component = $ui.WindowPane;
 	this.animated = true;
