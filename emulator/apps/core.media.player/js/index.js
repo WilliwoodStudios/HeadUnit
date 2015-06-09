@@ -1,3 +1,4 @@
+/* Copyright (c) 2015 Workshop 12 Inc. */
 var $core;
 var $system;
 

@@ -1,3 +1,4 @@
+/* Copyright (c) 2015 Workshop 12 Inc. */
 function screenChrome() {
 	this.disableAnimation = true;
 	this.component = $ui.HeadUnitChrome;
