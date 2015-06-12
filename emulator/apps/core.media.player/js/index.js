@@ -14,9 +14,12 @@ window.onload = function () {
 			// We are in the emulator
 			$system = window.parent.$system;
 			theme = $system.config.theme;
+			$system.registerApp('core.media.player', $ui);
 		} else {
 			console.log('WARNING: $system not defined');
 		}
+	} else {
+		$system.registerApp('core.media.player', $ui);
 	}
 	if (!("$data" in window) && window.parent && window.parent.$data) {
 		$data = window.parent.$data;

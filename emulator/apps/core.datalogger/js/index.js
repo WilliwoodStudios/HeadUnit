@@ -14,10 +14,13 @@ window.onload = function() {
 			// We are in the emulator
 			$system = window.parent.$system;
 			theme = $system.config.theme;
+			$system.registerApp('core.datalogger', $ui);
 		} else {
 			console.log('WARNING: $system not defined');
 		}
-	} 
+	} else {
+		$system.registerApp('core.datalogger', $ui);
+	}
 	// Initialize
 	$ui.init(main, theme);	
 }

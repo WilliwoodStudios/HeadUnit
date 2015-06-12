@@ -63,8 +63,8 @@ function screenChrome() {
 	this.onshow = function() {
 		if (this.hvac) {
 			// Set our temperature change listeners
-			$system.addEventListener($system.EventType.ONDRIVERTEMPCHANGE, this.ondrivertempchange, this);
-			$system.addEventListener($system.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);
+			$ui.addEventListener($system.EventType.ONDRIVERTEMPCHANGE, this.ondrivertempchange, this);
+			$ui.addEventListener($system.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);
 		}
 	}
 	
@@ -73,12 +73,12 @@ function screenChrome() {
 	}
 	
 	// Update the driver temperature setting
-	this.ondrivertempchange = function(data) {
-		this.hvac.driver.temperature.setTemperature(data.temperature);
+	this.ondrivertempchange = function(event) {
+		this.hvac.driver.temperature.setTemperature(event.data.temperature);
 	}.$bind(this);
 	
 	// Update the passenger temperature setting
-	this.onpassengertempchange = function(data) {
-		this.hvac.passenger.temperature.setTemperature(data.temperature);
+	this.onpassengertempchange = function(event) {
+		this.hvac.passenger.temperature.setTemperature(event.data.temperature);
 	}.$bind(this);
 }

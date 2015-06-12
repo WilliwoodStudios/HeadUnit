@@ -9,7 +9,7 @@ window.onload = function() {
 		isEmulator: (window.chrome && chrome.runtime && chrome.runtime.id) ? true : false
 	}
 	$system.init(config);
-	
+	$system.registerApp('core.headunit', $ui);
 	// Initialize UI
 	$ui.init(screenChrome, config.theme);
 	$emulator.chrome = $ui.screens[0];
