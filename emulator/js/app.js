@@ -2,10 +2,7 @@
 window.onload = function() {
 	// Initialize the system
 	var config = {
-		theme: {
-			rootClass: 'ui-theme-dark bold-weight',
-			color: $system.Color.ALIZARIN
-		},
+		theme: $ui.themeDark,
 		isEmulator: (window.chrome && chrome.runtime && chrome.runtime.id) ? true : false
 	}
 	$system.init(config);
@@ -17,5 +14,4 @@ window.onload = function() {
 // Main Chrome definition
 function chromeApp() {
 	this.component = $ui.ChromeApp;
-	
 }

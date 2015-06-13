@@ -13,8 +13,8 @@ function bookmarks() {
 				property: 'items'
 			},
 			onaction: function(event) {
-				var dataEvent = new $data.DataEvent('onbookmark',event.target.caption);
-				$data.raiseEvent(dataEvent);
+				var dataEvent = new $ui.DataEvent('onbookmark',event.target.caption);
+				$ui.raiseEvent(dataEvent);
 				$ui.pop();
 			}
 		}

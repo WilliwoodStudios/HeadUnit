@@ -47,7 +47,7 @@ function mainMenu() {
 	this.onshow = function() {
 		$core.getAppsList(this.onapplistrefresh);
 		// Get our background image
-		var backgroundImg = $core.getBackgroundImage($ui.theme.color);
+		var backgroundImg = $core.getBackgroundImage($ui.theme.backgroundImageColor);
 		if (backgroundImg) {
 			this.setBackground(new ScreenBackground(backgroundImg));
 		}

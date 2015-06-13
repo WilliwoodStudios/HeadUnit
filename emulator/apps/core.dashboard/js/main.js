@@ -6,6 +6,13 @@ function main() {
 		{
 			component: $ui.TileGroup,
 			tiles: [
+				/*{
+					component: $ui.TileProfile,
+					provider: {
+						id: 'dashboardProvider',
+						property: 'profileInfo'
+					}					
+				},*/
 				{
 					component: $ui.TileAcceleration,
 					provider: {
@@ -75,6 +82,17 @@ function main() {
 	this.onshow = function() {
 		// Set the screen data
 		var data = {
+			profileInfo: {
+				backgroundImg: "../img/subaru.jpg",
+				avatar: "../img/avatar.png",
+				userName: "brcewane",
+				stats: {
+					friends: 12,
+					clubs: 6,
+					score: 42369,
+					rank: 2
+				}			
+			},
 			idleInfo: { 
 				value: 70
 			},
