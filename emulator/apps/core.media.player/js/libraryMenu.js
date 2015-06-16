@@ -54,10 +54,14 @@ function libraryMenu() {
 	];
 	
 	this.onshow = function() {
+		this.onthemechange();
+	};
+	
+	this.onthemechange = function() {
 		// Get our background image
 		var backgroundImg = $core.getBackgroundImage($ui.theme.backgroundImageColor);
 		if (backgroundImg) {
 			this.setBackground(new ScreenBackground('../../'+backgroundImg));
 		}
-	};
+	}
 }
