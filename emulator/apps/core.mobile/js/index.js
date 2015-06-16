@@ -16,6 +16,7 @@ window.onload = function() {
 			console.log('WARNING: $system not defined');
 		}
 	} 
+	$system.registerApp('core.mobile', $ui);
 	// Initialize
 	$ui.init(main, $system.config.theme);	
 }

@@ -10,6 +10,7 @@ window.onload = function() {
 			console.log('WARNING: $system not defined');
 		}
 	} 
+	$system.registerApp('core.browser', $ui);
 	// Initialize
 	$ui.init(main, $system.config.theme);	
 }

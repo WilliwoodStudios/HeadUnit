@@ -10,7 +10,8 @@ window.onload = function() {
 		} else {
 			console.log('WARNING: $system not defined');
 		}
-	} 
+	}
+	$system.registerApp('core.dashboard', $ui);
 	// Initialize
 	$ui.init(main,$system.config.theme);	
 }
