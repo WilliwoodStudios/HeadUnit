@@ -17,27 +17,38 @@ function main() {
 				 	img: 'img/ruler.png',
 				  	id: 'setting.measurement',
 				  	title: 'Measurements',
-				  	caption: 'Units of measure for speed, distance, temperature etc.'
+				  	caption: 'Units of measure for speed, distance, temperature etc.',
+					accent: 'Not enabled quite yet'
 				},
 				{
 				  	img: 'img/wifi.png',
 				  	id: 'setting.network',
 				  	title: 'Network',
-				  	caption: 'Configure your internet connectivity'
+				  	caption: 'Configure your internet connectivity',
+					accent: 'Not enabled quite yet'
 				},
 				{
 				  	img: 'img/bluetooth.png',
 				  	id: 'setting.bluetooth',
 				  	title: 'Bluetooth',
-				  	caption: 'Configure your Bluetooth connectivity'
+				  	caption: 'Configure your Bluetooth connectivity',
+					accent: 'Not enabled quite yet'
+				},
+				{
+				  	img: 'img/relays.png',
+				  	id: 'setting.relays',
+				  	title: 'Switches',
+				  	caption: 'Configure your relay board accessory'
 				}
 			],
 			onaction: function(event) {
 				var id = event.target.id;
 				if (id == 'setting.color') {
 					$ui.push(colorScreen);
+				} else if (id == 'setting.relays') {
+					$ui.push(relayScreen);
 				} else {
-					$ui.toast('Settings are currently not available in the emulator');
+					$ui.toast('This setting is currently not available in the emulator');
 				}
 			}
 		}
