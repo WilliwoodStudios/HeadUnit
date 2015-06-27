@@ -5,6 +5,14 @@ function switchScreen() {
 	this.backCaption = 'Back';
 	this.content = [
 		{
+			component: $ui.Input,
+			hint: 'Switch Name',
+			provider: {
+				id: 'screenData',
+				property: 'name'
+			}
+		},
+		{
 			component: $ui.Toggle,
 			id: 'momentarySwitch',
 			caption: 'Is this a momentary switch?',
@@ -16,10 +24,10 @@ function switchScreen() {
 		},
 		{
 			component: $ui.Toggle,
-			caption: 'Enabled',
+			caption: 'Show in switch app',
 			provider: {
 				id: 'screenData',
-				property: 'enabled'
+				property: 'shown'
 			}
 		}
 	];
@@ -37,9 +45,29 @@ function switchScreen() {
 			this.momentarySwitch.visible = true;
 		}
 		var providerData = {
+			name: data.title,
 			isMomentary: (data.isMomentary == true),
-			enabled: (data.enabled == false) ? false : true
+			shown: (data.shown == false) ? false : true,
+			board: data.board,
+			bank: data.bank
 		}
 		this.screenData.data = providerData;
+	}
+	
+	// Handle the verifying and saving of the content
+	this.onbackclick = function() {
+		// Notify others if something has changed
+		if (this.screenData.getUpdatedFields().length > 0) {
+			var data = this.screenData.data,
+				payload = {
+					name: (data.name && data.name.length > 0) ? data.name : 'Unused',
+					isMomentary: data.isMomentary,
+					shown: (data.name == undefined || data.name.length == 0) ? false : data.shown,
+					board: data.board,
+					bank: data.bank
+				},
+				event = new $ui.DataEvent('relay_switch_config_change',payload);
+			$core.raiseEvent(event);
+		}
 	}
 }
