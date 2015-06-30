@@ -1,0 +1,51 @@
+{
+	"relays": [
+		{
+			"board": "1254-68798-447",
+			"name": "Accessory Lights",
+			"bank": 1
+		},
+		{
+			"board": "1254-68798-447",
+			"name": "Methanol",
+			"bank": 2
+		},
+		{
+			"board": "1254-68798-447",
+			"name": "Intercooler Mist",
+			"bank": 3
+		},
+		{
+			"board": "1254-68798-447",
+			"name": "Garage Door Opener",
+			"isMomentary": true,
+			"bank": 4
+		},
+		{
+			"board": "1254-68798-447",
+			"name": "Door Actuators",
+			"isPolaritySwitch": true,
+			"bank": 5
+		},
+		{
+			"board": "1254-68798-447",
+			"name": "Hide Away License Plate",
+			"isPolaritySwitch": true,
+			"bank": 6
+		},
+		{
+			"board": "1254-68798-447",
+			"name": "Unused",
+			"shown": false,
+			"isPolaritySwitch": true,
+			"bank": 7
+		},
+		{
+			"board": "1254-68798-447",
+			"name": "Unused",
+			"shown": false,
+			"isPolaritySwitch": true,
+			"bank": 8
+		}
+	]
+}

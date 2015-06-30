@@ -10,6 +10,9 @@ function switchScreen() {
 			provider: {
 				id: 'screenData',
 				property: 'name'
+			},
+			onchange: function() {
+				this.screen.fireChangeEvent();
 			}
 		},
 		{
@@ -20,14 +23,20 @@ function switchScreen() {
 			provider: {
 				id: 'screenData',
 				property: 'isMomentary'
+			},
+			onclick: function() {
+				this.screen.fireChangeEvent();
 			}
 		},
 		{
 			component: $ui.Toggle,
-			caption: 'Show in switch app',
+			caption: 'Show in app',
 			provider: {
 				id: 'screenData',
 				property: 'shown'
+			},
+			onclick: function() {
+				this.screen.fireChangeEvent();
 			}
 		}
 	];
@@ -39,6 +48,7 @@ function switchScreen() {
 		}	
 	];
 	
+	// Load our data
 	this.onshow = function(data) {
 		if (data == undefined) return;
 		if (data.isPolaritySwitch != true) {
@@ -54,20 +64,18 @@ function switchScreen() {
 		this.screenData.data = providerData;
 	}
 	
-	// Handle the verifying and saving of the content
-	this.onbackclick = function() {
-		// Notify others if something has changed
-		if (this.screenData.getUpdatedFields().length > 0) {
-			var data = this.screenData.data,
-				payload = {
-					name: (data.name && data.name.length > 0) ? data.name : 'Unused',
-					isMomentary: data.isMomentary,
-					shown: (data.name == undefined || data.name.length == 0) ? false : data.shown,
-					board: data.board,
-					bank: data.bank
-				},
-				event = new $ui.DataEvent('relay_switch_config_change',payload);
-			$core.raiseEvent(event);
-		}
+	// Notify others of changes
+	this.fireChangeEvent = function() {
+		var data = this.screenData.data,
+			payload = {
+				name: (data.name && data.name.length > 0) ? data.name : 'Unused',
+				isMomentary: data.isMomentary == true,
+				shown: data.shown,
+				board: data.board,
+				bank: data.bank,
+				isPolaritySwitch: data.isPolaritySwitch
+			},
+			event = new $ui.DataEvent('relay_switch_config_change',payload);
+		$core.raiseEvent(event);
 	}
 }

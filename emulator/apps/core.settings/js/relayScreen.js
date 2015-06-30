@@ -21,89 +21,37 @@ function relayScreen() {
 	this.attachedObjects = [
 		{
 			component: $ui.DataProvider,
-			id: 'relayProvider'
+			id: 'relayProvider',
+			onbeforeupdate: function() {
+				if (this.data && this.data.items) {
+					var i,
+						item;
+					for (i = 0; i < this.data.items.length; i++) {
+						item = this.data.items[i];
+						item.title = item.name;
+						item.caption = 'Bank #' + item.bank;
+						item.accent = 'Relay Accessory Serial No. ' + item.board;
+						if (item.isPolaritySwitch == true) {
+							item.img = 'img/polarity.png';
+						} else {
+							item.img = 'img/relays.png';
+						}
+					}
+				}
+			}
 		}
 	];
 	
+	// Initial show of screen
 	this.onshow = function() {
 		$ui.addEventListener('relay_switch_config_change', this.onswitchchange, this);
-		
-		var items = [
-			{
-				title: 'Accessory Lights',
-				caption: 'Bank #1',
-				accent: 'Relay Accessory Serial No. 1254-68798-447',
-				img: 'img/relays.png',
-				board: '1254-68798-447',
-				bank: 1
-			},
-			{
-				title: 'Methanol',
-				caption: 'Bank #2',
-				accent: 'Relay Accessory Serial No. 1254-68798-447',
-				img: 'img/relays.png',
-				board: '1254-68798-447',
-				bank: 2
-			},
-			{
-				title: 'Intercooler Mist',
-				caption: 'Bank #3',
-				accent: 'Relay Accessory Serial No. 1254-68798-447',
-				img: 'img/relays.png',
-				board: '1254-68798-447',
-				bank: 3
-			},
-			{
-				title: 'Garage Door Opener',
-				isMomentary: true,
-				caption: 'Bank #4',
-				accent: 'Relay Accessory Serial No. 1254-68798-447',
-				img: 'img/relays.png',
-				board: '1254-68798-447',
-				bank: 4
-			},
-			{
-				title: 'Door Actuators',
-				caption: 'Bank #5',
-				isPolaritySwitch: true,
-				accent: 'Relay Accessory Serial No. 1254-68798-447',
-				img: 'img/polarity.png',
-				board: '1254-68798-447',
-				bank: 5
-			},
-			{
-				title: 'Hide Away License Plate',
-				caption: 'Bank #6',
-				isPolaritySwitch: true,
-				accent: 'Relay Accessory Serial No. 1254-68798-447',
-				img: 'img/polarity.png',
-				board: '1254-68798-447',
-				bank: 6
-			},
-			{
-				title: 'Unused',
-				caption: 'Bank #7',
-				isPolaritySwitch: true,
-				shown: false,
-				accent: 'Relay Accessory Serial No. 1254-68798-447',
-				img: 'img/polarity.png',
-				board: '1254-68798-447',
-				bank: 7
-			},
-			{
-				title: 'Unused',
-				isPolaritySwitch: true,
-				shown: false,
-				caption: 'Bank #8',
-				accent: 'Relay Accessory Serial No. 1254-68798-447',
-				img: 'img/polarity.png',
-				board: '1254-68798-447',
-				bank: 8
-			}
-			
-		];
-		this.relayProvider.data = {items: items};
+		$system.relays.getRelayList(this.onrelaylistload);	
 	}
+	
+	// Handle the loading of the relay list
+	this.onrelaylistload = function(items) {
+		this.relayProvider.data = {items: items};
+	}.$bind(this);
 	
 	// Handle any config changes
 	this.onswitchchange = function(event) {
