@@ -17,6 +17,7 @@ public class CH341 extends AUSBSerial {
         if (result != 0) {
             throw new BossException(BossError.USB_DRIVER_ERROR);
         }
+        postInit();
     }
 
     int ch341_control_in(int command, int value, int index, byte[] buffer, int size) {

@@ -157,7 +157,7 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
 
     protected synchronized void postInit() {
         if (mReadThread == null) {
-            mReadThread = new Thread() {
+            mReadThread = new Thread("USB Read Thread") {
                 public void run() {
                     keepReading();
                 }
