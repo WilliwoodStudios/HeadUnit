@@ -72,6 +72,7 @@ function main() {
 				toggle.visible = (relay.shown == false) ? false : true;
 				toggle.caption = relay.name;
 				toggle.board = relay.board;
+				toggle.duration = relay.duration;
 				if (toggle.style != $ui.Toggle.Style.OnOffOn) { // Cannot change this style
 					if (relay.isMomentary == true) {
 						toggle.style = $ui.Toggle.Style.Momentary;

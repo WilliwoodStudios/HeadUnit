@@ -38,6 +38,15 @@ function switchScreen() {
 			onclick: function() {
 				this.screen.fireChangeEvent();
 			}
+		},
+		{
+			component: $ui.Toggle,
+			//style: $ui.Toggle.Style.Momentary,
+			caption: 'Test',
+			duration: 5000,
+			onclick: function() {
+				
+			}
 		}
 	];
 	
