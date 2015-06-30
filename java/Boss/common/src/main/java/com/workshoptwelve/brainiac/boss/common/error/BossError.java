@@ -31,7 +31,8 @@ public enum BossError {
     /**
      * USB errors
      */
-    USB_DRIVER_ERROR(3000,"USB Driver Error");
+    USB_DRIVER_ERROR(3000,"USB Driver Error"),
+    USB_DEVICE_NOT_FOUND(3001,"USB Device Not Found");
 
     private int mErrorCode;
     private String mDescription;
