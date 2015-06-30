@@ -11,6 +11,7 @@ import com.workshoptwelve.boss.app.hardware.usb.AUSBDeviceDriver;
 import com.workshoptwelve.brainiac.boss.common.error.BossError;
 import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
+import com.workshoptwelve.brainiac.boss.common.util.CircularPipe;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +28,17 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
     protected UsbEndpoint mEndpointIn;
     protected UsbEndpoint mEndpointOut;
     private OutputStream mOutputStream;
-    private InputStream mInputStream;
+    private CircularPipe mPipe;
+    private OutputStream mPipeOutputStream;
+    private CircularPipe.InputStream mInputStream;
+    private Thread mReadThread;
+
+    public AUSBSerial() {
+        log.setLogLevel(Log.Level.v);
+        mPipe = new CircularPipe(2048);
+        mPipeOutputStream = mPipe.getOutputStream();
+        mInputStream = mPipe.getInputStream();
+    }
 
     public void setDevice(UsbManager manager, UsbDevice device) throws BossException {
         super.setDevice(manager, device);
@@ -99,15 +110,26 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
 
                 @Override
                 public void write(byte[] buffer, int offset, int count) throws IOException {
+                    log.v("Write", count);
+
                     while (count > 0) {
-                        long started = SystemClock.elapsedRealtime();
-                        int wrote = mDeviceConnection.bulkTransfer(mEndpointOut, buffer, offset, count, 1000);
-                        long finished = SystemClock.elapsedRealtime();
+                        int wrote = 0;
+                        for (int i = 0; i < 5; ++i) {
+                            long started = SystemClock.elapsedRealtime();
+                            wrote = mDeviceConnection.bulkTransfer(mEndpointOut, buffer, offset, count, 1000);
+                            long finished = SystemClock.elapsedRealtime();
+                            if (wrote >= 0) {
+                                break;
+                            }
+                            log.v("Going to retry.");
+                        }
                         if (wrote < 0) {
+                            log.v("Could not write! Ummar!");
                             throw new IOException("Could not write.");
                         }
                         count -= wrote;
                         offset += wrote;
+                        log.v("Write while", count);
                     }
                 }
             };
@@ -115,31 +137,7 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
         return mOutputStream;
     }
 
-    public InputStream getInputStream() {
-        if (mInputStream == null) {
-            mInputStream = new InputStream() {
-                byte [] mDummyByte = new byte[1];
-                @Override
-                public int read() throws IOException {
-                    int howMany = read(mDummyByte);
-                    if (howMany == 1) {
-                        return mDummyByte[0] & 0xff;
-                    }
-                    return -1;
-                }
-
-                @Override
-                public int read(byte[] buffer) throws IOException {
-                    return read(buffer,0,buffer.length);
-                }
-
-                @Override
-                public int read(byte[] buffer, int byteOffset, int byteCount) throws IOException {
-                    int toReturn = mDeviceConnection.bulkTransfer(mEndpointIn,buffer,byteOffset,byteCount, 10000);
-                    return toReturn;
-                }
-            };
-        }
+    public CircularPipe.InputStream getInputStream() {
         return mInputStream;
     }
 
@@ -156,4 +154,54 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
     }
 
     public abstract void init() throws BossException;
+
+    protected synchronized void postInit() {
+        if (mReadThread == null) {
+            mReadThread = new Thread() {
+                public void run() {
+                    keepReading();
+                }
+            };
+            mReadThread.start();
+        }
+    }
+
+
+    private void keepReading() {
+        byte[] buffer = new byte[1024];
+        long lastFail = -1;
+        int failCount = 0;
+        try {
+            while (true) {
+                int toReturn = mDeviceConnection.bulkTransfer(mEndpointIn, buffer, 0, buffer.length, 10000);
+                log.v("Just Read:",toReturn,toReturn > 0 ? new String(buffer,0,toReturn) : "");
+                if (toReturn > 0) {
+                    lastFail = -1;
+                    failCount = 0;
+                    mPipeOutputStream.write(buffer, 0, toReturn);
+                } else if (toReturn == 0) {
+                    // do nothing.
+                } else {
+                    long now = SystemClock.uptimeMillis();
+                    if (lastFail == -1) {
+                    } else {
+                        long delta = now - lastFail;
+                        if (delta < 300) {
+                            ++failCount;
+                        } else {
+                            failCount = 0;
+                        }
+                    }
+                    lastFail = now;
+
+                    if (failCount > 5) {
+                        mPipeOutputStream.close();
+                        break;
+                    }
+                }
+            }
+        } catch (IOException ioe) {
+            log.v("Closing keep reading thread");
+        }
+    }
 }
