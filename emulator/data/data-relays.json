@@ -13,6 +13,7 @@
 		{
 			"board": "1254-68798-447",
 			"name": "Intercooler Mist",
+			"duration": 6000,
 			"bank": 3
 		},
 		{
@@ -24,6 +25,7 @@
 		{
 			"board": "1254-68798-447",
 			"name": "Door Actuators",
+			"duration": 10000,
 			"isPolaritySwitch": true,
 			"bank": 5
 		},

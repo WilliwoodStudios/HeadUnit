@@ -30,28 +30,28 @@ function main() {
 		{
 			component: $ui.Toggle,
 			visible: false,
-			//style: $ui.Toggle.Style.OnOffOn,
+			style: $ui.Toggle.Style.OnOffOn,
 			caption: '',
 			bank: 5
 		},
 		{
 			component: $ui.Toggle,
 			visible: false,
-			//style: $ui.Toggle.Style.OnOffOn,
+			style: $ui.Toggle.Style.OnOffOn,
 			caption: '',
 			bank: 6
 		},
 		{
 			component: $ui.Toggle,
 			visible: false,
-			//style: $ui.Toggle.Style.OnOffOn,
+			style: $ui.Toggle.Style.OnOffOn,
 			caption: '',
 			bank: 7
 		},
 		{
 			component: $ui.Toggle,
 			visible: false,
-			//style: $ui.Toggle.Style.OnOffOn,
+			style: $ui.Toggle.Style.OnOffOn,
 			caption: '',
 			bank: 8
 		}
@@ -73,6 +73,7 @@ function main() {
 				toggle.caption = relay.name;
 				toggle.board = relay.board;
 				toggle.duration = relay.duration;
+				toggle.position = 0;
 				if (toggle.style != $ui.Toggle.Style.OnOffOn) { // Cannot change this style
 					if (relay.isMomentary == true) {
 						toggle.style = $ui.Toggle.Style.Momentary;
