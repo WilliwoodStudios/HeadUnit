@@ -26,6 +26,8 @@ public class Server {
     private Runnable mListenRunnable;
 
     Server() {
+        log.setLogLevel(Log.Level.v);
+        log.v("Server instance created");
         addService(EventService.getInstance());
         addService(ContentService.getInstance());
         addService(LogService.getInstance());
@@ -44,6 +46,7 @@ public class Server {
     }
 
     public synchronized boolean start() {
+        log.v("start()");
         log.d();
         if (mListenRunnable == null) {
             ThreadPool.getInstance().run(mListenRunnable = new Runnable() {

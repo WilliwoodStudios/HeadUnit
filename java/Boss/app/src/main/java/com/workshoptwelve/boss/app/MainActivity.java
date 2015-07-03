@@ -56,7 +56,7 @@ public class MainActivity extends ActionBarActivity implements AndroidLogger.And
             ContentService.getInstance().setContentServiceImpl(new AndroidContentServiceImpl(context, "html/src"));
             MultiMediaService.getInstance().setMultiMediaServiceImpl(new AndroidMultiMediaService(context));
             OBDService.getInstance().setOBDConnection(new AndroidOBDConnection());
-            AccessoryService.getInstance().setAccessoryManager(new AndroidAccessoryManager());
+            AccessoryService.getInstance().setAccessoryManager(AndroidAccessoryManager.getInstance());
 
             Server server = Server.getInstance();
             server.addService(MultiMediaService.getInstance());
