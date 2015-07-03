@@ -40,14 +40,40 @@ function switchScreen() {
 			}
 		},
 		{
-			component: $ui.Toggle,
-			//style: $ui.Toggle.Style.Momentary,
-			caption: 'Test',
-			duration: 5000,
-			onclick: function() {
-				
+			component: $ui.Input,
+			inputType: $ui.Input.InputType.INTEGER,
+			id: 'timer',
+			hint: 'Timer in seconds (empty for no timer)',
+			onchange: function() {
+				this.screen.fireChangeEvent();
 			}
-		}
+		},
+		{
+			component: $ui.Input,
+			id: 'positiveLabel',
+			visible: false,
+			hint: 'Positive Label',
+			provider: {
+				id: 'screenData',
+				property: 'positiveLabel'
+			},
+			onchange: function() {
+				this.screen.fireChangeEvent();
+			}
+		},
+		{
+			component: $ui.Input,
+			id: 'negativeLabel',
+			visible: false,
+			hint: 'Negative Label',
+			provider: {
+				id: 'screenData',
+				property: 'negativeLabel'
+			},
+			onchange: function() {
+				this.screen.fireChangeEvent();
+			}
+		},
 	];
 	
 	this.attachedObjects = [
@@ -62,13 +88,22 @@ function switchScreen() {
 		if (data == undefined) return;
 		if (data.isPolaritySwitch != true) {
 			this.momentarySwitch.visible = true;
+		} else {
+			this.positiveLabel.visible = true;
+			this.negativeLabel.visible = true;
 		}
 		var providerData = {
 			name: data.title,
 			isMomentary: (data.isMomentary == true),
 			shown: (data.shown == false) ? false : true,
 			board: data.board,
-			bank: data.bank
+			bank: data.bank,
+			positiveLabel: data.positiveLabel,
+			negativeLabel: data.negativeLabel,
+			isPolaritySwitch: data.isPolaritySwitch
+		}
+		if (data.duration != undefined) {
+			this.timer.text = data.duration/1000;
 		}
 		this.screenData.data = providerData;
 	}
@@ -82,6 +117,9 @@ function switchScreen() {
 				shown: data.shown,
 				board: data.board,
 				bank: data.bank,
+				positiveLabel: (data.isPolaritySwitch == true && this.positiveLabel.text != undefined && this.positiveLabel.text.length > 0) ? this.positiveLabel.text : undefined,
+				negativeLabel: (data.isPolaritySwitch == true && this.negativeLabel.text != undefined && this.negativeLabel.text.length > 0) ? this.negativeLabel.text : undefined,
+				duration: (this.timer.text != undefined) ? (parseInt(this.timer.text)*1000) : undefined,
 				isPolaritySwitch: data.isPolaritySwitch
 			},
 			event = new $ui.DataEvent('relay_switch_config_change',payload);

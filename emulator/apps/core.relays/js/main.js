@@ -73,6 +73,8 @@ function main() {
 				toggle.caption = relay.name;
 				toggle.board = relay.board;
 				toggle.duration = relay.duration;
+				toggle.positiveLabel = relay.positiveLabel;
+				toggle.negativeLabel = relay.negativeLabel;
 				toggle.position = 0;
 				if (toggle.style != $ui.Toggle.Style.OnOffOn) { // Cannot change this style
 					if (relay.isMomentary == true) {

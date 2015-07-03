@@ -25,6 +25,8 @@
 		{
 			"board": "1254-68798-447",
 			"name": "Door Actuators",
+			"positiveLabel": "OPEN",
+			"negativeLabel": "CLOSE",
 			"duration": 10000,
 			"isPolaritySwitch": true,
 			"bank": 5
@@ -32,6 +34,8 @@
 		{
 			"board": "1254-68798-447",
 			"name": "Hide Away License Plate",
+			"positiveLabel": "SHOW",
+			"negativeLabel": "HIDE",
 			"isPolaritySwitch": true,
 			"bank": 6
 		},

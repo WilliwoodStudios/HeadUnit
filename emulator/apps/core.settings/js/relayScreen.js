@@ -63,6 +63,9 @@ function relayScreen() {
 				item.title = event.data.name;
 				item.isMomentary = event.data.isMomentary;
 				item.shown = event.data.shown;
+				item.duration = event.data.duration;
+				item.positiveLabel = event.data.positiveLabel;
+				item.negativeLabel = event.data.negativeLabel;
 				break;
 			}
 		}
