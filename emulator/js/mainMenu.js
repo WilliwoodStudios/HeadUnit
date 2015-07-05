@@ -1,3 +1,4 @@
+/* Copyright (c) 2015 Workshop 12 Inc. */
 function mainMenu() {
 	this.id = 'mainMenu';
 	this.component = $ui.WindowPane;
@@ -45,8 +46,13 @@ function mainMenu() {
 	// Load the menu
 	this.onshow = function() {
 		$core.getAppsList(this.onapplistrefresh);
+		this.onthemechange();
+	};
+	
+	// Handle theme changes
+	this.onthemechange = function() {
 		// Get our background image
-		var backgroundImg = $core.getBackgroundImage($ui.theme.color);
+		var backgroundImg = $core.getBackgroundImage($ui.theme.backgroundImageColor);
 		if (backgroundImg) {
 			this.setBackground(new ScreenBackground(backgroundImg));
 		}
@@ -58,6 +64,5 @@ function mainMenu() {
 			items: apps
 		}
 		this.mainMenuProvider.data = data;
-	}
-	this.onapplistrefresh = this.onapplistrefresh.bind(this);
+	}.bind(this);
 }

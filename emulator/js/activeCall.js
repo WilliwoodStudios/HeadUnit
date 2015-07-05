@@ -1,3 +1,4 @@
+/* Copyright (c) 2015 Workshop 12 Inc. */
 function activeCall() {
 	this.component = $ui.ActiveCallScreen;
 	this.iconIncomingCall = '../img/incomingCall.png';

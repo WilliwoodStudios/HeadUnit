@@ -1,3 +1,4 @@
+/* Copyright (c) 2015 Workshop 12 Inc. */
 function playlistList() {
 	this.component = $ui.WindowPane;
 	this.animated = true;
@@ -58,7 +59,7 @@ function playlistList() {
 					item = this.data.items[i];
 					item.title = item.name;
 					item.img = item.artwork;
-					item.accent = item.artistName + " - " + item.genre;
+					item.accent = $system.util.converter.secondsToTime(item.duration);
 					item.accent += " - ";
 					item.accent += item.songCount + " " + (item.songCount == 1 ? "Song" : "Songs");
 					if (item.title && item.title.length > 0) {

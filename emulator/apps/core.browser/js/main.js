@@ -1,3 +1,4 @@
+/* Copyright (c) 2015 Workshop 12 Inc. */
 function main() {
 	this.component = $ui.WindowPane;
 	
@@ -36,15 +37,13 @@ function main() {
 	];
 	
 	this.onshow = function() {
-		$data.addEventListener('onbookmark', this.onbookmark);
+		$ui.addEventListener('onbookmark', this.onbookmark);
 	}
 	
 	// Handle the user selecting a bookmarl
 	this.onbookmark = function(event) {
-		console.log(event);
 		this.browser.src = event.data;
-	}
-	this.onbookmark = this.onbookmark.$bind(this);
+	}.$bind(this);
 	
 	this.bookmarks = [
 		{

@@ -1,0 +1,10 @@
+{
+	"id":"core.relays",
+	"name": "switches",
+	"iconSplash": "img/icon-256x256.png",
+	"content": "index.html",
+	"availability": {
+        "headUnit": true,
+        "driversDevice": true
+    }
+}

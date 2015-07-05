@@ -1,3 +1,4 @@
+/* Copyright (c) 2015 Workshop 12 Inc. */
 function main() {
 	this.component = $ui.WindowPane;
 	this.content = [
@@ -109,11 +110,11 @@ function main() {
 		// Set our current media
 		this.onCurrentSongChanged();
 		
-		$data.addEventListener($system.songHistory.MEDIA_SONG_CHANGED, this.onCurrentSongChanged);
-		$data.addEventListener($system.songHistory.MEDIA_SHUFFLE_CHANGED,this.onShuffleChanged);
-		$data.addEventListener($system.songHistory.MEDIA_REPEAT_CHANGED,this.onRepeatChanged);
-		$data.addEventListener("mediaPlaybackStarted",this.onPlaybackStarted);
-		$data.addEventListener("mediaPlaybackEnded",this.onPlaybackEnded);
+		$ui.addEventListener($system.songHistory.MEDIA_SONG_CHANGED, this.onCurrentSongChanged, this);
+		$ui.addEventListener($system.songHistory.MEDIA_SHUFFLE_CHANGED,this.onShuffleChanged, this);
+		$ui.addEventListener($system.songHistory.MEDIA_REPEAT_CHANGED,this.onRepeatChanged, this);
+		$ui.addEventListener("mediaPlaybackStarted",this.onPlaybackStarted, this);
+		$ui.addEventListener("mediaPlaybackEnded",this.onPlaybackEnded, this);
 	};
 
 }

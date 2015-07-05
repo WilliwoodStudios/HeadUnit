@@ -1,3 +1,4 @@
+/* Copyright (c) 2015 Workshop 12 Inc. */
 function wedgePassengerTemperature() {
 	this.component = $ui.WedgeTemperature;
 	
@@ -9,7 +10,7 @@ function wedgePassengerTemperature() {
 	};
 	
 	this.onchange = function() {
-		var systemEvent = new $core.SystemEvent($system.EventType.ONPASSENGERTEMPCHANGE, {temperature: this.temperature});
+		var systemEvent = new $ui.DataEvent($system.EventType.ONPASSENGERTEMPCHANGE, {temperature: this.temperature});
 		$core.raiseEvent(systemEvent);
 	};
 	

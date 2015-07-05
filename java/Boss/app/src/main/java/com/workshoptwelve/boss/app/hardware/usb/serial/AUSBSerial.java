@@ -2,6 +2,7 @@ package com.workshoptwelve.boss.app.hardware.usb.serial;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
@@ -11,9 +12,10 @@ import com.workshoptwelve.boss.app.hardware.usb.AUSBDeviceDriver;
 import com.workshoptwelve.brainiac.boss.common.error.BossError;
 import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
+import com.workshoptwelve.brainiac.boss.common.util.CircularPipe;
+import com.workshoptwelve.brainiac.boss.common.util.ForEachList;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -26,8 +28,21 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
     protected UsbInterface mInterface;
     protected UsbEndpoint mEndpointIn;
     protected UsbEndpoint mEndpointOut;
+
+    private boolean mClosed = false;
+
     private OutputStream mOutputStream;
-    private InputStream mInputStream;
+    private CircularPipe mPipe;
+    private OutputStream mPipeOutputStream;
+    private CircularPipe.InputStream mInputStream;
+    private Thread mReadThread;
+
+    public AUSBSerial() {
+        log.setLogLevel(Log.Level.v);
+        mPipe = new CircularPipe(2048);
+        mPipeOutputStream = mPipe.getOutputStream();
+        mInputStream = mPipe.getInputStream();
+    }
 
     public void setDevice(UsbManager manager, UsbDevice device) throws BossException {
         super.setDevice(manager, device);
@@ -100,10 +115,21 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
                 @Override
                 public void write(byte[] buffer, int offset, int count) throws IOException {
                     while (count > 0) {
-                        long started = SystemClock.elapsedRealtime();
-                        int wrote = mDeviceConnection.bulkTransfer(mEndpointOut, buffer, offset, count, 1000);
-                        long finished = SystemClock.elapsedRealtime();
+                        UsbEndpoint localEndpointOut = mEndpointOut;
+                        UsbDeviceConnection localDeviceConnection = mDeviceConnection;
+                        if (localEndpointOut == null || localDeviceConnection == null) {
+                            throw new IOException("Resources missing");
+                        }
+                        int wrote = 0;
+                        for (int i = 0; i < 5; ++i) {
+                            wrote = localDeviceConnection.bulkTransfer(localEndpointOut, buffer, offset, count, 1000);
+                            if (wrote >= 0) {
+                                break;
+                            }
+                            log.v("Going to retry.");
+                        }
                         if (wrote < 0) {
+                            log.v("Could not write! Ummar!");
                             throw new IOException("Could not write.");
                         }
                         count -= wrote;
@@ -115,31 +141,7 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
         return mOutputStream;
     }
 
-    public InputStream getInputStream() {
-        if (mInputStream == null) {
-            mInputStream = new InputStream() {
-                byte [] mDummyByte = new byte[1];
-                @Override
-                public int read() throws IOException {
-                    int howMany = read(mDummyByte);
-                    if (howMany == 1) {
-                        return mDummyByte[0] & 0xff;
-                    }
-                    return -1;
-                }
-
-                @Override
-                public int read(byte[] buffer) throws IOException {
-                    return read(buffer,0,buffer.length);
-                }
-
-                @Override
-                public int read(byte[] buffer, int byteOffset, int byteCount) throws IOException {
-                    int toReturn = mDeviceConnection.bulkTransfer(mEndpointIn,buffer,byteOffset,byteCount, 10000);
-                    return toReturn;
-                }
-            };
-        }
+    public CircularPipe.InputStream getInputStream() {
         return mInputStream;
     }
 
@@ -156,4 +158,105 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
     }
 
     public abstract void init() throws BossException;
+
+    protected synchronized void postInit() {
+        if (mReadThread == null) {
+            mReadThread = new Thread("USB Read Thread") {
+                public void run() {
+                    keepReading();
+                }
+            };
+            mReadThread.start();
+        }
+    }
+
+    @Override
+    public void setConnected(boolean connected) {
+        log.v("Set Connected",connected);
+        super.setConnected(connected);
+        if (!connected) {
+            close();
+        }
+    }
+
+    private void keepReading() {
+        byte[] buffer = new byte[1024];
+        long lastFail = -1;
+        int failCount = 0;
+        try {
+            while (!mClosed) {
+                UsbDeviceConnection localDeviceConnection = mDeviceConnection;
+                if (localDeviceConnection == null) {
+                    break;
+                }
+
+                int toReturn = localDeviceConnection.bulkTransfer(mEndpointIn, buffer, 0, buffer.length, 10000);
+                if (toReturn > 0) {
+                    lastFail = -1;
+                    failCount = 0;
+                    mPipeOutputStream.write(buffer, 0, toReturn);
+                } else if (toReturn == 0) {
+                    // do nothing.
+                } else {
+                    long now = SystemClock.uptimeMillis();
+                    if (lastFail == -1) {
+                    } else {
+                        long delta = now - lastFail;
+                        if (delta < 300) {
+                            ++failCount;
+                        } else {
+                            failCount = 0;
+                        }
+                    }
+                    lastFail = now;
+
+                    if (failCount > 5) {
+                        mPipeOutputStream.close();
+                        break;
+                    }
+                }
+            }
+            log.v("Leaving keep reading via while escape");
+        } catch (IOException ioe) {
+            log.v("Leaving keep reading thread via exception");
+        }
+        close();
+    }
+
+    /**
+     * Close the serial device, releasing all resources.
+     */
+    public synchronized void close() {
+        log.v("Close being called.");
+        if (!mClosed) {
+            log.v("Close doing something");
+            mClosed = true;
+            mDeviceConnection.close();
+            mDeviceConnection = null;
+            mEndpointIn = null;
+            mEndpointOut = null;
+            mSerialListeners.forEach(new ForEachList.ForEach<USBSerialListener>() {
+                @Override
+                public void go(USBSerialListener item) {
+                    item.onClosed();
+                }
+            });
+        }
+
+        // RPW TODO.
+    }
+
+    private ForEachList<USBSerialListener> mSerialListeners = new ForEachList<>();
+
+    public void addUSBSerialListener(USBSerialListener listener) {
+        mSerialListeners.add(listener);
+    }
+
+    public void removeUSBSerialListener(USBSerialListener listener) {
+        mSerialListeners.remove(listener);
+    }
+
+    public interface USBSerialListener {
+        void onClosed();
+    }
 }

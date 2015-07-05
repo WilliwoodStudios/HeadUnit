@@ -1,3 +1,4 @@
+/* Copyright (c) 2015 Workshop 12 Inc. */
 function zeroToSixty() {
 	this.component = $ui.WindowPane;
 	this.animated = true;
@@ -23,7 +24,7 @@ function zeroToSixty() {
 							$ui.toast('The emulator simulates a 4.9 second 0-60');
 							window.setTimeout(function() {
 								if ($core) {
-									var systemEvent = new $core.SystemEvent($system.EventType.ONSPEEDCHANGE, {speed: 60});
+									var systemEvent = new $ui.DataEvent($system.EventType.ONSPEEDCHANGE, {speed: 60});
 									$core.raiseEvent(systemEvent);
 								}
 							},4900);
@@ -79,12 +80,12 @@ function zeroToSixty() {
 		// Populate the data provider
 		this.zeroToSixtyProvider.data = data; 
 		// Set our speed change listener
-		$system.addEventListener($system.EventType.ONSPEEDCHANGE, this.onspeedchange, this);
+		$ui.addEventListener($system.EventType.ONSPEEDCHANGE, this.onspeedchange, this);
 	};
 	
 	// Handle any speed change events
-	this.onspeedchange = function(data) {
-		if (data && (data.speed >= 60)) {
+	this.onspeedchange = function(event) {
+		if (event && event.data && (event.data.speed >= 60)) {
 			// Stop and reset our tiles
 			this.timerTile.stop();
 			this.recordTile.reset();

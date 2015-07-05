@@ -1,3 +1,4 @@
+/* Copyright (c) 2015 Workshop 12 Inc. */
 function main() {
 	this.component = $ui.WindowPane;
 	
@@ -55,8 +56,13 @@ function main() {
 	];
 	
 	this.onshow = function() {
+		this.onthemechange();
+	};
+	
+	// Handle theme changes
+	this.onthemechange = function() {
 		// Get our background image
-		var backgroundImg = $core.getBackgroundImage($ui.theme.color);
+		var backgroundImg = $core.getBackgroundImage($ui.theme.backgroundImageColor);
 		if (backgroundImg) {
 			this.setBackground(new ScreenBackground('../../'+backgroundImg));
 		}

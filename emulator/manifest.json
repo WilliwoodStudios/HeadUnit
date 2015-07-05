@@ -2,7 +2,7 @@
 	"manifest_version": 2,
 	"name": "Brainiac Emulator",
 	"description": "Emulated experience of Brainiac from Workshop 12",
-	"version": "1.1",
+	"version": "1.1.0.3",
 	"author": "Workshop 12",
 	"icons": {"128": "128.png"},
 	"app": {
@@ -10,5 +10,5 @@
 		      "scripts": ["js/background.js"]
 		 }
 	},
-	"permissions": ["webview", "pointerLock", "geolocation", "videoCapture", "storage"]
+	"permissions": ["webview", "pointerLock", "storage"]
 }

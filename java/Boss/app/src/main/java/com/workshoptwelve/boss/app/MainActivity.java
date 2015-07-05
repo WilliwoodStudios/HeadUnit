@@ -8,10 +8,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.workshoptwelve.boss.app.hardware.accessory.AndroidAccessoryManager;
 import com.workshoptwelve.boss.app.hardware.obdii.AndroidOBDConnection;
 import com.workshoptwelve.boss.app.hardware.usb.BossUSBManager;
 import com.workshoptwelve.boss.app.log.AndroidLogger;
 import com.workshoptwelve.boss.app.media.AndroidMultiMediaService;
+import com.workshoptwelve.brainiac.boss.common.hardware.accessory.AccessoryService;
 import com.workshoptwelve.brainiac.boss.common.hardware.obdii.OBDService;
 import com.workshoptwelve.brainiac.boss.common.server.Server;
 import com.workshoptwelve.brainiac.boss.common.content.ContentService;
@@ -55,6 +57,7 @@ public class MainActivity extends ActionBarActivity implements AndroidLogger.And
             ContentService.getInstance().setContentServiceImpl(new AndroidContentServiceImpl(context, "html/src"));
             MultiMediaService.getInstance().setMultiMediaServiceImpl(new AndroidMultiMediaService(context));
             OBDService.getInstance().setOBDConnection(new AndroidOBDConnection());
+            AccessoryService.getInstance().setAccessoryManager(AndroidAccessoryManager.getInstance());
 
             Server server = Server.getInstance();
             server.addService(MultiMediaService.getInstance());
