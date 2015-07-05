@@ -2,6 +2,7 @@ package com.workshoptwelve.brainiac.boss.common.server;
 
 import com.workshoptwelve.brainiac.boss.common.content.ContentService;
 import com.workshoptwelve.brainiac.boss.common.event.EventService;
+import com.workshoptwelve.brainiac.boss.common.hardware.accessory.AccessoryService;
 import com.workshoptwelve.brainiac.boss.common.hardware.obdii.OBDService;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.boss.common.log.LogService;
@@ -25,10 +26,13 @@ public class Server {
     private Runnable mListenRunnable;
 
     Server() {
+        log.setLogLevel(Log.Level.v);
+        log.v("Server instance created");
         addService(EventService.getInstance());
         addService(ContentService.getInstance());
         addService(LogService.getInstance());
         addService(OBDService.getInstance());
+        addService(AccessoryService.getInstance());
     }
 
     public static Server getInstance() {
@@ -42,6 +46,7 @@ public class Server {
     }
 
     public synchronized boolean start() {
+        log.v("start()");
         log.d();
         if (mListenRunnable == null) {
             ThreadPool.getInstance().run(mListenRunnable = new Runnable() {

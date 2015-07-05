@@ -38,5 +38,7 @@ public class ArduinoUno extends AUSBSerial {
                 encodingSetting, // buffer
                 7, // length
                 0); // timeout
+
+        postInit();
     }
 }
