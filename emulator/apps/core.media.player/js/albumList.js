@@ -95,15 +95,24 @@ function albumList() {
 	this.onshow = function() {
 		var mediaSource = $system.audio.getActiveMediaSource();
 		if (mediaSource) {
+			console.log("Media source");
+			mediaSource.getAlbums(this.albumsAvailable);
+			mediaSource.getMostPlayedAlbums(this.mostPlayedAlbumsAvailable);
+			console.log("Both gets created");
+		}
+	}.$bind(this);
+
+	this.albumsAvailable = function(albums) {
+		this.entryProvider.data = {items: albums};
+	}.$bind(this);
+
+	this.mostPlayedAlbumsAvailable = function(topPlayed) {
+		console.log("Most Played Available");
 			// Get our top played albums
-			var topPlayed = mediaSource.getMostPlayedAlbums();
 			if (topPlayed && (topPlayed.length > 0)) {
 				this.topPlayedProvider.data = {items: topPlayed};
 				this.topPlayed.visible = true;
 			}
 			// Retrieve our list of all albums
-			var albums = mediaSource.getAlbums();
-			this.entryProvider.data = {items: albums};
-		}
-	}
+	}.$bind(this);
 }

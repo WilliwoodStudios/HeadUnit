@@ -70,19 +70,21 @@ function main() {
 			}
 		};
 		if (mediaSource && (mediaSource.type == $system.MediaSourceType.PLAYER)) {
-			var song = mediaSource.getCurrentSong();
-			if (song) {
-				data = {
-					currentSong: {
-						album: song.albumName,
-						coverArt: song.artwork,
-						song: song.name,
-						artist: song.artistName,
-						duration: song.duration,
-						paused: mediaSource.isPaused()
-					}
-				};
-			}
+			mediaSource.getCurrentSong(function(song) {
+				if (song) {
+					data = {
+						currentSong: {
+							album: song.albumName,
+							coverArt: song.artwork,
+							song: song.name,
+							artist: song.artistName,
+							duration: song.duration,
+							paused: mediaSource.isPaused()
+						}
+					};
+					this.mediaPlayerProvider.data = data;
+				}
+			}.$bind(this));
 		}
 		this.mediaPlayerProvider.data = data;
 	}.$bind(this);
