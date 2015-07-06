@@ -91,19 +91,25 @@ function playlistList() {
 			}
 		}
 	];
+
+	this.mostPlayedPlaylistsAvailable = function(topPlayed) {
+		if (topPlayed && (topPlayed.length > 0)) {
+			this.topPlayedProvider.data = {items: topPlayed};
+			this.topPlayed.visible = true;
+		}
+	}.$bind(this);
+
+	this.playlistsAvailable = function(playlists) {
+		this.entryProvider.data = {items: playlists};
+	}.$bind(this);
 	
 	this.onshow = function() {
 		var mediaSource = $system.audio.getActiveMediaSource();
 		if (mediaSource) {
 			// Get our top played albums
-			var topPlayed = mediaSource.getMostPlayedPlaylists();
-			if (topPlayed && (topPlayed.length > 0)) {
-				this.topPlayedProvider.data = {items: topPlayed};
-				this.topPlayed.visible = true;
-			}
+			mediaSource.getMostPlayedPlaylists(this.mostPlayedPlaylistsAvailable);
 			// Retrieve our list of all albums
-			var playlists = mediaSource.getPlaylists();
-			this.entryProvider.data = {items: playlists};
+			mediaSource.getPlaylists(this.playlistsAvailable);
 		}
 	}
 }

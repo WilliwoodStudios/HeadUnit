@@ -5,21 +5,20 @@ function genreList() {
     this.backCaption = 'My Library',
 
     this.content = [{
-            component: $ui.Header,
-            caption: 'Genres'
-        }, {
-            component: $ui.List,
-            style: $ui.GenericListItem,
-            provider: {
-                id: 'entryProvider',
-                property: 'items'
-            },
-            onaction: function(event) {
-                event.target.sharedDetailMode = "genre";
-                $ui.push(sharedDetail, event.target);
-            }
+        component: $ui.Header,
+        caption: 'Genres'
+    }, {
+        component: $ui.List,
+        style: $ui.GenericListItem,
+        provider: {
+            id: 'entryProvider',
+            property: 'items'
+        },
+        onaction: function(event) {
+            event.target.sharedDetailMode = "genre";
+            $ui.push(sharedDetail, event.target);
         }
-    ];
+    }];
 
     this.attachedObjects = [{
         component: $ui.DataProvider,
@@ -61,13 +60,16 @@ function genreList() {
         }
     }];
 
+    this.genresAvailable = function(genres) {
+        this.entryProvider.data = {
+            items: genres
+        };
+    }.$bind(this);
+
     this.onshow = function() {
         var mediaSource = $system.audio.getActiveMediaSource();
         if (mediaSource) {
-            var genres = mediaSource.getGenres();
-            this.entryProvider.data = {
-                items: genres
-            };
+            mediaSource.getGenres(this.genresAvailable);
         }
-    }
+    };
 }
