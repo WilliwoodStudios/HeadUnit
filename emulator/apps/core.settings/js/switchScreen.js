@@ -41,7 +41,7 @@ function switchScreen() {
 		},
 		{
 			component: $ui.Input,
-			inputType: $ui.Input.InputType.INTEGER,
+			inputType: $ui.Input.InputType.FLOAT,
 			id: 'timer',
 			hint: 'Timer in seconds (empty for no timer)',
 			onchange: function() {
@@ -102,14 +102,30 @@ function switchScreen() {
 			negativeLabel: data.negativeLabel,
 			isPolaritySwitch: data.isPolaritySwitch
 		}
-		if (data.duration != undefined) {
+		if (data.duration != undefined && typeof(data.duration)=="number" && !isNaN(data.duration)) {
 			this.timer.text = data.duration/1000;
+		} else {
+			this.timer.text = "";
 		}
 		this.screenData.data = providerData;
 	}
 	
 	// Notify others of changes
 	this.fireChangeEvent = function() {
+		var duration = undefined;
+		if (this.timer && this.timer.text) {
+			duration = parseFloat(this.timer.text);
+			if (isNaN(duration)) {
+				duration = undefined;
+			} else {
+				duration *= 1000;
+				duration = Math.floor(duration);
+				if (duration < 0) {
+					duration = undefined;
+				}
+			}
+		}
+
 		var data = this.screenData.data,
 			payload = {
 				name: (data.name && data.name.length > 0) ? data.name : 'Unused',
@@ -119,7 +135,7 @@ function switchScreen() {
 				bank: data.bank,
 				positiveLabel: (data.isPolaritySwitch == true && this.positiveLabel.text != undefined && this.positiveLabel.text.length > 0) ? this.positiveLabel.text : undefined,
 				negativeLabel: (data.isPolaritySwitch == true && this.negativeLabel.text != undefined && this.negativeLabel.text.length > 0) ? this.negativeLabel.text : undefined,
-				duration: (this.timer.text != undefined) ? (parseInt(this.timer.text)*1000) : undefined,
+				duration: duration,
 				isPolaritySwitch: data.isPolaritySwitch
 			},
 			event = new $ui.DataEvent('relay_switch_config_change',payload);
