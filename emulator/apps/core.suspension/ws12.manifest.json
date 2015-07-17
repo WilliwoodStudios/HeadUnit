@@ -1,6 +1,6 @@
 {
-	"id":"core.relays",
-	"name": "switches",
+	"id":"core.suspension",
+	"name": "suspension",
 	"icon": "img/icon-128x128.png",
 	"iconSplash": "img/icon-256x256.png",
 	"content": "index.html",
