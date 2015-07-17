@@ -2,7 +2,17 @@
 function main() {
 	this.component = $ui.WindowPane;
 
-	this.content = [];
+	this.content = [
+		{
+			component: $ui.Suspension,
+			leftFront: 21,
+			rightFront: 25,
+			leftRear: 30,
+			rightRear: 30,
+			tank: 112,
+			img: 'img/cartop.png'
+		}
+	];
 
 	this.onshow = function() {
 		//$ui.addEventListener('relay_switch_config_change', this.onswitchchange, this);
