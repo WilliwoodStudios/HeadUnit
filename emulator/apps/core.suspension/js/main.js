@@ -65,7 +65,31 @@ function main() {
 							leftRear: 30,
 							rightRear: 30,
 							tank: 112,
-							img: 'img/cartop.png'
+							img: 'img/cartop.png',
+							onrightfrontclick: function() {
+								if (window.$core) {
+									var systemEvent = new $ui.DataEvent($system.EventType.ONREQUESTSUSPENSIONUI, {corner: 'rf'});
+									$core.raiseEvent(systemEvent);
+								}
+							},
+							onleftfrontclick: function() {
+								if (window.$core) {
+									var systemEvent = new $ui.DataEvent($system.EventType.ONREQUESTSUSPENSIONUI, {corner: 'lf'});
+									$core.raiseEvent(systemEvent);
+								}
+							},
+							onleftrearclick: function() {
+								if (window.$core) {
+									var systemEvent = new $ui.DataEvent($system.EventType.ONREQUESTSUSPENSIONUI, {corner: 'lr'});
+									$core.raiseEvent(systemEvent);
+								}
+							},
+							onrightrearclick: function() {
+								if (window.$core) {
+									var systemEvent = new $ui.DataEvent($system.EventType.ONREQUESTSUSPENSIONUI, {corner: 'rr'});
+									$core.raiseEvent(systemEvent);
+								}
+							}
 						}
 					]
 				}
