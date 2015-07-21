@@ -1,11 +1,12 @@
 #ifndef _RELAY_CHANNEL_H
 #define _RELAY_CHANNEL_H
 
-#include "Pollable.h"
+#include <Pollable.h>
 
 class RelayInterface : public Pollable {
   public:
-    RelayInterface();
+    RelayInterface(bool addPollable = true);
+    virtual ~RelayInterface();
 
     void setTimeout(uint32_t timeout);
     uint32_t getTimeout();
@@ -29,7 +30,7 @@ class RelayInterface : public Pollable {
 
 class RelayChannel : public RelayInterface {
   public:
-    RelayChannel();
+    RelayChannel(bool addPollable = true);
     virtual ~RelayChannel();
 
     void setPin(int8_t powerPin);
