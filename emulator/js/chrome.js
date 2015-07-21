@@ -65,6 +65,7 @@ function screenChrome() {
 			// Set our temperature change listeners
 			$ui.addEventListener($system.EventType.ONDRIVERTEMPCHANGE, this.ondrivertempchange, this);
 			$ui.addEventListener($system.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);
+			$ui.addEventListener($system.EventType.ONREQUESTSUSPENSIONUI, this.onrequestsuspensionui, this);
 		}
 	}
 	
@@ -80,5 +81,10 @@ function screenChrome() {
 	// Update the passenger temperature setting
 	this.onpassengertempchange = function(event) {
 		this.hvac.passenger.temperature.setTemperature(event.data.temperature);
+	}.$bind(this);
+	
+	// system requested the UI for adjusting a suspension corner
+	this.onrequestsuspensionui = function(event) {
+		$ui.push(wedgeSuspension, {corner: event.data.corner})
 	}.$bind(this);
 }

@@ -1,7 +1,12 @@
 /* Copyright (c) 2015 Workshop 12 Inc. */
+var $core;
 var $system;
+
 // Initialize our toolkit
 window.onload = function() {
+	if (window.parent.$core) {
+		$core = window.parent.$core;
+	}
 	// Get the system object
 	if (!$system) {
 		if (window.location !== window.parent.location) {

@@ -4,14 +4,98 @@ function main() {
 
 	this.content = [
 		{
-			component: $ui.Suspension,
-			leftFront: 21,
-			rightFront: 25,
-			leftRear: 30,
-			rightRear: 30,
-			tank: 112,
-			img: 'img/cartop.png'
+			component: $ui.ColumnLayout,
+			fillToParent: true,
+			columns: [
+				{
+					component: $ui.Column,
+					content: [
+						{
+							component: $ui.DockLayout,
+							location: $ui.DockLayout.DockLocation.BOTTOM,
+							dock: [
+								{
+						            component: $ui.Button,
+						            caption: 'Add Preset'
+						        }
+							],
+							content: [
+								{
+									component: $ui.List,
+									style: $ui.SuspensionListItem,
+									items: [
+										{
+											component: $ui.Header,
+											caption: 'Height Presets'	
+										},
+										{
+											caption: 'Parked'
+										},
+										{
+											caption: 'Driving'
+										},
+										{
+											caption: 'Full Height'
+										},
+										{
+											caption: 'My Driveway',
+											style: 'location'
+										},
+										{
+											caption: 'Over 90 km/h',
+											style: 'speed'
+										}
+									],
+									onaction: function(event) {
+										
+									}
+								}
+							]
+						}
+					]
+				},
+				{
+					component: $ui.Column,
+					span: 2,
+					content: [
+						{
+							component: $ui.Suspension,
+							leftFront: 21,
+							rightFront: 25,
+							leftRear: 30,
+							rightRear: 30,
+							tank: 112,
+							img: 'img/cartop.png',
+							onrightfrontclick: function() {
+								if (window.$core) {
+									var systemEvent = new $ui.DataEvent($system.EventType.ONREQUESTSUSPENSIONUI, {corner: 'rf'});
+									$core.raiseEvent(systemEvent);
+								}
+							},
+							onleftfrontclick: function() {
+								if (window.$core) {
+									var systemEvent = new $ui.DataEvent($system.EventType.ONREQUESTSUSPENSIONUI, {corner: 'lf'});
+									$core.raiseEvent(systemEvent);
+								}
+							},
+							onleftrearclick: function() {
+								if (window.$core) {
+									var systemEvent = new $ui.DataEvent($system.EventType.ONREQUESTSUSPENSIONUI, {corner: 'lr'});
+									$core.raiseEvent(systemEvent);
+								}
+							},
+							onrightrearclick: function() {
+								if (window.$core) {
+									var systemEvent = new $ui.DataEvent($system.EventType.ONREQUESTSUSPENSIONUI, {corner: 'rr'});
+									$core.raiseEvent(systemEvent);
+								}
+							}
+						}
+					]
+				}
+			]
 		}
+		
 	];
 
 	this.onshow = function() {
