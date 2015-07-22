@@ -1,17 +1,16 @@
+#include <Blinky.h>
+#include <LineReader.h>
+#include <Pollable.h>
+#include <SerialNumber.h>
+#include <Strings.h>
+#include <WS12Constants.h>
+
 #include "global.h"
 
 #include "StatementParser.h"
-#include "LineReader.h"
-#include "Blinky.h"
-
-#include "Strings.h"
-#include "SerialNumber.h"
 
 Blinky blinky(13, 500);
 LineReader lineReader;
-
-Pollable * pollables[10];
-uint8_t pollablesOffset = 0;
 
 RelayChannel switchChannels[SWITCH_CHANNEL_COUNT];
 PolarisedChannel directedChannels[DIRECTED_CHANNEL_COUNT];
@@ -43,7 +42,7 @@ void doSet(char * command, int length) {
 
 void doSer(char * command, int length) {
   if (length != 20) {
-    error_serUsage.print();
+    WS12::errorSerUsage.print();
   } else {
     SerialNumber::store(command + 4, length - 4);
     doId();
@@ -51,22 +50,8 @@ void doSer(char * command, int length) {
 }
 
 
-void addPollable(Pollable * pollable) {
-  if (pollablesOffset < sizeof(pollables) / sizeof(pollable)) {
-    pollables[pollablesOffset++] = pollable;
-  } else {
-    error_pollables.println();
-  }
-}
-
 void setup() {
-  for (uint8_t i = 0; i < sizeof(pollables) / sizeof(Pollable*); ++i) {
-    pollables[i] = NULL;
-  }
-
   Serial.begin(9600);
-  addPollable(&blinky);
-  addPollable(&lineReader);
 
   directedChannels[0].setPins(4, 5);
   directedChannels[1].setPins(6, 7);
@@ -78,13 +63,8 @@ void setup() {
   switchChannels[2].setPin(15);
   switchChannels[3].setPin(16);
 
-  for (uint8_t i = 0; i < 4; ++i) {
-    addPollable(&directedChannels[i]);
-    addPollable(&switchChannels[i]);
-  }
-
   for (uint8_t i = 0; i < 5; ++i) {
-    string_prompt.println();
+    WS12::stringPrompt.println();
   }
 }
 
@@ -92,11 +72,11 @@ StatementParser statementParser;
 
 void processCommand(char * buffer, uint8_t length) {
   bool newLine = true;
-  if (command_id.equals(buffer, length)) {
+  if (WS12::commandId.equals(buffer, length)) {
     doId();
   } else if (command_enum.equals(buffer, length)) {
     doEnum();
-  } else if (command_ser.begins(buffer, length)) {
+  } else if (WS12::commandSer.begins(buffer, length)) {
     doSer(buffer, length);
   } else if (command_set.begins(buffer, length)) {
     doSet(buffer, length);
@@ -116,15 +96,11 @@ void processCommand(char * buffer, uint8_t length) {
   if (newLine) {
     Serial.println();
   }
-  string_prompt.print();
+  WS12::stringPrompt.print();
 }
 
 void loop() {
-  uint32_t now = millis();
-
-  for (uint8_t i = 0; i < pollablesOffset; ++i) {
-    pollables[i]->poll(now);
-  }
+  Pollable::pollAll();
 
   if (lineReader.isLineReady()) {
     char * buffer;

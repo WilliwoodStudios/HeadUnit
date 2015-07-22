@@ -1,0 +1,51 @@
+Requests
+
+    Button Touch
+
+        ff 11 80 mask checksum
+
+        eg: ff 11 80 04 6b
+
+        Button Masks
+
+        80    +     +    20
+        40    -     -    10
+         8    +     +     2
+         4    -     -     1
+
+        mask - mask of buttons currently pressed. none to all...
+
+Responses
+
+    
+ff 25 4f 03 00 00 00 4a 3f 
+         TL TR BL BR Mast Checksum
+
+Checksum:
+
+
+mm is mask of buttons above - all can
+be pressed simultaneously.
+
+cc matches notes from Britt; 
+CheckSum (to calculate sum the three previous bytes, invert and
+
+add 1).
+
+eg:
+ff 11 80 04 6b
+Button Presses
+Message:
+    ff 11 80 mm cc20
+10
+
+2
+1
+80
+40
+
+8
+4
+
+
+Responses
