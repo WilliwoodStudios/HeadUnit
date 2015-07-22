@@ -16,7 +16,7 @@ function main() {
 							dock: [
 								{
 						            component: $ui.Button,
-						            caption: 'Add Preset'
+						            caption: 'Add Condition'
 						        }
 							],
 							content: [
@@ -60,11 +60,7 @@ function main() {
 					content: [
 						{
 							component: $ui.Suspension,
-							leftFront: 21,
-							rightFront: 25,
-							leftRear: 30,
-							rightRear: 30,
-							tank: 112,
+							id: 'suspensionDisplay',
 							img: 'img/cartop.png',
 							onrightfrontclick: function() {
 								if (window.$core) {
@@ -99,7 +95,18 @@ function main() {
 	];
 
 	this.onshow = function() {
-		//$ui.addEventListener('relay_switch_config_change', this.onswitchchange, this);
-		//$system.relays.getRelayList(this.onrelaylistload);
-	}
+		$ui.addEventListener($system.EventType.ONSUSPENSIONDATA, this.onsuspensiondata, this);
+		$system.suspension.requestCurrentData();
+	};
+	
+	// Update the suspension levels
+	this.onsuspensiondata = function(event) {
+		if (event && event.data) {
+			this.suspensionDisplay.leftFront = event.data.lf;
+			this.suspensionDisplay.leftRear = event.data.lr;
+			this.suspensionDisplay.rightFront = event.data.rf;
+			this.suspensionDisplay.rightRear = event.data.rr;
+			this.suspensionDisplay.tank = event.data.tank;
+		}
+	}.$bind(this);
 }
