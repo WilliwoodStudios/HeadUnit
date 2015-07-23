@@ -18,6 +18,8 @@ public:
 
     bool getPressures(uint8_t pressures[5]);
 
+    bool setPreset(uint8_t preset);
+
     bool setMessageMode(char mode);
 
     virtual void poll(uint32_t now);
