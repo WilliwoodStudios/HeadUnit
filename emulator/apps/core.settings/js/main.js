@@ -39,6 +39,12 @@ function main() {
 				  	id: 'setting.relays',
 				  	title: 'Switches',
 				  	caption: 'Configure your relay board accessory'
+				},
+				{
+				  	img: 'img/suspension.png',
+				  	id: 'setting.suspension',
+				  	title: 'Suspension',
+				  	caption: 'Configure your digital air management'
 				}
 			],
 			onaction: function(event) {
@@ -47,6 +53,8 @@ function main() {
 					$ui.push(colorScreen);
 				} else if (id == 'setting.relays') {
 					$ui.push(relayScreen);
+				} else if (id == 'setting.suspension') {
+					$ui.push(suspensionScreen);
 				} else {
 					$ui.toast('This setting is currently not available in the emulator');
 				}
