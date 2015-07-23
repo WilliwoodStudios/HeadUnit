@@ -44,13 +44,11 @@ void doGet() {
     Serial.print("]");
 }
 
-bool parseInt(char * buffer, uint8_t length, uint8_t & offset, uint8_t & value) {
+bool parseInt(char * buffer, uint8_t length, uint8_t & offset, uint32_t & value) {
     bool toReturn = false;
     value = 0;
     while(offset < length) {
         char current = buffer[offset];
-        Serial.print("Parse Int: ");
-        Serial.println(buffer[offset]);
         if (current >= '0' && current <='9') {
             value *= 10;
             toReturn = true;
@@ -60,13 +58,10 @@ bool parseInt(char * buffer, uint8_t length, uint8_t & offset, uint8_t & value) 
         }
         ++offset;
     }
-    Serial.print("ToReturn: ");
-    Serial.println(toReturn ? "true" : "false");
-    Serial.println(value);
     return toReturn;
 }
 
-bool parseHex(char * buffer, uint8_t length, uint8_t & offset, uint8_t & value) {
+bool parseHex(char * buffer, uint8_t length, uint8_t & offset, uint32_t & value) {
     bool toReturn = false;
     value = 0;
     while(offset < length) {
@@ -92,7 +87,7 @@ bool parseHex(char * buffer, uint8_t length, uint8_t & offset, uint8_t & value) 
 }
 
 void doValves(char * buffer, uint8_t length) {
-    uint8_t value;
+    uint32_t value;
     uint8_t offset = 2;
     if (parseHex(buffer,length,offset,value)) {
         if (appliance.setValves(value)) {
@@ -121,10 +116,13 @@ void doPressure(char * buffer, uint8_t length) {
             ++offset;
             expectingComma = false; 
         } else {
-            good = parseInt(buffer,length,offset,pressures[count]);
+            uint32_t temp = 0;
+            good = parseInt(buffer,length,offset,temp);
             if (!good) {
                 break;
             }
+            pressures[count] = temp;
+
             expectingComma = true;
             ++count;
         }
@@ -153,6 +151,24 @@ void doMode(char * buffer, uint8_t length) {
     }
 }
 
+void doHelp() {
+    stringHelp.print();
+}
+
+void doPreset(char * buffer, uint8_t length) {
+    uint8_t offset = 2;
+    uint32_t value = 0;
+    if (parseInt(buffer,length,offset,value)) {
+        if (offset==length) {
+            if (appliance.setPreset(value)) {
+                resultOK.print();
+                return;
+            }
+        }
+    }
+    resultFail.print();
+}
+
 void processCommand(char * buffer, uint8_t length) {
     bool newLine = true;
     bool qm = false;
@@ -167,6 +183,9 @@ void processCommand(char * buffer, uint8_t length) {
             case 'g':
                 doGet();
                 break;
+            case '?':
+                doHelp();
+                break;
             default:
                 qm = true;
         }
@@ -180,6 +199,9 @@ void processCommand(char * buffer, uint8_t length) {
                 break;
             case 'm':
                 doMode(buffer,length);
+                break;
+            case 's':
+                doPreset(buffer,length);
                 break;
             default:
                 qm = true;
