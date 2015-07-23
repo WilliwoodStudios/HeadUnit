@@ -3,9 +3,7 @@
 #define TALKING_TIMEOUT_MS 60000
 #define REPEAT_VALVE_COMMAND_DELAY_MS 333
 #define TIME_ALLOWED_WITH_NON_ZERO_VALVES_MS 45000
-#define SEEK_TIMEOUT_MS 45000
-
-static int seekMode = 0;
+#define SEEK_TIMEOUT_MS 20000
 
 Appliance::Appliance() : mSerial(10,11), mBufferOffset(0), 
         mPressuresValid(false), mTimeSeekStarted(0), 
@@ -17,20 +15,24 @@ Appliance::Appliance() : mSerial(10,11), mBufferOffset(0),
 
     mSerial.begin(9600);
 
-    for (uint8_t i = 0; i<5; ++i) {
-        mLastPressures[i] = 0;
-        if (i!=4) {
-            mDesiredPressures[i];
-        }
+    SeekChannel::setTankPressure(&mLastPressures[4]);
+    for (uint8_t i = 0; i<4; ++i) {
+        mSeekChannels[i].setup(i,&mLastPressures[i]);
+        mSeekChannels[i].setDesiredPressure(0);
     }
+
+    // RPW - DEBUG ONLY.
+    mLastPressures[4] = 180;
+    mPressuresValid = true;
 }
 
 Appliance::~Appliance() {
-    pinMode(8,INPUT);
-    pinMode(9,INPUT);
+    pinMode(10,INPUT);
+    pinMode(11,INPUT);
 }
 
 uint32_t lastSeekStart = 0;
+uint32_t mLastPressurePrint = 0;
 
 void Appliance::poll(uint32_t now) {
     if (lastSeekStart != mTimeSeekStarted) {
@@ -54,59 +56,60 @@ void Appliance::poll(uint32_t now) {
         }
         mBuffer[mBufferOffset++] = next;
         mBufferOffset %= sizeof(mBuffer);
-        if (mBufferOffset > 5) {
-            checkForMessages();
-        }
         mLastByteReceived = now;
+        if (mBufferOffset > 5) {
+            if (checkForMessages()) {
+                break;
+            }
+        }
     }
-    if (mTimeSeekStarted != 0 && (now-mTimeLastValveCommand) > 100) {
+    if (mTimeSeekStarted != 0 && now > mTimeLastValveCommand && (now-mTimeLastValveCommand) > 250) {
+        Serial.print("R ");
+        Serial.println(now - mTimeLastValveCommand);
         seek(now);
+
     }
     if (mRepeatValveCommands && now - mTimeLastValveCommand > REPEAT_VALVE_COMMAND_DELAY_MS) {
         setValvesInternal(mValves);
     }
+    if (now - mLastPressurePrint >= 100) {
+        Serial.print("----\t");
+        Serial.print(now);
+        for (uint8_t i=0; i<5; ++i) {
+            Serial.print("\t");
+            Serial.print(mLastPressures[i]);
+        }
+        Serial.println();
+        mLastPressurePrint = now;
+    }
 }
 
-static uint8_t sub[] = { 0x80, 0x20, 0x8, 0x2};
-static uint8_t add[] = { 0x40, 0x10, 0x4, 0x1};
-
 void Appliance::seek(uint32_t now) {
-    // Check if we've been seeking for too long.
-    if (now - mTimeSeekStarted > SEEK_TIMEOUT_MS) {
-        mTimeSeekStarted = 0;
-        setValvesInternal(0);
-        return;
-    }
-    if (mTimeLastValveCommand > mTimeLastPressures) {
-        // do nothing... ie: keep the same setting.
-        Serial.println("Ignore");
-    } else {
-        uint8_t mask = 0;
-        bool anySub = false;
-        for (uint8_t i = 0; i<4; ++i) {            
-            if (mDesiredPressures[i] == mLastPressures[i]) {
-                // cool...
-            } else if (mDesiredPressures[i] > mLastPressures[i]) {
-                if (seekMode == 0 || seekMode == 1) {
-                    mask |= add[i];
-                    seekMode = 1;
-                }
-            } else {
-                if (seekMode == 0 || seekMode == 2) {
-                    mask |= sub[i];
-                    anySub = true;
-                    seekMode = 2;
-                }
-            }
-        }
-
-        if (mask==0) {
+    if (mTimeSeekStarted != 0) {
+        if (now > mTimeSeekStarted && now - mTimeSeekStarted > SEEK_TIMEOUT_MS) {
             mTimeSeekStarted = 0;
+            setValvesInternal(0);
+            return;
         }
+    }
 
-        Serial.print("Chose ");
-        Serial.println(mask,HEX);
+    bool stillGoing = false;
+    for (uint8_t i=0; i<2; ++i) {
+        uint8_t mask = 0;
+        stillGoing = false;
+        bool rapid = false;
+
+        for (uint8_t i=0; i<4; ++i) {
+            mask |= mSeekChannels[i].getValves(mTimeLastPressures,rapid,stillGoing);
+        }
         setValvesInternal(mask);
+
+        if (!rapid) {
+            break;
+        }
+    }
+    if (!stillGoing) {
+        mTimeSeekStarted = 0;
     }
 }
 
@@ -128,11 +131,13 @@ bool Appliance::validateChecksum() {
 
 uint8_t knownPressure[5];
 
-void Appliance::checkForMessages() {
+bool Appliance::checkForMessages() {
+    bool result = false;
     if (mBufferOffset == 9) {
         if (mBuffer[1] == 0x25 && mBuffer[2] == 0x4f) {
             bool changed = false;
             if (validateChecksum()) {
+                result = true;
                 for (uint8_t i=0; i<5; ++i) {
                     mLastPressures[i] = mBuffer[i+3];
                     if (knownPressure[i] != mLastPressures[i]) {
@@ -141,26 +146,28 @@ void Appliance::checkForMessages() {
                     knownPressure[i] = mLastPressures[i];
                 }
                 mPressuresValid = true;
-                if (changed) {
-                    Serial.print("G ");
-                    for (uint8_t i=0; i<5; ++i) {
-                        Serial.print(knownPressure[i]);
-                        Serial.print(" ");
-                    }
-                    Serial.println();
+                // if (changed) {
+                //     Serial.print("----- ");
+                //     Serial.print(millis());
+                //     Serial.print(" G ");
+                //     for (uint8_t i=0; i<5; ++i) {
+                //         Serial.print(knownPressure[i]);
+                //         Serial.print(" ");
+                //     }
+                //     Serial.println();
 
-                    if (mTimeSeekStarted != 0) {
-                        seek(millis());
-                    }
+                // }
+                mTimeLastPressures = millis();
+                if (mTimeSeekStarted != 0) {
+                    seek(mTimeLastPressures);
                 }
             }
-            mBufferOffset = 0;
-            mTimeLastPressures = millis();
         }
     } else if (mBufferOffset == 13) {
         Serial.println("length 13");
         if (mBuffer[1] == 0x29 && mBuffer[2] == 0xcf) {
             if (validateChecksum()) {
+                result = true;
                 for (uint8_t i=0; i<5; ++i) {
                     mLastPressures[i] = mBuffer[i+7];
                 }
@@ -170,6 +177,7 @@ void Appliance::checkForMessages() {
             mTimeLastPressures = millis();
         }
     }
+    return result;
 }
 
 bool Appliance::getPressures(uint8_t pressures[5]) {
@@ -233,8 +241,8 @@ bool Appliance::setValvesInternal(uint8_t valves) {
     mSerial.write(buffer,5);
 
 
-    // Serial.print("V: ");
-    // Serial.println(mValves);
+    Serial.print("V: ");
+    Serial.println(mValves,HEX);
     // Serial.print("Since last: ");
     // Serial.println(millis() - mLastByteReceived);
     mTimeLastValveCommand = millis();
@@ -263,14 +271,14 @@ bool Appliance::setMessageMode(char mode) {
 }
 
 bool Appliance::setDesiredPressures(uint8_t * desiredPressures) {
-    if (!isTalking()) {
-        return false;
-    }
-    seekMode = 0;
+    // if (!isTalking()) {
+    //     return false;
+    // }
     mTimeSeekStarted = millis();
     for (uint8_t i=0; i<4; ++i) {
-        mDesiredPressures[i] = desiredPressures[i];
+        mSeekChannels[i].setDesiredPressure(desiredPressures[i]);
     }
+    setValvesInternal(0);
     return true;
 }
 

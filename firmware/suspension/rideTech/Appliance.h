@@ -6,6 +6,8 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
+#include "SeekChannel.h"
+
 class Appliance : public Pollable {
 public:
     Appliance();
@@ -24,7 +26,7 @@ protected:
     void seek(uint32_t now);
     bool isTalking();
     bool validateChecksum();
-    void checkForMessages();
+    bool checkForMessages();
     bool setValvesInternal(uint8_t valves);
 
 private:
@@ -33,7 +35,8 @@ private:
 
     uint8_t mLastPressures[5];
     bool mPressuresValid;
-    uint8_t mDesiredPressures[4];
+
+    SeekChannel mSeekChannels[4];
 
     uint8_t mBuffer[40];
     uint8_t mBufferOffset;
