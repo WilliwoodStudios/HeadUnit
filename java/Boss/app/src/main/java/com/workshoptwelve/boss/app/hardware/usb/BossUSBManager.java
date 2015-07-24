@@ -9,6 +9,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 
+import com.workshoptwelve.boss.app.hardware.usb.diagnostic.USBDiagnostic;
 import com.workshoptwelve.boss.app.hardware.usb.serial.ArduinoUno;
 import com.workshoptwelve.boss.app.hardware.usb.serial.CH341;
 import com.workshoptwelve.brainiac.boss.common.error.BossException;
@@ -95,6 +96,7 @@ public class BossUSBManager {
         log.v();
         mDeviceImpl.put(makeVendorProductId(6790, 29987), CH341.class);
         mDeviceImpl.put(makeVendorProductId(9025, 67), ArduinoUno.class);
+        // mDeviceImpl.put(makeVendorProductId(0x4d8,0xf724), USBDiagnostic.class);
     }
 
     public static BossUSBManager getInstance() {
