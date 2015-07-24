@@ -18,7 +18,7 @@ android {
         }
     }
     sourceSets {
-        main.assets.srcDirs = ['../html/src']
+//        main.assets.srcDirs = ['../html/src']
     }
 }
 
