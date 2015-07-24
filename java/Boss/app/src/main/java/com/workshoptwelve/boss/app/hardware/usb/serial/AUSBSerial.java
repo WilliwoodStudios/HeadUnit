@@ -6,6 +6,7 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
+import android.hardware.usb.UsbRequest;
 import android.os.SystemClock;
 
 import com.workshoptwelve.boss.app.hardware.usb.AUSBDeviceDriver;
@@ -17,6 +18,7 @@ import com.workshoptwelve.brainiac.boss.common.util.ForEachList;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * Created by robwilliams on 15-05-07.
@@ -114,7 +116,9 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
 
                 @Override
                 public void write(byte[] buffer, int offset, int count) throws IOException {
+                    log.v("Entering write");
                     while (count > 0) {
+                        log.v("Writing",offset,count);
                         UsbEndpoint localEndpointOut = mEndpointOut;
                         UsbDeviceConnection localDeviceConnection = mDeviceConnection;
                         if (localEndpointOut == null || localDeviceConnection == null) {
@@ -183,38 +187,68 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
         byte[] buffer = new byte[1024];
         long lastFail = -1;
         int failCount = 0;
+        long failStarted = 0;
+        ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+
+        UsbRequest request = new UsbRequest();
+        request.initialize(mDeviceConnection, mEndpointIn);
         try {
             while (!mClosed) {
                 UsbDeviceConnection localDeviceConnection = mDeviceConnection;
                 if (localDeviceConnection == null) {
+                    log.v("Local device connection null");
                     break;
                 }
 
-                int toReturn = localDeviceConnection.bulkTransfer(mEndpointIn, buffer, 0, buffer.length, 10000);
-                if (toReturn > 0) {
-                    lastFail = -1;
-                    failCount = 0;
-                    mPipeOutputStream.write(buffer, 0, toReturn);
-                } else if (toReturn == 0) {
-                    // do nothing.
-                } else {
-                    long now = SystemClock.uptimeMillis();
-                    if (lastFail == -1) {
-                    } else {
-                        long delta = now - lastFail;
-                        if (delta < 300) {
-                            ++failCount;
-                        } else {
-                            failCount = 0;
-                        }
-                    }
-                    lastFail = now;
+                byteBuffer.position(0);
+                byteBuffer.limit(byteBuffer.capacity());
 
-                    if (failCount > 5) {
-                        mPipeOutputStream.close();
-                        break;
-                    }
+                request.queue(byteBuffer,1024);
+                UsbRequest pendingRequest = localDeviceConnection.requestWait();
+
+                if (byteBuffer.position()>0) {
+                    byteBuffer.flip();
+                    int length = byteBuffer.limit();
+                    byteBuffer.get(buffer,0,length);
+                    mPipeOutputStream.write(buffer,0,length);
                 }
+
+
+
+                log.v("Buffer info",byteBuffer.position(),byteBuffer.remaining());
+//
+//                request.
+//
+//                int toReturn = localDeviceConnection.bulkTransfer(mEndpointIn, buffer, 0, buffer.length, 10000);
+//                if (toReturn > 0) {
+//                    lastFail = -1;
+//                    failCount = 0;
+//                    mPipeOutputStream.write(buffer, 0, toReturn);
+//                } else if (toReturn == 0) {
+//                    // do nothing.
+//                } else {
+//                    long now = SystemClock.uptimeMillis();
+//                    if (lastFail == -1) {
+//                        failStarted = now;
+//                    } else {
+//                        long delta = now - lastFail;
+//                        log.v("Delta for fail checks",delta);
+//                        if (delta < 300) {
+//                            ++failCount;
+//                        } else {
+//                            failCount = 0;
+//                        }
+//                        log.v("Intermediate fail count:",failCount);
+//                    }
+//                    lastFail = now;
+//
+//////                    if (failCount > 5) {
+////                    if (now - failStarted > 10000) {
+////                        log.v("Fail count:",failCount);
+////                        mPipeOutputStream.close();
+////                        break;
+////                    }
+//                }
             }
             log.v("Leaving keep reading via while escape");
         } catch (IOException ioe) {
