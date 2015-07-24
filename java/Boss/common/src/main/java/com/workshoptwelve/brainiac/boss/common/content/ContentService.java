@@ -18,7 +18,7 @@ public class ContentService extends AService {
     private AContentServiceImpl mContentServiceImpl;
 
     ContentService() {
-        super("www");
+        super("");
     }
 
     public static ContentService getInstance() {
@@ -33,24 +33,20 @@ public class ContentService extends AService {
     public void handleConnection(Socket connection, List<String> headers, String[] headerZero, HttpInputStream inputStream, HttpOutputStream outputStream) throws IOException {
         log.v("Path",headers);
         String path = headerZero[1];
-        if (path.startsWith("/www/")) {
-            path = path.substring(5);
+        if (path.contains("..")) {
 
-            if (path.contains("..")) {
-
-                outputStream.setResponse(400, "Bad request - you got too many dots in your path dude");
-                return;
-            }
-
-            while (path.startsWith("/")) {
-                path = path.substring(1);
-            }
-
-            mContentServiceImpl.sendPathToStream(path, outputStream);
-
-        } else {
-            outputStream.setResponse(404,"File not found");
+            outputStream.setResponse(400, "Bad request - you got too many dots in your path dude");
             return;
         }
+
+        while (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        if (path.equals("")) {
+            path = "index.html";
+        }
+
+        mContentServiceImpl.sendPathToStream(path, outputStream);
     }
 }
