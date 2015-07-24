@@ -20,19 +20,21 @@ public class Server {
     private static final Log log = Log.getLogger(Server.class);
 
     private static Server sInstance = new Server();
+    private final AService mDefaultService;
     private ArrayList<AService> mServices = new ArrayList<AService>();
 
     private ServerSocket mServerSocket;
     private Runnable mListenRunnable;
+    private String mNonDefaultPath;
 
     Server() {
         log.setLogLevel(Log.Level.v);
         log.v("Server instance created");
         addService(EventService.getInstance());
-        addService(ContentService.getInstance());
         addService(LogService.getInstance());
         addService(OBDService.getInstance());
         addService(AccessoryService.getInstance());
+        mDefaultService = ContentService.getInstance();
     }
 
     public static Server getInstance() {
@@ -43,6 +45,27 @@ public class Server {
     public void addService(AService service) {
         log.d();
         mServices.add(service);
+        mNonDefaultPath = null;
+        for (AService s : mServices) {
+            if (mNonDefaultPath == null) {
+                mNonDefaultPath = s.getPath();
+            } else {
+                mNonDefaultPath = common(mNonDefaultPath,s.getPath());
+            }
+        }
+    }
+
+    private String common(String a, String b) {
+        for (int i=0; i<a.length() && i<b.length(); ++i) {
+            if (a.charAt(i) != b.charAt(i)) {
+                return a.substring(0,i);
+            }
+        }
+        if (a.length() < b.length()) {
+            return a;
+        } else {
+            return b;
+        }
     }
 
     public synchronized boolean start() {
@@ -69,7 +92,7 @@ public class Server {
             mServerSocket = new ServerSocket(9876);
             while (true) {
                 final Socket client = mServerSocket.accept();
-                ThreadPool.getInstance().run(new ServerConnectionHandler(mServices,client));
+                ThreadPool.getInstance().run(new ServerConnectionHandler(mDefaultService,mNonDefaultPath,mServices,client));
             }
         } catch (IOException ioe) {
             log.e("Could not listen", ioe);
