@@ -34,6 +34,7 @@ protected:
 private:
     bool mValvesMessageAsSniffed;
     bool mRepeatValveCommands;
+    bool mVaryPressure;
 
     uint8_t mLastPressures[5];
     bool mPressuresValid;

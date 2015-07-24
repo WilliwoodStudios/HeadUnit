@@ -28,6 +28,7 @@ Appliance::Appliance() : mSerial(10,11), mBufferOffset(0),
 
     mLastPressures[4] = 12;
     mPressuresValid = true;
+    mVaryPressure = false;
 }
 
 Appliance::~Appliance() {
@@ -185,7 +186,18 @@ bool Appliance::checkForMessages() {
 }
 
 bool Appliance::getPressures(uint8_t pressures[5]) {
-    if (!isTalking()) {
+    if (mVaryPressure) {
+        for (uint8_t i=0; i<5; ++i) {
+            if (random() % 10 == 1) {
+                mLastPressures[i] += random()%11 - 5;
+                if (mLastPressures[i] > 200) {
+                    mLastPressures[i] = 0;
+                } else if (mLastPressures[i] > 180) {
+                    mLastPressures[i] = 180;
+                }
+            }
+        }
+    } else if (!isTalking()) {
         // Serial.println("Not talking");
         return false;
     }
@@ -282,6 +294,9 @@ bool Appliance::setMessageMode(char mode) {
             break;
         case 'S':
             mValvesMessageAsSniffed = false;
+            break;
+        case 'v':
+            mVaryPressure = true;
             break;
         default:
             return false; 
