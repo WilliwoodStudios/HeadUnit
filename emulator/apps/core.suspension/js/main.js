@@ -26,16 +26,19 @@ function main() {
 									items: [
 										{
 											component: $ui.Header,
-											caption: 'Height Presets'	
+											caption: 'Height Presets'
 										},
 										{
-											caption: 'Parked'
+											caption: 'Parked',
+											preset: 1
 										},
 										{
-											caption: 'Driving'
+											caption: 'Driving',
+											preset: 2
 										},
 										{
-											caption: 'Full Height'
+											caption: 'Full Height',
+											preset: 3
 										},
 										{
 											caption: 'My Driveway',
@@ -47,6 +50,10 @@ function main() {
 										}
 									],
 									onaction: function(event) {
+										if (event && event.target && event.target.preset) {
+											$system.suspension.choosePreset(event.target.preset);
+										}
+										console.log(event);
 										
 									}
 								}
