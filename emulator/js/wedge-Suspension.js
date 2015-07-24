@@ -8,24 +8,33 @@ function wedgeSuspension() {
 	this.backButton = {
 		icon: 'img/suspension.png',
 		caption: 'Done'
-	};
-	
-	this.onchange = function() {
-		var corner = this.corner;
-		if (this.oldValue == undefined) this.oldValue = 0;
-		if (this.value < this.oldValue) {
-			$system.suspension.releaseAir(corner);
-			window.setTimeout(function() {
-				$system.suspension.closeValve(corner)
-			}, 500);
-		} else if (this.value > this.oldValue) {
-			$system.suspension.addAir(corner);
-			window.setTimeout(function() {
-				$system.suspension.closeValve(corner)
-			}, 500);
+	}
+
+	this.onspinnerpress = function(direction, pressed) {
+		if (pressed) {
+			var toCall = direction == 1 ? $system.suspension.addAir : $system.suspension.releaseAir;
+			toCall(this.corner);
+		} else {
+			$system.suspension.closeValve(this.corner);
 		}
-		this.oldValue = this.value;
-	};
+	}.$bind(this);
+	
+	// this.onchange = function() {
+	// 	var corner = this.corner;
+	// 	if (this.oldValue == undefined) this.oldValue = 0;
+	// 	if (this.value < this.oldValue) {
+	// 		$system.suspension.releaseAir(corner);
+	// 		window.setTimeout(function() {
+	// 			$system.suspension.closeValve(corner)
+	// 		}, 500);
+	// 	} else if (this.value > this.oldValue) {
+	// 		$system.suspension.addAir(corner);
+	// 		window.setTimeout(function() {
+	// 			$system.suspension.closeValve(corner)
+	// 		}, 500);
+	// 	}
+	// 	this.oldValue = this.value;
+	// };
 	
 	// Adjust the direction of the screen
 	this.oncreate = function(data) {
