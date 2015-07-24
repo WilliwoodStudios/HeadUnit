@@ -97,23 +97,36 @@ public class AndroidAccessoryManager implements IAccessoryManager {
         }
     }
 
+    private static int commandsInProgress = 0;
+
     @Override
     public String sendCommandToAccessory(String serialNumber, String command) throws BossException {
-        AccessoryConnection toUse = null;
-        synchronized (mAccessoryConnections) {
-            for (AccessoryConnection ac : mAccessoryConnections) {
-                if (ac.getSerialNumber().equals(serialNumber)) {
-                    toUse = ac;
-                    break;
+        synchronized(AndroidAccessoryManager.class) {
+            commandsInProgress++;
+            log.v("> Accessory commands in progress:",commandsInProgress);
+        }
+        try {
+            AccessoryConnection toUse = null;
+            synchronized (mAccessoryConnections) {
+                for (AccessoryConnection ac : mAccessoryConnections) {
+                    if (ac.getSerialNumber().equals(serialNumber)) {
+                        toUse = ac;
+                        break;
+                    }
                 }
             }
-        }
-        if (toUse == null || toUse.isReady() == false) {
-            throw new BossException(BossError.USB_DEVICE_NOT_FOUND);
-        }
+            if (toUse == null || toUse.isReady() == false) {
+                throw new BossException(BossError.USB_DEVICE_NOT_FOUND);
+            }
 
-        BlockingFuture<String> result = new BlockingFuture<>();
-        toUse.sendCommand(command, result);
-        return result.get(10000, TimeUnit.MILLISECONDS);
+            BlockingFuture<String> result = new BlockingFuture<>();
+            toUse.sendCommand(command, result);
+            return result.get(10000, TimeUnit.MILLISECONDS);
+        } finally {
+            synchronized(AndroidAccessoryManager.class) {
+                --commandsInProgress;
+                log.v("< Accessory commands in progress:",commandsInProgress);
+            }
+        }
     }
 }
