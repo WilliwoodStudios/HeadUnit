@@ -1,14 +1,14 @@
 /* Copyright (c) 2015 Workshop 12 Inc. */
 window.onload = function() {
 	// retrieve our saved theme settings
-   	chrome.storage.local.get('color', function(result) {
+	function init(result) {
 		// Initialize the system
 		var config = {
 			theme: $ui.themeDark,
 			isEmulator: (window.chrome && chrome.runtime && chrome.runtime.id) ? true : false
 		}
 		// Apply our theme
-		if (result.color != undefined) {
+		if (result && result.color != undefined) {
 			var i,
 				variable,
 				color = result.color;
@@ -31,5 +31,13 @@ window.onload = function() {
 		// Initialize UI
 		$ui.init(screenChrome, config.theme);
 		$emulator.chrome = $ui.screens[0];
-   	});
+   	};
+
+	if (chrome && chrome.storage && chrome.storage.local) {
+   		chrome.storage.local.get('color', init);
+	} else {
+		init();
+	}
+
+	
 }
