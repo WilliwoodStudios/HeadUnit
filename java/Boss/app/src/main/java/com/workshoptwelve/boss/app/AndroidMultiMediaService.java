@@ -27,19 +27,19 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl {
         if (mMediaPlayer != null) {
             stop();
         }
-        mMediaPlayer = MediaPlayer.create(mContext, R.raw.mickrippon_ruleroffairies);
-        final MediaPlayer myMediaPlayer = mMediaPlayer;
-        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                if (mMediaPlayer == myMediaPlayer) {
-                    stopPolling();
-                    mMediaPlayer = null;
-                }
-            }
-        });
-        mMediaPlayer.start();
-        startPolling();
+//        mMediaPlayer = MediaPlayer.create(mContext, R.raw.mickrippon_ruleroffairies);
+//        final MediaPlayer myMediaPlayer = mMediaPlayer;
+//        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+//            @Override
+//            public void onCompletion(MediaPlayer mp) {
+//                if (mMediaPlayer == myMediaPlayer) {
+//                    stopPolling();
+//                    mMediaPlayer = null;
+//                }
+//            }
+//        });
+//        mMediaPlayer.start();
+//        startPolling();
         return super.play();
     }
 
