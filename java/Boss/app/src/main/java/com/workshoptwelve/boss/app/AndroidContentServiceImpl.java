@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
@@ -22,6 +23,7 @@ import java.io.OutputStream;
  * Created by robwilliams on 15-05-05.
  */
 public class AndroidContentServiceImpl extends AContentServiceImpl {
+    private final Handler mHandler;
     private Log log = Log.getLogger(AndroidContentServiceImpl.class);
 
 
@@ -37,17 +39,43 @@ public class AndroidContentServiceImpl extends AContentServiceImpl {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            mWebContentService = null;
             log.e("Service disconnected");
+            mHandler.postDelayed(mConnectService,1000);
+        }
+    };
+
+    private Runnable mConnectService = new Runnable() {
+        public void run() {
+            log.v("Attempt to reconnect service");
+            connectService();
+            mHandler.postDelayed(mCheckService, 1000);
+        }
+    };
+
+    private Runnable mCheckService = new Runnable() {
+        public void run() {
+            log.v("Checking Service");
+            if (mWebContentService == null) {
+                mHandler.postDelayed(mConnectService, 100);
+            }
         }
     };
 
     public AndroidContentServiceImpl(Context context, String s) {
         super();
         mContext = context;
-        connectService();
+        mHandler = new Handler();
+        mHandler.postDelayed(mConnectService, 0);
     }
 
     private void connectService() {
+        synchronized (this) {
+            if (mWebContentService != null) {
+                return;
+            }
+        }
+        log.v("ConnectService()");
         Intent serviceIntent = new Intent("com.workshoptwelve.brainiac.boss.WEBCONTENT");
         mContext.startService(serviceIntent);
         mContext.bindService(serviceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
