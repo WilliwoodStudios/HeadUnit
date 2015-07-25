@@ -33,7 +33,7 @@ window.onload = function() {
 		$emulator.chrome = $ui.screens[0];
    	};
 
-	if (chrome && chrome.storage && chrome.storage.local) {
+	if (window.chrome && chrome.storage && chrome.storage.local) {
    		chrome.storage.local.get('color', init);
 	} else {
 		init();
