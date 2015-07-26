@@ -55,7 +55,7 @@ public class WebContentService extends Service {
 
     private final IWebContent.Stub mBinder = new IWebContent.Stub() {
         @Override
-        public int getWebContent(final String path, final ParcelFileDescriptor output) throws RemoteException {
+        public int getWebContent(final String path, final ParcelFileDescriptor output) {
             int toReturn = 0;
             try {
                 final InputStream inputStream = getAssets().open(path);
@@ -114,7 +114,7 @@ public class WebContentService extends Service {
                 }.start();
                 return toReturn;
             } catch (IOException ioe) {
-                throw new RemoteException(ioe.getMessage());
+                return -1;
             }
         }
     };
