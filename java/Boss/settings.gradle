@@ -1,1 +1,1 @@
-include  ':common', ':desktop', ':app', ':bosswebcontent', ':bosswebcontent-test'
+include  ':common', ':desktop', ':boss', ':bosswebcontent', ':bosswebcontent-test', ':localui', ':xwalkcore'
