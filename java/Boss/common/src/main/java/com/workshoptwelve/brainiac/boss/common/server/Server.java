@@ -1,12 +1,14 @@
 package com.workshoptwelve.brainiac.boss.common.server;
 
 import com.workshoptwelve.brainiac.boss.common.content.ContentService;
+import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.event.EventService;
 import com.workshoptwelve.brainiac.boss.common.hardware.accessory.AccessoryService;
 import com.workshoptwelve.brainiac.boss.common.hardware.obdii.OBDService;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.boss.common.log.LogService;
 import com.workshoptwelve.brainiac.boss.common.threading.ThreadPool;
+import com.workshoptwelve.brainiac.boss.common.util.BlockingFuture;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -55,6 +57,12 @@ public class Server {
         }
     }
 
+    public int getPort() {
+        return mServerPort;
+    }
+
+    private int mServerPort = -1;
+
     private String common(String a, String b) {
         for (int i=0; i<a.length() && i<b.length(); ++i) {
             if (a.charAt(i) != b.charAt(i)) {
@@ -72,31 +80,37 @@ public class Server {
         log.v("start()");
         log.d();
         if (mListenRunnable == null) {
+            final BlockingFuture<Integer> serverPort = new BlockingFuture<>();
             ThreadPool.getInstance().run(mListenRunnable = new Runnable() {
                 public void run() {
                     log.d();
-                    listen();
+                    listen(serverPort);
                     if (mListenRunnable == this) {
                         mListenRunnable = null;
                     }
                 }
             });
+            mServerPort = serverPort.getNoExeption(-1);
             return true;
         }
         return false;
     }
 
-    private void listen() {
+    private void listen(BlockingFuture<Integer> port) {
         log.d();
-        try {
-            mServerSocket = new ServerSocket(9876);
-            while (true) {
-                final Socket client = mServerSocket.accept();
-                ThreadPool.getInstance().run(new ServerConnectionHandler(mDefaultService,mNonDefaultPath,mServices,client));
+        for (int i=9000; i<10000; ++i) {
+            try {
+                mServerSocket = new ServerSocket(i);
+                mServerPort = i;
+                port.setResult(i);
+                while (true) {
+                    final Socket client = mServerSocket.accept();
+                    ThreadPool.getInstance().run(new ServerConnectionHandler(mDefaultService, mNonDefaultPath, mServices, client));
+                }
+            } catch (IOException ioe) {
+                log.e("Could not listen", ioe);
+                stop();
             }
-        } catch (IOException ioe) {
-            log.e("Could not listen", ioe);
-            stop();
         }
     }
 
