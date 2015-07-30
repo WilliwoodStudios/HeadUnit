@@ -95,6 +95,7 @@ public class BossUSBManager {
         log.v();
         mDeviceImpl.put(makeVendorProductId(6790, 29987), CH341.class);
         mDeviceImpl.put(makeVendorProductId(9025, 67), ArduinoUno.class);
+        mDeviceImpl.put(makeVendorProductId(9025, 1), ArduinoUno.class);
         // mDeviceImpl.put(makeVendorProductId(0x4d8,0xf724), USBDiagnostic.class);
     }
 
