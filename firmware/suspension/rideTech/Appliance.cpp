@@ -223,7 +223,11 @@ bool Appliance::setPreset(uint8_t preset) {
     setValves(0); // cancels any ongoing seek...
     uint8_t buffer[5];
     buffer[0] = 0xff;
-    buffer[1] = 0x12;
+    if (mValvesMessageAsSniffed) {
+        buffer[1] = 0x11;
+    } else {
+        buffer[1] = 0x12;
+    }
     buffer[2] = 0;
     buffer[3] = preset + 4;
     buffer[4] = 0 - buffer[1] - buffer[2] - buffer[3];
