@@ -4,6 +4,13 @@ void MessageList::addMessage(uint8_t a, uint8_t b) {
     uint8_t minPosition = 0;
     int32_t minCount = messages[0].getCount();
     uint8_t use = 0xff;
+    
+    for (uint8_t i=0; i<MESSAGE_LIST_SIZE; ++i) {
+        if (messages[i].getA() == a && messages[i].getB() == b) {
+            ++messages[i];
+            return;
+        }
+    }
     for (uint8_t i=0; i<MESSAGE_LIST_SIZE; ++i) {
         if (messages[i].getCount()==-1) {
             minPosition = i;
@@ -36,6 +43,7 @@ void MessageList::sort() {
 
 void MessageList::dump() {
     sort();
+    Serial.println("=====");
     for (uint8_t i=0; i<MESSAGE_LIST_SIZE; ++i) {
         if (messages[i].getCount() < 0) {
             // ignore

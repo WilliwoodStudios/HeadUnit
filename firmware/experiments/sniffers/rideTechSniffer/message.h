@@ -9,8 +9,8 @@ class Message {
 public:
     Message() {
         mCount = -1;
-        mA = 0;
-        mB = 0;
+        mA = 0xff;
+        mB = 0xff;
     }
 
     virtual ~Message() {
@@ -24,6 +24,14 @@ public:
 
     bool operator>(Message & message) {
         return mCount > message.mCount;
+    }
+
+    uint8_t getA() {
+        return mA;
+    }
+
+    uint8_t getB() {
+        return mB;
     }
 
     void setMessage(uint8_t a, uint8_t b) {
