@@ -77,6 +77,7 @@ public class AndroidContentServiceImpl extends AContentServiceImpl {
         }
         log.v("ConnectService()");
         Intent serviceIntent = new Intent("com.workshoptwelve.brainiac.boss.WEBCONTENT");
+        serviceIntent.setPackage("com.workshoptwelve.brainiac.boss.webcontent");
         mContext.startService(serviceIntent);
         mContext.bindService(serviceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }

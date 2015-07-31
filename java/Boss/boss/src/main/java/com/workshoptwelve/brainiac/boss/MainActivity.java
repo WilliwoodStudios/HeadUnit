@@ -56,6 +56,7 @@ public class MainActivity extends ActionBarActivity implements AndroidLogger.And
 
     private void startBossService() {
         Intent intent = new Intent("com.workshoptwelve.brainiac.boss.SERVICE");
+        intent.setPackage("com.workshoptwelve.brainiac.boss");
         startService(intent);
         bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
     }
