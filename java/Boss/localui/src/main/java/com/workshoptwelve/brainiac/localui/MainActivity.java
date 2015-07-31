@@ -106,6 +106,7 @@ public class MainActivity extends Activity {
     private void connectService() {
         if (mBoss == null) {
             Intent intent = new Intent("com.workshoptwelve.brainiac.boss.SERVICE");
+            intent.setPackage("com.workshoptwelve.brainiac.boss");
             startService(intent);
             bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
         }
