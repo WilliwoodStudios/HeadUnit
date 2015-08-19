@@ -130,32 +130,34 @@ function sharedDetail() {
         if (mediaSource) {
             var songs = [];
             var emptyMessage = "";
+
+            var callback = function(songs) {
+                if (songs.length == 0) {
+                    songs.push({
+                        name: emptyMessage
+                    });
+                }
+                this.entryProvider.data = {
+                    items: songs
+                };
+            }.$bind(this);
             
             if (this.viewMode == "album") {
-                songs = mediaSource.getAlbumSongs(item.uid);
                 emptyMessage = "No songs in the sample album...";
+                songs = mediaSource.getAlbumSongs(item.uid, callback);
             } else if (this.viewMode == "artist") {
-                songs = mediaSource.getArtistSongs(item.uid);
                 emptyMessage = "No songs for this sample artist...";
+                songs = mediaSource.getArtistSongs(item.uid, callback);
             } else if (this.viewMode == "genre") {
-                songs = mediaSource.getGenreSongs(item.uid);
                 emptyMessage = "No songs for this sample genre...";
+                songs = mediaSource.getGenreSongs(item.uid, callback);
             } else if (this.viewMode === "playlist") {
-                songs = mediaSource.getPlaylistSongs(item.uid);
                 emptyMessage = "No songs for this sample playlist...";
+                songs = mediaSource.getPlaylistSongs(item.uid, callback);
             } else if (this.viewMode === "song") {
-                songs = mediaSource.getSongs();
                 emptyMessage = "No songs in the library...";
+                songs = mediaSource.getSongs(callback);
             }
-            
-            if (songs.length == 0) {
-                songs.push({
-                    name: emptyMessage
-                });
-            }
-            this.entryProvider.data = {
-                items: songs
-            };
         }
     }.$bind(this);
 }

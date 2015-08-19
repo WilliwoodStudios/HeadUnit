@@ -99,14 +99,16 @@ function artistList() {
         var mediaSource = $system.audio.getActiveMediaSource();
         if (mediaSource) {
             // Get our top played albums
-            var topPlayed = mediaSource.getMostPlayedArtists();
-            if (topPlayed && (topPlayed.length > 0)) {
-                this.topPlayedProvider.data = {items: topPlayed};
-                this.topPlayed.visible = true;
-            }
+            mediaSource.getMostPlayedArtists(function(topPlayed) {
+                if (topPlayed && (topPlayed.length > 0)) {
+                    this.topPlayedProvider.data = {items: topPlayed};
+                    this.topPlayed.visible = true;
+                }
+            }.$bind(this));
             // Retrieve our list of all atrists
-            var artists = mediaSource.getArtists();
-            this.entryProvider.data = {items: artists};
+            mediaSource.getArtists(function(artists) {
+                this.entryProvider.data = {items: artists};
+            }.$bind(this));
         }
     }
 }

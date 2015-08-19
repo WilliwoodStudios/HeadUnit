@@ -96,14 +96,16 @@ function playlistList() {
 		var mediaSource = $system.audio.getActiveMediaSource();
 		if (mediaSource) {
 			// Get our top played albums
-			var topPlayed = mediaSource.getMostPlayedPlaylists();
-			if (topPlayed && (topPlayed.length > 0)) {
-				this.topPlayedProvider.data = {items: topPlayed};
-				this.topPlayed.visible = true;
-			}
+			mediaSource.getMostPlayedPlaylists(function(topPlayed) {
+				if (topPlayed && (topPlayed.length > 0)) {
+					this.topPlayedProvider.data = {items: topPlayed};
+					this.topPlayed.visible = true;
+				}
+			}.$bind(this));
 			// Retrieve our list of all albums
-			var playlists = mediaSource.getPlaylists();
-			this.entryProvider.data = {items: playlists};
+			mediaSource.getPlaylists(function(playLists) {
+				this.entryProvider.data = {items: playlists};
+			}.$bind(this));
 		}
 	}
 }

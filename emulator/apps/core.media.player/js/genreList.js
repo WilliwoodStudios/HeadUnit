@@ -64,10 +64,11 @@ function genreList() {
     this.onshow = function() {
         var mediaSource = $system.audio.getActiveMediaSource();
         if (mediaSource) {
-            var genres = mediaSource.getGenres();
-            this.entryProvider.data = {
-                items: genres
-            };
+            mediaSource.getGenres(function(genres) {
+                this.entryProvider.data = {
+                    items: genres
+                };
+            }.$bind(this));
         }
     }
 }
