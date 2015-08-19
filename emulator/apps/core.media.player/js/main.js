@@ -110,11 +110,11 @@ function main() {
 		// Set our current media
 		this.onCurrentSongChanged();
 		
-		$ui.addEventListener($system.songHistory.MEDIA_SONG_CHANGED, this.onCurrentSongChanged, this);
-		$ui.addEventListener($system.songHistory.MEDIA_SHUFFLE_CHANGED,this.onShuffleChanged, this);
-		$ui.addEventListener($system.songHistory.MEDIA_REPEAT_CHANGED,this.onRepeatChanged, this);
-		$ui.addEventListener("mediaPlaybackStarted",this.onPlaybackStarted, this);
-		$ui.addEventListener("mediaPlaybackEnded",this.onPlaybackEnded, this);
+		$ui.addEventListener($system.EventType.MEDIA_SONG_CHANGED, this.onCurrentSongChanged, this);
+		$ui.addEventListener($system.EventType.MEDIA_SHUFFLE_CHANGED,this.onShuffleChanged, this);
+		$ui.addEventListener($system.EventType.MEDIA_REPEAT_CHANGED,this.onRepeatChanged, this);
+		$ui.addEventListener($system.EventType.MEDIA_PLAYBACK_STARTED,this.onPlaybackStarted, this);
+		$ui.addEventListener($system.EventType.MEDIA_PLAYBACK_ENDED,this.onPlaybackEnded, this);
 	};
 
 }
