@@ -28,6 +28,26 @@ public class ForEachList<T> extends ArrayList<T> {
         }
     }
 
+    public void addSingle(T listener) {
+        if (listener != null) {
+            synchronized (this) {
+                if (!contains(listener)) {
+                    add(listener);
+                }
+            }
+        }
+    }
+
+    public void removeEach(T listener) {
+        if (listener != null) {
+            synchronized (this) {
+                while(contains(listener)) {
+                    remove(listener);
+                }
+            }
+        }
+    }
+
     public interface ForEach<T> {
         void go(T item);
     }

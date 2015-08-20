@@ -37,15 +37,17 @@ function main() {
 				}
 			},
 			ontoggleshuffle: function() {
-				$system.songHistory.setShuffle(!$system.songHistory.getShuffle());
+				var mediaSource = $system.audio.getActiveMediaSource();
+				if (mediaSource && (mediaSource.type == $system.MediaSourceType.PLAYER)) {
+					mediaSource.toggleShuffle();
+				}
 			},
 			ontogglerepeat: function() {
-				var repeat = $system.songHistory.getRepeat();
-				repeat += 1;
-				repeat %= 3;
-				$system.songHistory.setRepeat(repeat);
+				var mediaSource = $system.audio.getActiveMediaSource();
+				if (mediaSource && (mediaSource.type == $system.MediaSourceType.PLAYER)) {
+					mediaSource.toggleRepeat();
+				}
 			}
-
 		}
 	];
 
@@ -58,7 +60,6 @@ function main() {
 
 	this.onCurrentSongChanged = function (event) {
 		// pretty much ignoring the event...
-		var mediaSource = $system.audio.getActiveMediaSource();
 		var data = {
 			currentSong: {
 				album: "-",
@@ -69,21 +70,15 @@ function main() {
 				paused: true
 			}
 		};
-		if (mediaSource && (mediaSource.type == $system.MediaSourceType.PLAYER)) {
-			var song = mediaSource.getCurrentSong();
-			if (song) {
-				data = {
-					currentSong: {
-						album: song.albumName,
-						coverArt: song.artwork,
-						song: song.name,
-						artist: song.artistName,
-						duration: song.duration,
-						paused: mediaSource.isPaused()
-					}
-				};
-			}
-		}
+		var song = event.data;
+
+		data.currentSong.album = song.albumName;
+		data.currentSong.coverArt = song.artwork;
+		data.currentSong.song = song.name;
+		data.currentSong.artist = song.artistName;
+		data.currentSong.duration = song.duration;
+		data.currentSong.paused = !($system.audio.getActiveMediaSource().isPaused());
+
 		this.mediaPlayerProvider.data = data;
 	}.$bind(this);
 	
@@ -107,14 +102,17 @@ function main() {
 
 
 	this.onshow = function () {
-		// Set our current media
-		this.onCurrentSongChanged();
-		
 		$ui.addEventListener($system.EventType.MEDIA_SONG_CHANGED, this.onCurrentSongChanged, this);
 		$ui.addEventListener($system.EventType.MEDIA_SHUFFLE_CHANGED,this.onShuffleChanged, this);
 		$ui.addEventListener($system.EventType.MEDIA_REPEAT_CHANGED,this.onRepeatChanged, this);
 		$ui.addEventListener($system.EventType.MEDIA_PLAYBACK_STARTED,this.onPlaybackStarted, this);
 		$ui.addEventListener($system.EventType.MEDIA_PLAYBACK_ENDED,this.onPlaybackEnded, this);
-	};
+
+		var mediaSource = $system.audio.getActiveMediaSource();
+		if (mediaSource.broadcastStatus) {
+			mediaSource.broadcastStatus();
+		}
+		mediaSource.getStatus();
+	}.$bind(this);
 
 }
