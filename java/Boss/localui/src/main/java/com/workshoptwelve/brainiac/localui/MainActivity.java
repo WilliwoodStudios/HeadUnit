@@ -25,42 +25,6 @@ public class MainActivity extends Activity {
     private XWalkView mXWalkView;
     private Handler mHandler;
     private IBoss mBoss;
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.v("LOCALUI", "Service connected");
-            mBoss = IBoss.Stub.asInterface(service);
-            mHandler.postDelayed(mFindServerPort, 0);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.e("LOCALUI", "Uh oh");
-        }
-    };
-    private int mServerPort;
-    private Runnable mFindServerPort = new Runnable() {
-        public void run() {
-            Log.v("LOCALUI", "find server port");
-            if (mBoss != null) {
-                int serverPort = -1;
-                try {
-                    serverPort = mBoss.getServerPort();
-                    Log.v("LOCALUI", "Port: " + serverPort);
-                } catch (RemoteException re) {
-                    // consume.
-                }
-                if (serverPort < 1) {
-                    mHandler.postDelayed(this, 100);
-                } else {
-                    mServerPort = serverPort;
-                    mHandler.postDelayed(mOpenContent, 0);
-                }
-            }
-        }
-    };
-
-
     private Runnable mOpenContent = new Runnable() {
         public void run() {
             mXWalkView.load("http://127.0.0.1:" + mServerPort + "/index.html", null);
@@ -102,15 +66,6 @@ public class MainActivity extends Activity {
             mXWalkView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         }
     };
-
-    private void connectService() {
-        if (mBoss == null) {
-            Intent intent = new Intent("com.workshoptwelve.brainiac.boss.SERVICE");
-            intent.setPackage("com.workshoptwelve.brainiac.boss");
-            startService(intent);
-            bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
-        }
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
