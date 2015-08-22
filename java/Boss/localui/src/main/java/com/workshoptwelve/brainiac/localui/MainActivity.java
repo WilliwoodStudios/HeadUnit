@@ -1,16 +1,8 @@
 package com.workshoptwelve.brainiac.localui;
 
 import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.RemoteException;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,18 +10,17 @@ import android.view.View;
 import android.view.WindowManager;
 
 import com.workshoptwelve.brainiac.boss.IBoss;
+import com.workshoptwelve.brainiac.boss.common.log.Log;
+import com.workshoptwelve.brainiac.localui.util.log.RedundantAndroidLogger;
 
 import org.xwalk.core.XWalkView;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements BossConnectionHelper.BossConnectionListener  {
     private XWalkView mXWalkView;
-    private Handler mHandler;
-    private IBoss mBoss;
-    private Runnable mOpenContent = new Runnable() {
-        public void run() {
-            mXWalkView.load("http://127.0.0.1:" + mServerPort + "/index.html", null);
-        }
-    };
+
+    static {
+        Log.setLogger(new RedundantAndroidLogger("brainiac"));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +29,6 @@ public class MainActivity extends Activity {
         mXWalkView = (XWalkView) findViewById(R.id.activity_main);
         mXWalkView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         mXWalkView.setOnSystemUiVisibilityChangeListener(mSystemUiVisibilityChangeListener);
-        mHandler = new Handler();
-        connectService();
 
         View disableStatusBarView = new View(this);
 
@@ -58,6 +47,9 @@ public class MainActivity extends Activity {
 
         handleParams.gravity = Gravity.TOP;
         getWindow().addContentView(disableStatusBarView, handleParams);
+
+        BossConnectionHelper.getInstance().addBossConnectionListener(this);
+        BossConnectionHelper.getInstance().init(this);
     }
 
     private View.OnSystemUiVisibilityChangeListener mSystemUiVisibilityChangeListener = new View.OnSystemUiVisibilityChangeListener() {
@@ -66,6 +58,7 @@ public class MainActivity extends Activity {
             mXWalkView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         }
     };
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -111,5 +104,16 @@ public class MainActivity extends Activity {
         if (mXWalkView != null) {
             mXWalkView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         }
+    }
+
+    @Override
+    public void onBossConnectionAvailable() {
+        int serverPort = BossConnectionHelper.getInstance().getServerPort();
+        mXWalkView.load("http://127.0.0.1:" + serverPort + "/index.html", null);
+    }
+
+    @Override
+    public void onBossServicesNotAvailable() {
+        // TODO something
     }
 }
