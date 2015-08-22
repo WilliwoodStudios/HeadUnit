@@ -42,6 +42,8 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl implements 
 
     private Song mPlayingSong;
 
+    private boolean mPlayingSongIsPaused;
+
     private int mPlayingSongPosition = 0;
 
     private MediaPlayer mMediaPlayer;
@@ -503,22 +505,29 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl implements 
     }
 
     @Override
-    public JSONObject play() throws JSONException, BossException {
+    public synchronized JSONObject play() throws JSONException, BossException {
         forceInit();
-        return super.play();
+        if (mPlayingSongIsPaused && mMediaPlayer != null) {
+            mMediaPlayer.start();
+            mPlayingSongIsPaused = false;
+        } else {
+            playCurrentSong();
+        }
+        return getStatus();
     }
 
     @Override
-    public JSONObject pause() throws JSONException, BossException {
+    public synchronized JSONObject pause() throws JSONException, BossException {
         forceInit();
-        if (mMediaPlayer != null) {
+        if (!mPlayingSongIsPaused && mMediaPlayer != null) {
+            mPlayingSongIsPaused = true;
             mMediaPlayer.pause();
         }
-        return super.pause();
+        return getStatus();
     }
 
     @Override
-    public JSONObject getStatus() throws JSONException, BossException {
+    public synchronized JSONObject getStatus() throws JSONException, BossException {
         forceInit();
         JSONObject toReturn = new JSONObject();
         toReturn.put("result", 1);
@@ -531,10 +540,9 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl implements 
                 toReturn.put("song", mEffectiveSongList.get(mPlayingSongPosition).getSource());
             }
         } else {
-            toReturn.put("playing",true);
+            toReturn.put("playing",!mPlayingSongIsPaused);
             try {
                 toReturn.put("song", mPlayingSong.getSource());
-                int duration = mMediaPlayer.getDuration();
             } catch (RuntimeException re) {
                 // consume.
             }
@@ -550,6 +558,7 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl implements 
 
     private synchronized void playCurrentSong() {
         mPlayingSong = null;
+        mPlayingSongIsPaused = false;
 
         if (mEffectiveSongList== null) {
             log.e("No effective song list at this time");
@@ -570,14 +579,16 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl implements 
             if (mRepeatMode==RepeatMode.ALL) {
                 mPlayingSongPosition = mEffectiveSongList.size()-1;
             } else {
-                // TODO - something!!!
+                mPlayingSongPosition = 0;
+                return;
             }
         }
         if (mPlayingSongPosition >= mEffectiveSongList.size()) {
             if (mRepeatMode==RepeatMode.ALL) {
                 mPlayingSongPosition = 0;
             } else {
-                // TODO - something
+                mPlayingSongPosition = 0;
+                return;
             }
         }
 
