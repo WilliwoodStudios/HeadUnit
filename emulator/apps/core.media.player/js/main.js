@@ -59,6 +59,7 @@ function main() {
 	];
 
 	this.onCurrentSongChanged = function (event) {
+		console.log("on current song changed");
 		// pretty much ignoring the event...
 		var data = {
 			currentSong: {
@@ -93,13 +94,14 @@ function main() {
 	};
 	
 	this.onPlaybackEnded = function(event) {
+		console.log("Playback ended");
 		this.mediaPlayer.setPaused(true);
 	}.$bind(this);
 	
 	this.onPlaybackStarted = function(event) {
+		console.log("Playback started");
 		this.mediaPlayer.setPaused(false);
 	}.$bind(this);
-
 
 	this.onshow = function () {
 		$ui.addEventListener($system.EventType.MEDIA_SONG_CHANGED, this.onCurrentSongChanged, this);
@@ -108,11 +110,29 @@ function main() {
 		$ui.addEventListener($system.EventType.MEDIA_PLAYBACK_STARTED,this.onPlaybackStarted, this);
 		$ui.addEventListener($system.EventType.MEDIA_PLAYBACK_ENDED,this.onPlaybackEnded, this);
 
+		this.pollPlayerStatus(true);
+
+		if (this.pollInterval == null) {
+			this.pollInterval = window.setInterval(this.pollPlayerStatus, 2000);
+		}
+	}.$bind(this);
+
+	this.pollPlayerStatus = function(askForBroadcast) {
 		var mediaSource = $system.audio.getActiveMediaSource();
-		if (mediaSource.broadcastStatus) {
-			mediaSource.broadcastStatus();
+		if (askForBroadcast) {
+			if (mediaSource.broadcastStatus) {
+				mediaSource.broadcastStatus();
+			}
 		}
 		mediaSource.getStatus();
 	}.$bind(this);
 
+	this.ondestroy = function() {
+		if (this.pollInterval != null) {
+			window.clearInterval(this.pollInterval);
+			this.pollInterval = null;
+		}
+	}.$bind(this);
+
+	this.pollInterval = null;
 }
