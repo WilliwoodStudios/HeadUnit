@@ -23,31 +23,34 @@
 			"bank": "s:3"
 		},
 		{
-			"board": "0000000000000001",
-			"name": "Door Actuators",
+			"board": "ffffffffffffff01",
+			"name": "Guns",
 			"positiveLabel": "OPEN",
 			"negativeLabel": "CLOSE",
-			"duration": 10000,
+			"duration": 15000,
 			"isPolaritySwitch": true,
 			"bank": "d:0"
 		},
 		{
-			"board": "0000000000000001",
-			"name": "Hide Away License Plate",
+			"board": "ffffffffffffff01",
+			"name": "Discs",
 			"positiveLabel": "SHOW",
 			"negativeLabel": "HIDE",
+			"duration": 15000,
 			"isPolaritySwitch": true,
 			"bank": "d:1"
 		},
 		{
-			"board": "0000000000000001",
-			"name": "Unused",
-			"shown": false,
+			"board": "ffffffffffffff01",
+			"name": "Roof",
+			"positiveLabel": "OPEN",
+			"negativeLabel": "CLOSE",
+			"duration": 45000,
 			"isPolaritySwitch": true,
 			"bank": "d:2"
 		},
 		{
-			"board": "0000000000000001",
+			"board": "ffffffffffffff01",
 			"name": "Unused",
 			"shown": false,
 			"isPolaritySwitch": true,
