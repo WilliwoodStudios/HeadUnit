@@ -9,15 +9,21 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 
 import com.workshoptwelve.brainiac.boss.common.content.APropertyServiceImpl;
+import com.workshoptwelve.brainiac.boss.common.log.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by robwilliams on 15-08-27.
  */
 public class AndroidPropertyServiceImpl extends APropertyServiceImpl {
     private final Context mContext;
+    private static final Log log = Log.getLogger(AndroidPropertyServiceImpl.class);
 
     public AndroidPropertyServiceImpl(Context context) {
         mContext = context;
@@ -36,74 +42,86 @@ public class AndroidPropertyServiceImpl extends APropertyServiceImpl {
     private static final String JSON_ERROR = "error";
 
     @Override
-    public JSONObject set(String name, String value) throws JSONException {
-        ContentValues values = new ContentValues();
-
-        values.put(COLUMN_VALUE, value);
-
+    public JSONObject set(JSONObject valuesToUse) throws JSONException {
         SQLiteDatabase database = mPropertyOpenHelper.getWritableDatabase();
 
+        JSONObject toReturn = new JSONObject();
+        toReturn.put("result",1);
+
+        JSONObject toReturnValues = new JSONObject();
+        toReturn.put("values",toReturnValues);
+
         try {
-            int rows = database.update(TABLE, values, COLUMN_NAME + " = ?", new String[]{name});
-            if (rows == 1) {
-                // excellent.
-            } else {
-                // ignoring any error from the insert.
-                values.put(COLUMN_NAME, name);
-                database.insert(TABLE, null, values);
+            for (Iterator<String> nameIterator = valuesToUse.keys(); nameIterator.hasNext(); ) {
+                String name = nameIterator.next();
+
+                ContentValues values = new ContentValues();
+
+                Object value = valuesToUse.get(name);
+                toReturnValues.put(name,value);
+
+                String valueToUse = String.valueOf(value);
+
+                values.put(COLUMN_VALUE, valueToUse);
+
+                int rows = database.update(TABLE, values, COLUMN_NAME + " = ?", new String[]{name});
+                if (rows == 1) {
+                    // excellent.
+                } else {
+                    // ignoring any error from the insert.
+                    values.put(COLUMN_NAME, name);
+                    database.insert(TABLE, null, values);
+                }
             }
-
-            JSONObject toReturn = new JSONObject();
-
-            toReturn.put(JSON_RESULT, 1);
-
-            JSONObject property = new JSONObject();
-            toReturn.put(JSON_PROPERTY, property);
-
-            property.put(JSON_NAME, name);
-            property.put(JSON_VALUE, value);
-
-            return toReturn;
         } finally {
             database.close();
         }
+
+        return toReturn;
     }
 
     @Override
-    public JSONObject get(String name, String defaultValue) throws JSONException {
+    public JSONObject get(List<String> names, JSONObject defaultValues) throws JSONException {
         SQLiteDatabase database = mPropertyOpenHelper.getReadableDatabase();
         try {
-            Cursor cursor = database.query(TABLE, new String[]{COLUMN_VALUE}, COLUMN_NAME + " = ?", new String[]{name}, null, null, null);
-            try {
-                JSONObject toReturn = new JSONObject();
-                JSONObject property = new JSONObject();
-                toReturn.put(JSON_RESULT, 1);
-                toReturn.put(JSON_PROPERTY, property);
+            JSONObject toReturn = new JSONObject();
+            toReturn.put(JSON_RESULT, 1);
 
-                property.put(JSON_NAME, name);
-                property.put(JSON_USING_DEFAULT, true);
-                if (null == defaultValue) {
-                    property.put(JSON_VALUE, JSONObject.NULL);
-                } else {
-                    property.put(JSON_VALUE, defaultValue);
-                }
-                if (cursor.moveToFirst()) {
-                    try {
-                        String toUse = cursor.getString(0);
-                        if (toUse == null) {
-                            property.put(JSON_VALUE, JSONObject.NULL);
-                        } else {
-                            property.put(JSON_VALUE, toUse);
+            JSONObject toReturnValues = new JSONObject();
+            toReturn.put("values",toReturnValues);
+
+            for (String name : names) {
+                Cursor cursor = database.query(TABLE, new String[]{COLUMN_VALUE}, COLUMN_NAME + " = ?", new String[]{name}, null, null, null);
+                try {
+                    if (cursor.moveToFirst()) {
+                        try {
+                            String toUse = cursor.getString(0);
+                            if (toUse == null) {
+                                toReturnValues.put(name,JSONObject.NULL);
+                            } else {
+                                if (toUse.startsWith("{")) {
+                                    toReturnValues.put(name,new JSONObject(toUse));
+                                } else if (toUse.startsWith("[")) {
+                                    toReturnValues.put(name,new JSONArray(toUse));
+                                } else {
+                                    toReturnValues.put(name,toUse);
+                                }
+                            }
+                        } catch (RuntimeException re) {
+                            log.e("Could not properly read property",re);
                         }
-                        property.put(JSON_USING_DEFAULT, false);
-                    } catch (RuntimeException re) {
-                        property.put(JSON_ERROR, re.getMessage());
+                    } else {
+                        if (defaultValues != null && defaultValues.has(name)) {
+                            toReturnValues.put(name,defaultValues.get(name));
+                        } else {
+                            toReturnValues.put(name,JSONObject.NULL);
+                        }
                     }
+                } finally {
+                    cursor.close();
                 }
-                return toReturn;
-            } finally {
-                cursor.close();
             }
+            return toReturn;
         } finally {
             database.close();
         }

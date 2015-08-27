@@ -8,23 +8,8 @@ window.onload = function() {
 			isEmulator: (window.chrome && chrome.runtime && chrome.runtime.id) ? true : false
 		}
 		// Apply our theme
-		if (result && result.color != undefined) {
-			var i,
-				variable,
-				color = result.color;
-			// Update properties
-			config.theme.backgroundImageColor = color;
-			config.theme.chart.color_OK = color;
-			config.theme.chart.color_GREAT = color;
-			config.theme.chart.color_GOOD = color;
-			config.theme.chart.color_RANDOM1 = color;
-			// Update variables
-			for (i = 0; i < config.theme.variables.length; i ++) {
-				variable = config.theme.variables[i];
-				if (variable.name == '@brand-color' || variable.name == '@profile-wedge-color') {
-					variable.value = color;
-				}
-			}
+		if (result && result.core_theme) {
+			config.theme = result.core_theme;
 		}
 		$system.init(config);
 		$system.registerApp('core.headunit', $ui);
@@ -33,11 +18,5 @@ window.onload = function() {
 		$emulator.chrome = $ui.screens[0];
    	};
 
-	if (window.chrome && chrome.storage && chrome.storage.local) {
-   		chrome.storage.local.get('color', init);
-	} else {
-		init();
-	}
-
-	
+   	$system.property.get(["core_theme"],init);
 }
