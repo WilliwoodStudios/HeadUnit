@@ -1,6 +1,7 @@
 package com.workshoptwelve.brainiac.boss.common.server;
 
 import com.workshoptwelve.brainiac.boss.common.content.ContentService;
+import com.workshoptwelve.brainiac.boss.common.content.PropertyService;
 import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.event.EventService;
 import com.workshoptwelve.brainiac.boss.common.hardware.accessory.AccessoryService;
@@ -36,6 +37,7 @@ public class Server {
         addService(LogService.getInstance());
         addService(OBDService.getInstance());
         addService(AccessoryService.getInstance());
+        addService(PropertyService.getInstance());
         mDefaultService = ContentService.getInstance();
     }
 

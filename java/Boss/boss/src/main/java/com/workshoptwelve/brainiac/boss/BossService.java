@@ -7,6 +7,7 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 
 import com.workshoptwelve.brainiac.boss.common.content.ContentService;
+import com.workshoptwelve.brainiac.boss.common.content.PropertyService;
 import com.workshoptwelve.brainiac.boss.common.hardware.accessory.AccessoryService;
 import com.workshoptwelve.brainiac.boss.common.hardware.obdii.OBDService;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
@@ -42,6 +43,7 @@ public class BossService extends Service {
             MultiMediaService.getInstance().setMultiMediaServiceImpl(new AndroidMultiMediaService(context));
             OBDService.getInstance().setOBDConnection(new AndroidOBDConnection());
             AccessoryService.getInstance().setAccessoryManager(AndroidAccessoryManager.getInstance());
+            PropertyService.getInstance().setPropertyServiceImpl(new AndroidPropertyServiceImpl(context));
 
             Server server = Server.getInstance();
             server.addService(MultiMediaService.getInstance());
