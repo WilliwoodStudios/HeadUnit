@@ -82,44 +82,6 @@ function main() {
 					this.number.number = "";
 				} else {
 					this.number.appendToNumber(key.caption);
-					switch (key.caption) {
-						case '0':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE0);
-							break;
-						case '1':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE1);
-							break;
-						case '2':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE2);
-							break;
-						case '3':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE3);
-							break;
-						case '4':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE4);
-							break;
-						case '5':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE5);
-							break;
-						case '6':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE6);
-							break;
-						case '7':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE7);
-							break;
-						case '8':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE8);
-							break;
-						case '9':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE9);
-							break;
-						case '#':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE_POUND);
-							break;
-						case '*':
-							$system.audio.playSoundEffect($system.SoundEffect.TONE_ASTERIK);
-							break;
-					}
 				}
 			},
 			number: {
