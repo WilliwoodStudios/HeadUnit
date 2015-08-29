@@ -78,7 +78,7 @@ function main() {
 		data.currentSong.song = song.name;
 		data.currentSong.artist = song.artistName;
 		data.currentSong.duration = song.duration;
-		data.currentSong.paused = !($system.audio.getActiveMediaSource().isPaused());
+		data.currentSong.paused = $system.audio.getActiveMediaSource().isPaused();
 
 		this.mediaPlayerProvider.data = data;
 	}.$bind(this);
