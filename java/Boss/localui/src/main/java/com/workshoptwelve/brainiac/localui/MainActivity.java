@@ -25,12 +25,16 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
         XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
     }
 
+    private SystemSoundExtension mSystemSoundExtension;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        new SystemSoundExtension(this);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        mSystemSoundExtension = new SystemSoundExtension(this);
 
         mXWalkView = (XWalkView) findViewById(R.id.activity_main);
         mXWalkView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
