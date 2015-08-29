@@ -13,6 +13,7 @@ import com.workshoptwelve.brainiac.boss.IBoss;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.localui.util.log.RedundantAndroidLogger;
 
+import org.xwalk.core.XWalkPreferences;
 import org.xwalk.core.XWalkView;
 
 public class MainActivity extends Activity implements BossConnectionHelper.BossConnectionListener  {
@@ -20,6 +21,7 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
 
     static {
         Log.setLogger(new RedundantAndroidLogger("brainiac"));
+        XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
     }
 
     @Override
