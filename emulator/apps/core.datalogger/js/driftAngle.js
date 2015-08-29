@@ -22,7 +22,7 @@ function driftAngle() {
 					},
 					onrecord: function() {
 						// Fake out our angles in the emulator
-						if ($system.config.isEmulator == true) {
+						if ($system.config.isEmulator == true || true) { // TODO - fix
 							$ui.toast('The emulator simulates a short drifting run');
 							var screen = this.screen;
 							screen._angle = 1;

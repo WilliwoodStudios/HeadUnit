@@ -20,7 +20,7 @@ function zeroToSixty() {
 						this.screen.timerTile.start();
 						$system.audio.playSoundEffect($system.SoundEffect.HORN);
 						// Fake out reaching 60 mph in 4.9 seconds in the emulator
-						if ($system.config.isEmulator == true) {
+						if ($system.config.isEmulator == true || true) { // TODO - fix
 							$ui.toast('The emulator simulates a 4.9 second 0-60');
 							window.setTimeout(function() {
 								if ($core) {

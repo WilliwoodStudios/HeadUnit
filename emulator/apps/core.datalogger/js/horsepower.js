@@ -21,7 +21,7 @@ function horsepower() {
 						
 						$system.audio.playSoundEffect($system.SoundEffect.HORN);
 						// Fake out reaching 60 mph in 4.9 seconds in the emulator
-						if ($system.config.isEmulator == true) {
+						if ($system.config.isEmulator == true || true) { // TODO - fix
 							$ui.toast('The emulator simulates a 468 HP dyno run');
 							var screen = this.screen;
 							screen._rpm = 2500;

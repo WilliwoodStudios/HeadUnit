@@ -21,7 +21,7 @@ function lateralGs() {
 					},
 					onrecord: function() {
 						// Fake out our angles in the emulator
-						if ($system.config.isEmulator == true) {
+						if ($system.config.isEmulator == true || true) { // TODO - fix
 							$ui.toast('The emulator simulates a short skidpad test');
 							var screen = this.screen;
 							// Slide Left

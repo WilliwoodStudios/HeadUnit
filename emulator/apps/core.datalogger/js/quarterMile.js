@@ -20,7 +20,7 @@ function quarterMile() {
 						this.screen.timerTile.start();
 						$system.audio.playSoundEffect($system.SoundEffect.HORN);
 						// Fake out a 10 second run in the emulator
-						if ($system.config.isEmulator == true) {
+						if ($system.config.isEmulator == true || true) { // TODO - fix
 							$ui.toast('The emulator simulates a 10 second 1/4 mile.');
 							var screen = this.screen;
 							window.setTimeout(function() {
