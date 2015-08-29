@@ -11,6 +11,7 @@ import android.view.WindowManager;
 
 import com.workshoptwelve.brainiac.boss.IBoss;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
+import com.workshoptwelve.brainiac.localui.extension.SystemSoundExtension;
 import com.workshoptwelve.brainiac.localui.util.log.RedundantAndroidLogger;
 
 import org.xwalk.core.XWalkPreferences;
@@ -28,6 +29,9 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        new SystemSoundExtension(this);
+
         mXWalkView = (XWalkView) findViewById(R.id.activity_main);
         mXWalkView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         mXWalkView.setOnSystemUiVisibilityChangeListener(mSystemUiVisibilityChangeListener);
