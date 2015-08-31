@@ -41,7 +41,7 @@ function lateralGs() {
 				{
 					component: $ui.TileLateralGs,
 					id: 'lateralTile',
-					img: 'img/cartop.png',
+					img: 'img/cartop_small.png',
 				},
 				{
 					component: $ui.TileTimeDonut,
