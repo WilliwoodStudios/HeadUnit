@@ -61,6 +61,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					animated: false,
 					targetHigh: true,
 					provider: {
 						id: 'quarterMileProvider',
@@ -69,6 +70,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'quarterMileMPHHistory'
@@ -76,6 +78,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'reactionTime'
@@ -83,6 +86,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'reactionTimeHistory'
@@ -90,6 +94,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'sixtyFoot'
@@ -97,6 +102,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'sixtyFootHistory'
@@ -104,6 +110,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'threeThirtyFoot'
@@ -111,6 +118,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'threeThirtyFootHistory'
@@ -118,6 +126,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'eighthMile'
@@ -125,6 +134,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'eighthMileHistory'
@@ -132,6 +142,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					animated: false,
 					targetHigh: true,
 					provider: {
 						id: 'quarterMileProvider',
@@ -140,6 +151,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'eighthMileMPHHistory'
