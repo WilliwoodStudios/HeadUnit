@@ -14,7 +14,7 @@ window.onload = function() {
 		$system.init(config);
 		$system.registerApp('core.headunit', $ui);
 		// Initialize UI
-		$ui.init(screenChrome, config.theme);
+		$ui.init(screenChrome, config);
 		$emulator.chrome = $ui.screens[0];
    	};
 

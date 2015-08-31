@@ -12,5 +12,5 @@ window.onload = function() {
 	} 
 	$system.registerApp('core.browser', $ui);
 	// Initialize
-	$ui.init(main, $system.config.theme);	
+	$ui.init(main, $system.config);	
 }

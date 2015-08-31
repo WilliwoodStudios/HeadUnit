@@ -13,5 +13,5 @@ window.onload = function() {
 	}
 	$system.registerApp('core.dashboard', $ui);
 	// Initialize
-	$ui.init(main,$system.config.theme);	
+	$ui.init(main,$system.config);	
 }

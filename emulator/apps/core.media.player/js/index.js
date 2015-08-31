@@ -21,5 +21,5 @@ window.onload = function () {
 	} 
 	$system.registerApp('core.media.player', $ui);
 	// Initialize
-	$ui.init(main, $system.config.theme);
+	$ui.init(main, $system.config);
 }
