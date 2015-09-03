@@ -6,21 +6,22 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by robwilliams on 15-09-03.
  */
 public class WebSocketDispatcher {
-    private ArrayList<WebSocket> mSockets = new ArrayList<>();
+    private List<WebSocket> mSockets = Collections.synchronizedList(new ArrayList<WebSocket>());
     private WebSocket[] mDummyArray = new WebSocket[0];
     private static final Log log = Log.getLogger(WebSocketDispatcher.class);
 
     public void sendMessage(String message) {
         WebSocket[] toSendOn = mSockets.toArray(mDummyArray);
-        byte[] asBytes = message.getBytes();
         for (WebSocket webSocket : toSendOn) {
             try {
-                webSocket.send(asBytes);
+                webSocket.send(message);
             } catch (Exception e) {
                 log.e("Could not send", e);
             }
