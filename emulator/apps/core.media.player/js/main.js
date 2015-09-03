@@ -1,6 +1,7 @@
 /* Copyright (c) 2015 Workshop 12 Inc. */
 function main() {
 	this.component = $ui.WindowPane;
+	this.debug = false;
 	this.content = [
 		{
 			component: $ui.MediaPlayer,
@@ -59,7 +60,7 @@ function main() {
 	];
 
 	this.onCurrentSongChanged = function (event) {
-		console.log("on current song changed");
+		if (this.debug) console.log("on current song changed");
 		// pretty much ignoring the event...
 		var data = {
 			currentSong: {
@@ -94,12 +95,12 @@ function main() {
 	};
 	
 	this.onPlaybackEnded = function(event) {
-		console.log("Playback ended");
+		if (this.debug) console.log("Playback ended");
 		this.mediaPlayer.setPaused(true);
 	}.$bind(this);
 	
 	this.onPlaybackStarted = function(event) {
-		console.log("Playback started");
+		if (this.debug) console.log("Playback started");
 		this.mediaPlayer.setPaused(false);
 	}.$bind(this);
 
@@ -110,29 +111,22 @@ function main() {
 		$ui.addEventListener($system.EventType.MEDIA_PLAYBACK_STARTED,this.onPlaybackStarted, this);
 		$ui.addEventListener($system.EventType.MEDIA_PLAYBACK_ENDED,this.onPlaybackEnded, this);
 
-		this.pollPlayerStatus(true);
-
-		if (this.pollInterval == null) {
-			this.pollInterval = window.setInterval(this.pollPlayerStatus, 2000);
-		}
-	}.$bind(this);
-
-	this.pollPlayerStatus = function(askForBroadcast) {
 		var mediaSource = $system.audio.getActiveMediaSource();
-		if (askForBroadcast) {
-			if (mediaSource.broadcastStatus) {
-				mediaSource.broadcastStatus();
-			}
-		}
-		mediaSource.getStatus();
+		if (this.debug) console.log("Media Source: about to register our interest");
+		mediaSource.registerInterest(this);
 	}.$bind(this);
 
 	this.ondestroy = function() {
-		if (this.pollInterval != null) {
-			window.clearInterval(this.pollInterval);
-			this.pollInterval = null;
-		}
+		if (this.debug) console.log("About to unregister...");
+		var mediaSource = $system.audio.getActiveMediaSource();
+		mediaSource.unregisterInterest(this);
 	}.$bind(this);
 
-	this.pollInterval = null;
+	var oldOnUnload = window.onunload;
+	window.onunload = function() {
+		this.ondestroy();
+		if (oldOnUnload && typeof(oldOnUnload)==="function") {
+			oldOnUnload();
+		}
+	}.$bind(this);
 }
