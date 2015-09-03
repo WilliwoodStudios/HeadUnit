@@ -8,6 +8,8 @@ import com.workshoptwelve.brainiac.boss.common.event.EventType;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.boss.common.server.WebSocketDispatcher;
 
+import org.java_websocket.WebSocket;
+import org.java_websocket.handshake.ClientHandshake;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -110,7 +112,27 @@ public class MultiMediaService extends AService {
         setWebSocketDispatcher(mWebSocketDispatcher);
     }
 
-    private WebSocketDispatcher mWebSocketDispatcher = new WebSocketDispatcher();
+    private WebSocketDispatcher mWebSocketDispatcher = new WebSocketDispatcher() {
+        @Override
+        public void onMessage(WebSocket conn, String message) {
+            try {
+                mMultiMediaServiceImpl.getStatus();
+            } catch (Exception e) {
+                // consume
+            }
+        }
+
+        @Override
+        public void onOpen(WebSocket conn, ClientHandshake handshake) {
+            super.onOpen(conn, handshake);
+            try {
+                mMultiMediaServiceImpl.getStatus();
+            } catch (Exception e) {
+                // consume
+            }
+
+        }
+    };
 
     public static MultiMediaService getInstance() {
         return sInstance;
