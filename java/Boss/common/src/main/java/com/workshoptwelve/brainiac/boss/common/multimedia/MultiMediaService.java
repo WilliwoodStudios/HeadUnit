@@ -6,6 +6,7 @@ import com.workshoptwelve.brainiac.boss.common.server.AEndPoint;
 import com.workshoptwelve.brainiac.boss.common.server.AService;
 import com.workshoptwelve.brainiac.boss.common.event.EventType;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
+import com.workshoptwelve.brainiac.boss.common.server.WebSocketDispatcher;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -105,7 +106,11 @@ public class MultiMediaService extends AService {
         addEndPoint(mGetLibrary);
 
         addEventType(mPositionEventType);
+
+        setWebSocketDispatcher(mWebSocketDispatcher);
     }
+
+    private WebSocketDispatcher mWebSocketDispatcher = new WebSocketDispatcher();
 
     public static MultiMediaService getInstance() {
         return sInstance;
@@ -117,5 +122,6 @@ public class MultiMediaService extends AService {
 
     public void setMultiMediaServiceImpl(AMultiMediaServiceImpl impl) {
         mMultiMediaServiceImpl = impl;
+        impl.setWebSocketDispatcher(mWebSocketDispatcher);
     }
 }

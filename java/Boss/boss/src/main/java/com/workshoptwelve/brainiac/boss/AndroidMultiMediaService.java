@@ -551,6 +551,8 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl implements 
         toReturn.put("shuffle",mShuffle);
         toReturn.put("repeat",mRepeatMode.ordinal());
 
+        broadCastMessage(toReturn);
+
         return toReturn;
     }
 
@@ -621,6 +623,11 @@ public class AndroidMultiMediaService extends AMultiMediaServiceImpl implements 
             } else {
                 ++mPlayingSongPosition;
                 playCurrentSong();
+            }
+            try {
+                getStatus();
+            } catch (Exception e) {
+                // consume.
             }
         }
     }

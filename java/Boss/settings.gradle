@@ -1,1 +1,1 @@
-include  ':common', ':desktop', ':boss', ':bosswebcontent', ':bosswebcontent-test', ':localui', ':xwalkcore'
+include  ':common', ':submodules:Java-WebSocket', ':desktop', ':boss', ':bosswebcontent', ':localui', ':xwalkcore'
