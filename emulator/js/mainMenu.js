@@ -64,6 +64,5 @@ function mainMenu() {
 			items: apps
 		}
 		this.mainMenuProvider.data = data;
-		console.log(data.items.length)
 	}.bind(this);
 }
