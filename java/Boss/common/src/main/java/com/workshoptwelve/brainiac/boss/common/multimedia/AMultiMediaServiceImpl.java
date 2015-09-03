@@ -5,6 +5,7 @@ import com.workshoptwelve.brainiac.boss.common.event.Event;
 import com.workshoptwelve.brainiac.boss.common.event.EventService;
 import com.workshoptwelve.brainiac.boss.common.event.EventType;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
+import com.workshoptwelve.brainiac.boss.common.server.WebSocketDispatcher;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,6 +19,7 @@ public abstract class AMultiMediaServiceImpl {
     protected final static Log log = Log.getLogger(AMultiMediaServiceImpl.class);
 
     private EventType mPositionEventType;
+    private WebSocketDispatcher mWebSocketDispatcher;
 
     public JSONObject play() throws JSONException, BossException {
         log.v();
@@ -71,5 +73,13 @@ public abstract class AMultiMediaServiceImpl {
         if (log.canD()) {
             log.d("Sending position", position);
         }
+    }
+
+    protected void broadCastMessage(JSONObject toSend) {
+        mWebSocketDispatcher.sendMessage(toSend.toString());
+    }
+    
+    void setWebSocketDispatcher(WebSocketDispatcher dispatcher) {
+        mWebSocketDispatcher = dispatcher;
     }
 }

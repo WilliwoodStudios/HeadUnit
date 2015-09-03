@@ -12,6 +12,8 @@ import com.workshoptwelve.brainiac.boss.common.threading.ThreadPool;
 import com.workshoptwelve.brainiac.boss.common.util.BlockingFuture;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ public class Server {
     private ServerSocket mServerSocket;
     private Runnable mListenRunnable;
     private String mNonDefaultPath;
+    private WebSocketServer mWebSocketServer;
 
     Server() {
         log.setLogLevel(Log.Level.v);
@@ -105,6 +108,10 @@ public class Server {
                 mServerSocket = new ServerSocket(i);
                 mServerPort = i;
                 port.setResult(i);
+                
+                InetSocketAddress address = new InetSocketAddress(i-50);
+                
+                mWebSocketServer = new WebSocketServer(this,address);
                 while (true) {
                     final Socket client = mServerSocket.accept();
                     ThreadPool.getInstance().run(new ServerConnectionHandler(mDefaultService, mNonDefaultPath, mServices, client));
@@ -118,5 +125,14 @@ public class Server {
 
     public synchronized void stop() {
         // TODO make it stop.
+    }
+
+    public WebSocketDispatcher getWebSocketDispatcher(String resourceDescriptor) {
+        for (AService service : mServices) {
+            if (service.getPath().equals(resourceDescriptor)) {
+                return service.getWebSocketDispatcher();
+            }
+        }
+        return null;
     }
 }
