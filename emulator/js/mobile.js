@@ -2,12 +2,10 @@
 window.onload = function() {
 	// retrieve our saved theme settings
 	function init(result) {
-		console.log('here')
 		// Initialize the system
 		var config = {
 			theme: $ui.themeDark,
-			//isEmulator: (window.chrome && chrome.runtime && chrome.runtime.id) ? true : false,
-			isEmulator: true,
+			isEmulator: (window.chrome && chrome.runtime && chrome.runtime.id) ? true : false,
 			isClientDevice: true
 		}
 		// Apply our theme
