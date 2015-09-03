@@ -43,8 +43,8 @@ class ServerConnectionHandler implements Runnable {
         mDefaultService = defaultService;
         mClient = client;
         mNonDefaultPath = nonDefaultPath;
-
-        log.setLogLevel(Log.Level.v);
+//
+//        log.setLogLevel(Log.Level.v);
     }
 
     private void configureSocket() throws SocketException {
