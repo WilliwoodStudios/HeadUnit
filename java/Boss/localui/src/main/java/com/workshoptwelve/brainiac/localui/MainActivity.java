@@ -1,7 +1,9 @@
 package com.workshoptwelve.brainiac.localui;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.PixelFormat;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.Menu;
@@ -9,36 +11,73 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 
-import com.workshoptwelve.brainiac.boss.IBoss;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.localui.extension.SystemSoundExtension;
 import com.workshoptwelve.brainiac.localui.util.log.RedundantAndroidLogger;
+import com.workshoptwelve.brainiac.localui.view.GesturedXWalkView;
 
 import org.xwalk.core.XWalkPreferences;
-import org.xwalk.core.XWalkView;
 
 public class MainActivity extends Activity implements BossConnectionHelper.BossConnectionListener  {
-    private XWalkView mXWalkView;
+    private GesturedXWalkView mXWalkView;
 
     static {
         Log.setLogger(new RedundantAndroidLogger("brainiac"));
         XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
     }
+    private static final Log log = Log.getLogger(MainActivity.class);
 
     private SystemSoundExtension mSystemSoundExtension;
+
+    private GesturedXWalkView.GestureListener mGestureListener = new GesturedXWalkView.GestureListener() {
+        private int mInitialVolume;
+        private int mMaxVolume;
+        private int mTargetVolume = -1;
+
+        @Override
+        public void onStart() {
+//            log.e("start");
+            mInitialVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            mMaxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        }
+
+        @Override
+        public void onGestureChange(float delta) {
+            int targetVolume = mInitialVolume + (int)(delta * mMaxVolume);
+            if (targetVolume > mMaxVolume) {
+                targetVolume = mMaxVolume;
+            } else if (targetVolume < 0) {
+                targetVolume = 0;
+            }
+            if (mTargetVolume != targetVolume) {
+                mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVolume, 0);
+                mTargetVolume = targetVolume;
+                log.v("Setting volume to " + targetVolume + " " + delta);
+            }
+        }
+
+        @Override
+        public void onEnd() {
+            log.e("end");
+        }
+    };
+    private AudioManager mAudioManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        log.setLogLevel(Log.Level.v);
+        mAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         setContentView(R.layout.activity_main);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         mSystemSoundExtension = new SystemSoundExtension(this);
 
-        mXWalkView = (XWalkView) findViewById(R.id.activity_main);
+        mXWalkView = (GesturedXWalkView) findViewById(R.id.activity_main);
         mXWalkView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         mXWalkView.setOnSystemUiVisibilityChangeListener(mSystemUiVisibilityChangeListener);
+        mXWalkView.setGestureListener(mGestureListener);
 
         View disableStatusBarView = new View(this);
 
