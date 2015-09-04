@@ -12,6 +12,10 @@ public class AndroidLogger extends Logger {
     private final String mTag;
     private AndroidLoggerListener mListener;
 
+    public AndroidLogger() {
+        this("NO_TAG_GIVEN");
+    }
+
     public AndroidLogger(String tag) {
         mTag = tag;
     }
