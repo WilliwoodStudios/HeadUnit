@@ -17,7 +17,6 @@ window.onload = function() {
 		}
 	} 
 	$system.registerApp('core.settings', $ui);
-	console.log($system.config);
 	// Initialize
 	$ui.init(main, $system.config);	
 }
