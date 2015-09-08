@@ -12,6 +12,7 @@ window.onload = function() {
 		if (result && result.core_theme) {
 			config.theme = result.core_theme;
 		}
+		config.theme.inHeadUnit = false;
 		$system.init(config);
 		$system.registerApp('core.headunit', $ui);
 		// Initialize UI
