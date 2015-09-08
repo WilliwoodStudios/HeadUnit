@@ -5,7 +5,6 @@ window.onload = function() {
 		theme: $ui.themeDark,
 		isEmulator: (window.chrome && chrome.runtime && chrome.runtime.id) ? true : false
 	}
-	console.log(config);
 	$system.init(config);
 	
 	// Initialize UI

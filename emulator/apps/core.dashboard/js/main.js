@@ -6,13 +6,6 @@ function main() {
 		{
 			component: $ui.TileGroup,
 			tiles: [
-				/*{
-					component: $ui.TileProfile,
-					provider: {
-						id: 'dashboardProvider',
-						property: 'profileInfo'
-					}					
-				},*/
 				{
 					component: $ui.TileAcceleration,
 					provider: {
@@ -57,6 +50,7 @@ function main() {
 				},
 				{
 					component: $ui.TileIdle,
+					animated: false,
 					provider: {
 						id: 'dashboardProvider',
 						property: 'idleInfo'
@@ -64,6 +58,7 @@ function main() {
 				},
 				{
 					component: $ui.TileIdleDetails,
+					animated: false,
 					provider: {
 						id: 'dashboardProvider',
 						property: 'idleDetailsInfo'
