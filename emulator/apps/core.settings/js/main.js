@@ -23,6 +23,7 @@ function main() {
 				{
 				  	img: 'img/wifi.png',
 				  	id: 'setting.network',
+					visible: ($system.isClientDevice == true) ? false : true,
 				  	title: 'Network',
 				  	caption: 'Configure your internet connectivity',
 					accent: 'Not enabled quite yet'
@@ -30,6 +31,7 @@ function main() {
 				{
 				  	img: 'img/bluetooth.png',
 				  	id: 'setting.bluetooth',
+					visible: ($system.isClientDevice == true) ? false : true,
 				  	title: 'Bluetooth',
 				  	caption: 'Configure your Bluetooth connectivity',
 					accent: 'Not enabled quite yet'
