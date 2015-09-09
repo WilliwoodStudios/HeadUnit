@@ -74,7 +74,7 @@
 			"content": "index.html",
 			"availability": {
 		        "headUnit": false,
-		        "driversDevice": true
+		        "driversDevice": false
 		    }
 		},
 		{
