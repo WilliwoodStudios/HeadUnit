@@ -11,6 +11,7 @@ function lateralGs() {
 				{
 					component: $ui.TileRecord,
 					id: 'recordTile',
+					visible: ($system.isClientDevice == true) ? false : true,
 					caption: 'Record Lateral G\'s',
 					onstartclick: function() {
 						this.screen._threshold = this.screen._threshold + 720;
@@ -41,6 +42,7 @@ function lateralGs() {
 				{
 					component: $ui.TileLateralGs,
 					id: 'lateralTile',
+					visible: ($system.isClientDevice == true) ? false : true,
 					img: 'img/cartop_small.png',
 				},
 				{

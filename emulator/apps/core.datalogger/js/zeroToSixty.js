@@ -10,6 +10,7 @@ function zeroToSixty() {
 			tiles: [
 				{
 					component: $ui.TileRecord,
+					visible: ($system.isClientDevice == true) ? false : true,
 					id: 'recordTile',
 					caption: 'Record 0-60 Time',
 					countdown: true,
@@ -36,6 +37,7 @@ function zeroToSixty() {
 				},
 				{
 					component: $ui.TileTimer,
+					visible: ($system.isClientDevice == true) ? false : true,
 					id: 'timerTile'
 				},
 				{

@@ -7,6 +7,7 @@ function quarterMile() {
 	this.content = [
 		{
 			component: $ui.TileGroup,
+			visible: ($system.isClientDevice == true) ? false : true,
 			tiles: [
 				{
 					component: $ui.TileRecord,

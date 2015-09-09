@@ -11,6 +11,7 @@ function driftAngle() {
 				{
 					component: $ui.TileRecord,
 					id: 'recordTile',
+					visible: ($system.isClientDevice == true) ? false : true,
 					caption: 'Record Drift Angle',
 					onstartclick: function() {
 						this.screen.angleTile.angle = 0;
@@ -53,6 +54,7 @@ function driftAngle() {
 				{
 					component: $ui.TileDriftAngle,
 					id: 'angleTile',
+					visible: ($system.isClientDevice == true) ? false : true,
 					img: 'img/cartop.png',
 				},
 				{

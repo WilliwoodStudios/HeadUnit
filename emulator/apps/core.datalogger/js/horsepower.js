@@ -11,6 +11,7 @@ function horsepower() {
 				{
 					component: $ui.TileRecord,
 					id: 'recordTile',
+					visible: ($system.isClientDevice == true) ? false : true,
 					caption: 'Record HP/TQ',
 					countdown: true,
 					onstartclick: function() {
@@ -42,6 +43,7 @@ function horsepower() {
 				{
 					component: $ui.TileDynoChart,
 					id: 'dynoChart',
+					visible: ($system.isClientDevice == true) ? false : true,
 					provider: {
 						id: 'runProvider',
 						property: 'run'
