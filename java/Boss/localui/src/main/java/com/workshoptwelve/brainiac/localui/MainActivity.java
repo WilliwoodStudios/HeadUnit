@@ -14,36 +14,80 @@ import android.view.WindowManager;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
 import com.workshoptwelve.brainiac.localui.extension.SystemSoundExtension;
 import com.workshoptwelve.brainiac.localui.util.log.RedundantAndroidLogger;
+import com.workshoptwelve.brainiac.localui.view.DoubleSwipeGestureHandler;
+import com.workshoptwelve.brainiac.localui.view.GestureListener;
 import com.workshoptwelve.brainiac.localui.view.GesturedXWalkView;
 
 import org.xwalk.core.XWalkPreferences;
 
-public class MainActivity extends Activity implements BossConnectionHelper.BossConnectionListener  {
+import java.net.URL;
+
+public class MainActivity extends Activity implements BossConnectionHelper.BossConnectionListener {
     private GesturedXWalkView mXWalkView;
 
     static {
         Log.setLogger(new RedundantAndroidLogger("brainiac"));
         XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
     }
+
     private static final Log log = Log.getLogger(MainActivity.class);
 
     private SystemSoundExtension mSystemSoundExtension;
 
-    private GesturedXWalkView.GestureListener mGestureListener = new GesturedXWalkView.GestureListener() {
+    private GestureListener mLeftRightGestureListener = new GestureListener() {
+        private boolean mIsForward;
+        private boolean mFarEnough;
+
+        @Override
+
+        public void onStart() {
+            mFarEnough = false;
+        }
+
+        @Override
+        public void onGestureChange(float delta) {
+            mIsForward = delta > 0;
+            if (Math.abs(delta) > 0.25) {
+                mFarEnough = true;
+            }
+            log.e(delta);
+        }
+
+        @Override
+        public void onEnd() {
+            if (mFarEnough) {
+                int port = BossConnectionHelper.getInstance().getServerPort();
+                final String urlString = "http://127.0.0.1:" + port + "/brainiac/service/mm/skip?direction=" + (mIsForward ? "forward" : "back");
+                new Thread() {
+                    public void run() {
+                        try {
+                            URL url = new URL(urlString);
+                            url.getContent();
+                        } catch (Exception e) {
+                            log.e("Could not skip:", e);
+                        }
+                    }
+                }.start();
+            } else {
+                log.e("Not far enough to skip");
+            }
+        }
+    };
+
+    private GestureListener mUpDownGestureListener = new GestureListener() {
         private int mInitialVolume;
         private int mMaxVolume;
         private int mTargetVolume = -1;
 
         @Override
         public void onStart() {
-//            log.e("start");
             mInitialVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
             mMaxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
         }
 
         @Override
         public void onGestureChange(float delta) {
-            int targetVolume = mInitialVolume + (int)(delta * mMaxVolume);
+            int targetVolume = mInitialVolume + (int) (delta * mMaxVolume);
             if (targetVolume > mMaxVolume) {
                 targetVolume = mMaxVolume;
             } else if (targetVolume < 0) {
@@ -58,16 +102,16 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
 
         @Override
         public void onEnd() {
-            log.e("end");
         }
     };
+
     private AudioManager mAudioManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         log.setLogLevel(Log.Level.v);
-        mAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         setContentView(R.layout.activity_main);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -77,7 +121,14 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
         mXWalkView = (GesturedXWalkView) findViewById(R.id.activity_main);
         mXWalkView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         mXWalkView.setOnSystemUiVisibilityChangeListener(mSystemUiVisibilityChangeListener);
-        mXWalkView.setGestureListener(mGestureListener);
+
+        DoubleSwipeGestureHandler upDown = new DoubleSwipeGestureHandler.UpDownDoubleSwipeGestureHandler(mXWalkView);
+        upDown.setGestureListener(mUpDownGestureListener);
+        mXWalkView.addGestureHandler(upDown);
+
+        DoubleSwipeGestureHandler leftRight = new DoubleSwipeGestureHandler.LeftRightDoubleSwipeGestureHandler(mXWalkView);
+        leftRight.setGestureListener(mLeftRightGestureListener);
+        mXWalkView.addGestureHandler(leftRight);
 
         View disableStatusBarView = new View(this);
 
