@@ -3,6 +3,9 @@ package com.workshoptwelve.brainiac.boss;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
+import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
@@ -53,9 +56,36 @@ public class BossService extends Service {
 
             BossUSBManager.getInstance().startup(context);
 
+            initSilence(context);
+
             sStarted = true;
         }
     }
+
+    public static void initSilence(Context context) {
+        MediaPlayer mediaPlayer = new MediaPlayer();
+        AssetManager assets = context.getAssets();
+
+        try {
+            AssetFileDescriptor afd = assets.openFd("sound/silence.mp3");
+            sAndroidLogger.e("Resource summary", afd.getStartOffset(), afd.getLength());
+            mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            mediaPlayer.prepare();
+            mediaPlayer.setLooping(true);
+            mediaPlayer.start();
+            mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(MediaPlayer mp, int what, int extra) {
+                    sAndroidLogger.e("Error trying to get silence working");
+                    return true;
+                }
+            });
+        } catch (Exception e) {
+            sAndroidLogger.e("Could not open silence", e);
+        }
+    }
+
+
 
     @Nullable
     @Override
