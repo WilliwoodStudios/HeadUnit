@@ -21,7 +21,7 @@ function screenChrome() {
 	};
 	
 	this.hvac = {
-		visible: (window.innerHeight > 600),
+		visible: (window.innerHeight > 801),
 		driver: {
 			temperature: {
 				value: 75,
@@ -67,6 +67,7 @@ function screenChrome() {
 			$ui.addEventListener($system.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);
 			$ui.addEventListener($system.EventType.ONREQUESTSUSPENSIONUI, this.onrequestsuspensionui, this);
 		}
+		this.onthemechange();
 	}
 	
 	this.onsettingsclick = function() {
@@ -86,5 +87,11 @@ function screenChrome() {
 	// system requested the UI for adjusting a suspension corner
 	this.onrequestsuspensionui = function(event) {
 		$ui.push(wedgeSuspension, {corner: event.data.corner})
+	}.$bind(this);
+
+	this.onthemechange = function() {
+		if ("brainiacSystemTheme" in window) {
+			brainiacSystemTheme.adviseTheme($ui.theme);
+  		}
 	}.$bind(this);
 }
