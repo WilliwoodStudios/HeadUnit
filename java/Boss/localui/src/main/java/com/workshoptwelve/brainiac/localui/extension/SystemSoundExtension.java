@@ -11,7 +11,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.xwalk.core.XWalkExtension;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 /**
