@@ -3,6 +3,7 @@ package com.workshoptwelve.brainiac.localui.view;
 import android.app.Activity;
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import org.xwalk.core.XWalkView;
@@ -20,6 +21,7 @@ public class GesturedXWalkView extends XWalkView {
     public GesturedXWalkView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
+
     public GesturedXWalkView(Context context, Activity activity) {
         super(context, activity);
     }
@@ -34,10 +36,12 @@ public class GesturedXWalkView extends XWalkView {
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         for (GestureHandler g : mGestureHandlers) {
             if (g.onInterceptTouchEvent(ev)) {
+                Log.e("GESTURED", "true for on intercept touch");
                 mActiveHandler = g;
                 return true;
             }
         }
+        Log.e("GESTURED", "false for on intercept touch " + ev);
         return super.onInterceptTouchEvent(ev);
     }
 
@@ -56,12 +60,24 @@ public class GesturedXWalkView extends XWalkView {
             }
             return toReturn;
         }
+        Log.e("GESTURED", "Not handling...");
         return false;
     }
 
     public void addGestureHandler(GestureHandler handler) {
         if (!mGestureHandlers.contains(handler)) {
             mGestureHandlers.add(handler);
+            handler.setGestureCoordinator(mGestureCoordinator);
         }
     }
+
+    private GestureCoordinator mGestureCoordinator = new GestureCoordinator() {
+        @Override
+        public void onGestureStart(GestureHandler gestureHandler) {
+            for (GestureHandler g : mGestureHandlers) {
+                if (g != gestureHandler)
+                g.reset();
+            }
+        }
+    };
 }

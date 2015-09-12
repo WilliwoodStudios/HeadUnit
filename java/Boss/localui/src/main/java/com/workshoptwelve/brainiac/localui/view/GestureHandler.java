@@ -9,4 +9,8 @@ public interface GestureHandler {
     boolean onInterceptTouchEvent(MotionEvent ev);
 
     boolean onTouchEvent(MotionEvent ev);
+
+    void setGestureCoordinator(GestureCoordinator coordinator);
+
+    void reset();
 }

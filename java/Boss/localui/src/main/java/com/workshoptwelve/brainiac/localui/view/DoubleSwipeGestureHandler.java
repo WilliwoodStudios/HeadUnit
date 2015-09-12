@@ -11,6 +11,8 @@ import com.workshoptwelve.brainiac.boss.common.log.Log;
  */
 public abstract class DoubleSwipeGestureHandler implements GestureHandler {
 
+    private GestureCoordinator mGestureCoordinator;
+
     protected abstract boolean isUpDown();
 
     public static class UpDownDoubleSwipeGestureHandler extends DoubleSwipeGestureHandler {
@@ -32,6 +34,11 @@ public abstract class DoubleSwipeGestureHandler implements GestureHandler {
             return false;
         }
 
+    }
+
+    @Override
+    public void setGestureCoordinator(GestureCoordinator coordinator) {
+        mGestureCoordinator = coordinator;
     }
 
     /**
@@ -180,6 +187,7 @@ public abstract class DoubleSwipeGestureHandler implements GestureHandler {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
+        log.e("on intercept, current state:",state);
         int action = ev.getActionMasked();
         int index = ev.getActionIndex();
         ev.getActionIndex();
@@ -234,11 +242,16 @@ public abstract class DoubleSwipeGestureHandler implements GestureHandler {
         if (state == IN_GESTURE) {
             if (mGestureListener != null) {
                 mGestureStarted = true;
+                mGestureCoordinator.onGestureStart(this);
                 mGestureListener.onStart();
             }
             return true;
         }
         return false;
+    }
+
+    public void reset() {
+        state = WAITING_FOR_FIRST;
     }
 
     @Override
