@@ -12,26 +12,29 @@ import android.view.View;
 import android.view.WindowManager;
 
 import com.workshoptwelve.brainiac.boss.common.log.Log;
+import com.workshoptwelve.brainiac.localui.extension.SystemThemeExtension;
 import com.workshoptwelve.brainiac.localui.extension.SystemSoundExtension;
 import com.workshoptwelve.brainiac.localui.util.log.RedundantAndroidLogger;
 import com.workshoptwelve.brainiac.localui.view.DoubleSwipeGestureHandler;
 import com.workshoptwelve.brainiac.localui.view.GestureListener;
 import com.workshoptwelve.brainiac.localui.view.GesturedXWalkView;
+import com.workshoptwelve.brainiac.localui.view.VolumeView;
 
 import org.xwalk.core.XWalkPreferences;
 
 import java.net.URL;
 
 public class MainActivity extends Activity implements BossConnectionHelper.BossConnectionListener {
-    private GesturedXWalkView mXWalkView;
+    private static final Log log;
 
     static {
         Log.setLogger(new RedundantAndroidLogger("brainiac"));
         XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
+        log = Log.getLogger(MainActivity.class);
     }
 
-    private static final Log log = Log.getLogger(MainActivity.class);
-
+    private GesturedXWalkView mXWalkView;
+    private VolumeView mVolumeView;
     private SystemSoundExtension mSystemSoundExtension;
 
     private GestureListener mLeftRightGestureListener = new GestureListener() {
@@ -42,6 +45,7 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
 
         public void onStart() {
             mFarEnough = false;
+//            log.e("start");
         }
 
         @Override
@@ -50,13 +54,15 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
             if (Math.abs(delta) > 0.25) {
                 mFarEnough = true;
             }
-            log.e(delta);
+//            log.e(delta);
         }
 
         @Override
         public void onEnd() {
+//            log.e("On end");
             if (mFarEnough) {
                 int port = BossConnectionHelper.getInstance().getServerPort();
+                mVolumeView.setSkip(mIsForward);
                 final String urlString = "http://127.0.0.1:" + port + "/brainiac/service/mm/skip?direction=" + (mIsForward ? "forward" : "back");
                 new Thread() {
                     public void run() {
@@ -73,7 +79,7 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
             }
         }
     };
-
+    private AudioManager mAudioManager;
     private GestureListener mUpDownGestureListener = new GestureListener() {
         private int mInitialVolume;
         private int mMaxVolume;
@@ -83,6 +89,7 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
         public void onStart() {
             mInitialVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
             mMaxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+//            log.e("start");
         }
 
         @Override
@@ -98,14 +105,22 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
                 mTargetVolume = targetVolume;
                 log.v("Setting volume to " + targetVolume + " " + delta);
             }
+            mVolumeView.setVolume(targetVolume,mMaxVolume);
+//            log.e(delta);
         }
 
         @Override
         public void onEnd() {
+//            log.e("end");
         }
     };
-
-    private AudioManager mAudioManager;
+    private SystemThemeExtension mSystemThemeExtension;
+    private View.OnSystemUiVisibilityChangeListener mSystemUiVisibilityChangeListener = new View.OnSystemUiVisibilityChangeListener() {
+        @Override
+        public void onSystemUiVisibilityChange(int visibility) {
+            mXWalkView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,6 +132,9 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         mSystemSoundExtension = new SystemSoundExtension(this);
+        mSystemThemeExtension = new SystemThemeExtension(this);
+
+        mVolumeView = (VolumeView) findViewById(R.id.volumeView);
 
         mXWalkView = (GesturedXWalkView) findViewById(R.id.activity_main);
         mXWalkView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
@@ -151,14 +169,6 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
         BossConnectionHelper.getInstance().addBossConnectionListener(this);
         BossConnectionHelper.getInstance().init(this);
     }
-
-    private View.OnSystemUiVisibilityChangeListener mSystemUiVisibilityChangeListener = new View.OnSystemUiVisibilityChangeListener() {
-        @Override
-        public void onSystemUiVisibilityChange(int visibility) {
-            mXWalkView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-        }
-    };
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
