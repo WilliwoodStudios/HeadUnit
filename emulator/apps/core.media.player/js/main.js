@@ -122,11 +122,15 @@ function main() {
 		mediaSource.unregisterInterest(this);
 	}.$bind(this);
 
-	var oldOnUnload = window.onunload;
-	window.onunload = function() {
-		this.ondestroy();
-		if (oldOnUnload && typeof(oldOnUnload)==="function") {
-			oldOnUnload();
-		}
-	}.$bind(this);
+	if ("chrome" in window && chrome.runtime && chrome.runtime.id) {
+		// We are in a chrome app - don't do the ondestroy/onunload.
+	} else {
+		var oldOnUnload = window.onunload;
+		window.onunload = function() {
+			this.ondestroy();
+			if (oldOnUnload && typeof(oldOnUnload)==="function") {
+				oldOnUnload();
+			}
+		}.$bind(this);
+	}
 }
