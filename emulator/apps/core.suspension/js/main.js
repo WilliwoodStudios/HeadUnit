@@ -1,6 +1,8 @@
 /* Copyright (c) 2015 Workshop 12 Inc. */
 function main() {
 	this.component = $ui.WindowPane;
+	
+	this.presetSelected = true;
 
 	this.content = [
 		/***************** Smartphone START ***********************/
@@ -56,12 +58,32 @@ function main() {
 							dock: [
 								{
 						            component: $ui.Button,
-						            caption: 'Add Condition'
+									id: 'conditionButton',
+						            caption: 'Add Condition',
+									onclick: function() {
+										if (this.screen.presetSelected == true) {
+											
+										} else {
+											var i,
+												item,
+												data = {
+													items: []
+												};
+											for (i = 0; i < this.screen.presetList.items.length; i++) {
+												item = this.screen.presetList.items[i];
+												if (item.component != $ui.Header) {
+													data.items.push({caption: item.caption, preset: item.preset});
+												}
+											}
+											$ui.push(savePreset, data);
+										}
+									}
 						        }
 							],
 							content: [
 								{
 									component: $ui.List,
+									id: 'presetList',
 									style: $ui.SuspensionListItem,
 									items: [
 										{
@@ -70,7 +92,8 @@ function main() {
 										},
 										{
 											caption: 'Parked',
-											preset: 1
+											preset: 1,
+											selected: true
 										},
 										{
 											caption: 'Driving',
@@ -79,7 +102,7 @@ function main() {
 										{
 											caption: 'Full Height',
 											preset: 3
-										},
+										}/*,
 										{
 											caption: 'My Driveway',
 											style: 'location'
@@ -87,14 +110,12 @@ function main() {
 										{
 											caption: 'Over 90 km/h',
 											style: 'speed'
-										}
+										}*/
 									],
 									onaction: function(event) {
 										if (event && event.target && event.target.preset) {
 											$system.suspension.choosePreset(event.target.preset);
 										}
-										console.log(event);
-										
 									}
 								}
 							]
@@ -160,9 +181,12 @@ function main() {
 			this.content.splice(1,1);
 		}
 	};
-
+	
+	// Listen for our system events
 	this.onshow = function() {
 		$ui.addEventListener($system.EventType.ONSUSPENSIONDATA, this.onsuspensiondata, this);
+		$ui.addEventListener($system.EventType.ONSUSPENSIONADJUSTED, this.onsuspensionadjusted, this);
+		$ui.addEventListener($system.EventType.ONSUSPENSIONPRESET, this.onsuspensionpreset, this);
 		$system.suspension.requestCurrentData();
 	};
 	
@@ -174,6 +198,31 @@ function main() {
 			this.suspensionDisplay.rightFront = event.data.rf;
 			this.suspensionDisplay.rightRear = event.data.rr;
 			this.suspensionDisplay.tank = event.data.tank;
+		}
+	}.$bind(this);
+	
+	// Reset preset state because user manually adjusted a corner
+	this.onsuspensionadjusted = function(event) {
+		this.conditionButton.caption = 'Save Preset';
+		this.presetSelected = false;
+		for (var i = 0; i < this.presetList.items.length; i++) {
+			this.presetList.items[i].selected = false;
+		}
+	}.$bind(this);
+	
+	// A preset has been selected or saved
+	this.onsuspensionpreset = function(event) {
+		if (event && event.data) {
+			this.screen.presetSelected = true;
+			this.screen.conditionButton.caption = 'Add Condition';
+			var i, 
+				item;
+			for (i = 0; i < this.presetList.items.length; i++) {
+				item = this.presetList.items[i];
+				if (item.preset == event.data) {
+					item.selected = true;
+				}
+			}
 		}
 	}.$bind(this);
 }

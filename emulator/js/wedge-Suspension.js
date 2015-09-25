@@ -14,6 +14,10 @@ function wedgeSuspension() {
 		if (pressed) {
 			var toCall = direction == 1 ? $system.suspension.addAir : $system.suspension.releaseAir;
 			toCall(this.corner);
+			if (window.$core) {
+				var systemEvent = new $ui.DataEvent($system.EventType.ONSUSPENSIONADJUSTED);
+				$core.raiseEvent(systemEvent);
+			}
 		} else {
 			$system.suspension.closeValve(this.corner);
 		}
