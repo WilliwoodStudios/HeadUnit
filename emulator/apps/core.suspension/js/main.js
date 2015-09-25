@@ -3,15 +3,55 @@ function main() {
 	this.component = $ui.WindowPane;
 
 	this.content = [
+		/***************** Smartphone START ***********************/
+		{
+			component: $ui.DockLayout,
+			id: 'dockLayout',
+			visible: false,
+			dock: [{
+				component: $ui.SegmentedControl,
+				selectedIndex: 0,
+				options: ['Pressure', 'Presets'],
+				onclick: function() {
+					if (this.selectedIndex === 0) {
+						this.screen.tabbedPane.selectTab(this.screen.pressureTab);
+					} else {
+						this.screen.tabbedPane.selectTab(this.screen.presetTab);
+					}
+				}
+			}],
+			content: [
+				{
+					component: $ui.TabbedPane,
+					id: 'tabbedPane',
+					tabs: [
+						{
+							component: $ui.Tab,
+							id: 'pressureTab',
+							content:[]
+						},
+						{
+							component: $ui.Tab,
+							id: 'presetTab',
+							content:[]
+						}
+					]
+				}
+			]
+		},	
+		/***************** Smartphone END ***********************/	
 		{
 			component: $ui.ColumnLayout,
+			id: 'mainColumnLayout',
 			fillToParent: true,
 			columns: [
 				{
 					component: $ui.Column,
+					borderRight: true,
 					content: [
 						{
 							component: $ui.DockLayout,
+							id: 'presetDock',
 							location: $ui.DockLayout.DockLocation.BOTTOM,
 							dock: [
 								{
@@ -100,6 +140,26 @@ function main() {
 		}
 		
 	];
+
+	// If this is a mobile device then we need to re-arrange the screen
+	this.oncreate = function() {
+		if ($system.isClientDevice == true) {
+			var mainColumnLayout = this.content[1],
+				dockLayout = this.content[0],
+				pressureTab = dockLayout.content[0].tabs[0],
+				presetTab = dockLayout.content[0].tabs[1],
+				presetDock = mainColumnLayout.columns[0].content[0],
+				suspension = mainColumnLayout.columns[1].content[0];
+			// Set our visibility state
+			mainColumnLayout.visible = false;
+			dockLayout.visible = true;
+			// Move our controls
+			pressureTab.content.push(suspension);
+			presetTab.content.push(presetDock);
+			// Remove the column layout
+			this.content.splice(1,1);
+		}
+	};
 
 	this.onshow = function() {
 		$ui.addEventListener($system.EventType.ONSUSPENSIONDATA, this.onsuspensiondata, this);

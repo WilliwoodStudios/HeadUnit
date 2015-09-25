@@ -1,96 +1,119 @@
 /* Copyright (c) 2015 Workshop 12 Inc. */
 function main() {
 	this.component = $ui.WindowPane;
-	this.content = [{
-		component: $ui.SplitView,
-		left: [{
-			component: $ui.DockLayout,
-			dock: [{
-				component: $ui.SegmentedControl,
-				marginTop: true,
-				marginBottom: true,
-				marginLeft: true,
-				marginRight: true,
-				selectedIndex: 0,
-				options: ['Contacts', 'Calls'],
-				onclick: function() {
-					if (this.selectedIndex === 0) {
-						this.screen.tabbedPane.selectTab(this.screen.contactListTab);
-					} else {
-						this.screen.tabbedPane.selectTab(this.screen.recentCallsTab);
-						if (this.screen.callsProvider.data == undefined) {
-							$system.phone.getCallLog(this.screen.updateCallLog);
-						}
+	this.content = [
+		{
+			component: $ui.ColumnLayout,
+			fillToParent: true,
+			columns: [
+				{
+					component: $ui.Column,
+					borderRight: true,
+					content: [
+						{
+							component: $ui.DockLayout,
+							dock: [
+								{
+									component: $ui.SegmentedControl,
+									selectedIndex: 0,
+									options: ['Contacts', 'Calls'],
+									onclick: function() {
+										if (this.selectedIndex === 0) {
+											this.screen.tabbedPane.selectTab(this.screen.contactListTab);
+										} else {
+											this.screen.tabbedPane.selectTab(this.screen.recentCallsTab);
+											if (this.screen.callsProvider.data == undefined) {
+												$system.phone.getCallLog(this.screen.updateCallLog);
+											}
+										}
+									}
+								}
+							],
+							content: [
+								{
+								component: $ui.TabbedPane,
+								id: 'tabbedPane',
+								tabs: [
+									{ // Contact list tab
+										component: $ui.Tab,
+										id: 'contactListTab',
+										content: [
+											{
+												component: $ui.Spinner,
+												id: 'listSpinner',
+												size: $ui.Spinner.LARGE,
+												visible: false
+											}, 
+											{
+												component: $ui.List,
+												id: 'contactList',
+												visible: false,
+												style: $ui.GenericListItem,
+												provider: {
+													id: 'contactProvider',
+													property: 'contacts'
+												},
+												onaction: function(event) {
+													$system.initiateCall({
+														name: event.target.title,
+														phoneNumber: event.target.accent,
+														img: event.target.img
+													});
+												}
+											}
+										]
+									}, 
+									{ // This is the Recent Calls Tab
+										component: $ui.Tab,
+										id: 'recentCallsTab',
+										content: [
+											{
+												component: $ui.List,
+												style: $ui.PhoneLogListItem,
+												provider: {
+													id: 'callsProvider',
+													property: 'calls'
+												}
+											}
+										]
+									}
+								]
+							}
+						]
 					}
-				}
-			}],
-			content: [{
-				component: $ui.TabbedPane,
-				id: 'tabbedPane',
-				tabs: [{ // Contact list tab
-					component: $ui.Tab,
-					id: 'contactListTab',
-					content: [{
-						component: $ui.Spinner,
-						id: 'listSpinner',
-						size: $ui.Spinner.LARGE,
-						visible: false
-					}, {
-						component: $ui.List,
-						id: 'contactList',
-						visible: false,
-						style: $ui.GenericListItem,
-						provider: {
-							id: 'contactProvider',
-							property: 'contacts'
-						},
-						onaction: function(event) {
-							$system.initiateCall({
-								name: event.target.title,
-								phoneNumber: event.target.accent,
-								img: event.target.img
-							});
-						}
-					}]
-				}, { // This is the Recent Calls Tab
-					component: $ui.Tab,
-					id: 'recentCallsTab',
-					content: [{
-						component: $ui.List,
-						style: $ui.PhoneLogListItem,
-						provider: {
-							id: 'callsProvider',
-							property: 'calls'
-						}
-					}]
-				}]
-			}]
-		}],
-		right: [{
-			component: $ui.DialPad,
-			onkeypadpress: function(key) {
-				if (key.dial) {
-					$ui.playTouchSound();
-					var number = this.number.number;
-					if (number.length > 0) {
-							$system.initiateCall({
-								name: this.number.prettyNumber,
-								phoneNumber: number,
-								img: ""
-							});
-					}
-					this.number.number = "";
-				} else {
-					this.number.appendToNumber(key.caption);
-				}
+				]	
 			},
-			number: {
-				ondeleteclick: function() {
-					$ui.playTouchSound();
-					this.deleteFromNumber();
-				}
+			{
+				component: $ui.Column,
+				content: [
+					{
+						component: $ui.DialPad,
+						onkeypadpress: function(key) {
+							if (key.dial) {
+								$ui.playTouchSound();
+								var number = this.number.number;
+								if (number.length > 0) {
+										$system.initiateCall({
+											name: this.number.prettyNumber,
+											phoneNumber: number,
+											img: ""
+										});
+								}
+								this.number.number = "";
+							} else {
+								this.number.appendToNumber(key.caption);
+							}
+						},
+						number: {
+							ondeleteclick: function() {
+								$ui.playTouchSound();
+								this.deleteFromNumber();
+							}
+						}
+					}
+				]
 			}
-		}]
+		]
 	}];
 
 	this.attachedObjects = [{
