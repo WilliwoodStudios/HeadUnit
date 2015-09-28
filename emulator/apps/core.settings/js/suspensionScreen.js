@@ -34,6 +34,8 @@ function suspensionScreen() {
 				if (event.target) {
 					if (event.target.id == 'suspension.choice') {
 						$ui.push(suspensionChoiceScreen);
+					} else if (event.target.id == 'suspension.presets') {
+						$ui.push(suspensionPresetScreen);
 					}
 				}
 			}
