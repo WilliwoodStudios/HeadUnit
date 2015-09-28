@@ -24,27 +24,26 @@
 		},
 		{
 			"board": "ffffffffffffff01",
-			"name": "Guns",
-			"positiveLabel": "OPEN",
-			"negativeLabel": "CLOSE",
-			"duration": 15000,
+			"name": "License Plate",
+			"positiveLabel": "SHOW",
+			"negativeLabel": "HIDE",
+			"duration": 6000,
 			"isPolaritySwitch": true,
 			"bank": "d:0"
 		},
 		{
 			"board": "ffffffffffffff01",
-			"name": "Discs",
-			"positiveLabel": "SHOW",
-			"negativeLabel": "HIDE",
-			"duration": 15000,
+			"name": "Doors",
+			"positiveLabel": "OPEN",
+			"negativeLabel": "CLOSE",
+			"duration": 7000,
 			"isPolaritySwitch": true,
 			"bank": "d:1"
 		},
 		{
 			"board": "ffffffffffffff01",
-			"name": "Roof",
-			"positiveLabel": "OPEN",
-			"negativeLabel": "CLOSE",
+			"name": "Unused",
+			"shown": false,
 			"duration": 45000,
 			"isPolaritySwitch": true,
 			"bank": "d:2"

@@ -72,7 +72,7 @@ function main() {
 											for (i = 0; i < this.screen.presetList.items.length; i++) {
 												item = this.screen.presetList.items[i];
 												if (item.component != $ui.Header) {
-													data.items.push({caption: item.caption, preset: item.preset});
+													data.items.push({caption: item.caption, index: item.index});
 												}
 											}
 											$ui.push(savePreset, data);
@@ -85,36 +85,13 @@ function main() {
 									component: $ui.List,
 									id: 'presetList',
 									style: $ui.SuspensionListItem,
-									items: [
-										{
-											component: $ui.Header,
-											caption: 'Height Presets'
-										},
-										{
-											caption: 'Parked',
-											preset: 1,
-											selected: true
-										},
-										{
-											caption: 'Driving',
-											preset: 2
-										},
-										{
-											caption: 'Full Height',
-											preset: 3
-										}/*,
-										{
-											caption: 'My Driveway',
-											style: 'location'
-										},
-										{
-											caption: 'Over 90 km/h',
-											style: 'speed'
-										}*/
-									],
+									provider: {
+										id: 'presetListProvider',
+										property: 'presets'
+									},
 									onaction: function(event) {
-										if (event && event.target && event.target.preset) {
-											$system.suspension.choosePreset(event.target.preset);
+										if (event && event.target && event.target.index != undefined) {
+											$system.suspension.choosePreset(event.target.index);
 										}
 									}
 								}
@@ -162,6 +139,25 @@ function main() {
 		
 	];
 
+	this.attachedObjects = [
+		{
+			component: $ui.DataProvider,
+			id: 'presetListProvider',
+			onbeforeload: function(data) {
+				if (data == undefined || data.presets == undefined) return;
+				var header = {
+						component: $ui.Header,
+						caption: 'Height Presets'
+					};
+				if (data.presets.length == 0) {
+					data.presets.push(header);
+				} else {
+					data.presets.splice(0,0,header);
+				}
+			}
+		}	
+	];
+
 	// If this is a mobile device then we need to re-arrange the screen
 	this.oncreate = function() {
 		if ($system.isClientDevice == true) {
@@ -187,7 +183,9 @@ function main() {
 		$ui.addEventListener($system.EventType.ONSUSPENSIONDATA, this.onsuspensiondata, this);
 		$ui.addEventListener($system.EventType.ONSUSPENSIONADJUSTED, this.onsuspensionadjusted, this);
 		$ui.addEventListener($system.EventType.ONSUSPENSIONPRESET, this.onsuspensionpreset, this);
-		$system.suspension.requestCurrentData();
+		$ui.addEventListener($system.EventType.ONSUSPENSIONSETTINGSCHANGE, this.onsuspensionsettingschange, this);
+		// Load up our presets
+		$system.suspension.getPresetList(this.onpresetlistload);
 	};
 	
 	// Update the suspension levels
@@ -219,10 +217,38 @@ function main() {
 				item;
 			for (i = 0; i < this.presetList.items.length; i++) {
 				item = this.presetList.items[i];
-				if (item.preset == event.data) {
+				if (item.index == event.data) {
 					item.selected = true;
 				}
 			}
 		}
+	}.$bind(this);
+	
+	// Someone saved an update to the settings for a preset
+	this.onsuspensionsettingschange = function(event) {
+		if (event == undefined || event.data == undefined) return;
+		var i,
+			preset;
+		for (i = 0; i < this.presetList.items.length; i++) {
+			preset = this.presetList.items[i];
+			if (preset.index == event.data.index)
+			this.presetList.items[i].selected = false;
+		}
+	}.$bind(this);
+	
+	// Handle the loading of the presets list
+	this.onpresetlistload = function(presets) {
+		if (presets == undefined) return;
+		var i,
+			data = {
+				presets: []
+			},
+			preset;
+		for (i = 0; i < presets.length; i++) {
+			preset = presets[i];
+			data.presets.push({caption: preset.name, index: preset.index, selected: (i == 0)})
+		}
+		this.presetListProvider.data = data;
+		$system.suspension.requestCurrentData();
 	}.$bind(this);
 }

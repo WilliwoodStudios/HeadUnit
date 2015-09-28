@@ -10,12 +10,14 @@ function main() {
 				{				  
 				  	img: 'img/palette.png',
 				  	id: 'setting.color',
+					hasArrow: true,
 				  	title: 'Colors',
 				  	caption: 'Change the system color theme'
 				},
 				{
 				 	img: 'img/ruler.png',
 				  	id: 'setting.measurement',
+					hasArrow: true,
 				  	title: 'Measurements',
 				  	caption: 'Units of measure for speed, distance, temperature etc.',
 					accent: 'Not enabled quite yet'
@@ -23,6 +25,7 @@ function main() {
 				{
 				  	img: 'img/wifi.png',
 				  	id: 'setting.network',
+					hasArrow: true,
 					visible: ($system.isClientDevice == true) ? false : true,
 				  	title: 'Network',
 				  	caption: 'Configure your internet connectivity',
@@ -31,6 +34,7 @@ function main() {
 				{
 				  	img: 'img/bluetooth.png',
 				  	id: 'setting.bluetooth',
+					hasArrow: true,
 					visible: ($system.isClientDevice == true) ? false : true,
 				  	title: 'Bluetooth',
 				  	caption: 'Configure your Bluetooth connectivity',
@@ -39,12 +43,14 @@ function main() {
 				{
 				  	img: 'img/relays.png',
 				  	id: 'setting.relays',
+					hasArrow: true,
 				  	title: 'Switches',
 				  	caption: 'Configure your relay board accessory'
 				},
 				{
 				  	img: 'img/suspension.png',
 				  	id: 'setting.suspension',
+					hasArrow: true,
 				  	title: 'Suspension',
 				  	caption: 'Configure your digital air management'
 				}

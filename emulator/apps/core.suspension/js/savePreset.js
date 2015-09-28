@@ -16,8 +16,8 @@ function savePreset() {
 				property: 'items'
 			},
 			onaction: function(event) {
-				if (event && event.target && event.target.preset) {
-					$system.suspension.savePreset(event.target.preset);
+				if (event && event.target && event.target.index) {
+					$system.suspension.savePreset(event.target.index);
 					$ui.pop();
 				}
 			}
