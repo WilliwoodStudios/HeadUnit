@@ -25,7 +25,8 @@ function relayScreen() {
 			onbeforeupdate: function() {
 				if (this.data && this.data.items) {
 					var i,
-						item;
+						item,
+						firstPolarity;
 					for (i = 0; i < this.data.items.length; i++) {
 						item = this.data.items[i];
 						item.title = item.name;
@@ -33,9 +34,17 @@ function relayScreen() {
 						item.accent = 'Relay Accessory Serial No. ' + item.board;
 						if (item.isPolaritySwitch == true) {
 							item.img = 'img/polarity.png';
+							if (firstPolarity == undefined) {
+								firstPolarity = item;
+							}
 						} else {
 							item.img = 'img/relays.png';
 						}
+					}
+					// Add our headers
+					this.data.items.splice(0,0,{component: $ui.Header, caption: 'On/Off Switches'});
+					if (firstPolarity != undefined) {
+						this.data.items.splice(this.data.items.indexOf(firstPolarity),0,{component: $ui.Header, caption: 'Reverse Polarity Switches'});
 					}
 				}
 			}
