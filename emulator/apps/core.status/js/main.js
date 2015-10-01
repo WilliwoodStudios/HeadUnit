@@ -49,7 +49,7 @@ function main() {
 					caption: '<large>P0127</large>',
 					accent: 'Tap engine to clear codes',
 					onclick: function() {
-						console.log('hello')
+						$system.obd.confirmCodeClear();
 					}
 				},
 				{
@@ -144,7 +144,6 @@ function main() {
 			readyTab.content.push(readinessList);
 			// Remove the column layout
 			this.content.splice(1,2);
-			console.log(this.content)
 		}
 	};
 }
