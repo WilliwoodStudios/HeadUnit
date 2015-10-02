@@ -51,6 +51,8 @@ public class BossService extends Service {
                 sPort = server.getPort();
             }
 
+            server.addService(ContentUpdateService.getInstance(context));
+
             BossUSBManager.getInstance().startup(context);
 
             sStarted = true;
