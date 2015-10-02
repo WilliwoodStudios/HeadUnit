@@ -17,8 +17,8 @@ public class HttpOutputStream extends OutputStream {
     private boolean mHeadersSent = false;
     private Mode mMode;
 
-    private int mResponseCode;
-    private String mResponseText;
+    private int mResponseCode = 500;
+    private String mResponseText = "Not set in code";
     private ByteArrayOutputStream mBuffer;
 
     private List<String> mHeaders = new ArrayList<String>();
