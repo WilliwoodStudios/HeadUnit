@@ -25,6 +25,8 @@ public class HttpInputStream extends InputStream {
         mHeaders = Collections.emptyList();
     }
 
+    private int mReadHeaderOffset = -1;
+    private int mReadHeaderBufferEnd = -1;
     private byte [] mReadHeaderBuffer = new byte[2000];
 
     public List<String> readHeaders() throws IOException {
@@ -41,6 +43,7 @@ public class HttpInputStream extends InputStream {
             if (readLength == -1) {
                 throw new EOFException("EOF");
             }
+            mReadHeaderBufferEnd = readLength;
             lineStart = 0;
             for (int i = 0; i < readLength; ++i) {
                 if (i > 0 && buffer[i - 1] == '\r' && buffer[i] == '\n') {
@@ -48,6 +51,7 @@ public class HttpInputStream extends InputStream {
                     if (length == 0) {
                         mHeadersRead = true;
                         mHeaders = Collections.unmodifiableList(toReturn);
+                        mReadHeaderOffset = i+1;
                         return mHeaders;
                     } else {
                         if (lineInProgress.length() != 0) {
@@ -73,11 +77,36 @@ public class HttpInputStream extends InputStream {
 
     @Override
     public int read(byte[] b) throws IOException {
+        if (mReadHeaderOffset!=-1) {
+            return read(b,0,b.length);
+        }
         return mBase.read(b);
     }
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
+        if (mReadHeaderOffset!=-1) {
+            int toUse = len;
+            int inBuffer = mReadHeaderBufferEnd - mReadHeaderOffset;
+            if (inBuffer < toUse) {
+                toUse = inBuffer;
+            }
+            System.arraycopy(mReadHeaderBuffer,mReadHeaderOffset,b,off,toUse);
+            off += toUse;
+            len -= toUse;
+            mReadHeaderOffset += toUse;
+            if (mReadHeaderOffset>=mReadHeaderBufferEnd) {
+                mReadHeaderOffset = -1;
+            }
+            if (len==0) {
+                return toUse;
+            }
+            int nextPart = mBase.read(b,off,len);
+            if (nextPart == -1) {
+                return toUse;
+            }
+            return toUse + nextPart;
+        }
         return mBase.read(b, off, len);
     }
 
@@ -112,6 +141,13 @@ public class HttpInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
+        if (mReadHeaderOffset!=-1) {
+            int toReturn = mReadHeaderBuffer[mReadHeaderOffset++] & 0xff;
+            if (mReadHeaderOffset>=mReadHeaderBufferEnd) {
+                mReadHeaderOffset = -1;
+            }
+            return toReturn;
+        }
         return mBase.read();
     }
 }
