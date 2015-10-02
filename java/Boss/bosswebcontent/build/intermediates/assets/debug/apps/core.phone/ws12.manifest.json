@@ -1,0 +1,11 @@
+{
+	"id": "core.phone",
+	"name": "phone",
+	"icon": "img/icon-128x128.png",
+	"iconSplash": "img/icon-256x256.png",
+	"content": "index.html",
+	"availability": {
+        "headUnit": true,
+        "driversDevice": false
+    }
+}

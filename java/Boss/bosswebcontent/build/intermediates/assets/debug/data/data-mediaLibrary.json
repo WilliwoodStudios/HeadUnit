@@ -1,0 +1,202 @@
+{
+	"currentSong": {
+		"uid": "skdjhfiweurw97"
+	},
+	"albums": [{
+		"uid": "u3459ijf983u",
+		"name": "License To Ill",
+		"artistUid": "s09wdfu09jeopj",
+		"year": 1992,
+		"artwork": "../../data/img/coverart/licensed_to_ill.jpg"
+	}, {
+		"uid": "9879ehfjidhf98",
+		"name": "Billy Talent III",
+		"artistUid": "98237hjkhds9",
+		"year": 2009,
+		"artwork": "../../data/img/coverart/album_billytalent.jpg"
+	}, {
+		"uid": "4957jf98yf8wh",
+		"name": "Back in Black",
+		"artistUid": "4398hgdioh",
+		"year": 1980,
+		"artwork": "../../data/img/coverart/album_back_in_black.jpg"
+	}, {
+		"uid": "498357hsfsfsfnfiuhf87",
+		"name": "Greatest Hits",
+		"artistUid": "948ungfih",
+		"year": 2009,
+		"artwork": "../../data/img/coverart/foofighters_gh_cover.jpg"
+	}, {
+		"uid": "2398fnoihfiu",
+		"name": "Advanced Basics",
+		"artistUid": "98759843",
+		"year": 2014,
+		"artwork": "../../data/img/coverart/album_uss.jpg"
+	}],
+	"playlists": [{
+		"uid": "playlist1",
+		"name": "Pump Up",
+		"playCount": 13,
+		"songs": [
+			"lskadjflksdjfoisdfjosdi999",
+			"skdjhfiweurw97",
+			"skdjhfisfsafds21654s894fweurw97",
+			"sjdlkfjsio89",
+			"sjdlkfjs3234545io89"
+		]
+	}, {
+		"uid": "playlist2",
+		"name": "Settle Down",
+		"playCount": 2,
+		"songs": [
+			"skdjhfisfsaf234kljhhusd1654s894fweurw97",
+			"sjdlkfjs3234545io89",
+			"skdjhfiweurw9987dsfsfsd22waoiehfsfsfsfasffsduw99"
+		]
+	}, {
+		"uid": "playlist3",
+		"name": "Almost There",
+		"playCount": 64,
+		"songs": [
+			"21544sdsdfsdrf87",
+			"lskadjflksdjfoisdfjosdi999",
+			"skdjhfisfsafds2164564988974894fweurw97"
+		]
+	}],
+	"songs": [{
+			"uid": "skdjhfiweurw97",
+			"name": "So What Cha Want",
+			"duration": 20,
+			"albumUid": "u3459ijf983u",
+			"path": "data/media/Beastie%20Boys/License%20To%20Ill/SoWhatChaWant.mp3",
+			"playCount": 42
+		}, {
+			"uid": "skdjhfiweurw9987",
+			"name": "Brass Monkey",
+			"duration": 20,
+			"albumUid": "u3459ijf983u",
+			"path": "data/media/Beastie%20Boys/License%20To%20Ill/BrassMonkey.mp3",
+			"playCount": 39
+		},{
+			"uid": "skdjhfiweurw9987waoiehfuw99",
+			"name": "No Sleep Till Brooklyn",
+			"duration": 20,
+			"albumUid": "u3459ijf983u",
+			"path": "data/media/Beastie%20Boys/License%20To%20Ill/NoSleepTillBrooklyn.mp3",
+			"playCount": 60
+		},  {
+			"uid": "skdjhfiweurw9987dsfsfsd22waoiehfuw99",
+			"name": "All My Life",
+			"duration": 20,
+			"albumUid": "498357hsfsfsfnfiuhf87",
+			"path": "data/media/Foo%20Fighters/Greatest%20Hits/AllMyLife.mp3",
+			"playCount": 61
+		}, {
+			"uid": "skdjhfiweurw9987dsfsfsd22waoiehfsfsfsfasffsduw99",
+			"name": "Everlong",
+			"duration": 20,
+			"albumUid": "498357hsfsfsfnfiuhf87",
+			"path": "data/media/Foo%20Fighters/Greatest%20Hits/Everlong.mp3",
+			"playCount": 72
+		}, {
+			"uid": "lskadjflksdjfoisdfjosdi999",
+			"name": "Best Of You",
+			"duration": 20,
+			"albumUid": "498357hsfsfsfnfiuhf87",
+			"path": "data/media/Foo%20Fighters/Greatest%20Hits/BestOfYou.mp3",
+			"playCount": 105
+		},  {
+			"uid": "skdjhfisfsafds21654s894fweurw97",
+			"name": "You Shook Me All Night Long",
+			"duration": 20,
+			"albumUid": "4957jf98yf8wh",
+			"path": "data/media/AC%20DC/Back%20In%20Black/YouShookMeAllNightLong.mp3",
+			"playCount": 12
+		}, {
+			"uid": "skdjhfisfsafds2164564988974894fweurw97",
+			"name": "Hells Bells",
+			"duration": 20,
+			"albumUid": "4957jf98yf8wh",
+			"path": "data/media/AC%20DC/Back%20In%20Black/HellsBells.mp3",
+			"playCount": 12
+		}, {
+			"uid": "skdjhfisfsaf234kljhhusd1654s894fweurw97",
+			"name": "Back In Black",
+			"duration": 20,
+			"albumUid": "4957jf98yf8wh",
+			"path": "data/media/AC%20DC/Back%20In%20Black/BackInBlack.mp3",
+			"playCount": 27
+		}, {
+			"uid": "21544sdsdfsdrf87",
+			"name": "This Is The Best",
+			"duration": 20,
+			"albumUid": "2398fnoihfiu",
+			"path": "data/media/USS/Advanced%20Basics/ThisIsTheBest.mp3",
+			"playCount": 35
+		}, {
+			"uid": "21544sdsdfsdrf8764",
+			"name": "Yin Yang",
+			"duration": 20,
+			"albumUid": "2398fnoihfiu",
+			"path": "data/media/USS/Advanced%20Basics/YinYang.mp3",
+			"playCount": 55
+		}, {
+			"uid": "sjdlkfjsio89",
+			"name": "Devil On My Shoulder",
+			"duration": 20,
+			"albumUid": "9879ehfjidhf98",
+			"path": "data/media/Billy%20Talent/Billy%20Talent%20III/DevilOnMyShoulder.mp3",
+			"playCount": 10
+		}, {
+			"uid": "sjdlkfjsio8sdfsdf145464524749",
+			"name": "Saint Veronika",
+			"duration": 20,
+			"albumUid": "9879ehfjidhf98",
+			"path": "data/media/Billy%20Talent/Billy%20Talent%20III/SaintVeronika.mp3",
+			"playCount": 25
+		}, {
+			"uid": "sjdlkfjs3234545io89",
+			"name": "Rusted from the Rain",
+			"duration": 20,
+			"albumUid": "9879ehfjidhf98",
+			"path": "data/media/Billy%20Talent/Billy%20Talent%20III/RustedFromTheRain.mp3",
+			"playCount": 83
+		}
+	],
+	"artists": [{
+		"uid": "s09wdfu09jeopj",
+		"name": "Beastie Boys",
+		"genreUid": "28937549023hkjdh",
+		"playCount": 143
+	}, {
+		"uid": "98237hjkhds9",
+		"name": "Billy Talent",
+		"genreUid": "2165465sfsdjh",
+		"playCount": 90
+	}, {
+		"uid": "4398hgdioh",
+		"name": "AC/DC",
+		"genreUid": "98wd7hhhky",
+		"playCount": 203
+	}, {
+		"uid": "948ungfih",
+		"name": "Foo Fighters",
+		"genreUid": "98wd7hhhky",
+		"playCount": 57
+	}, {
+		"uid": "98759843",
+		"name": "USS",
+		"genreUid": "2165465sfsdjh",
+		"playCount": 52
+	}],
+	"genres": [{
+		"uid": "28937549023hkjdh",
+		"name": "Hip Hop/Rap"
+	}, {
+		"uid": "2165465sfsdjh",
+		"name": "Alternative"
+	}, {
+		"uid": "98wd7hhhky",
+		"name": "Rock"
+	}]
+}
