@@ -6,3 +6,4 @@ emulator/css/$emulator*
 **/$ws12
 **/$data*
 **/.DS_Store
+.sync.hashes

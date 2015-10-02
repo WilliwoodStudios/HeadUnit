@@ -126,7 +126,7 @@ class ServerConnectionHandler implements Runnable {
                 mHeaderZeroParts = mHeaders.get(0).split(" ");
 
                 if (mHeaderZeroParts.length != 3) {
-                    throw new IOException("Wrong number of parts in header 0");
+                    throw new IOException("Wrong number of parts in header 0: " + mHeaders.get(0));
                 }
 
                 try {
