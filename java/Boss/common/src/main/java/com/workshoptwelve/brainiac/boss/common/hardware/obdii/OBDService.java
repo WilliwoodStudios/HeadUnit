@@ -93,6 +93,8 @@ public class OBDService extends AService {
      */
     private IOBDConnection sOBDConnection;
 
+    private OBDWebSocketDispatcher mWebSocketDispatcher = new OBDWebSocketDispatcher(this);
+
     /**
      * Constructor registers end points.
      */
@@ -106,6 +108,8 @@ public class OBDService extends AService {
         addEndPoint(new GetDTC());
         addEndPoint(new ClearDTC());
         addEndPoint(new GetTestStatus());
+
+        setWebSocketDispatcher(mWebSocketDispatcher);
     }
 
     /**
@@ -122,6 +126,14 @@ public class OBDService extends AService {
      */
     public void setOBDConnection(IOBDConnection connection) {
         sOBDConnection = connection;
+    }
+
+    /**
+     * Get the in use @{IOBDConnection}.
+     * @return The in use connection.
+     */
+    public IOBDConnection getOBDConnection() {
+        return sOBDConnection;
     }
 
     /**
@@ -193,6 +205,18 @@ public class OBDService extends AService {
             toReturn.put(KEY_INCOMPLETE, isIncomplete);
         }
         return toReturn;
+    }
+
+    public void registerForPIDUpdate(IOBDListener mListener, Integer effectivePID) {
+        sOBDConnection.registerForPIDUpdates(effectivePID,mListener);
+    }
+
+    public void unregisterForPIDUpdate(IOBDListener mListener, Integer effectivePID) {
+        sOBDConnection.unregisterForPIDUpdates(effectivePID,mListener);
+    }
+
+    public void setWebSocketDispatcher(OBDWebSocketDispatcher dispatcher) {
+        super.setWebSocketDispatcher(dispatcher);
     }
 
     private class GetOBDStatus extends AEndPoint {

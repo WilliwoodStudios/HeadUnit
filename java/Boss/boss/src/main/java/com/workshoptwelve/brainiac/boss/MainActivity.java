@@ -1,55 +1,33 @@
 package com.workshoptwelve.brainiac.boss;
 
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import com.workshoptwelve.brainiac.boss.hardware.accessory.AndroidAccessoryManager;
-import com.workshoptwelve.brainiac.boss.hardware.obdii.AndroidOBDConnection;
-import com.workshoptwelve.brainiac.boss.hardware.usb.BossUSBManager;
-import com.workshoptwelve.brainiac.boss.log.AndroidLogger;
-import com.workshoptwelve.brainiac.boss.common.hardware.accessory.AccessoryService;
+import com.workshoptwelve.brainiac.boss.common.hardware.obdii.IOBDListener;
 import com.workshoptwelve.brainiac.boss.common.hardware.obdii.OBDService;
-import com.workshoptwelve.brainiac.boss.common.server.Server;
-import com.workshoptwelve.brainiac.boss.common.content.ContentService;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
-import com.workshoptwelve.brainiac.boss.common.multimedia.MultiMediaService;
 
 
-public class MainActivity extends ActionBarActivity implements AndroidLogger.AndroidLoggerListener {
+public class MainActivity extends ActionBarActivity {
     private TextView mTextViewLog;
-
-    @Override
-    public void onLogAvailable(final Log.Level level, final StringBuilder toLog) {
-        runOnUiThread(new Runnable() {
-            public void run() {
-                if (mTextViewLog.getLineCount() > 2000) {
-                    mTextViewLog.setText("");
-                }
-                mTextViewLog.append(toLog.toString());
-                mTextViewLog.append("\n");
-            }
-        });
-    }
+    private TextView mCTextView;
+    private TextView mDTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        mTextViewLog = (TextView)findViewById(R.id.textViewLog);
-//        mTextViewLog.setMovementMethod(new ScrollingMovementMethod());
-//
-//        sAndroidLogger.setAndroidLoggerListener(this);
+        mCTextView = (TextView)findViewById(R.id.cTextView);
+        mDTextView = (TextView)findViewById(R.id.dTextView);
 
         startBossService();
     }
@@ -61,9 +39,31 @@ public class MainActivity extends ActionBarActivity implements AndroidLogger.And
         bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
     }
 
+
+    private IOBDListener mOBDListener = new IOBDListener() {
+        @Override
+        public void onPIDUpdated(final int mode, final int pid, final String value) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    if (pid==0xc) {
+                        mCTextView.setText(value);
+                    } else {
+                        mDTextView.setText(value);
+                    }
+                }
+            });
+        }
+    };
+
+    private void registerTestOBD() {
+        OBDService.getInstance().registerForPIDUpdate(mOBDListener, (1 << 16) + 0xc);
+        OBDService.getInstance().registerForPIDUpdate(mOBDListener, (1 << 16) + 0xd);
+    }
+
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            registerTestOBD();
             android.util.Log.e("BOSS", "Connected to self");
             IBoss mBoss = IBoss.Stub.asInterface(service);
             // TODO - make this async.
