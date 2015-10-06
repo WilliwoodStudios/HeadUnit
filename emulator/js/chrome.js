@@ -66,8 +66,10 @@ function screenChrome() {
 			$ui.addEventListener($system.EventType.ONDRIVERTEMPCHANGE, this.ondrivertempchange, this);
 			$ui.addEventListener($system.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);
 			$ui.addEventListener($system.EventType.ONREQUESTSUSPENSIONUI, this.onrequestsuspensionui, this);
-			$ui.addEventListener($system.EventType.ONMEDIAMINIMIZE, this.onmediaminimize, this);
-			$ui.addEventListener($system.EventType.ONMEDIARESTORE, this.onmediarestore, this);
+			if ($system.config.isClientDevice != true) {
+				$ui.addEventListener($system.EventType.ONMEDIAMINIMIZE, this.onmediaminimize, this);
+				$ui.addEventListener($system.EventType.ONMEDIARESTORE, this.onmediarestore, this);
+			}
 		}
 		this.onthemechange();
 	}
