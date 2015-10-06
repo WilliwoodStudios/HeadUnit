@@ -9,7 +9,6 @@ window.onload = function() {
 			$system = window.parent.$system;
 		} else {
 			console.log('WARNING: $system not defined');
-			console.log('elephant');
 		}
 	}
 	$system.registerApp('core.gauges', $ui);

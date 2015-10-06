@@ -1,86 +1,179 @@
 /* Copyright (c) 2015 Workshop 12 Inc. */
-
-function emulator_Gauge(object, screen) {
-	$ui_CoreComponent.call(this,object,screen);
-
-	console.log("Elephant");
-
-	object.dom.innerHTML = "Robbie";
-
-	object.dom.style.width = "200px";
-	object.dom.style.height = "200px";
-	object.dom.style.border = "1px solid red";
-	object.dom.style.color = "#ffffff";
-
-	object.update = function(value) {
-		object.dom.innerHTML = value;
-	}.$bind(object);
-
-	return object.dom;
-}
-
-$ui.addExtension(new UIExtension('Gauge', emulator_Gauge));
-
 function main() {
 	this.component = $ui.WindowPane;
-
-	this._private = {};
 	
 	this.content = [
 		{
-			component: $ui.Gauge,
-		}, {
-			component: $ui.Gauge,
-		}
-	];
+			component: $ui.TileGroup,
+			tiles: [
+				{
+					component: $ui.RealTimeGauge,
+					mode: "speed",
+					provider: {
 
-	this._private.onopen = function() {
-		var toSend = { 
-			action: "register", 
-			"mode": 1, 
-			"pid": 0xc 
-		};
-		this._private.wrappedWebSocket.send(JSON.stringify(toSend));
-		toSend.pid = 0xd;
-		this._private.wrappedWebSocket.send(JSON.stringify(toSend));
-	}.$bind(this);
+					}
+				},
+				{
+					component: $ui.RealTimeGauge,
+					mode: "rpm",
+					provider: {
 
-	this._private.onmessage = function(message) {
-		console.log(message);
-		console.log(JSON.stringify(message));
-		if (message[0] === '=') {
-			var parts = message.substring(2).split(",");
-			if (parts[0] === 'pidUpdate') {
-				var mode = parseInt(parts[1]);
-				var pid = parseInt(parts[2]);
-				var value = parts[3];
+					}
+				},
+				{
+					component: $ui.RealTimeGauge,
+					mode: "timingAdvance",
+					position: "top",
+					provider: {
 
-				var asArray = $system.util.hexStringToIntArray(value);
+					}
+				},
+				{
+					component: $ui.RealTimeGauge,
+					mode: "temperature",
+					title: "Air Intake",
+					position: "left",
+					provider: {
 
-				if (mode == 1) {
-					switch(pid) {
-						case 0xd:
-							this.content[0].update(asArray[asArray.length-1] + " km/h");
-							break;
-						case 0xc:
-							var rpm = asArray[asArray.length-2] * 256 + asArray[asArray.length-1];
-							rpm /= 4;
-							rpm = Math.floor(rpm);
-							this.content[1].update(rpm + " RPM");
-							break;
-						default:
-							console.log("Unhandled " + mode + " " + pid);
+					}
+				},
+				{
+					component: $ui.RealTimeGauge,
+					mode: "percentage",
+					title: "Throttle Position",
+					provider: {
+
+					}
+				},
+				{
+					component: $ui.RealTimeGauge,
+					mode: "temperature",
+					title: "Engine Oil",
+					provider: {
+
+					}
+				},
+				{
+					component: $ui.RealTimeGauge,
+					mode: "oxygenSensor",
+					position: "right"
+				}
+				/*
+				{
+					component: $ui.TileDistance,
+					provider: {
+						id: 'dashboardProvider',
+						property: 'distanceInfo'
+					}
+				},
+				{
+					component: $ui.TileBadge,
+					provider: {
+						id: 'dashboardProvider',
+						property: 'badgeInfo'
+					}
+				},
+				{
+					component: $ui.TileBraking,
+					provider: {
+						id: 'dashboardProvider',
+						property: 'brakingInfo'
+					}
+				},
+				{
+					component: $ui.TileMPG,
+					provider: {
+						id: 'dashboardProvider',
+						property: 'mpgInfo'
+					}
+				},
+				{
+					component: $ui.TileFuel,
+					provider: {
+						id: 'dashboardProvider',
+						property: 'fuelInfo'
+					}
+				},
+				{
+					component: $ui.TileIdle,
+					animated: false,
+					provider: {
+						id: 'dashboardProvider',
+						property: 'idleInfo'
+					}
+				},
+				{
+					component: $ui.TileIdleDetails,
+					animated: false,
+					provider: {
+						id: 'dashboardProvider',
+						property: 'idleDetailsInfo'
 					}
 				}
-				console.log("Mode: " + mode + " PID: " + pid + " " + value + JSON.stringify(asArray));
-			}
-		}
-	}.$bind(this);
+				*/
+			]
+			// attachedObjects: [
+			
+			// 	{
+			// 		component: $ui.DataProvider,
+			// 		id: 'dashboardProvider'
+			// 	}
+				
+			// ]
+		}	
+	];
 	
 	this.onshow = function() {
-        this._private.wrappedWebSocket = $system.util.wrapWebSocket("/brainiac/service/hardware/obd");
-        this._private.wrappedWebSocket.onmessage = this._private.onmessage;
-        this._private.wrappedWebSocket.onopen = this._private.onopen;
-        this._private.wrappedWebSocket.start();
+		// // Set the screen data
+		// var data = {
+		// 	profileInfo: {
+		// 		backgroundImg: "../img/subaru.jpg",
+		// 		avatar: "../img/avatar.png",
+		// 		userName: "brcewane",
+		// 		stats: {
+		// 			friends: 12,
+		// 			clubs: 6,
+		// 			score: 42369,
+		// 			rank: 2
+		// 		}			
+		// 	},
+		// 	idleInfo: { 
+		// 		value: 70
+		// 	},
+		// 	accelerationInfo: {
+		// 		min: 0,
+		// 		max: 1.5,
+		// 		value: 0.9
+		// 	},
+		// 	brakingInfo: {
+		// 		min: 0,
+		// 		max: 1.5,
+		// 		value: 0.3
+		// 	},
+		// 	mpgInfo: {
+		// 		max: 32,
+		// 		value: 20,
+		// 		abbreviation: 'MPG'
+		// 	},
+		// 	badgeInfo: {
+		// 		img: 'img/badge_idle_monochrome.png',
+		// 		caption: '<large>27</large>min commute',
+		// 		accent: 'Quickest trip to work!'
+		// 	},
+		// 	distanceInfo: {
+		// 		data: [20,25,9.2],
+		// 		units: 'miles'
+		// 	},
+		// 	fuelInfo: {
+		// 		value: 6,
+		// 		data: [90,50,30]
+		// 	},
+		// 	idleDetailsInfo: {
+		// 		labels: ['Sun','Mon','Tue','Wed','Thur','Fri','Today'],
+		// 		data: [0,35,17,65,0,10,15]
+		// 	}
+		// }
+		// // Populate the dashboard data provider
+		// this.dashboardProvider.data = data; 
 	}
 }
