@@ -48,6 +48,18 @@ function main() {
 				if (mediaSource && (mediaSource.type == $system.MediaSourceType.PLAYER)) {
 					mediaSource.toggleRepeat();
 				}
+			},
+			onminimize: function() {
+				if (window.$core) {
+					var systemEvent = new $ui.DataEvent($system.EventType.ONMEDIAMINIMIZE);
+					$core.raiseEvent(systemEvent);
+				}
+			},
+			onrestore: function() {
+				if (window.$core) {
+					var systemEvent = new $ui.DataEvent($system.EventType.ONMEDIARESTORE);
+					$core.raiseEvent(systemEvent);
+				}
 			}
 		}
 	];

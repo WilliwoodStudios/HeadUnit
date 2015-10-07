@@ -7,6 +7,7 @@ function mainMenu() {
 	this.content = [
 		{
 			component: $ui.CircleMenu,
+			id: 'mainCircleMenu',
 			provider: {
 				id: 'mainMenuProvider',
 				property: 'items'
@@ -46,6 +47,8 @@ function mainMenu() {
 	// Load the menu
 	this.onshow = function() {
 		$core.getAppsList(this.onapplistrefresh);
+		$ui.addEventListener($system.EventType.ONMEDIAMINIMIZE, this.onmediasizechange, this);
+		$ui.addEventListener($system.EventType.ONMEDIARESTORE, this.onmediasizechange, this);
 		this.onthemechange();
 	};
 	
@@ -65,4 +68,10 @@ function mainMenu() {
 		}
 		this.mainMenuProvider.data = data;
 	}.bind(this);
+	
+	// User changed media size
+	this.onmediasizechange = function() {
+		this.mainCircleMenu.recalculateLayout();
+	}.$bind(this);
+	
 }
