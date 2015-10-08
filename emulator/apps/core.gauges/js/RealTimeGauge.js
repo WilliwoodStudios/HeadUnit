@@ -133,7 +133,7 @@ function emulator_RealTimeGauge(object, screen) {
         _private.config.angle = [Math.PI * (2/6), Math.PI * (-2/6)];
     }
 
-    _private.value = _private.config.min;
+    _private.value = undefined;
 
     Object.defineProperty(object,"value",{
         get: function() {
@@ -160,6 +160,15 @@ function emulator_RealTimeGauge(object, screen) {
     }
 
     _private.animate = function() {
+        if (_private.targetValue === undefined) {
+            _private.value = undefined;
+            _private.renderNeedle();
+            _private.renderValueLabel();
+            return;
+        }
+        if (_private.value === undefined && _private.targetValue !== undefined) {
+            _private.value = _private.targetValue;
+        }
         if (_private.config.min < 0) {
             var x = 8;
             x *= 56;
@@ -188,7 +197,7 @@ function emulator_RealTimeGauge(object, screen) {
         var deltaTime = now - _private.lastAnimationTime;
         _private.lastAnimationTime = now;
 
-        var maxSpeed = 0.001;
+        var maxSpeed = 0.0005;
 
         var toAdd = mult * maxSpeed * range * deltaTime;
         if (mult * toAdd > mult * delta) {
@@ -280,9 +289,12 @@ function emulator_RealTimeGauge(object, screen) {
     }.$bind(object);
 
     _private.renderNeedle = function() {
-        // console.log("Render Needle");
-
         var ctx = _private.needleCanvasContext;
+        if (_private.value === undefined) {
+            ctx.clearRect(0, 0, _private.needleCanvas.width, _private.needleCanvas.height);
+            return;
+        }
+
 
         var a1 = _private.config.angle[0];
         var a2 = _private.config.angle[1];
@@ -324,6 +336,11 @@ function emulator_RealTimeGauge(object, screen) {
     }
 
     _private.renderValueLabel = function() {
+        if (_private.value === undefined) {
+            var ctx = _private.labelCanvasContext;
+            ctx.clearRect(0, 0, 400,400);
+            return;
+        }
         var newLabel = Math.floor(_private.value);
         if (newLabel !== _private.lastValueLabel) {
             _private.lastValueLabel = newLabel;
@@ -375,15 +392,29 @@ function emulator_RealTimeGauge(object, screen) {
     }
 
     object._onthemechange = function() {
-        // TODO - do something.
+        _private.render();
     }.$bind(object);
 
     _private.render();
 
-    window.setInterval(function() { 
-        var range = _private.config.max - _private.config.min;
-        this.value = Math.random() * range + _private.config.min;
-    }.$bind(object),1000);
+    if (object.pid !== undefined) {
+        if (object.pidMode === undefined) {
+            object.pidMode = 1;
+        }
+
+        var mode = object.pidMode;
+        var pid = object.pid;
+        OBDWorker.register(mode,pid,function(val) {
+            this.value = val;
+        }.$bind(object),function() {
+            console.log("Error...");
+        }.$bind(object));
+    }
+
+    // window.setInterval(function() { 
+    //     var range = _private.config.max - _private.config.min;
+    //     this.value = Math.random() * range + _private.config.min;
+    // }.$bind(object),1000);
 
     return object.dom;
 }
