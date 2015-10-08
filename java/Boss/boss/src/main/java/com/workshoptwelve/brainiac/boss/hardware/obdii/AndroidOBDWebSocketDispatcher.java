@@ -37,14 +37,15 @@ public class AndroidOBDWebSocketDispatcher extends OBDWebSocketDispatcher {
                     int pid = asJson.getInt("pid");
 
                     mRegistrations.register(conn, mode, pid);
+                    log.e("Registering for",mode,pid);
                 } else if ("unregister".equals(action)) {
                     int mode = asJson.getInt("mode");
                     int pid = asJson.getInt("pid");
 
                     mRegistrations.unregister(conn, mode, pid);
+                    log.e("Unregistering for",mode,pid);
                 }
             }
-            super.onMessage(conn, message);
         } catch (JSONException je) {
             // TODO log.
         }
