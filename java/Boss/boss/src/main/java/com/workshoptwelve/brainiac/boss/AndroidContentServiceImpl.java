@@ -28,23 +28,29 @@ public class AndroidContentServiceImpl extends AContentServiceImpl {
 
     @Override
     public void sendPathToStream(String path, HttpOutputStream outputStream) throws IOException {
-        if (path.indexOf("..") != -1) {
-            throw new IOException("..");
-        }
-        File toSend = new File(mRootPath, path);
-        if (toSend.isDirectory()) {
-            toSend = new File(toSend, "index.html");
-        }
-        if (toSend.exists()) {
-            outputStream.setResponse(200, "OK");
-            FileInputStream fis = new FileInputStream(toSend);
-            try {
-                streamToStream(fis, outputStream);
-            } finally {
-                fis.close();
+        try {
+            if (path.indexOf("..") != -1) {
+                throw new IOException("..");
             }
-        } else {
-            outputStream.setResponse(404, "File not found");
+            File toSend = new File(mRootPath, path);
+            if (toSend.isDirectory()) {
+                toSend = new File(toSend, "index.html");
+            }
+            if (toSend.exists()) {
+                outputStream.setResponse(200, "OK");
+                FileInputStream fis = new FileInputStream(toSend);
+                try {
+                    streamToStream(fis, outputStream);
+                } finally {
+                    fis.close();
+                }
+            } else {
+                log.e(toSend,"does not exist");
+                outputStream.setResponse(404, "File not found");
+            }
+        } catch (IOException ioe) {
+            log.e("Failed",ioe);
+            throw ioe;
         }
     }
 }
