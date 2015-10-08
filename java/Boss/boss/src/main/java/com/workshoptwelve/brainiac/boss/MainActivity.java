@@ -56,8 +56,8 @@ public class MainActivity extends ActionBarActivity {
     };
 
     private void registerTestOBD() {
-        OBDService.getInstance().registerForPIDUpdate(mOBDListener, (1 << 16) + 0xc);
-        OBDService.getInstance().registerForPIDUpdate(mOBDListener, (1 << 16) + 0xd);
+//        OBDService.getInstance().registerForPIDUpdate(mOBDListener, (1 << 16) + 0xc);
+//        OBDService.getInstance().registerForPIDUpdate(mOBDListener, (1 << 16) + 0xd);
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
