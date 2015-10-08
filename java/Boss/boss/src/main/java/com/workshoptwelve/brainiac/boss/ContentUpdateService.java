@@ -87,6 +87,7 @@ public class ContentUpdateService extends AService {
                         toWrite.getParentFile().mkdirs();
 
                         FileOutputStream fos = new FileOutputStream(toWrite);
+                        log.e("Writing to",toWrite);
                         try {
                             int totalReadLength = 0;
                             do {
