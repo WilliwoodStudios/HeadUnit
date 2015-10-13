@@ -274,9 +274,24 @@ public abstract class AUSBSerial extends AUSBDeviceDriver {
                     item.onClosed();
                 }
             });
-        }
 
-        // RPW TODO.
+            if (mInputStream != null) {
+                try {
+                    mInputStream.close();
+                } catch (Exception e) {
+                    log.w("Problem closing closed stream",e);
+                }
+            }
+            if (mOutputStream != null) {
+                try {
+                    mPipeOutputStream.close();
+                } catch (Exception e) {
+                    log.w("Problem closing closed stream",e);
+                }
+            }
+            mInputStream = null;
+            mOutputStream = null;
+        }
     }
 
     private ForEachList<USBSerialListener> mSerialListeners = new ForEachList<>();
