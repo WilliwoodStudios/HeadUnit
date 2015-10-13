@@ -8,13 +8,14 @@ import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.hardware.obdii.IOBDConnection;
 import com.workshoptwelve.brainiac.boss.common.hardware.obdii.IOBDListener;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
-import com.workshoptwelve.brainiac.boss.common.threading.ThreadPool;
 import com.workshoptwelve.brainiac.boss.common.util.BlockingFuture;
 import com.workshoptwelve.brainiac.boss.common.util.ForEachList;
 import com.workshoptwelve.brainiac.boss.common.util.Hex;
 import com.workshoptwelve.brainiac.boss.hardware.usb.AUSBDeviceDriver;
 import com.workshoptwelve.brainiac.boss.hardware.usb.BossUSBManager;
 import com.workshoptwelve.brainiac.boss.hardware.usb.serial.CH341;
+import com.workshoptwelve.brainiac.boss.util.VerboseHandler;
+import com.workshoptwelve.brainiac.boss.util.VerboseRunnable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +29,7 @@ import java.util.List;
  */
 public class AndroidOBDConnection implements IOBDConnection {
     private static final Log log = Log.getLogger(AndroidOBDConnection.class);
+
     byte[] mResponseBuffer = new byte[512];
     /**
      * Array storing which (mode 1) PID have been detected as supported.
@@ -118,14 +120,14 @@ public class AndroidOBDConnection implements IOBDConnection {
         mUpdatingPIDs.removeListener(effectivePID,listener);
     }
 
-    private Runnable mPIDPoller = new Runnable() {
-        public void run() {
+    private VerboseRunnable mPIDPoller = new VerboseRunnable("mPIDPoller") {
+        public void loggedRun() {
             pollPIDs();
         }
     };
 
-    private Runnable mDisconnectedRunnable = new Runnable() {
-        public void run() {
+    private VerboseRunnable mDisconnectedRunnable = new VerboseRunnable("disconnected runnable") {
+        public void loggedRun() {
             log.v("Disconnected Runnable");
             mVehicleConnected = false;
             mDeviceDriver = null;
@@ -134,11 +136,12 @@ public class AndroidOBDConnection implements IOBDConnection {
             mInputStream = null;
         }
     };
+
     private String mDeviceVersion;
     private Looper mLooper;
-    private Handler mHandler;
-    private Runnable mGetAvailablePIDRunnable = new Runnable() {
-        public void run() {
+    private VerboseHandler mHandler;
+    private VerboseRunnable mGetAvailablePIDRunnable = new VerboseRunnable("Get Available PID Runnable") {
+        public void loggedRun() {
             getAvailablePID();
         }
     };
@@ -157,8 +160,8 @@ public class AndroidOBDConnection implements IOBDConnection {
             log.v();
             if (deviceDriver instanceof CH341) {
                 log.v("Is a CH341");
-                mHandler.post(new Runnable() {
-                    public void run() {
+                mHandler.post(new VerboseRunnable("on device available") {
+                    public void loggedRun() {
                         usbAvailable((CH341) deviceDriver);
                     }
                 });
@@ -167,8 +170,8 @@ public class AndroidOBDConnection implements IOBDConnection {
             }
         }
     };
-    private Runnable mInitRunnable = new Runnable() {
-        public void run() {
+    private VerboseRunnable mInitRunnable = new VerboseRunnable("init runnable") {
+        public void loggedRun() {
             log.v("InitRunnable");
             BossUSBManager.getInstance().addUSBManagerListener(mListener);
             List<AUSBDeviceDriver> availableDevices = BossUSBManager.getInstance().getAvailableDevices();
@@ -188,7 +191,7 @@ public class AndroidOBDConnection implements IOBDConnection {
             public void run() {
                 Looper.prepare();
                 mLooper = Looper.myLooper();
-                mHandler = new Handler();
+                mHandler = new VerboseHandler();
                 mHandler.post(mInitRunnable);
                 threadStarted.setResult(Boolean.TRUE);
                 Looper.loop();
@@ -222,7 +225,14 @@ public class AndroidOBDConnection implements IOBDConnection {
         if (isDeviceConnected() && isVehicleConnected()) {
             Integer effectivePID = mUpdatingPIDs.getNextIDForPolling();
             if (effectivePID != null) {
-                String command = String.format("%02X%02X\n", effectivePID.intValue() >> 16, effectivePID.intValue() & 0xffff);
+                int mode = effectivePID.intValue()>>16;
+                int pid = effectivePID.intValue()& 0xffff;
+                if (mode == 1 && !mSupportedPID[pid]) {
+                    log.e("Attempting to poll a pid that the vehicle said isn't supported",mode,pid);
+                    return;
+                }
+
+                String command = String.format("%02X%02X\n", mode, pid);
                 try {
                     String response = sendCommand(command);
                     if (isVehicleGoneResponse(response)) {
@@ -410,8 +420,8 @@ public class AndroidOBDConnection implements IOBDConnection {
 
     public void sendCommand(final String command, final BlockingFuture<String> responseFuture) throws BossException {
         log.v(command);
-        mHandler.post(new Runnable() {
-            public void run() {
+        mHandler.post(new VerboseRunnable("send command with future") {
+            public void loggedRun() {
                 try {
                     log.v("send command proper thread", command);
                     checkVehicle();
