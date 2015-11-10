@@ -15,6 +15,7 @@ import java.util.List;
 public class AppSpace extends ViewGroup {
 
     private Handler mHandler;
+    private BrainiacLandscapeLayout mFullScreenLayout;
 
     public AppSpace(Context context) {
         super(context); init();
@@ -36,18 +37,24 @@ public class AppSpace extends ViewGroup {
     private List<AppScreen> mScreens = new ArrayList<>();
 
     public void pushScreen(AppScreen screen) {
-        if (mScreens.size() == 0) {
-            screen.pushFinished();
-        } else {
-            if (screen.startScreenAnimate(getWidth(), getHeight(), getWidth(), 0, 0, 0, 200)) {
-                mHandler.postDelayed(mAnimate,10);
+        if (screen.isFullScreen()) {
+            if (mFullScreenLayout != null) {
+                mFullScreenLayout.pushScreen(screen);
             }
-            screen.layout(getWidth(), 0, getWidth(), getHeight());
+        } else {
+            if (mScreens.size() == 0) {
+                screen.pushFinished();
+            } else {
+                if (screen.startScreenAnimate(getWidth(), getHeight(), getWidth(), 0, 0, 0, 200)) {
+                    mHandler.postDelayed(mAnimate, 10);
+                }
+                screen.layout(getWidth(), 0, getWidth(), getHeight());
+            }
+            Log.e("AppSpace", "Width: " + getWidth());
+            mScreens.add(screen);
+            addView(screen);
+            screen.pushing(this);
         }
-        Log.e("AppSpace","Width: " + getWidth());
-        mScreens.add(screen);
-        addView(screen);
-        screen.pushed(this);
     }
 
     private Runnable mAnimate = new Runnable() {
@@ -88,5 +95,9 @@ public class AppSpace extends ViewGroup {
             return mScreens.get(mScreens.size()-1)==appScreen;
         }
         return false;
+    }
+
+    public void setBrainiacLandscapeLayout(BrainiacLandscapeLayout layout) {
+        mFullScreenLayout = layout;
     }
 }

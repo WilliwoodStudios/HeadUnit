@@ -5,6 +5,7 @@ import android.graphics.Point;
 import android.os.Handler;
 import android.view.ViewGroup;
 
+import com.williwoodstudios.pureviews.air.AirMainScreen;
 import com.williwoodstudios.pureviews.media.MainScreen;
 
 /**
@@ -14,8 +15,6 @@ public class BrainiacLandscapeLayout extends ViewGroup {
 
     private final CircleNavigationBar mNavBar;
     private final AppSpace mAppSpace;
-    //    private final CircleMenu mCircleMenu;
-    private MainScreen mMainScreen;
     private Activity mActivity;
     private Point mDisplaySize = new Point();
 
@@ -25,35 +24,19 @@ public class BrainiacLandscapeLayout extends ViewGroup {
 
         mNavBar = new CircleNavigationBar(activity);
         mAppSpace = new AppSpace(activity);
+        mAppSpace.setBrainiacLandscapeLayout(this);
 
-        mAppSpace.pushScreen(mMainScreen = new MainScreen(activity));
-//        mCircleMenu = new CircleMenu(activity);
+        mAppSpace.pushScreen(new AirMainScreen(activity));
 
         setBackgroundColor(0xff000000);
 
         addView(mNavBar);
         addView(mAppSpace);
+    }
 
-        final Handler mHandler = new Handler();
-        mHandler.postDelayed(new Runnable() {
-            public void run() {
-                Runnable q = new Runnable() {
-                    int at = 0;
-
-                    public void run() {
-                        String s = "" + (char) (at + 'a');
-                        mMainScreen.setSong(s, s, s);
-                        ++at;
-                        if (at < 26) {
-                            mHandler.postDelayed(this, 100);
-                        }
-                    }
-                };
-
-                mMainScreen.setSong("Rob Williams Jnr", "Alcatraz", "Unreleased");
-                mHandler.postDelayed(q, 500);
-            }
-        }, 5000);
+    public void pushScreen(AppScreen screen) {
+        addView(screen);
+        screen.layout(0,0,getWidth(),getHeight());
     }
 
     @Override

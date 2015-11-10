@@ -24,12 +24,16 @@ public abstract class AppScreen extends ViewGroup {
         super(context, attrs, defStyleAttr);
     }
 
-    public final void pushed(AppSpace appSpace) {
+    public final void pushing(AppSpace appSpace) {
         mAppSpace = appSpace;
-        onPushed();
+        onPushing();
     }
 
-    protected void onPushed() {
+    public boolean isFullScreen() {
+        return false;
+    }
+
+    protected void onPushing() {
         // do nothing.
     }
 
