@@ -74,4 +74,11 @@ public class WedgeScreen extends AppScreen {
     private int max(int a, int b) {
         return a > b ? a : b;
     }
+
+    @Override
+    public boolean shouldDelayChildPressedState() {
+        return false;
+    }
+
+
 }
