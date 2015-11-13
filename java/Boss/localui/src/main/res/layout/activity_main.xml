@@ -1,13 +1,20 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_main"
+    android:background="@color/black_solid"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-    xmlns:android="http://schemas.android.com/apk/res/android" />
 
-    <com.workshoptwelve.brainiac.localui.view.GesturedXWalkView
-        android:id="@+id/activity_main"
+    <RelativeLayout
+        android:id="@+id/splashLayout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent">
-    </com.workshoptwelve.brainiac.localui.view.GesturedXWalkView>
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:src="@drawable/brainiac_splash"
+            android:scaleType="centerCrop" />
+    </RelativeLayout>
+
     <com.workshoptwelve.brainiac.localui.view.VolumeView
         android:id="@+id/volumeView"
         android:layout_width="fill_parent"

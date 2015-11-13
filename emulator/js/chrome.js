@@ -72,6 +72,12 @@ function screenChrome() {
 			}
 		}
 		this.onthemechange();
+ 		if ("brainiacSystemLoaded" in window) {
+ 			brainiacSystemLoaded.systemLoaded();
+ 			console.log("We think we told Java that we're loaded");
+  		} else {
+  			console.log("No extension for loading...");
+  		}
 	}
 	
 	this.onsettingsclick = function() {
