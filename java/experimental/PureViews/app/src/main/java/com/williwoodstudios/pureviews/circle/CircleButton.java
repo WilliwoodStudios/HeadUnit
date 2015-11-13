@@ -104,7 +104,12 @@ public class CircleButton extends ViewGroup {
 //    }
 //
     public void setImageResource(int resourceId) {
-        mBitmap = BitmapFactory.decodeResource(getContext().getResources(), resourceId);
+        if (resourceId != -1) {
+            mBitmap = BitmapFactory.decodeResource(getContext().getResources(), resourceId);
+        } else if (mBitmap != null) {
+            mBitmap.recycle();
+            mBitmap = null;
+        }
         clearBitmaps();
     }
 
@@ -259,8 +264,8 @@ public class CircleButton extends ViewGroup {
                 if (mTitlePosition == TitlePosition.BELOW) {
 //                    canvas.drawText(mTitle, (mRect.right - mRect.left) / 2, mRect.right + mText.getTextSize() * 1.125f, mText);
                     int textPad = 10;
-                    mLabelTextView.measure(0,0);
-                    mLabelTextView.layout((width-mLabelTextView.getMeasuredWidth())/2, width + textPad, width, height);
+                    mLabelTextView.measure(0, 0);
+                    mLabelTextView.layout((width - mLabelTextView.getMeasuredWidth()) / 2, width + textPad, width, height);
 
                     Log.e("CircleButton",0 + " " + (width+textPad) + " " + width + " " + height);
 
