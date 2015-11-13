@@ -5,6 +5,8 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,8 +43,26 @@ public class AppSpace extends ViewGroup implements ScreenManager {
 
     private List<AppScreen> mScreens = new ArrayList<>();
 
-    public void popScreen(AppScreen screen) {
-        // TODO something.
+    public void popScreen(final AppScreen screen) {
+        mScreens.remove(screen);
+        TranslateAnimation ta = new TranslateAnimation(0,getWidth(),0,0);
+        ta.setDuration(250);
+        ta.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                removeView(screen);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        screen.startAnimation(ta);
     }
 
     public void pushScreen(AppScreen screen) {
@@ -82,13 +102,6 @@ public class AppSpace extends ViewGroup implements ScreenManager {
 
         }
     };
-
-    public void popScreen() {
-    }
-
-    public void popTo() {
-
-    }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
