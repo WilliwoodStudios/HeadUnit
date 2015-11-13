@@ -37,6 +37,19 @@ public class Log {
             } catch (Exception e) {
                 // Can't do anything - our logging is broken...
             }
+            if (sLogger == null) {
+                sLogger = new Logger() {
+                    @Override
+                    protected void rawLog(Level level, StringBuilder toLog) {
+
+                    }
+
+                    @Override
+                    protected void getPrefix(Level level, StringBuilder prefix) {
+
+                    }
+                };
+            }
         }
         Log toReturn = sKnownLoggers.get(name);
         if (toReturn == null) {

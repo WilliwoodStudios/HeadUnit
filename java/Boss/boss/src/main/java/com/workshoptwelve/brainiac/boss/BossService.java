@@ -15,6 +15,7 @@ import com.workshoptwelve.brainiac.boss.common.multimedia.MultiMediaService;
 import com.workshoptwelve.brainiac.boss.common.server.Server;
 import com.workshoptwelve.brainiac.boss.hardware.accessory.AndroidAccessoryManager;
 import com.workshoptwelve.brainiac.boss.hardware.obdii.AndroidOBDConnection;
+import com.workshoptwelve.brainiac.boss.hardware.obdii.AndroidOBDWebSocketDispatcher;
 import com.workshoptwelve.brainiac.boss.hardware.usb.BossUSBManager;
 import com.workshoptwelve.brainiac.boss.log.AndroidLogger;
 
@@ -42,6 +43,7 @@ public class BossService extends Service {
             ContentService.getInstance().setContentServiceImpl(new AndroidContentServiceImpl(context, "html/src"));
             MultiMediaService.getInstance().setMultiMediaServiceImpl(new AndroidMultiMediaService(context));
             OBDService.getInstance().setOBDConnection(new AndroidOBDConnection());
+            OBDService.getInstance().setWebSocketDispatcher(new AndroidOBDWebSocketDispatcher(OBDService.getInstance()));
             AccessoryService.getInstance().setAccessoryManager(AndroidAccessoryManager.getInstance());
             PropertyService.getInstance().setPropertyServiceImpl(new AndroidPropertyServiceImpl(context));
 

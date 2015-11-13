@@ -3,20 +3,25 @@ package com.workshoptwelve.brainiac.boss.hardware.obdii;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.workshoptwelve.brainiac.boss.hardware.usb.AUSBDeviceDriver;
-import com.workshoptwelve.brainiac.boss.hardware.usb.BossUSBManager;
-import com.workshoptwelve.brainiac.boss.hardware.usb.serial.CH341;
 import com.workshoptwelve.brainiac.boss.common.error.BossError;
 import com.workshoptwelve.brainiac.boss.common.error.BossException;
 import com.workshoptwelve.brainiac.boss.common.hardware.obdii.IOBDConnection;
+import com.workshoptwelve.brainiac.boss.common.hardware.obdii.IOBDListener;
 import com.workshoptwelve.brainiac.boss.common.log.Log;
-import com.workshoptwelve.brainiac.boss.common.threading.ThreadPool;
 import com.workshoptwelve.brainiac.boss.common.util.BlockingFuture;
+import com.workshoptwelve.brainiac.boss.common.util.ForEachList;
 import com.workshoptwelve.brainiac.boss.common.util.Hex;
+import com.workshoptwelve.brainiac.boss.hardware.usb.AUSBDeviceDriver;
+import com.workshoptwelve.brainiac.boss.hardware.usb.BossUSBManager;
+import com.workshoptwelve.brainiac.boss.hardware.usb.serial.CH341;
+import com.workshoptwelve.brainiac.boss.util.VerboseHandler;
+import com.workshoptwelve.brainiac.boss.util.VerboseRunnable;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -24,6 +29,7 @@ import java.util.List;
  */
 public class AndroidOBDConnection implements IOBDConnection {
     private static final Log log = Log.getLogger(AndroidOBDConnection.class);
+
     byte[] mResponseBuffer = new byte[512];
     /**
      * Array storing which (mode 1) PID have been detected as supported.
@@ -35,8 +41,93 @@ public class AndroidOBDConnection implements IOBDConnection {
     private boolean mVehicleConnected;
     private boolean mDeviceConnected;
 
-    private Runnable mDisconnectedRunnable = new Runnable() {
-        public void run() {
+    private class OBDListenerSet extends ForEachList<IOBDListener> {
+
+    }
+
+    private class UpdatingPIDs {
+        private Integer mForEachEffectivePID;
+        private String mForEachMessage;
+
+        private ForEachList.ForEach<IOBDListener> mForEach = new ForEachList.ForEach<IOBDListener>() {
+            @Override
+            public void go(IOBDListener item) {
+                item.onPIDUpdated(mForEachEffectivePID>>16,mForEachEffectivePID & 0xffff,mForEachMessage);
+
+            }
+        };
+
+        private HashMap<Integer,OBDListenerSet> mListeners = new HashMap<>();
+        private ArrayList<Integer> mPIDs = new ArrayList<>();
+
+        private int mPollingPosition = 0;
+
+        private IOBDListener [] mDummyArray = new IOBDListener[0];
+
+
+        public void sendUpdate(Integer effectivePID, String message) {
+            OBDListenerSet set;
+            synchronized(this) {
+                set = mListeners.get(effectivePID);
+            }
+            if (set != null) {
+                mForEachEffectivePID = effectivePID;
+                mForEachMessage = message;
+                set.forEach(mForEach);
+            }
+        }
+
+        public synchronized Integer getNextIDForPolling() {
+            if (mPIDs.size() == 0) {
+                return null;
+            }
+            mPollingPosition %= mPIDs.size();
+            return mPIDs.get(mPollingPosition++);
+        }
+
+        public synchronized void addListener(Integer effectivePID, IOBDListener listener) {
+            OBDListenerSet toReturn = mListeners.get(effectivePID);
+            if (toReturn == null) {
+                mPIDs.add(effectivePID);
+                toReturn = new OBDListenerSet();
+                mListeners.put(effectivePID, toReturn);
+            }
+            if (!toReturn.contains(listener)) {
+                toReturn.add(listener);
+            }
+        }
+
+        public synchronized void removeListener(Integer effectivePID, IOBDListener listener) {
+            OBDListenerSet toUse = mListeners.get(effectivePID);
+            if (toUse == null) {
+                return;
+            }
+            toUse.remove(listener);
+        }
+    }
+
+    private UpdatingPIDs mUpdatingPIDs = new UpdatingPIDs();
+
+    @Override
+    public void registerForPIDUpdates(Integer effectivePID, IOBDListener listener) {
+        mUpdatingPIDs.addListener(effectivePID,listener);
+        mHandler.removeCallbacks(mPIDPoller);
+        mHandler.post(mPIDPoller);
+    }
+
+    @Override
+    public void unregisterForPIDUpdates(Integer effectivePID, IOBDListener listener) {
+        mUpdatingPIDs.removeListener(effectivePID,listener);
+    }
+
+    private VerboseRunnable mPIDPoller = new VerboseRunnable("mPIDPoller") {
+        public void loggedRun() {
+            pollPIDs();
+        }
+    };
+
+    private VerboseRunnable mDisconnectedRunnable = new VerboseRunnable("disconnected runnable") {
+        public void loggedRun() {
             log.v("Disconnected Runnable");
             mVehicleConnected = false;
             mDeviceDriver = null;
@@ -45,11 +136,12 @@ public class AndroidOBDConnection implements IOBDConnection {
             mInputStream = null;
         }
     };
+
     private String mDeviceVersion;
     private Looper mLooper;
-    private Handler mHandler;
-    private Runnable mGetAvailablePIDRunnable = new Runnable() {
-        public void run() {
+    private VerboseHandler mHandler;
+    private VerboseRunnable mGetAvailablePIDRunnable = new VerboseRunnable("Get Available PID Runnable") {
+        public void loggedRun() {
             getAvailablePID();
         }
     };
@@ -68,8 +160,8 @@ public class AndroidOBDConnection implements IOBDConnection {
             log.v();
             if (deviceDriver instanceof CH341) {
                 log.v("Is a CH341");
-                mHandler.post(new Runnable() {
-                    public void run() {
+                mHandler.post(new VerboseRunnable("on device available") {
+                    public void loggedRun() {
                         usbAvailable((CH341) deviceDriver);
                     }
                 });
@@ -78,8 +170,8 @@ public class AndroidOBDConnection implements IOBDConnection {
             }
         }
     };
-    private Runnable mInitRunnable = new Runnable() {
-        public void run() {
+    private VerboseRunnable mInitRunnable = new VerboseRunnable("init runnable") {
+        public void loggedRun() {
             log.v("InitRunnable");
             BossUSBManager.getInstance().addUSBManagerListener(mListener);
             List<AUSBDeviceDriver> availableDevices = BossUSBManager.getInstance().getAvailableDevices();
@@ -99,7 +191,7 @@ public class AndroidOBDConnection implements IOBDConnection {
             public void run() {
                 Looper.prepare();
                 mLooper = Looper.myLooper();
-                mHandler = new Handler();
+                mHandler = new VerboseHandler();
                 mHandler.post(mInitRunnable);
                 threadStarted.setResult(Boolean.TRUE);
                 Looper.loop();
@@ -124,6 +216,39 @@ public class AndroidOBDConnection implements IOBDConnection {
 
         if (!mSupportedPID[pid]) {
             throw new BossException(BossError.OBD_PID_NOT_SUPPORTED);
+        }
+    }
+
+    private Integer mLastPolledPID = null;
+
+    private void pollPIDs() {
+        if (isDeviceConnected() && isVehicleConnected()) {
+            Integer effectivePID = mUpdatingPIDs.getNextIDForPolling();
+            if (effectivePID != null) {
+                int mode = effectivePID.intValue()>>16;
+                int pid = effectivePID.intValue()& 0xffff;
+                if (mode == 1 && !mSupportedPID[pid]) {
+                    log.e("Attempting to poll a pid that the vehicle said isn't supported",mode,pid);
+                    return;
+                }
+
+                String command = String.format("%02X%02X\n", mode, pid);
+                try {
+                    String response = sendCommand(command);
+                    if (isVehicleGoneResponse(response)) {
+                        noteVehicleGone();
+                    } else {
+                        mUpdatingPIDs.sendUpdate(effectivePID, response);
+                    }
+                    log.e("Response from polling pid", command, response);
+                } catch (BossException be) {
+                    log.e("not yet handled",be);
+                    // TODO - do something.
+                } catch (IOException e) {
+                    log.e("not yet handled",e);
+                    // TODO - do something.
+                }
+            }
         }
     }
 
@@ -270,6 +395,17 @@ public class AndroidOBDConnection implements IOBDConnection {
     private void noteVehicleFound() {
         log.v();
         mVehicleConnected = true;
+        IOBDListener toAdd = new IOBDListener() {
+            @Override
+            public void onPIDUpdated(int mode, int pid, String value) {
+                log.e("ON PID UPDATED", mode, pid, value);
+            }
+        };
+        Integer a = (1<<16) + 0xd;
+        Integer b = (1<<16) + 0xc;
+
+        registerForPIDUpdates(a,toAdd);
+        registerForPIDUpdates(b,toAdd);
     }
 
     private boolean looksBad(String string) {
@@ -284,10 +420,10 @@ public class AndroidOBDConnection implements IOBDConnection {
 
     public void sendCommand(final String command, final BlockingFuture<String> responseFuture) throws BossException {
         log.v(command);
-        mHandler.post(new Runnable() {
-            public void run() {
+        mHandler.post(new VerboseRunnable("send command with future") {
+            public void loggedRun() {
                 try {
-                    log.v("send command proper thread",command);
+                    log.v("send command proper thread", command);
                     checkVehicle();
                     String response = sendCommand(command);
                     if (isVehicleGoneResponse(response)) {
@@ -296,15 +432,15 @@ public class AndroidOBDConnection implements IOBDConnection {
                     }
                     responseFuture.setResult(response);
                 } catch (BossException be) {
-                    log.v("Boss Exception",be);
+                    log.v("Boss Exception", be);
                     responseFuture.setException(be);
                 } catch (IOException ioe) {
-                    log.v("IOException",ioe);
+                    log.v("IOException", ioe);
                     responseFuture.setException(new BossException(BossError.OBD_NO_RESPONSE, ioe));
                     try {
                         mDeviceDriver.restart();
                     } catch (BossException bossException) {
-                        log.d("Send -> ioexception -> restart -> bossException",bossException);
+                        log.d("Send -> ioexception -> restart -> bossException", bossException);
                     }
                 }
             }
@@ -312,17 +448,22 @@ public class AndroidOBDConnection implements IOBDConnection {
     }
 
     private String sendCommand(String command) throws IOException, BossException {
-        checkConnection();
-        log.v(command);
-        mOutputStream.write(command.getBytes());
-        mOutputStream.write(13);
+        try {
+            checkConnection();
+            log.v(command);
+            mOutputStream.write(command.getBytes());
+            mOutputStream.write(13);
 
-        String toReturn = readResponse();
-        if (log.canV()) {
-            log.v("Response", "\n" + Hex.dump(toReturn));
+            String toReturn = readResponse();
+            if (log.canV()) {
+                log.v("Response", "\n" + Hex.dump(toReturn));
+            }
+
+            return toReturn;
+        } finally {
+            mHandler.removeCallbacks(mPIDPoller);
+            mHandler.postDelayed(mPIDPoller, 0);
         }
-
-        return toReturn;
     }
 
     private String readResponse() throws IOException {

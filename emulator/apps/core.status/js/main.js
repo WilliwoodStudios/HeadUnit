@@ -133,32 +133,32 @@ function main() {
 							title: 'Exhaust Gas Recirculation/VVT'
 						},
 						{
-							obdProperty: 'nmhcCatalystTest',
+							obdProperty: 'nmhcCatalyst',
 							visible: false,
 							title: 'NMHC Catalyst'
 						},
 						{
-							obdProperty: 'noxScrMonitorTest',
+							obdProperty: 'noxScrMonitor',
 							visible: false,
 							title: 'NOx/SCR Monitor'
 						},
 						{
-							obdProperty: 'boostPressureTest',
+							obdProperty: 'boostPressure',
 							visible: false,
 							title: 'Boost Pressure'
 						},
 						{
-							obdProperty: 'exhaustGasSensorTest',
+							obdProperty: 'exhaustGasSensor',
 							visible: false,
 							title: 'Exhaust Gas Sensor'
 						},
 						{
-							obdProperty: 'pmFilterMonitoringTest',
+							obdProperty: 'pmFilterMonitoring',
 							visible: false,
 							title: 'PM Filter'
 						},
 						{
-							obdProperty: 'egrVvtSystemTest',
+							obdProperty: 'egrVvtSystem',
 							visible: false,
 							title: 'EGR/Variable Valve Timing'
 						}
@@ -250,15 +250,20 @@ function main() {
 				item = this.readinessList.items[i];
 				if (item.component == $ui.Header) continue; // Skip any headers
 				test = data.obd.tests.sinceDtcCleared[item.obdProperty];
-				item.visible = (test.available == true);
-				if (item.visible == true) {
-					if (test.incomplete == true) {
-						item.img = 'img/warning.png';
-						item.caption = 'Incomplete';
-						item.accent = 'Vehicle has not completed its system checks';
-					} else {
-						item.img = 'img/checkmark.png';
-						item.caption = 'Complete';
+				if (test === undefined) {
+					console.log("Found no test data for " + item.obdProperty);
+					item.visible = false;
+				} else {
+					item.visible = (test.available == true);
+					if (item.visible == true) {
+						if (test.incomplete == true) {
+							item.img = 'img/warning.png';
+							item.caption = 'Incomplete';
+							item.accent = 'Vehicle has not completed its system checks';
+						} else {
+							item.img = 'img/checkmark.png';
+							item.caption = 'Complete';
+						}
 					}
 				}
 			}
