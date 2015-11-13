@@ -219,7 +219,7 @@ public class MainActivity extends Activity implements BossConnectionHelper.BossC
     @Override
     public void onBossConnectionAvailable() {
         int serverPort = BossConnectionHelper.getInstance().getServerPort();
-        mXWalkView.load("http://127.0.0.1:" + serverPort + "/index.html", null);
+        mXWalkView.load("http://127.0.0.1:" + serverPort + "/mobile.html", null);
     }
 
     @Override
