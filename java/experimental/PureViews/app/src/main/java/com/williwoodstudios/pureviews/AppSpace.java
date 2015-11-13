@@ -12,10 +12,15 @@ import java.util.List;
 /**
  * Created by robwilliams on 2015-11-09.
  */
-public class AppSpace extends ViewGroup {
+public class AppSpace extends ViewGroup implements ScreenManager {
+
+    private ScreenManager mFullScreenManager;
+
+    public void setFullScreenManager(ScreenManager fullScreenManager) {
+        mFullScreenManager = fullScreenManager;
+    }
 
     private Handler mHandler;
-    private BrainiacLandscapeLayout mFullScreenLayout;
 
     public AppSpace(Context context) {
         super(context); init();
@@ -36,10 +41,14 @@ public class AppSpace extends ViewGroup {
 
     private List<AppScreen> mScreens = new ArrayList<>();
 
+    public void popScreen(AppScreen screen) {
+        // TODO something.
+    }
+
     public void pushScreen(AppScreen screen) {
         if (screen.isFullScreen()) {
-            if (mFullScreenLayout != null) {
-                mFullScreenLayout.pushScreen(screen);
+            if (mFullScreenManager != null) {
+                mFullScreenManager.pushScreen(screen);
             }
         } else {
             if (mScreens.size() == 0) {
@@ -52,6 +61,7 @@ public class AppSpace extends ViewGroup {
             }
             Log.e("AppSpace", "Width: " + getWidth());
             mScreens.add(screen);
+            notifyTopChanged();
             addView(screen);
             screen.pushing(this);
         }
@@ -97,7 +107,30 @@ public class AppSpace extends ViewGroup {
         return false;
     }
 
-    public void setBrainiacLandscapeLayout(BrainiacLandscapeLayout layout) {
-        mFullScreenLayout = layout;
+    @Override
+    public void popToFirstScreen() {
+        if (mScreens.size()>1) {
+            while (mScreens.size() > 1) {
+                removeView(mScreens.get(mScreens.size() - 1));
+                mScreens.remove(mScreens.size() - 1);
+            }
+            notifyTopChanged();
+        }
     }
+
+    private void notifyTopChanged() {
+        if (mOnTopChangedListener!= null && mScreens.size()>=0) {
+            mOnTopChangedListener.onTopChanged(mScreens.get(mScreens.size()-1));
+        }
+    }
+
+    public interface OnTopChangedListener {
+        void onTopChanged(AppScreen screen);
+    }
+
+    public void setOnTopChangedListener(OnTopChangedListener otcl) {
+        mOnTopChangedListener = otcl;
+    }
+
+    private OnTopChangedListener mOnTopChangedListener;
 }

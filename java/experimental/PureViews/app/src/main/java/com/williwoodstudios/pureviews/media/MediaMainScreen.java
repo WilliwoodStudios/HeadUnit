@@ -9,13 +9,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.williwoodstudios.pureviews.AppScreen;
-import com.williwoodstudios.pureviews.CircleButton;
+import com.williwoodstudios.pureviews.circle.CircleButton;
 import com.williwoodstudios.pureviews.R;
 
 /**
  * Created by robwilliams on 2015-11-09.
  */
-public class MainScreen extends AppScreen {
+public class MediaMainScreen extends AppScreen {
 
     private TextView mRepeatLabel;
     private TextView mSourceLabel;
@@ -30,17 +30,17 @@ public class MainScreen extends AppScreen {
 
     private CircleButton mMenuButton;
 
-    public MainScreen(Context context) {
+    public MediaMainScreen(Context context) {
         super(context);
         init();
     }
 
-    public MainScreen(Context context, AttributeSet attrs) {
+    public MediaMainScreen(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
-    public MainScreen(Context context, AttributeSet attrs, int defStyleAttr) {
+    public MediaMainScreen(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }
@@ -192,5 +192,15 @@ public class MainScreen extends AppScreen {
         int r = l + v.getMeasuredWidth();
 
         v.layout(l,t,r,b);
+    }
+
+    @Override
+    public int getNavigationIconResourceID() {
+        return R.drawable.core_media_player_img_icon_128x128;
+    }
+
+    @Override
+    public int getNavigationLevel() {
+        return 1;
     }
 }

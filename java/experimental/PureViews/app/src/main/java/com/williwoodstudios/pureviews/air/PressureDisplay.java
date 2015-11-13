@@ -36,6 +36,21 @@ public class PressureDisplay extends View {
         init();
     }
 
+    public void setValue(int value) {
+        if (value != mValue) {
+            mValue = value;
+            mValueString = String.valueOf(value);
+            invalidate();
+        }
+    }
+
+    public int getValue() {
+        return mValue;
+    }
+
+    private int mValue = 0;
+    private String mValueString = "0";
+
     private void init() {
         mTopPaint = new Paint();
         mTopPaint.setTextAlign(Paint.Align.CENTER);
@@ -91,7 +106,7 @@ public class PressureDisplay extends View {
             start += -mTopPaint.ascent();
         }
 
-        canvas.drawText("32", width / 2, start, mTopPaint);
+        canvas.drawText(mValueString, width / 2, start, mTopPaint);
 //        canvas.drawLine(0, start, width, start, mTopPaint);
 //        canvas.drawLine(0, start + mTopPaint.ascent(),width,start+mTopPaint.ascent(),mTopPaint);
 

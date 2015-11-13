@@ -55,9 +55,13 @@ public class WedgeScreen extends AppScreen {
     public void onDraw(Canvas canvas) {
         mLinePaint.setColor(Theme.color);
         mLinePaint.setAlpha(255);
-        mLinePaint.setStrokeWidth(max(getHeight()/3,getWidth()/3));
+        mLinePaint.setStrokeWidth(max(getHeight() / 3, getWidth() / 3));
 
-        canvas.drawLine(0,getHeight(),getWidth(),0,mLinePaint);
+        if (mWedgeMode == WedgeMode.BACK_SLASH) {
+            canvas.drawLine(0, 0, getWidth(), getHeight(), mLinePaint);
+        } else {
+            canvas.drawLine(0, getHeight(), getWidth(), 0, mLinePaint);
+        }
     }
 
     public void setWedgeMode(WedgeMode wedgeMode) {

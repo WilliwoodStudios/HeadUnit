@@ -10,7 +10,7 @@ import android.view.ViewGroup;
  */
 public abstract class AppScreen extends ViewGroup {
 
-    private AppSpace mAppSpace;
+    private ScreenManager mScreenManager;
 
     public AppScreen(Context context) {
         super(context);
@@ -24,8 +24,8 @@ public abstract class AppScreen extends ViewGroup {
         super(context, attrs, defStyleAttr);
     }
 
-    public final void pushing(AppSpace appSpace) {
-        mAppSpace = appSpace;
+    public final void pushing(ScreenManager screenManager) {
+        mScreenManager = screenManager;
         onPushing();
     }
 
@@ -43,14 +43,21 @@ public abstract class AppScreen extends ViewGroup {
 
     public void pushScreen(AppScreen screen) {
         Log.e("AppScreen", "Pushing screen " + screen);
-        if (mAppSpace != null) {
-            mAppSpace.pushScreen(screen);
+        if (mScreenManager != null) {
+            mScreenManager.pushScreen(screen);
+        }
+    }
+    
+    public void popScreen() {
+        Log.e("AppScreen","Pop screen");
+        if (mScreenManager != null) {
+            mScreenManager.popScreen(this);
         }
     }
 
     public boolean isTopScreen() {
-        if (mAppSpace != null) {
-            return mAppSpace.isTopScreen(this);
+        if (mScreenManager != null) {
+            return mScreenManager.isTopScreen(this);
         }
         return false;
     }
@@ -131,7 +138,18 @@ public abstract class AppScreen extends ViewGroup {
     }
 
     protected void onPushFinished() {
+    }
 
+    public int getNavigationIconResourceID() {
+        return -1;
+    }
+
+    public float getNavigationIconResourcePadding() {
+        return 0;
+    }
+
+    public int getNavigationLevel() {
+        return 0;
     }
 
     public boolean isScreenAnimationRunning() {

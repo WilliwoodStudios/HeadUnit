@@ -12,6 +12,7 @@ import android.widget.ImageView;
 
 import com.williwoodstudios.pureviews.R;
 import com.williwoodstudios.pureviews.Theme;
+import com.williwoodstudios.pureviews.wedge.WedgeScreen;
 import com.williwoodstudios.pureviews.wedge.WedgeSpinnerScreen;
 
 /**
@@ -68,11 +69,36 @@ public class PressureControl extends ViewGroup {
 
     private OnClickListener mOnClickListener = new OnClickListener() {
         @Override
-        public void onClick(View v) {
+        public void onClick(final View v) {
             Log.e("PressureControl", "Clicked: " + v);
-            mScreen.pushScreen(new WedgeSpinnerScreen(getContext()));
+            WedgeSpinnerScreen spinnerScreen = new WedgeSpinnerScreen(getContext());
+            spinnerScreen.setImageResource(R.drawable.suspension);
+            spinnerScreen.setWedgeMode(v == mFrontLeft || v == mBackLeft ? WedgeScreen.WedgeMode.FORWARD_SLASH : WedgeScreen.WedgeMode.BACK_SLASH);
+            spinnerScreen.setValue(((PressureDisplay)v).getValue());
+            spinnerScreen.setOnValueChangedListener(new WedgeSpinnerScreen.OnValueChangeListener() {
+                @Override
+                public void onValueChange(int oldValue, int newValue) {
+                    Log.e("PressureControl","Value changed: " + newValue);
+                    ((PressureDisplay)v).setValue(newValue);
+                }
+            });
+
+            mScreen.pushScreen(spinnerScreen);
+
         }
     };
+
+    public void setPressures(int [] pressures) {
+        if (pressures.length!=5) {
+            return;
+        }
+
+        mFrontLeft.setValue(pressures[0]);
+        mFrontRight.setValue(pressures[1]);
+        mBackLeft.setValue(pressures[2]);
+        mBackRight.setValue(pressures[3]);
+        mTank.setValue(pressures[4]);
+    }
 
     private int mWidth, mHeight;
 

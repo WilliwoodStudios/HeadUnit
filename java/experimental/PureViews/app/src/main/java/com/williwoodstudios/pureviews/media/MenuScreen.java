@@ -69,5 +69,8 @@ public class MenuScreen extends AppScreen {
         canvas.drawLine(0,40,mWidth,40, mLinePaint);
     }
 
-
+    @Override
+    public int getNavigationLevel() {
+        return 1;
+    }
 }

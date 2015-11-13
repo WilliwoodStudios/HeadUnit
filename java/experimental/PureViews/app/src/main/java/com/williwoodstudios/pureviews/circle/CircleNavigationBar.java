@@ -1,4 +1,4 @@
-package com.williwoodstudios.pureviews;
+package com.williwoodstudios.pureviews.circle;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -10,21 +10,34 @@ import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.williwoodstudios.pureviews.AppScreen;
+import com.williwoodstudios.pureviews.AppSpace;
+import com.williwoodstudios.pureviews.R;
+import com.williwoodstudios.pureviews.RectangleAnimation;
+import com.williwoodstudios.pureviews.ScreenManager;
+import com.williwoodstudios.pureviews.Theme;
+
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 /**
  * Created by robwilliams on 2015-10-18.
  */
-public class CircleNavigationBar extends View {
+public class CircleNavigationBar extends View implements AppSpace.OnTopChangedListener {
     private final Paint mSpacer;
     private final Handler mHandler;
     private final GregorianCalendar mCalendar;
     private final Paint mTime;
     private final RectF mTopRect;
     private final RectF mMidRect;
+    private final RectF mMidBitmapRect;
     private final RectF mBotRect;
+
     private final Bitmap mTopBitmap;
+    private Bitmap mMidBitmap;
+    private Bitmap mBotBitmap;
+
+    private final ScreenManager mScreenManager;
     private RectF mActiveRect = new RectF();
     private final Paint mCirclePaint;
     private final Paint mCircleFill;
@@ -40,8 +53,10 @@ public class CircleNavigationBar extends View {
 
     private RectangleAnimation mAnimateSelection;
 
-    public CircleNavigationBar(Context context) {
+    public CircleNavigationBar(Context context, ScreenManager screenManager) {
         super(context);
+        mScreenManager = screenManager;
+
         setBackgroundColor(0xff000000);
 
         mSpacer = new Paint();
@@ -99,9 +114,11 @@ public class CircleNavigationBar extends View {
 
         mTopRect = new RectF();
         mMidRect = new RectF();
+        mMidBitmapRect = new RectF();
         mBotRect = new RectF();
 
         mTopBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.navigation_home);
+        mBotBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.settings_icon);
     }
 
     private char[] mDateString;
@@ -167,16 +184,16 @@ public class CircleNavigationBar extends View {
 
         mBitmapBlackCircle = Bitmap.createBitmap((int) circleWidth + 2, (int) circleWidth + 2, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(mBitmapBlackCircle);
-        sratch.set(1, 1, mBitmapBlackCircle.getWidth()-1, mBitmapBlackCircle.getHeight()-1);
+        sratch.set(1, 1, mBitmapBlackCircle.getWidth() - 1, mBitmapBlackCircle.getHeight() - 1);
         canvas.drawArc(sratch, 0, 360, true, mCircleFill);
 
-        mBitmapOutlineCircle = Bitmap.createBitmap(mBitmapBlackCircle.getWidth(),mBitmapBlackCircle.getHeight(), Bitmap.Config.ARGB_8888);
+        mBitmapOutlineCircle = Bitmap.createBitmap(mBitmapBlackCircle.getWidth(), mBitmapBlackCircle.getHeight(), Bitmap.Config.ARGB_8888);
         canvas = new Canvas(mBitmapOutlineCircle);
-        canvas.drawArc(sratch,0,360,true, mCirclePaint);
+        canvas.drawArc(sratch, 0, 360, true, mCirclePaint);
 
-        mBitmapSelectedCircle = Bitmap.createBitmap(mBitmapBlackCircle.getWidth(),mBitmapBlackCircle.getHeight(), Bitmap.Config.ARGB_8888);
+        mBitmapSelectedCircle = Bitmap.createBitmap(mBitmapBlackCircle.getWidth(), mBitmapBlackCircle.getHeight(), Bitmap.Config.ARGB_8888);
         canvas = new Canvas(mBitmapSelectedCircle);
-        canvas.drawArc(sratch,0,360,true, mActiveCircleFill);
+        canvas.drawArc(sratch, 0, 360, true, mActiveCircleFill);
     }
 
     @Override
@@ -195,7 +212,9 @@ public class CircleNavigationBar extends View {
 
         // Draw Circles
         canvas.drawBitmap(mBitmapBlackCircle, mTopRect.left, mTopRect.top, null);
-        canvas.drawBitmap(mBitmapBlackCircle, mMidRect.left, mMidRect.top, null);
+        if (mActiveCircle > 0) {
+            canvas.drawBitmap(mBitmapBlackCircle, mMidRect.left, mMidRect.top, null);
+        }
         canvas.drawBitmap(mBitmapBlackCircle, mBotRect.left, mBotRect.top, null);
 
         // Draw active circle
@@ -203,11 +222,19 @@ public class CircleNavigationBar extends View {
 
         // Draw borders
         canvas.drawBitmap(mBitmapOutlineCircle, mTopRect.left, mTopRect.top, null);
-        canvas.drawBitmap(mBitmapOutlineCircle, mMidRect.left, mMidRect.top, null);
+        if (mActiveCircle > 0) {
+            canvas.drawBitmap(mBitmapOutlineCircle, mMidRect.left, mMidRect.top, null);
+        }
         canvas.drawBitmap(mBitmapOutlineCircle, mBotRect.left, mBotRect.top, null);
 
         // Draw icons
         canvas.drawBitmap(mTopBitmap, null, mTopRect, mBitmapPaint);
+        if (mMidBitmap != null) {
+            canvas.drawBitmap(mMidBitmap, null, mMidBitmapRect, mBitmapPaint);
+        }
+        if (mBotBitmap != null) {
+            canvas.drawBitmap(mBotBitmap, null, mBotRect, mBitmapPaint);
+        }
     }
 
     @Override
@@ -219,6 +246,7 @@ public class CircleNavigationBar extends View {
             int newActiveCircle = mActiveCircle;
             if (mTopRect.contains(x, y)) {
                 newActiveCircle = 0;
+                mScreenManager.popToFirstScreen();
             } else if (mMidRect.contains(x, y)) {
                 newActiveCircle = 1;
             } else if (mBotRect.contains(x, y)) {
@@ -230,5 +258,49 @@ public class CircleNavigationBar extends View {
             }
         }
         return true;
+    }
+
+    private void freeMidBitmap() {
+        if (mMidBitmap != null) {
+            mMidBitmap.recycle();
+            mMidBitmap = null;
+        }
+        mMidBitmapId = -1;
+    }
+
+    private int mMidBitmapId = -1;
+
+    @Override
+    public void onTopChanged(AppScreen screen) {
+        if (screen.getNavigationLevel() == 0) {
+            // update the layout.
+            freeMidBitmap();
+            invalidate();
+        } else if (screen.getNavigationLevel() == 1) {
+            int id = screen.getNavigationIconResourceID();
+            if (id != -1) {
+                if (id != mMidBitmapId) {
+                    freeMidBitmap();
+
+                    float trim = screen.getNavigationIconResourcePadding();
+                    float width = mMidRect.width();
+                    float delta = width * trim;
+
+                    mMidBitmapRect.set(mMidRect.left + delta, mMidRect.top + delta, mMidRect.right - delta, mMidRect.bottom - delta);
+                    mMidBitmapId = id;
+                    mMidBitmap = BitmapFactory.decodeResource(getResources(), id);
+                    invalidate();
+                }
+            }
+            // update the icon and layout...
+        } else {
+            // Show the settings tab.
+        }
+
+        if (mActiveCircle != screen.getNavigationLevel()) {
+            int newActiveCircle = screen.getNavigationLevel();
+            mActiveCircle = newActiveCircle;
+            mAnimateSelection.start(mActiveRect, mActiveCircle == 0 ? mTopRect : mActiveCircle == 1 ? mMidRect : mBotRect, 350);
+        }
     }
 }

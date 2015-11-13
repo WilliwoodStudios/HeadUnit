@@ -2,16 +2,17 @@ package com.williwoodstudios.pureviews;
 
 import android.app.Activity;
 import android.graphics.Point;
-import android.os.Handler;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 
 import com.williwoodstudios.pureviews.air.AirMainScreen;
-import com.williwoodstudios.pureviews.media.MainScreen;
+import com.williwoodstudios.pureviews.circle.CircleMenu;
+import com.williwoodstudios.pureviews.circle.CircleNavigationBar;
 
 /**
  * Created by robwilliams on 2015-10-18.
  */
-public class BrainiacLandscapeLayout extends ViewGroup {
+public class BrainiacLandscapeLayout extends AppSpace {
 
     private final CircleNavigationBar mNavBar;
     private final AppSpace mAppSpace;
@@ -22,11 +23,13 @@ public class BrainiacLandscapeLayout extends ViewGroup {
         super(activity);
         mActivity = activity;
 
-        mNavBar = new CircleNavigationBar(activity);
+        mNavBar = new CircleNavigationBar(activity,this);
         mAppSpace = new AppSpace(activity);
-        mAppSpace.setBrainiacLandscapeLayout(this);
+        mAppSpace.setFullScreenManager(this);
+        mAppSpace.setOnTopChangedListener(mNavBar);
 
-        mAppSpace.pushScreen(new AirMainScreen(activity));
+//        mAppSpace.pushScreen(new AirMainScreen(activity));
+        mAppSpace.pushScreen(new CircleMenu(activity));
 
         setBackgroundColor(0xff000000);
 
@@ -36,7 +39,17 @@ public class BrainiacLandscapeLayout extends ViewGroup {
 
     public void pushScreen(AppScreen screen) {
         addView(screen);
+        screen.pushing(this);
         screen.layout(0,0,getWidth(),getHeight());
+
+        AlphaAnimation fadeIn = new AlphaAnimation(0,1);
+        fadeIn.setDuration(250);
+        fadeIn.setFillAfter(true);
+        screen.startAnimation(fadeIn);
+    }
+
+    public void popScreen(AppScreen screen) {
+        removeView(screen);
     }
 
     @Override
@@ -45,6 +58,11 @@ public class BrainiacLandscapeLayout extends ViewGroup {
 
         mNavBar.layout(0, 0, mDisplaySize.y / 4, mDisplaySize.y);
         mAppSpace.layout(mDisplaySize.y / 4, 0, mDisplaySize.x, mDisplaySize.y);
+    }
+
+    @Override
+    public void popToFirstScreen() {
+        mAppSpace.popToFirstScreen();
     }
 
 }
