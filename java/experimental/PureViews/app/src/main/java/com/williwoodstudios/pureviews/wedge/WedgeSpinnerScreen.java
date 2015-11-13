@@ -121,12 +121,6 @@ public class WedgeSpinnerScreen extends WedgeScreen {
         }
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        // don't let clicks go through the background.
-        return true;
-    }
-
     public interface OnValueChangeListener {
         void onValueChange(int oldValue, int newValue);
     }

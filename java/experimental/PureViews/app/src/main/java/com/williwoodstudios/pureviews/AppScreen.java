@@ -3,6 +3,7 @@ package com.williwoodstudios.pureviews;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.ViewGroup;
 
 /**
@@ -155,4 +156,12 @@ public abstract class AppScreen extends ViewGroup {
     public boolean isScreenAnimationRunning() {
         return mAnimationRunning;
     }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        // don't let clicks go through the background.
+        return true;
+    }
+
+
 }
