@@ -2,55 +2,46 @@ package com.williwoodstudios.pureviews.circle;
 
 import android.content.Context;
 import android.util.Log;
-import android.view.View;
 
 import com.williwoodstudios.pureviews.AppScreen;
 import com.williwoodstudios.pureviews.R;
-import com.williwoodstudios.pureviews.air.AirMainScreen;
-import com.williwoodstudios.pureviews.media.MediaMainScreen;
+
+import java.util.List;
 
 /**
  * Created by robwilliams on 2015-10-18.
  */
 public class CircleMenu extends AppScreen {
+    private final Configuration mConfiguration;
 
-    private String[] names = new String[]{"music", "maps", "data logger", "phone", "suspension", "dashboard"};
-    private int[] mImageResources = new int[]{R.drawable.core_media_player_img_icon_256x256,
-            R.drawable.core_maps_img_icon_256x256,
-            R.drawable.core_datalogger_img_icon_256x256,
-            R.drawable.core_phone_img_icon_256x256,
-            R.drawable.core_suspension_img_icon_256x256,
-            R.drawable.core_dashboard_img_icon_256x256
-    };
-    private OnClickListener[] mOnClickListeners = new OnClickListener[]{
-            new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    pushScreen(new MediaMainScreen(getContext()));
-                }
-            },
-            null,
-            null,
-            null,
-            new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    pushScreen(new AirMainScreen(getContext()));
-                }
-            },
-            null
-    };
+    public static class CircleMenuItem {
+        public CircleMenuItem(String name, int imageResourceId, OnClickListener listener) {
+            mName = name;
+            mImageResourceId = imageResourceId;
+            mOnClickListener = listener;
+        }
+        public String mName;
+        public int mImageResourceId;
+        public OnClickListener mOnClickListener;
 
-    public CircleMenu(Context owner) {
+    }
+    public interface Configuration {
+        List<CircleMenuItem> getItems();
+    }
+
+    public CircleMenu(Context owner, Configuration configuration) {
         super(owner);
-        for (int i = 0; i < names.length; ++i) {
-            CircleButton toAdd = new CircleButton(owner, names[i]);
+        mConfiguration = configuration;
+
+        for (CircleMenuItem item : mConfiguration.getItems()) {
+            CircleButton toAdd = new CircleButton(owner, item.mName);
             toAdd.setTitlePosition(CircleButton.TitlePosition.BELOW);
-            toAdd.setImageResource(mImageResources[i]);
+            toAdd.setImageResource(item.mImageResourceId);
             toAdd.onAnimationEnd();
             toAdd.setBitmapPad(0.25f);
-            if (mOnClickListeners[i] != null) {
-                toAdd.setOnClickListener(mOnClickListeners[i]);
+            OnClickListener listener = item.mOnClickListener;
+            if (listener != null) {
+                toAdd.setOnClickListener(listener);
             }
             addView(toAdd);
         }
