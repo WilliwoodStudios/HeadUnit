@@ -3,6 +3,7 @@ package com.williwoodstudios.pureviews.wedge;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.util.AttributeSet;
 
 import com.williwoodstudios.pureviews.AppScreen;
@@ -14,7 +15,7 @@ import com.williwoodstudios.pureviews.Theme;
 public class WedgeScreen extends AppScreen {
 
     public enum WedgeMode {
-        FORWARD_SLASH, BACK_SLASH
+        FORWARD_SLASH, BACK_SLASH, DIALOG
     }
 
     private Paint mLinePaint;
@@ -37,7 +38,7 @@ public class WedgeScreen extends AppScreen {
     }
 
     private void init() {
-        setBackgroundColor(0xaf000000);
+        setBackgroundColor(0xbf000000);
         mLinePaint = new Paint();
         mLinePaint.setAntiAlias(true);
     }
@@ -49,7 +50,10 @@ public class WedgeScreen extends AppScreen {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        mDialogPath.reset();
     }
+
+    private Path mDialogPath = new Path();
 
     @Override
     public void onDraw(Canvas canvas) {
@@ -59,8 +63,24 @@ public class WedgeScreen extends AppScreen {
 
         if (mWedgeMode == WedgeMode.BACK_SLASH) {
             canvas.drawLine(0, 0, getWidth(), getHeight(), mLinePaint);
-        } else {
+        } else if (mWedgeMode == WedgeMode.FORWARD_SLASH) {
             canvas.drawLine(0, getHeight(), getWidth(), 0, mLinePaint);
+        } else if (mWedgeMode == WedgeMode.DIALOG) {
+            if (mDialogPath.isEmpty()) {
+                mLinePaint.setStyle(Paint.Style.FILL);
+                mLinePaint.setStrokeWidth(0);
+                mLinePaint.setAntiAlias(true);
+
+                int width = getWidth();
+                int height = getHeight();
+
+                mDialogPath.moveTo(0, 0);
+                mDialogPath.lineTo(width * 0.55f, 0);
+                mDialogPath.lineTo(width * 0.45f, height);
+                mDialogPath.lineTo(0, height);
+                mDialogPath.close();
+            }
+            canvas.drawPath(mDialogPath,mLinePaint);
         }
     }
 
@@ -83,6 +103,4 @@ public class WedgeScreen extends AppScreen {
     public boolean shouldDelayChildPressedState() {
         return false;
     }
-
-
 }
