@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,6 +17,7 @@ import com.williwoodstudios.pureviews.R;
 import com.williwoodstudios.pureviews.RectangleAnimation;
 import com.williwoodstudios.pureviews.ScreenManager;
 import com.williwoodstudios.pureviews.Theme;
+import com.williwoodstudios.pureviews.wedge.WedgeDialogScreen;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -70,6 +72,7 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
         mTime.setColor(Theme.color);
         mTime.setAlpha(255);
         mTime.setAntiAlias(true);
+        mTime.setTypeface(Typeface.create(Typeface.SANS_SERIF,Typeface.BOLD));
         mTime.setTextAlign(Paint.Align.CENTER);
 
         mCirclePaint = new Paint();
@@ -157,7 +160,7 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         mTime.setTextSize(0.06f * (bottom - top));
-        mDateStringY = mTime.getTextSize() * 1f;
+        mDateStringY = mTime.getTextSize() * 1f + 5;
 
         int width = right - left;
         int height = bottom - top;
@@ -252,6 +255,11 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
             } else if (mBotRect.contains(x, y)) {
                 newActiveCircle = 2;
             }
+
+            if (y < mTopRect.top) {
+                mHandler.removeCallbacks(mShowHeightAlert);
+                mHandler.postDelayed(mShowHeightAlert, 5000);
+            }
             if (newActiveCircle != mActiveCircle) {
                 mActiveCircle = newActiveCircle;
                 mAnimateSelection.start(mActiveRect, mActiveCircle == 0 ? mTopRect : mActiveCircle == 1 ? mMidRect : mBotRect, 350);
@@ -259,6 +267,14 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
         }
         return true;
     }
+
+    private Runnable mShowHeightAlert = new Runnable() {
+        public void run() {
+            WedgeDialogScreen wds = new WedgeDialogScreen(getContext());
+            wds.setPrompt("Activate Preset\n'Full Height'?");
+            mScreenManager.pushScreen(wds);
+        }
+    };
 
     private void freeMidBitmap() {
         if (mMidBitmap != null) {
