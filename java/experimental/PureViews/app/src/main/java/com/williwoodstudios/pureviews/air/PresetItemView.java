@@ -3,6 +3,7 @@ package com.williwoodstudios.pureviews.air;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -15,6 +16,7 @@ import com.williwoodstudios.pureviews.Theme;
  */
 public class PresetItemView extends ViewGroup {
 
+    private final View mSpacerLine;
     private final ImageView mImageView;
     private final TextView mTextView;
     private final Handler mHandler;
@@ -36,9 +38,13 @@ public class PresetItemView extends ViewGroup {
         mTextView.setTextSize(30);
         addView(mTextView);
 
+        mSpacerLine = new View(getContext());
+        mSpacerLine.setBackgroundColor(0xff7f7f7f);
+        addView(mSpacerLine);
+
         mHandler = new Handler();
 
-        // setClickable(true);
+        setClickable(true);
     }
 
     class ColorAnimation implements Runnable {
@@ -136,5 +142,6 @@ public class PresetItemView extends ViewGroup {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         mTextView.layout(b - t + 5, 10, r - l, b - t - 10);
         mImageView.layout(0, 0, b - t, b - t);
+        mSpacerLine.layout(0,b-t-1,r-l,b-t);
     }
 }
