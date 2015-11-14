@@ -36,5 +36,7 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         Intent intent = new Intent(this, NetworkService.class);
         stopService(intent);
+
+        super.onDestroy();
     }
 }
