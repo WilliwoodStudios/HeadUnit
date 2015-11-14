@@ -80,6 +80,7 @@ public class PressureControl extends ViewGroup {
                 public void onValueChange(int oldValue, int newValue) {
                     Log.e("PressureControl","Value changed: " + newValue);
                     ((PressureDisplay)v).setValue(newValue);
+                    handlePressureChange();
                 }
             });
 
@@ -87,6 +88,14 @@ public class PressureControl extends ViewGroup {
 
         }
     };
+
+    private void handlePressureChange() {
+        onPressuresChanged(mFrontLeft.getValue(),mFrontRight.getValue(),mBackLeft.getValue(),mBackRight.getValue());
+    }
+
+    void onPressuresChanged(int fl, int fr, int bl, int br) {
+        // do nothing...
+    }
 
     public void setPressures(int [] pressures) {
         if (pressures.length!=5) {
