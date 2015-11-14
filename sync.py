@@ -38,7 +38,7 @@ def saveHashes():
     file.close()
 
 def hashFile(filePath):
-    file = open(filePath,"r")
+    file = open(filePath,"rb")
     content = file.read()
     file.close()
     return hashlib.sha256(content).hexdigest()
@@ -93,7 +93,7 @@ for someFile in currentHashes.keys():
     if update:
         anyChanged = True
         toHit = url + "update?path=" + urllib.quote(webNames[someFile])
-        file = open(someFile,"r")
+        file = open(someFile,"rb")
         data = file.read()
         file.close()
         response = urllib2.urlopen(toHit,data).read()

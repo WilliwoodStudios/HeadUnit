@@ -62,7 +62,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
-					animated: false,
+					//animated: false,
 					targetHigh: true,
 					provider: {
 						id: 'quarterMileProvider',
@@ -71,7 +71,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
-					animated: false,
+					//animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'quarterMileMPHHistory'
