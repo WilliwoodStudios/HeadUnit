@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.Point;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 
 import com.williwoodstudios.pureviews.air.AirMainScreen;
 import com.williwoodstudios.pureviews.circle.CircleMenu;
@@ -99,8 +100,27 @@ public class BrainiacLandscapeLayout extends AppSpace {
         screen.startAnimation(fadeIn);
     }
 
-    public void popScreen(AppScreen screen) {
-        removeView(screen);
+    public void popScreen(final AppScreen screen) {
+        AlphaAnimation fadeOut = new AlphaAnimation(1,0);
+        fadeOut.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                removeView(screen);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        fadeOut.setDuration(250);
+        fadeOut.setFillAfter(true);
+        screen.startAnimation(fadeOut);
     }
 
     @Override
