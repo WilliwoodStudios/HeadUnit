@@ -128,7 +128,7 @@ public class CircleButton extends ViewGroup {
     @Override
     protected void onAnimationEnd() {
         super.onAnimationEnd();
-        Log.e("CircleButton", "Animation End");
+//        Log.e("CircleButton", "Animation End");
         AlphaAnimation animation = new AlphaAnimation(0, 1);
         animation.setDuration(250);
         animation.setFillAfter(true);
@@ -166,7 +166,7 @@ public class CircleButton extends ViewGroup {
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
-        Log.e("CircleButton", "Draw");
+//        Log.e("CircleButton", "Draw");
         if (mRedrawBitmaps || mPressedBitmap == null || mDefaultBitmap == null) {
             generateBitmaps();
         }
@@ -267,9 +267,9 @@ public class CircleButton extends ViewGroup {
                     mLabelTextView.measure(0, 0);
                     mLabelTextView.layout((width - mLabelTextView.getMeasuredWidth()) / 2, width + textPad, width, height);
 
-                    Log.e("CircleButton",0 + " " + (width+textPad) + " " + width + " " + height);
-
-                    Log.e("CircleButton",mLabelTextView.getMeasuredHeight() + " " + mLabelTextView.getMeasuredWidth());
+//                    Log.e("CircleButton",0 + " " + (width+textPad) + " " + width + " " + height);
+//
+//                    Log.e("CircleButton",mLabelTextView.getMeasuredHeight() + " " + mLabelTextView.getMeasuredWidth());
 
                 } else if (mTitlePosition == TitlePosition.RIGHT) {
                     int textPad = 10;

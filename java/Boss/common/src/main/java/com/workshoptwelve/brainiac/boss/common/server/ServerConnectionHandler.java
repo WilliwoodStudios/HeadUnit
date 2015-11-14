@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 /**
@@ -150,6 +151,8 @@ class ServerConnectionHandler implements Runnable {
             }
         } catch (EOFException eof) {
             log.v("Connection appears closed by peer");
+        } catch (SocketTimeoutException ste) {
+            // ignore
         } catch (Exception e) {
             log.e("Error handling connection", e);
         } finally {

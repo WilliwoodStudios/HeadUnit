@@ -119,6 +119,17 @@
 		        "headUnit": true,
 		        "driversDevice": true
 		    }
+		},
+		{
+			"id": "core.gauges",
+			"name": "gauges",
+			"icon": "img/icon-128x128.png",
+			"iconSplash": "img/icon-256x256.png",
+			"content": "index.html",
+			"availability": {
+				"headUnit": true,
+				"driversDevice": true
+			}
 		}
 	]
 }
