@@ -60,6 +60,14 @@ function main() {
 					var systemEvent = new $ui.DataEvent($system.EventType.ONMEDIARESTORE);
 					$core.raiseEvent(systemEvent);
 				}
+			},
+			onsource: function() {
+				if (window.$core) {
+					window.setTimeout(function() {
+						var systemEvent = new $ui.DataEvent($system.EventType.ONCONFIRMGARAGEDOOR);
+						$core.raiseEvent(systemEvent);
+					},2000);
+				}
 			}
 		}
 	];

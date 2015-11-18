@@ -21,7 +21,7 @@ function screenChrome() {
 	};
 	
 	this.hvac = {
-		visible: false,//(window.innerHeight > 801 || ($system.isClientDevice == true)),
+		visible: false, //(window.innerHeight > 801 || ($system.isClientDevice == true)),
 		driver: {
 			temperature: {
 				value: 75,
@@ -69,6 +69,7 @@ function screenChrome() {
 			if ($system.config.isClientDevice != true) {
 				$ui.addEventListener($system.EventType.ONMEDIAMINIMIZE, this.onmediaminimize, this);
 				$ui.addEventListener($system.EventType.ONMEDIARESTORE, this.onmediarestore, this);
+				$ui.addEventListener($system.EventType.ONCONFIRMGARAGEDOOR, this.onconfirmgaragedoor, this);
 			}
 		}
 		this.onthemechange();
@@ -91,6 +92,12 @@ function screenChrome() {
 	// system requested the UI for adjusting a suspension corner
 	this.onrequestsuspensionui = function(event) {
 		$ui.push(wedgeSuspension, {corner: event.data.corner})
+	}.$bind(this);
+	
+	
+	// system requested the UI for Confirming Garage Door
+	this.onconfirmgaragedoor = function(event) {
+		$ui.push(confirmGarageScreen);
 	}.$bind(this);
 
 	this.onthemechange = function() {
