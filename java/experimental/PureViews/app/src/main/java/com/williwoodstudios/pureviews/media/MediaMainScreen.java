@@ -75,7 +75,7 @@ public class MediaMainScreen extends AppScreen {
         mSongLabel = makeTextView("Song");
         mAlbumLabel = makeTextView("Album");
 
-        mMenuButton = new CircleButton(getContext(),R.drawable.hamburger);
+        mMenuButton = new CircleButton(getContext(), R.drawable.hamburger);
         addView(mMenuButton);
         mMenuButton.setOnClickListener(mMenuOnClickListener);
 
@@ -89,21 +89,31 @@ public class MediaMainScreen extends AppScreen {
 
     }
 
+    private boolean mStopped = false;
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mStopped = true;
+    }
+
     private Runnable mCheckCommand = new Runnable() {
         public void run() {
-            Log.e("MediaMainScreen","Checking data");
+            Log.e("MediaMainScreen", "Checking data");
             Byte command = NetworkService.getNextCommand();
             if (command != null) {
                 byte c = command.byteValue();
-                if (c=='p') {
+                if (c == 'p') {
                     previous();
-                } else if (c=='n') {
+                } else if (c == 'n') {
                     next();
-                } else if (c=='s') {
+                } else if (c == 's') {
                     playPause();
                 }
             }
-            mHandler.postDelayed(this,100);
+            if (!mStopped) {
+                mHandler.postDelayed(this, 100);
+            }
         }
     };
 
@@ -112,7 +122,7 @@ public class MediaMainScreen extends AppScreen {
     private OnClickListener mMenuOnClickListener = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            Log.e("MainScreen","On click");
+            Log.e("MainScreen", "On click");
             if (isTopScreen()) {
                 pushScreen(new MenuScreen(getContext()));
             }
@@ -124,14 +134,14 @@ public class MediaMainScreen extends AppScreen {
             @Override
             public void setPressed(boolean pressed) {
                 super.setPressed(pressed);
-                if (pressed && resourceId!=-1) {
+                if (pressed && resourceId != -1) {
                     setAlpha(0.7f);
                 } else {
                     setAlpha(1f);
                 }
             }
         };
-        if (resourceId!=-1) {
+        if (resourceId != -1) {
             toReturn.setImageResource(resourceId);
             toReturn.setClickable(true);
             toReturn.setOnClickListener(mControlClickListener);
@@ -148,9 +158,9 @@ public class MediaMainScreen extends AppScreen {
         public void onClick(View v) {
             if (v == mPreviousButton) {
                 previous();
-            } else if (v== mPlayPauseButton) {
+            } else if (v == mPlayPauseButton) {
                 playPause();
-            } else if (v==mNextButton) {
+            } else if (v == mNextButton) {
                 next();
             }
         }
@@ -177,7 +187,7 @@ public class MediaMainScreen extends AppScreen {
 
     public void next() {
         ++mSongIndex;
-        while(mSongIndex >= mSongList.size()) {
+        while (mSongIndex >= mSongList.size()) {
             --mSongIndex;
         }
         setSong();
@@ -185,7 +195,7 @@ public class MediaMainScreen extends AppScreen {
 
     public void previous() {
         --mSongIndex;
-        while(mSongIndex < 0) {
+        while (mSongIndex < 0) {
             ++mSongIndex;
         }
         setSong();
@@ -266,11 +276,11 @@ public class MediaMainScreen extends AppScreen {
 
         mMenuButton.layout(menuL, menuT, menuR, menuB);
 
-        mAlbumArt.layout(0,0,width,height);
+        mAlbumArt.layout(0, 0, width, height);
     }
 
     private void updateSongLabels(int width, int height) {
-        if (width <=0 || height <= 0) {
+        if (width <= 0 || height <= 0) {
             return;
         }
         float textSize = height / 13f / 35; // 35 is from px size in web app.
@@ -282,30 +292,30 @@ public class MediaMainScreen extends AppScreen {
         mSongLabel.setTextSize(songSize);
         mAlbumLabel.setTextSize(albumSize);
 
-        mArtistLabel.measure(0,0);
-        mSongLabel.measure(0,0);
-        mAlbumLabel.measure(0,0);
+        mArtistLabel.measure(0, 0);
+        mSongLabel.measure(0, 0);
+        mAlbumLabel.measure(0, 0);
 
         int y = height / 2;
         y -= albumSize;
 
-        centre(mAlbumLabel,width, y);
+        centre(mAlbumLabel, width, y);
 
-        y-= songSize;
-        centre(mSongLabel,width, y);
+        y -= songSize;
+        centre(mSongLabel, width, y);
 
-        y-= artistSize;
-        centre(mArtistLabel,width,y);
+        y -= artistSize;
+        centre(mArtistLabel, width, y);
     }
 
     private void centre(View v, int width, int y) {
         int t = y;
         int b = y + v.getMeasuredHeight();
 
-        int l = (width - v.getMeasuredWidth())/2;
+        int l = (width - v.getMeasuredWidth()) / 2;
         int r = l + v.getMeasuredWidth();
 
-        v.layout(l,t,r,b);
+        v.layout(l, t, r, b);
     }
 
     @Override

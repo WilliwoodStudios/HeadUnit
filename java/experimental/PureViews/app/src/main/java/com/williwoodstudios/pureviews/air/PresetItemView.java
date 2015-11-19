@@ -35,7 +35,7 @@ public class PresetItemView extends ViewGroup {
         mTextView = new TextView(getContext());
         mTextView.setText("Hello");
         mTextView.setTextAppearance(getContext(), R.style.mediaButtonFont);
-        mTextView.setTextSize(30);
+        mTextView.setTextSize(25);
         addView(mTextView);
 
         mSpacerLine = new View(getContext());
@@ -140,7 +140,7 @@ public class PresetItemView extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        mTextView.layout(b - t + 5, 10, r - l, b - t - 10);
+        mTextView.layout(b - t, 10, r - l, b - t - 10);
         mImageView.layout(0, 0, b - t, b - t);
         mSpacerLine.layout(0,b-t-1,r-l,b-t);
     }

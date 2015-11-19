@@ -38,7 +38,7 @@ public class WedgeScreen extends AppScreen {
     }
 
     private void init() {
-        setBackgroundColor(0xbf000000);
+        setBackgroundColor(0xef000000);
         mLinePaint = new Paint();
         mLinePaint.setAntiAlias(true);
     }
