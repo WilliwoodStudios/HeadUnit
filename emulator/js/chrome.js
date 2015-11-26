@@ -21,7 +21,7 @@ function screenChrome() {
 	};
 	
 	this.hvac = {
-		visible: false, //(window.innerHeight > 801 || ($system.isClientDevice == true)),
+		visible: (window.innerHeight > 801 || ($system.isClientDevice == true)),
 		driver: {
 			temperature: {
 				value: 75,
