@@ -6,6 +6,7 @@ function main() {
 		{
 			component: $ui.MediaPlayer,
 			id: 'mediaPlayer',
+			maxMinVisible: $system.isSplitScreen(),
 			provider: {
 				id: 'mediaPlayerProvider',
 				property: 'currentSong'
