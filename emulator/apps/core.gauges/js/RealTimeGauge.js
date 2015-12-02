@@ -411,10 +411,10 @@ function emulator_RealTimeGauge(object, screen) {
         }.$bind(object));
     }
 
-    // window.setInterval(function() { 
-    //     var range = _private.config.max - _private.config.min;
-    //     this.value = Math.random() * range + _private.config.min;
-    // }.$bind(object),1000);
+    window.setInterval(function() { 
+         var range = _private.config.max - _private.config.min;
+         this.value = Math.random() * range + _private.config.min;
+    }.$bind(object),1000);
 
     return object.dom;
 }
