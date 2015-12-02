@@ -36,6 +36,8 @@ function suspensionScreen() {
 						$ui.push(suspensionChoiceScreen);
 					} else if (event.target.id == 'suspension.presets') {
 						$ui.push(suspensionPresetScreen);
+					} else if (event.target.id == 'suspension.default') {
+						$ui.toast('This setting is currently not available in the emulator');
 					}
 				}
 			}

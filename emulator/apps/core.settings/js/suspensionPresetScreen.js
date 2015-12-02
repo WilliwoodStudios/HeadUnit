@@ -17,7 +17,8 @@ function suspensionPresetScreen() {
 			},
 			onaction: function(event) {
 				if (event && event.target && event.target.index) {
-					console.log('clicked: ' +event.target.title)
+					//console.log('clicked: ' +event.target.title)
+					$ui.toast('This setting is currently not available in the emulator');
 				}
 			}
 		}

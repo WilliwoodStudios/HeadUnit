@@ -46,7 +46,7 @@ function suspensionChoiceScreen() {
 				}
 			],
 			onaction: function(event) {
-				
+				$ui.toast('Switching between Air Systems currently is not available in the emulator');
 			}
 		}
 	];

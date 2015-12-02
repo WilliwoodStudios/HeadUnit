@@ -18,7 +18,12 @@ function clearCodeScreen() {
 	]
 	// Handle the users choice
 	this.onchoice = function(index) {
-		console.log('index: ' + index)
+		if (index == 0) {
+			if (window.$core) {
+				var systemEvent = new $ui.DataEvent($system.EventType.ONOBDCODESCLEARED);
+				$core.raiseEvent(systemEvent);
+			}
+		}
 		$ui.pop();
 	};
 }

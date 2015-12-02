@@ -50,7 +50,9 @@ function main() {
 						property: 'badge'
 					},
 					onclick: function() {
-						$system.obd.confirmCodeClear();
+						if (this.contentShowing == true && this.screen.hasCodes == true) {
+							$system.obd.confirmCodeClear();
+						}
 					}
 				},
 				{
@@ -60,7 +62,9 @@ function main() {
 						property: 'description'
 					},
 					onclick: function() {
-						console.log('clicked description')
+						if (this.contentShowing == true && this.screen.hasCodes == true) {
+							$ui.toast('This feature is currently not available in the emulator');
+						}
 					}
 				}
 			]
@@ -202,6 +206,7 @@ function main() {
 	// Request data from the vehicle
 	this.onshow = function() {
 		$system.obd.getOBDStatus(this.onobdstatussuccess, this.onobdstatusfail);
+		$ui.addEventListener($system.EventType.ONOBDCODESCLEARED, this.onobdcodescleared, this);
 	};
 	
 	// Vehicle is connected and ready so ask for test status data
@@ -217,8 +222,14 @@ function main() {
 		console.log(data);
 	}.$bind(this);
 	
+	// User cleared codes
+	this.onobdcodescleared = function(data) {
+		this.showNoDTC();
+	}.$bind(this);
+	
 	// update the screen to show no trouble codes
 	this.showNoDTC = function() {
+		this.hasCodes = false;
 		var data = {
 				badge: {
 					caption: '<large>GREAT!</large>',
@@ -283,6 +294,7 @@ function main() {
 		if (data && (data.result == 1)) {
 			var codes = data.obd.dtcCodes;
 			if (codes && codes.length > 0) {
+				this.hasCodes = true;
 				var code = codes[0],
 					data = {
 						badge: {

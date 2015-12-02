@@ -62,7 +62,7 @@ function main() {
 						            caption: 'Add Condition',
 									onclick: function() {
 										if (this.screen.presetSelected == true) {
-											
+											$ui.toast('This feature is currently not available in the emulator');
 										} else {
 											var i,
 												item,
