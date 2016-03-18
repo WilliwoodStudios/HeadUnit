@@ -1,1 +1,83 @@
-reverseEngineeringNotes.txt
+Unique Message Addresses
+========================
+   can0  00FF1400
+   can0  00FF1500
+   can0  00FF1600
+   can0  00FF1700
+   can0  00FF1800
+   can0  00FF1900
+   can0  00FF1B00
+   can0  00FF1C00
+   can0  00FF78
+   can0  00FF7801
+
+   can0  00FF7C01 - Manual button press
+
+Physical Button Presses
+=======================
+
+Message transmitted frequently when device is in MANUAL mode.
+
+Note sent when in preset mode.
+
+
+Carried in:
+  can0  00FF7C01   [8]  00 00 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  00 00 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  00 00 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  00 00 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  01 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  01 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  01 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  01 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  01 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  01 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  01 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  01 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  01 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  01 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 01 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 03 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 03 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 03 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 03 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 03 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 03 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 03 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  05 03 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  00 00 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  00 00 FF FF FF FF FF FF   '........'
+  can0  00FF7C01   [8]  00 00 FF FF FF FF FF FF   '........'
+
+          wheel mask    || 
+            direction      ||
+
+wheel mask:
+    front left         01
+    front right        04
+    back left          10
+    back right         40
+
+direction flag: (not a mask)
+    up                 01
+    down               02
+
+    note: possible for many channels to be pressed in the same direction
+          not posisble for channels to be pressed in opposing directions
+
+
+
