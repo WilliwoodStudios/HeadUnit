@@ -1,10 +1,12 @@
 /* Copyright (c) 2015 Workshop 12 Inc. */
 function main() {
 	this.component = $ui.WindowPane;
+	this.debug = false;
 	this.content = [
 		{
 			component: $ui.MediaPlayer,
 			id: 'mediaPlayer',
+			maxMinVisible: $system.isSplitScreen(),
 			provider: {
 				id: 'mediaPlayerProvider',
 				property: 'currentSong'
@@ -37,15 +39,37 @@ function main() {
 				}
 			},
 			ontoggleshuffle: function() {
-				$system.songHistory.setShuffle(!$system.songHistory.getShuffle());
+				var mediaSource = $system.audio.getActiveMediaSource();
+				if (mediaSource && (mediaSource.type == $system.MediaSourceType.PLAYER)) {
+					mediaSource.toggleShuffle();
+				}
 			},
 			ontogglerepeat: function() {
-				var repeat = $system.songHistory.getRepeat();
-				repeat += 1;
-				repeat %= 3;
-				$system.songHistory.setRepeat(repeat);
+				var mediaSource = $system.audio.getActiveMediaSource();
+				if (mediaSource && (mediaSource.type == $system.MediaSourceType.PLAYER)) {
+					mediaSource.toggleRepeat();
+				}
+			},
+			onminimize: function() {
+				if (window.$core) {
+					var systemEvent = new $ui.DataEvent($system.EventType.ONMEDIAMINIMIZE);
+					$core.raiseEvent(systemEvent);
+				}
+			},
+			onrestore: function() {
+				if (window.$core) {
+					var systemEvent = new $ui.DataEvent($system.EventType.ONMEDIARESTORE);
+					$core.raiseEvent(systemEvent);
+				}
+			},
+			onsource: function() {
+				if (window.$core) {
+					/*window.setTimeout(function() {
+						var systemEvent = new $ui.DataEvent($system.EventType.ONCONFIRMGARAGEDOOR);
+						$core.raiseEvent(systemEvent);
+					},2000);*/
+				}
 			}
-
 		}
 	];
 
@@ -57,8 +81,8 @@ function main() {
 	];
 
 	this.onCurrentSongChanged = function (event) {
+		if (this.debug) console.log("on current song changed");
 		// pretty much ignoring the event...
-		var mediaSource = $system.audio.getActiveMediaSource();
 		var data = {
 			currentSong: {
 				album: "-",
@@ -69,21 +93,15 @@ function main() {
 				paused: true
 			}
 		};
-		if (mediaSource && (mediaSource.type == $system.MediaSourceType.PLAYER)) {
-			var song = mediaSource.getCurrentSong();
-			if (song) {
-				data = {
-					currentSong: {
-						album: song.albumName,
-						coverArt: song.artwork,
-						song: song.name,
-						artist: song.artistName,
-						duration: song.duration,
-						paused: mediaSource.isPaused()
-					}
-				};
-			}
-		}
+		var song = event.data;
+
+		data.currentSong.album = song.albumName;
+		data.currentSong.coverArt = song.artwork;
+		data.currentSong.song = song.name;
+		data.currentSong.artist = song.artistName;
+		data.currentSong.duration = song.duration;
+		data.currentSong.paused = $system.audio.getActiveMediaSource().isPaused();
+
 		this.mediaPlayerProvider.data = data;
 	}.$bind(this);
 	
@@ -98,23 +116,42 @@ function main() {
 	};
 	
 	this.onPlaybackEnded = function(event) {
+		if (this.debug) console.log("Playback ended");
 		this.mediaPlayer.setPaused(true);
 	}.$bind(this);
 	
 	this.onPlaybackStarted = function(event) {
+		if (this.debug) console.log("Playback started");
 		this.mediaPlayer.setPaused(false);
 	}.$bind(this);
 
-
 	this.onshow = function () {
-		// Set our current media
-		this.onCurrentSongChanged();
-		
-		$data.addEventListener($system.songHistory.MEDIA_SONG_CHANGED, this.onCurrentSongChanged);
-		$data.addEventListener($system.songHistory.MEDIA_SHUFFLE_CHANGED,this.onShuffleChanged);
-		$data.addEventListener($system.songHistory.MEDIA_REPEAT_CHANGED,this.onRepeatChanged);
-		$data.addEventListener("mediaPlaybackStarted",this.onPlaybackStarted);
-		$data.addEventListener("mediaPlaybackEnded",this.onPlaybackEnded);
-	};
+		$ui.addEventListener($system.EventType.MEDIA_SONG_CHANGED, this.onCurrentSongChanged, this);
+		$ui.addEventListener($system.EventType.MEDIA_SHUFFLE_CHANGED,this.onShuffleChanged, this);
+		$ui.addEventListener($system.EventType.MEDIA_REPEAT_CHANGED,this.onRepeatChanged, this);
+		$ui.addEventListener($system.EventType.MEDIA_PLAYBACK_STARTED,this.onPlaybackStarted, this);
+		$ui.addEventListener($system.EventType.MEDIA_PLAYBACK_ENDED,this.onPlaybackEnded, this);
 
+		var mediaSource = $system.audio.getActiveMediaSource();
+		if (this.debug) console.log("Media Source: about to register our interest");
+		mediaSource.registerInterest(this);
+	}.$bind(this);
+
+	this.ondestroy = function() {
+		if (this.debug) console.log("About to unregister...");
+		var mediaSource = $system.audio.getActiveMediaSource();
+		mediaSource.unregisterInterest(this);
+	}.$bind(this);
+
+	if ("chrome" in window && chrome.runtime && chrome.runtime.id) {
+		// We are in a chrome app - don't do the ondestroy/onunload.
+	} else {
+		var oldOnUnload = window.onunload;
+		window.onunload = function() {
+			this.ondestroy();
+			if (oldOnUnload && typeof(oldOnUnload)==="function") {
+				oldOnUnload();
+			}
+		}.$bind(this);
+	}
 }

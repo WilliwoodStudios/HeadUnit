@@ -18,6 +18,14 @@ public class BlockingFuture<T> {
         return false;
     }
 
+    public T getNoExeption(T defaultValue) {
+        try {
+            return get();
+        } catch (BossException be) {
+            return defaultValue;
+        }
+    }
+
     public synchronized T get() throws BossException {
         do {
             if (mDone) {

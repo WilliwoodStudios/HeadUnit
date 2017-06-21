@@ -7,6 +7,7 @@ function mainMenu() {
 	this.content = [
 		{
 			component: $ui.CircleMenu,
+			id: 'mainCircleMenu',
 			provider: {
 				id: 'mainMenuProvider',
 				property: 'items'
@@ -46,8 +47,15 @@ function mainMenu() {
 	// Load the menu
 	this.onshow = function() {
 		$core.getAppsList(this.onapplistrefresh);
+		$ui.addEventListener($system.EventType.ONMEDIAMINIMIZE, this.onmediasizechange, this);
+		$ui.addEventListener($system.EventType.ONMEDIARESTORE, this.onmediasizechange, this);
+		this.onthemechange();
+	};
+	
+	// Handle theme changes
+	this.onthemechange = function() {
 		// Get our background image
-		var backgroundImg = $core.getBackgroundImage($ui.theme.color);
+		var backgroundImg = $core.getBackgroundImage($ui.theme.backgroundImageColor);
 		if (backgroundImg) {
 			this.setBackground(new ScreenBackground(backgroundImg));
 		}
@@ -59,6 +67,11 @@ function mainMenu() {
 			items: apps
 		}
 		this.mainMenuProvider.data = data;
-	}
-	this.onapplistrefresh = this.onapplistrefresh.bind(this);
+	}.bind(this);
+	
+	// User changed media size
+	this.onmediasizechange = function() {
+		this.mainCircleMenu.recalculateLayout();
+	}.$bind(this);
+	
 }

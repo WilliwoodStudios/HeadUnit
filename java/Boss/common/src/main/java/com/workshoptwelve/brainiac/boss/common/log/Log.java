@@ -30,6 +30,27 @@ public class Log {
     private static Map<String,Log> sKnownLoggers = new HashMap<String, Log>();
 
     public static synchronized Log getLogger(String name) {
+        if (sLogger == null) {
+            try {
+                Class klass = Class.forName("com.workshoptwelve.brainiac.boss.log.AndroidLogger");
+                sLogger = (Logger) klass.newInstance();
+            } catch (Exception e) {
+                // Can't do anything - our logging is broken...
+            }
+            if (sLogger == null) {
+                sLogger = new Logger() {
+                    @Override
+                    protected void rawLog(Level level, StringBuilder toLog) {
+
+                    }
+
+                    @Override
+                    protected void getPrefix(Level level, StringBuilder prefix) {
+
+                    }
+                };
+            }
+        }
         Log toReturn = sKnownLoggers.get(name);
         if (toReturn == null) {
             sKnownLoggers.put(name,toReturn = new Log(name));

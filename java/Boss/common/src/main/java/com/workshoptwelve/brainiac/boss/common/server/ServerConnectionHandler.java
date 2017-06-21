@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 /**
@@ -25,6 +26,8 @@ import java.util.List;
 class ServerConnectionHandler implements Runnable {
     private static final Log log = Log.getLogger(ServerConnectionHandler.class.getName());
     private static final int CLIENT_READ_TIMEOUT_MS = 20000;
+    private final AService mDefaultService;
+    private final String mNonDefaultPath;
     private Socket mClient;
     private List<AService> mServices;
 
@@ -36,9 +39,13 @@ class ServerConnectionHandler implements Runnable {
     private List<String> mHeaders;
     private String[] mHeaderZeroParts;
 
-    public ServerConnectionHandler(List<AService> services, Socket client) {
+    public ServerConnectionHandler(AService defaultService, String nonDefaultPath, List<AService> services, Socket client) {
         mServices = services;
+        mDefaultService = defaultService;
         mClient = client;
+        mNonDefaultPath = nonDefaultPath;
+//
+//        log.setLogLevel(Log.Level.v);
     }
 
     private void configureSocket() throws SocketException {
@@ -58,19 +65,24 @@ class ServerConnectionHandler implements Runnable {
         log.v();
         String path = mHeaderZeroParts[1];
 
-        boolean done = false;
-        for (AService service : mServices) {
-            String servicePath = service.getPath();
-            int servicePathLength = servicePath.length();
-            if (path.startsWith(servicePath)) {
-                if (path.length() == servicePathLength || isSlashOrQuestionMark(path.charAt(servicePathLength))) {
-                    service.handleConnection(mClient, mHeaders, mHeaderZeroParts, mHttpInputStream, mHttpOutputStream);
-                    done = true;
-                    break;
+        if (path.startsWith(mNonDefaultPath)) {
+            boolean done = false;
+            for (AService service : mServices) {
+                String servicePath = service.getPath();
+                int servicePathLength = servicePath.length();
+                if (path.startsWith(servicePath)) {
+                    if (path.length() == servicePathLength || isSlashOrQuestionMark(path.charAt(servicePathLength))) {
+                        service.handleConnection(mClient, mHeaders, mHeaderZeroParts, mHttpInputStream, mHttpOutputStream);
+                        done = true;
+                        break;
+                    }
                 }
             }
+            return done;
         }
-        return done;
+
+        mDefaultService.handleConnection(mClient, mHeaders, mHeaderZeroParts, mHttpInputStream, mHttpOutputStream);
+        return true;
     }
 
     private void showAllServices() throws JSONException, IOException {
@@ -115,7 +127,7 @@ class ServerConnectionHandler implements Runnable {
                 mHeaderZeroParts = mHeaders.get(0).split(" ");
 
                 if (mHeaderZeroParts.length != 3) {
-                    throw new IOException("Wrong number of parts in header 0");
+                    throw new IOException("Wrong number of parts in header 0: " + mHeaders.get(0));
                 }
 
                 try {
@@ -126,9 +138,9 @@ class ServerConnectionHandler implements Runnable {
                             showAllServices();
                         }
                     } catch (JSONException je) {
-                        throw new BossException(BossError.UNHANDLED_EXCEPTION,je);
+                        throw new BossException(BossError.UNHANDLED_EXCEPTION, je);
                     } catch (RuntimeException re) {
-                        throw new BossException(BossError.UNHANDLED_EXCEPTION,re);
+                        throw new BossException(BossError.UNHANDLED_EXCEPTION, re);
                     }
                 } catch (BossException bossException) {
                     handleBossException(bossException);
@@ -139,6 +151,8 @@ class ServerConnectionHandler implements Runnable {
             }
         } catch (EOFException eof) {
             log.v("Connection appears closed by peer");
+        } catch (SocketTimeoutException ste) {
+            // ignore
         } catch (Exception e) {
             log.e("Error handling connection", e);
         } finally {
@@ -150,11 +164,11 @@ class ServerConnectionHandler implements Runnable {
         JSONObject response = new JSONObject();
         BossError bossError = bossException.getBossError();
         JSONObject jsonError = new JSONObject();
-        response.put("error",jsonError);
+        response.put("error", jsonError);
 
         jsonError.put("description", bossError.getDescription());
-        jsonError.put("code",bossError.getErrorCode());
-        jsonError.put("enum",bossError.toString());
+        jsonError.put("code", bossError.getErrorCode());
+        jsonError.put("enum", bossError.toString());
 
         String message = bossException.getMessage();
         if (message != null && message.length() > 0) {
@@ -165,14 +179,14 @@ class ServerConnectionHandler implements Runnable {
         if (cause != null) {
             JSONObject jsonCause = new JSONObject();
             jsonError.put("errorCause", jsonCause);
-            jsonCause.put("message",cause.getMessage());
+            jsonCause.put("message", cause.getMessage());
             jsonCause.put("class", cause.getClass().getName());
             StringBuilder stackTrace = new StringBuilder();
             Logger.getExceptionTrace(cause, stackTrace);
             jsonCause.put("stackTrace", stackTrace);
         }
 
-        mHttpOutputStream.setResponse(200,"OK");
+        mHttpOutputStream.setResponse(200, "OK");
         mHttpOutputStream.write(response.toString(3).getBytes());
     }
 

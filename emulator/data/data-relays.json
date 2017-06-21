@@ -1,0 +1,59 @@
+{
+	"relays": [
+		{
+			"board": "0000000000000001",
+			"name": "Accessory Lights",
+			"bank": "s:0"
+		},
+		{
+			"board": "0000000000000001",
+			"name": "Methanol",
+			"bank": "s:1"
+		},
+		{
+			"board": "0000000000000001",
+			"name": "Intercooler Mist",
+			"duration": 6000,
+			"bank": "s:2"
+		},
+		{
+			"board": "0000000000000001",
+			"name": "Garage Door Opener",
+			"isMomentary": true,
+			"bank": "s:3"
+		},
+		{
+			"board": "ffffffffffffff01",
+			"name": "License Plate",
+			"positiveLabel": "SHOW",
+			"negativeLabel": "HIDE",
+			"duration": 6000,
+			"isPolaritySwitch": true,
+			"bank": "d:0"
+		},
+		{
+			"board": "ffffffffffffff01",
+			"name": "Doors",
+			"positiveLabel": "OPEN",
+			"negativeLabel": "CLOSE",
+			"duration": 7000,
+			"isPolaritySwitch": true,
+			"bank": "d:1"
+		},
+		{
+			"board": "ffffffffffffff01",
+			"name": "Unused",
+			"shown": false,
+			"duration": 45000,
+			"isPolaritySwitch": true,
+			"bank": "d:2"
+		},
+		{
+			"board": "ffffffffffffff01",
+			"name": "Unused",
+			"shown": false,
+			"isPolaritySwitch": true,
+			"bank": "d:3"
+		}
+	]
+}

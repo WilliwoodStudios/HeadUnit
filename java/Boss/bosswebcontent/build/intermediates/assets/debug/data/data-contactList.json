@@ -1,0 +1,41 @@
+{
+	"contacts": [
+		{
+			"img": "../../data/img/avatars/avatar6.png",
+			"title": "Dave Johnson",
+			"caption": "Home Number",
+			"accent": "(555) 369-3269"
+		},
+		{
+			"img": "../../data/img/avatars/avatar2.png",
+			"title": "Gary Klassen",
+			"caption": "Cell Number",
+			"accent": "(555) 698-2658"
+		},
+		{
+			"img": "../../data/img/avatars/avatar3.png",
+			"title": "Rob Williams",
+			"caption": "Home Number",
+			"accent": "(555) 369-1259"
+		},
+		{
+			"img": "../../data/img/avatars/avatar5.png",
+			"title": "Sam Lowe",
+			"caption": "Cell Number",
+			"accent": "(555) 369-7826"
+		},
+		{
+			"img": "../../data/img/avatars/avatar1.png",
+			"title": "Tim Neil",
+			"caption": "Home Number",
+			"accent": "(555) 555-9869"
+		},
+		{
+			"img": "../../data/img/avatars/avatar4.png",
+			"title": "Victoria Berry",
+			"caption": "Home Number",
+			"accent": "(555) 698-3658"
+		}
+			
+	]
+}

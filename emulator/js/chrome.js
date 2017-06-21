@@ -2,7 +2,7 @@
 function screenChrome() {
 	this.disableAnimation = true;
 	this.component = $ui.HeadUnitChrome;
-	this.primaryWindow ={
+	this.primaryWindow = {
 		windowPane: mainMenu
 	};
 	
@@ -21,7 +21,7 @@ function screenChrome() {
 	};
 	
 	this.hvac = {
-		visible: (window.innerHeight > 600),
+		visible: (window.innerHeight > 801 || ($system.isClientDevice == true)),
 		driver: {
 			temperature: {
 				value: 75,
@@ -63,22 +63,58 @@ function screenChrome() {
 	this.onshow = function() {
 		if (this.hvac) {
 			// Set our temperature change listeners
-			$system.addEventListener($system.EventType.ONDRIVERTEMPCHANGE, this.ondrivertempchange, this);
-			$system.addEventListener($system.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);
+			$ui.addEventListener($system.EventType.ONDRIVERTEMPCHANGE, this.ondrivertempchange, this);
+			$ui.addEventListener($system.EventType.ONPASSENGERTEMPCHANGE, this.onpassengertempchange, this);
+			$ui.addEventListener($system.EventType.ONREQUESTSUSPENSIONUI, this.onrequestsuspensionui, this);
+			if ($system.config.isClientDevice != true) {
+				$ui.addEventListener($system.EventType.ONMEDIAMINIMIZE, this.onmediaminimize, this);
+				$ui.addEventListener($system.EventType.ONMEDIARESTORE, this.onmediarestore, this);
+				$ui.addEventListener($system.EventType.ONCONFIRMGARAGEDOOR, this.onconfirmgaragedoor, this);
+			}
 		}
+		this.onthemechange();
 	}
 	
 	this.onsettingsclick = function() {
-		$core.openSettings();
-	}
+		$core.openSettings();		
+	};
 	
 	// Update the driver temperature setting
-	this.ondrivertempchange = function(data) {
-		this.hvac.driver.temperature.setTemperature(data.temperature);
+	this.ondrivertempchange = function(event) {
+		this.hvac.driver.temperature.setTemperature(event.data.temperature);
 	}.$bind(this);
 	
 	// Update the passenger temperature setting
-	this.onpassengertempchange = function(data) {
-		this.hvac.passenger.temperature.setTemperature(data.temperature);
+	this.onpassengertempchange = function(event) {
+		this.hvac.passenger.temperature.setTemperature(event.data.temperature);
+	}.$bind(this);
+	
+	// system requested the UI for adjusting a suspension corner
+	this.onrequestsuspensionui = function(event) {
+		$ui.push(wedgeSuspension, {corner: event.data.corner})
+	}.$bind(this);
+	
+	
+	// system requested the UI for Confirming Garage Door
+	this.onconfirmgaragedoor = function(event) {
+		$ui.push(confirmGarageScreen);
+	}.$bind(this);
+
+	this.onthemechange = function() {
+		if ("brainiacSystemTheme" in window) {
+			brainiacSystemTheme.adviseTheme($ui.theme);
+  		}
+	}.$bind(this);
+	
+	// User minimized media
+	this.onmediaminimize = function() {
+		this.primaryWindow.size = $ui.Size.HUGE;
+		this.secondaryWindow.size = $ui.Size.TINY;
+	}.$bind(this);
+	
+	// User resored media app size
+	this.onmediarestore = function() {
+		this.primaryWindow.size = $ui.Size.NORMAL;
+		this.secondaryWindow.size = $ui.Size.NORMAL;
 	}.$bind(this);
 }

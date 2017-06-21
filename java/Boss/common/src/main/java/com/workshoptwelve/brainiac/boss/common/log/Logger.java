@@ -38,7 +38,7 @@ public abstract class Logger {
     }
 
     public Log.Level getLogLevel(String name) {
-        return Log.Level.d; // TODO make this programatic...
+        return Log.Level.i; // d; // TODO make this programatic...
     }
 
     private synchronized void log(Log.Level level, Object... args) {

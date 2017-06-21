@@ -28,7 +28,7 @@ public class OBDService extends AService {
     public static final String TEST_EGR_VVT_SYSTEM = "egrVvtSystem";
     public static final String TEST_EVAPORATIVE_SYSTEM = "evaporativeSystem";
     public static final String TEST_EXHAUST_GAS_SENSOR = "exhaustGasSensor";
-    public static final String TEST_HEATED_CATALYST = "headetCatalyst";
+    public static final String TEST_HEATED_CATALYST = "heatedCatalyst";
     public static final String TEST_NMHC_CATALYST = "nmhcCatalyst";
     public static final String TEST_NOX_SCR_MONITOR = "noxScrMonitor";
     public static final String TEST_OXYGEN_SENSOR = "oxygenSensor";
@@ -70,7 +70,7 @@ public class OBDService extends AService {
     private static final String KEY_FUEL_SYSTEM = "fuelSystem";
     private static final String KEY_INCOMPLETE = "incomplete";
     private static final String KEY_MIL_ON = "milOn";
-    private static final String KEY_MISFIRE = "misfire";
+    private static final String KEY_MISFIRE = "misFire";
     private static final String KEY_OBD = "obd";
     private static final String KEY_RESPONSE = "response";
     private static final String KEY_SINCE_DTC_CLEARED = "sinceDtcCleared";
@@ -80,11 +80,11 @@ public class OBDService extends AService {
     private static final String PARAM_MODE = "mode";
     private static final String PARAM_PID = "pid";
     private static final String PATH = "/brainiac/service/hardware/obd";
-    private static final String PATH_CLEAR_DTC = "clearDtc";
-    private static final String PATH_GET_DTC = "getDtc";
-    private static final String PATH_GET_OBD_STATUS = "getObdStatus";
+    private static final String PATH_CLEAR_DTC = "clearDTC";
+    private static final String PATH_GET_DTC = "getDTC";
+    private static final String PATH_GET_OBD_STATUS = "getOBDStatus";
     private static final String PATH_GET_TEST_STATUS = "getTestStatus";
-    private static final String PATH_SEND_PID = "sendPid";
+    private static final String PATH_SEND_PID = "sendPID";
     private static final String VALUE_COMPRESSION = "compression";
     private static final String VALUE_SPARK = "spark";
 
@@ -92,6 +92,8 @@ public class OBDService extends AService {
      * This is the connection to the device.
      */
     private IOBDConnection sOBDConnection;
+
+    private OBDWebSocketDispatcher mWebSocketDispatcher = new OBDWebSocketDispatcher(this);
 
     /**
      * Constructor registers end points.
@@ -106,6 +108,8 @@ public class OBDService extends AService {
         addEndPoint(new GetDTC());
         addEndPoint(new ClearDTC());
         addEndPoint(new GetTestStatus());
+
+        setWebSocketDispatcher(mWebSocketDispatcher);
     }
 
     /**
@@ -122,6 +126,14 @@ public class OBDService extends AService {
      */
     public void setOBDConnection(IOBDConnection connection) {
         sOBDConnection = connection;
+    }
+
+    /**
+     * Get the in use @{IOBDConnection}.
+     * @return The in use connection.
+     */
+    public IOBDConnection getOBDConnection() {
+        return sOBDConnection;
     }
 
     /**
@@ -195,6 +207,18 @@ public class OBDService extends AService {
         return toReturn;
     }
 
+    public void registerForPIDUpdate(IOBDListener mListener, Integer effectivePID) {
+        sOBDConnection.registerForPIDUpdates(effectivePID,mListener);
+    }
+
+    public void unregisterForPIDUpdate(IOBDListener mListener, Integer effectivePID) {
+        sOBDConnection.unregisterForPIDUpdates(effectivePID,mListener);
+    }
+
+    public void setWebSocketDispatcher(OBDWebSocketDispatcher dispatcher) {
+        super.setWebSocketDispatcher(dispatcher);
+    }
+
     private class GetOBDStatus extends AEndPoint {
         public GetOBDStatus() {
             super(PATH_GET_OBD_STATUS);
@@ -204,8 +228,8 @@ public class OBDService extends AService {
         public JSONObject execute(List<String> headers, HashMap<String, String> params) throws BossException, JSONException {
             checkConnection();
 
-            JSONObject toReturn = new JSONObject();
-            JSONObject obd = buildResultOne();
+            JSONObject toReturn = buildResultOne();
+            JSONObject obd = new JSONObject();
 
             toReturn.put(KEY_OBD, obd);
 
@@ -403,7 +427,7 @@ public class OBDService extends AService {
             toReturn.put(KEY_OBD, obd);
 
             JSONArray dtcCodes = new JSONArray();
-            toReturn.put(KEY_DTC_CODES, dtcCodes);
+            obd.put(KEY_DTC_CODES, dtcCodes);
 
             int where43 = responseString.indexOf("43");
             // TODO handle not found case.
@@ -414,8 +438,27 @@ public class OBDService extends AService {
                 if (codeBytes[i] == 0 && codeBytes[i + 1] == 0) {
                     // ignore.
                 } else {
+                    JSONObject codeObject = new JSONObject();
                     String code = twoBytesToDTC(codeBytes, i);
-                    dtcCodes.put(code);
+                    codeObject.put("code",code);
+                    codeObject.put("title","This will be the title");
+
+                    JSONArray causes = new JSONArray();
+                    causes.put("Cause 1");
+                    causes.put("Cause 2");
+                    codeObject.put("causes",causes);
+
+                    JSONArray techNotes = new JSONArray();
+                    techNotes.put("Do not set fire to vehicle");
+                    codeObject.put("techNotes",techNotes);
+
+                    JSONArray symptoms = new JSONArray();
+                    symptoms.put("Vehicle showing smoke and flames");
+                    codeObject.put("symptoms",symptoms);
+
+                    codeObject.put("description","No description available for " + code);
+
+                    dtcCodes.put(codeObject);
                 }
             }
 

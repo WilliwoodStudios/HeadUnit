@@ -7,6 +7,7 @@ function quarterMile() {
 	this.content = [
 		{
 			component: $ui.TileGroup,
+			visible: ($system.isClientDevice == true) ? false : true,
 			tiles: [
 				{
 					component: $ui.TileRecord,
@@ -20,7 +21,7 @@ function quarterMile() {
 						this.screen.timerTile.start();
 						$system.audio.playSoundEffect($system.SoundEffect.HORN);
 						// Fake out a 10 second run in the emulator
-						if ($system.config.isEmulator == true) {
+						if ($system.config.isEmulator == true || true) { // TODO - fix
 							$ui.toast('The emulator simulates a 10 second 1/4 mile.');
 							var screen = this.screen;
 							window.setTimeout(function() {
@@ -61,6 +62,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					//animated: false,
 					targetHigh: true,
 					provider: {
 						id: 'quarterMileProvider',
@@ -69,6 +71,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					//animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'quarterMileMPHHistory'
@@ -76,6 +79,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'reactionTime'
@@ -83,6 +87,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'reactionTimeHistory'
@@ -90,6 +95,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'sixtyFoot'
@@ -97,6 +103,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'sixtyFootHistory'
@@ -104,6 +111,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'threeThirtyFoot'
@@ -111,6 +119,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'threeThirtyFootHistory'
@@ -118,6 +127,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'eighthMile'
@@ -125,6 +135,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'eighthMileHistory'
@@ -132,6 +143,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeDonut,
+					animated: false,
 					targetHigh: true,
 					provider: {
 						id: 'quarterMileProvider',
@@ -140,6 +152,7 @@ function quarterMile() {
 				},
 				{
 					component: $ui.TileTimeHistory,
+					animated: false,
 					provider: {
 						id: 'quarterMileProvider',
 						property: 'eighthMileMPHHistory'

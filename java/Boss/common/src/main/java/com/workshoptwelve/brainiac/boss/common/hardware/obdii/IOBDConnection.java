@@ -15,4 +15,7 @@ public interface IOBDConnection {
     void checkPIDSupport(int mode, int pid) throws BossException;
 
     void sendCommand(String command, BlockingFuture<String> response) throws BossException;
+
+    void registerForPIDUpdates(Integer effectivePID, IOBDListener listener);
+    void unregisterForPIDUpdates(Integer effectivePID, IOBDListener listener);
 }

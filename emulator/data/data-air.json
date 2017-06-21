@@ -1,0 +1,28 @@
+{
+	"presets": [
+		{
+			"index": 1,
+			"name": "Parked",
+			"lf": 20,
+			"rf": 20,
+			"lr": 25,
+			"rr": 27
+		},
+		{
+			"index": 2,
+			"name": "Driving",
+			"lf": 40,
+			"rf": 40,
+			"lr": 42,
+			"rr": 45
+		},
+		{
+			"index": 3,
+			"name": "Full Height",
+			"lf": 72,
+			"rf": 71,
+			"lr": 76,
+			"rr": 77
+		}
+	]
+}

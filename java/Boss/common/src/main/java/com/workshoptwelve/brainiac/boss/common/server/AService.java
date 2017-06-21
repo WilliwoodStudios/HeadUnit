@@ -40,6 +40,16 @@ public abstract class AService {
         return mEndPoints;
     }
 
+    private WebSocketDispatcher mWebSocketDispatcher;
+
+    public WebSocketDispatcher getWebSocketDispatcher() {
+        return mWebSocketDispatcher;
+    }
+
+    protected void setWebSocketDispatcher(WebSocketDispatcher dispatcher) {
+        mWebSocketDispatcher = dispatcher;
+    }
+
     protected final void addEndPoint(AEndPoint endPoint) {
         mEndPoints.add(endPoint);
     }

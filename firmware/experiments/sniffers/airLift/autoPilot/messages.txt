@@ -1,0 +1,128 @@
+Status Poll
+===========
+    > fa010005f3
+    < fa100e00250064625c5ba5be0000003c089ff3
+        fa
+        10
+        0e
+        00
+        25
+        00
+        64      - pressure 0
+        62      - pressure 1
+        5c      - pressure 2
+        5b      - pressure 3
+        a5      - pressure tank
+        be
+        00
+        00
+        00
+        3c
+        08
+        9f
+        f3
+
+Go To Preset
+============
+    --------
+
+    > fa011647923c0f913cfef3
+        fa
+        01
+        16
+        47
+        92      - pressure 0?
+        3c      - pressure 2?
+        0f
+        91      - pressure 1?
+        3c      - pressure 3?
+        fe
+        f3
+    < fa10f10104f3
+
+    ----------
+    > fa011647665c0f665c15f3
+        fa
+        01
+        16
+        47
+        66      - pressure 0
+        5c      - pressure 2
+        0f
+        66      - pressure 1
+        5c      - pressure 3
+        15
+        f3
+
+Manual
+======
+    Toggle manual to preset:
+        > fa011440000000b1f3
+
+    Toggle preset to manual:
+        > fa011441000000b0f3
+
+    Seems to be ACK for toggle: (duplicate of other ack?)
+        > fa10f10104f3
+
+
+    In Manual Mode - one end keeps sending:
+    - fa10f10005f3
+
+    Seems to be ACK response for pressure changes.     
+        20:01:31.096: > fa10f10401f3
+
+    0 Down Press Release
+        > fa01416163f3
+        > fa014100c4f3
+
+    1 Down Press Release
+        > fa01416262f3
+        > fa014100c4f3    
+
+    2 Down Press Release
+        > fa01416460f3
+        > fa014100c4f3
+
+    3 Down Press Release
+        > fa0141685cf3
+        > fa014100c4f3        
+
+    0 Up Press Release  
+        > fa01415173f3
+        > fa014100c4f3    
+
+    1 Up Press Release
+        > fa01415272f3
+        > fa014100c4f3        
+
+    2 Up Press Release
+        > fa01415470f3
+        > fa014100c4f3    
+
+    3 Up Press Release
+        > fa0141586cf3
+        > fa014100c4f3
+
+    0 Down, 1 Down, 0 Release, 1 Release
+        > fa01416163f3
+        > fa01416361f3
+        > fa01416262f3
+        > fa014100c4f3
+
+    0 Down, 1 Up, 0 Release, 1 Release
+        > fa01416163f3
+        > fa01415272f3
+        > fa01415272f3
+        > fa014100c4f3            
+
+    0 Up, 1 Up, 0 Release, 1 Release
+        > fa01415173f3
+        > fa01415371f3
+        > fa01415272f3
+        > fa014100c4f3        
+
+Viewing ANY Preset
+==================
+    > fa011443000000aef3
+    < fa10f10104f3

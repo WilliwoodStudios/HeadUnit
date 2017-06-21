@@ -1,1 +1,1 @@
-include  ':common', ':desktop', ':app'
+include  ':common', ':submodules:Java-WebSocket', ':desktop', ':boss', ':localui', ':xwalkcore'
