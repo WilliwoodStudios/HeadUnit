@@ -156,20 +156,36 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-        mTime.setTextSize(0.06f * (bottom - top));
-        mDateStringY = mTime.getTextSize() * 1f;
-
+        float circleWidth;
         int width = right - left;
         int height = bottom - top;
 
-        float circleWidth = width / 6f * 4;
+        if (width > height) { // Portrait because the navigation bar is wider than tall
+            mTime.setTextSize(0.05f * (right - left));
+            mDateStringY = mTime.getTextSize() * 1f;
+            circleWidth = circleWidth = height / 6f * 4;
 
-        for (int i = -1; i <= 1; ++i) {
-            RectF toUse = i == -1 ? mTopRect : i == 0 ? mMidRect : mBotRect;
-            toUse.left = (width - circleWidth) / 2f;
-            toUse.right = toUse.left + circleWidth;
-            toUse.top = (height - circleWidth) / 2f + i * 1.75f * circleWidth;
-            toUse.bottom = toUse.top + circleWidth;
+            for (int i = -1; i <= 1; ++i) {
+                RectF toUse = i == -1 ? mTopRect : i == 0 ? mMidRect : mBotRect;
+                toUse.top = (height - circleWidth) / 2f;
+                //toUse.left = (width - circleWidth) / 2f + i * 1.75f * circleWidth;
+                toUse.left = (width - circleWidth) / 2f + i * 3f * circleWidth;
+                toUse.right = toUse.left + circleWidth;
+                toUse.bottom = toUse.top + circleWidth;
+            }
+
+        } else {
+            mTime.setTextSize(0.06f * (bottom - top));
+            mDateStringY = mTime.getTextSize() * 1f;
+            circleWidth = circleWidth = width / 6f * 4;
+
+            for (int i = -1; i <= 1; ++i) {
+                RectF toUse = i == -1 ? mTopRect : i == 0 ? mMidRect : mBotRect;
+                toUse.left = (width - circleWidth) / 2f;
+                toUse.right = toUse.left + circleWidth;
+                toUse.top = (height - circleWidth) / 2f + i * 1.75f * circleWidth;
+                toUse.bottom = toUse.top + circleWidth;
+            }
         }
 
         if (mActiveCircle == 0) {
@@ -200,15 +216,28 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        // Draw border line
-        canvas.drawLine(getWidth() - 1, 0, getWidth() - 1, getHeight(), mSpacer);
+        if (getWidth() > getHeight()) { // Portrait view
+            // Draw border line
+            canvas.drawLine(0, getHeight() - 1,  getWidth(), getHeight() - 1, mSpacer);
 
-        // Draw clock
-        canvas.drawText(mDateString, 0, mDateStringLength, getWidth() / 2, mDateStringY, mTime);
+            // Draw clock
+            canvas.drawText(mDateString, 0, mDateStringLength, getWidth() - mDateStringY - 5, getHeight()/2 + (mTime.getFontMetrics().top/2), mTime);
 
-        // Draw Line
-        float midX = (mTopRect.left + mTopRect.right) / 2;
-        canvas.drawLine(midX, mTopRect.top + 5, midX, mBotRect.bottom - 5, mCirclePaint);
+            // Draw Line
+            float midY = (mTopRect.top + mTopRect.bottom) / 2;
+            canvas.drawLine(mTopRect.left + 5, midY , mBotRect.right - 5, midY, mCirclePaint);
+
+        } else {
+            // Draw border line
+            canvas.drawLine(getWidth() - 1, 0, getWidth() - 1, getHeight(), mSpacer);
+
+            // Draw clock
+            canvas.drawText(mDateString, 0, mDateStringLength, getWidth() / 2, mDateStringY, mTime);
+
+            // Draw Line
+            float midX = (mTopRect.left + mTopRect.right) / 2;
+            canvas.drawLine(midX, mTopRect.top + 5, midX, mBotRect.bottom - 5, mCirclePaint);
+        }
 
         // Draw Circles
         canvas.drawBitmap(mBitmapBlackCircle, mTopRect.left, mTopRect.top, null);

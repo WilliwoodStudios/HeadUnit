@@ -6,103 +6,121 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.util.Log;
-import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
-import android.widget.TextView;
 
-import com.williwoodstudios.pureviews.R;
 import com.williwoodstudios.pureviews.Theme;
 
 /**
  * Created by robwilliams on 2015-10-18.
  */
 public class CircleButton extends ViewGroup {
-    private final Paint mPaint;
-    private final Paint mBlack;
+    private static final String TAG = CircleButton.class.getName();
+    private static int sCreationCount = 0;
+    private final Paint mBorderPaint;
+    private final Paint mBlackPaint;
     private final Paint mBitmapPaint;
-
-    private static final float twoPI = (float) (2 * Math.PI);
+    private final Paint mTitlePaint;
     private final RectF mRect;
     private final RectF mBitmapRect = new RectF();
-
+    private final RectF mTitleRect = new RectF();
     //    private final Paint mText;
-    private Paint mSelected;
-
+    private Paint mPressedPaint;
     private Bitmap mBitmap;
-
-    private TextView mLabelTextView;
+    private String mPackageName;
     private float mBitmapPad = 0.1f;
+    private float mTitleWidth = 0;
+    private TitlePosition mTitlePosition = TitlePosition.BELOW;
+    private String mTitle;
+    private String mTitleToShow;
+    private boolean mIsActive = false;
+    private int mWidth, mHeight;
 
     public CircleButton(Context context) {
         super(context);
+        mTitle = "";
 
+        ++sCreationCount;
+        Log.d(TAG, "Created new circle button " + sCreationCount);
 
-//        setBackgroundColor(0xffff0000);
-        mBlack = new Paint();
-        mBlack.setAntiAlias(true);
-        mBlack.setStyle(Paint.Style.FILL);
-        mBlack.setColor(0x000000);
-        mBlack.setAlpha(255);
+        mBlackPaint = new Paint();
+        mBlackPaint.setAntiAlias(true);
+        mBlackPaint.setStyle(Paint.Style.FILL);
+        mBlackPaint.setColor(0x000000);
+        mBlackPaint.setAlpha(255);
 
-        mPaint = new Paint();
-        mPaint.setAntiAlias(true);
-        mPaint.setStrokeWidth(2);
-        mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setColor(0xffffff);
-        mPaint.setAlpha(255);
+        mBorderPaint = new Paint();
+        mBorderPaint.setAntiAlias(true);
+        mBorderPaint.setStrokeWidth(2);
+        mBorderPaint.setStyle(Paint.Style.STROKE);
+        mBorderPaint.setColor(0xffffff);
+        mBorderPaint.setAlpha(255);
 
-//        mText = new Paint();
-//        mText.setAntiAlias(true);
-//        mText.setColor(0xffffff);
-//        mText.setAlpha(255);
-//
-        mSelected = new Paint();
-        mSelected.setAntiAlias(true);
-        mSelected.setColor(Theme.color);
-        mSelected.setAlpha(255);
-        mSelected.setStyle(Paint.Style.FILL);
+        mPressedPaint = new Paint();
+        mPressedPaint.setAntiAlias(true);
+        mPressedPaint.setColor(Theme.color);
+        mPressedPaint.setAlpha(255);
+        mPressedPaint.setStyle(Paint.Style.FILL);
 
         mBitmapPaint = new Paint();
         mBitmapPaint.setAntiAlias(true);
         mBitmapPaint.setFilterBitmap(true);
         mBitmapPaint.setDither(true);
 
+        mTitlePaint = new Paint();
+        mTitlePaint.setAntiAlias(true);
+        mTitlePaint.setStrokeWidth(1);
+        mTitlePaint.setColor(0xffffff);
+        mTitlePaint.setAlpha(255);
+        mTitlePaint.setStyle(Paint.Style.FILL_AND_STROKE);
+
         mRect = new RectF(3, 3, 200, 200);
 
         setClickable(true);
+    }
 
-        mLabelTextView = new TextView(getContext()) {
-            @Override
-            protected void onAnimationStart() {
-                super.onAnimationStart();
-                setAlpha(1);
+    /**
+     * These prefixes will be stripped from title names.
+     */
+    static String sToStrip[] = { "google ", "samsung " };
+
+    public CircleButton(Context context, String title) {
+        this(context);
+
+        mTitle = title;
+
+        String lower = title.toLowerCase();
+
+        for (String s : sToStrip) {
+            if (lower.startsWith(s)) {
+                mTitle = mTitle.substring(s.length());
             }
-        };
-        mLabelTextView.setTextAppearance(getContext(), R.style.mediaButtonFont);
-        mLabelTextView.setAlpha(0);
-        addView(mLabelTextView);
+        }
+
+        mTitleToShow = mTitle;
+    }
+
+    public CircleButton(Context context, int resourceId) {
+        this(context);
+
+        setImageResource(resourceId);
     }
 
     public void setNormalColor(int color) {
-        mBlack.setColor(color);
-        mBlack.setAlpha(color >> 24);
-        clearBitmaps();
+        mBlackPaint.setColor(color);
+        mBlackPaint.setAlpha(color >> 24);
     }
 
     public void setPressedColor(int color) {
-        mSelected.setColor(color);
-        mSelected.setAlpha(color >> 24);
-        clearBitmaps();
+        mPressedPaint.setColor(color);
+        mPressedPaint.setAlpha(color >> 24);
     }
 
-    //    public void setTitleColor(int color) {
-//        mText.setColor(color);
-//        mText.setAlpha(color >> 24);
-//        clearBitmaps();
-//    }
-//
     public void setImageResource(int resourceId) {
         if (resourceId != -1) {
             mBitmap = BitmapFactory.decodeResource(getContext().getResources(), resourceId);
@@ -110,19 +128,46 @@ public class CircleButton extends ViewGroup {
             mBitmap.recycle();
             mBitmap = null;
         }
-        clearBitmaps();
+        invalidate();
+    }
+
+    public String getPackageName() {
+        return mPackageName;
+    }
+
+    public void setPackageName(String packageName) {
+        mPackageName = packageName;
+    }
+
+    public void setAppIcon(Drawable appIcon) {
+        if (appIcon != null) {
+            // We are going to grayscale the Bitmap
+            // TODO: This crashes on Android O.
+            Bitmap bmpOriginal = ((BitmapDrawable) appIcon).getBitmap();
+            int width, height;
+            height = bmpOriginal.getHeight();
+            width = bmpOriginal.getWidth();
+            Bitmap bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas c = new Canvas(bmpGrayscale);
+            Paint paint = new Paint();
+            ColorMatrix cm = new ColorMatrix();
+            cm.setSaturation(0);
+            ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
+            paint.setColorFilter(f);
+            c.drawBitmap(bmpOriginal, 0, 0, paint);
+            mBitmap = bmpGrayscale;
+        } else {
+            clearImage();
+        }
+        invalidate();
     }
 
     public void clearImage() {
-        mBitmap = null;
-        clearBitmaps();
-    }
-
-    public CircleButton(Context context, String title) {
-        this(context);
-
-        mTitle = title;
-        mLabelTextView.setText(mTitle);
+        if (mBitmap != null) {
+            mBitmap.recycle();
+            mBitmap = null;
+        }
+        invalidate();
     }
 
     @Override
@@ -132,89 +177,31 @@ public class CircleButton extends ViewGroup {
         AlphaAnimation animation = new AlphaAnimation(0, 1);
         animation.setDuration(250);
         animation.setFillAfter(true);
-        mLabelTextView.startAnimation(animation);
     }
-
-    public enum TitlePosition {
-        NONE, BELOW, LEFT, RIGHT
-    }
-
-    private TitlePosition mTitlePosition = TitlePosition.BELOW;
 
     public void setTitlePosition(TitlePosition position) {
         if (position != null && position != mTitlePosition) {
             mTitlePosition = position;
             doCalcs(getWidth(), getHeight());
-            clearBitmaps();
         }
     }
-
-    public CircleButton(Context context, int resourceId) {
-        this(context);
-
-        setImageResource(resourceId);
-    }
-
-    private boolean mRedrawBitmaps = false;
-
-    public void clearBitmaps() {
-        mRedrawBitmaps = true;
-        invalidate();
-    }
-
-    private String mTitle;
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
-//        Log.e("CircleButton", "Draw");
-        if (mRedrawBitmaps || mPressedBitmap == null || mDefaultBitmap == null) {
-            generateBitmaps();
-        }
-        if (mPressedBitmap == null || mDefaultBitmap == null) {
-            return;
-        }
-        if (isPressed()) {
-            canvas.drawBitmap(mPressedBitmap, 0, 0, null);
-        } else {
-            canvas.drawBitmap(mDefaultBitmap, 0, 0, null);
-        }
         super.dispatchDraw(canvas);
-    }
 
-    private Bitmap mPressedBitmap, mDefaultBitmap;
+        canvas.drawArc(mRect, 0, 360, true, isPressed() ? mPressedPaint : mBlackPaint);
+        canvas.drawArc(mRect, 0, 360, false, mBorderPaint);
 
-    private void generateBitmaps() {
-        if (getWidth() < 1 || getHeight() < 1) {
-            return;
+        if (mBitmap != null) {
+            canvas.drawBitmap(mBitmap, null, mBitmapRect, mBitmapPaint);
         }
 
-        if (mPressedBitmap == null || mPressedBitmap.getWidth() != getWidth() || mPressedBitmap.getHeight() != getHeight()) {
-            mPressedBitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
-            mDefaultBitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
-        } else {
-            mPressedBitmap.eraseColor(0x00ffffff);
-            mDefaultBitmap.eraseColor(0x00ffffff);
-        }
-
-        mRedrawBitmaps = false;
-
-        for (int i = 0; i < 2; ++i) {
-            Canvas canvas = new Canvas(i == 0 ? mDefaultBitmap : mPressedBitmap);
-            if (i == 0) {
-                canvas.drawArc(mRect, 0, 360, true, mBlack);
-            } else {
-                canvas.drawArc(mRect, 0, 360, true, mSelected);
-            }
-
-            canvas.drawArc(mRect, 0, 360, false, mPaint);
-
-            if (mBitmap != null) {
-                canvas.drawBitmap(mBitmap, null, mBitmapRect, mBitmapPaint);
-            }
+        if (mTitle != null) {
+            float left = mTitleRect.width() / 2 - mTitleWidth / 2 + mTitleRect.left;
+            canvas.drawText(mTitleToShow, left, mTitleRect.bottom - mTitleRect.height() / 4, mTitlePaint);
         }
     }
-
-    private boolean mIsActive = false;
 
     @Override
     public void setPressed(boolean pressed) {
@@ -226,18 +213,37 @@ public class CircleButton extends ViewGroup {
         if (width == 0 || height == 0) {
             return;
         }
+
+        float size = Theme.CIRCLE_BUTTON_TEXT_SIZE;
+
         if (mTitlePosition == TitlePosition.NONE) {
             int toUse = width < height ? width : height;
             mRect.set(1, 1, toUse - 1, toUse - 1);
         } else if (mTitlePosition == TitlePosition.RIGHT) {
             mRect.set(1, 1, height - 1, height - 1);
-            mLabelTextView.setTextSize(0.25f * height);
         } else if (mTitlePosition == TitlePosition.LEFT) {
             mRect.set(width - height - 1, 1, width - 1, height - 1);
-            mLabelTextView.setTextSize(0.25f * height);
         } else if (mTitlePosition == TitlePosition.BELOW) {
             mRect.set(1, 1, width - 1, width - 1);
-            mLabelTextView.setTextSize(0.125f * height);
+        }
+
+        mTitlePaint.setTextSize(size);
+
+        if (size != 0) {
+            mTitleToShow = mTitle;
+            int crop = 0;
+            do {
+                mTitleToShow = mTitle.substring(0,mTitle.length()-crop);
+                mTitleToShow = mTitleToShow.replaceAll(" $","");
+                if (crop>0) {
+                    mTitleToShow += "..";
+                }
+                mTitleWidth = mTitlePaint.measureText(mTitleToShow);
+                if (mTitleWidth <= width) {
+                    break;
+                }
+                ++crop;
+            } while(mTitleToShow.length()>2);
         }
 
         float bitmapPad = mRect.width() * mBitmapPad;
@@ -248,8 +254,6 @@ public class CircleButton extends ViewGroup {
     public void setBitmapPad(float paddingFraction) {
         mBitmapPad = paddingFraction;
     }
-
-    private int mWidth, mHeight;
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
@@ -262,28 +266,16 @@ public class CircleButton extends ViewGroup {
 
             if (mTitle != null && mTitlePosition != TitlePosition.NONE) {
                 if (mTitlePosition == TitlePosition.BELOW) {
-//                    canvas.drawText(mTitle, (mRect.right - mRect.left) / 2, mRect.right + mText.getTextSize() * 1.125f, mText);
                     int textPad = 10;
-                    mLabelTextView.measure(0, 0);
-                    mLabelTextView.layout((width - mLabelTextView.getMeasuredWidth()) / 2, width + textPad, width, height);
-
-//                    Log.e("CircleButton",0 + " " + (width+textPad) + " " + width + " " + height);
-//
-//                    Log.e("CircleButton",mLabelTextView.getMeasuredHeight() + " " + mLabelTextView.getMeasuredWidth());
-
-                } else if (mTitlePosition == TitlePosition.RIGHT) {
-                    int textPad = 10;
-
-                    mLabelTextView.measure(0, 0);
-                    mLabelTextView.layout(height + textPad, (height - mLabelTextView.getMeasuredHeight()) / 2, width, height);
-                } else if (mTitlePosition == TitlePosition.LEFT) {
-                    int textPad = 10;
-
-                    mLabelTextView.measure(0, 0);
-                    mLabelTextView.layout(width - height - textPad - mLabelTextView.getMeasuredWidth(), (height - mLabelTextView.getMeasuredHeight()) / 2, width - height, height);
+                    mTitleRect.set(0, width + textPad, width, height);
+                } else {
+                    mTitleRect.set(0, 0, width, height);
                 }
             }
-            clearBitmaps();
         }
+    }
+
+    public enum TitlePosition {
+        NONE, BELOW, LEFT, RIGHT
     }
 }

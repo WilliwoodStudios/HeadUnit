@@ -1,10 +1,16 @@
 package com.williwoodstudios.pureviews.circle;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
+import android.view.ViewGroup;
+import android.widget.ScrollView;
 
 import com.williwoodstudios.pureviews.AppScreen;
 import com.williwoodstudios.pureviews.R;
+import com.williwoodstudios.pureviews.Theme;
 
 import java.util.List;
 
@@ -12,17 +18,34 @@ import java.util.List;
  * Created by robwilliams on 2015-10-18.
  */
 public class CircleMenu extends AppScreen {
+    // TODO: Scrolling should be sticky - right now it isn't.
+
     private final Configuration mConfiguration;
+    private final ScrollView mScrollView;
+    private final ViewGroup mButtonGroup;
+    private final Paint mSpacer;
 
     public static class CircleMenuItem {
         public CircleMenuItem(String name, int imageResourceId, OnClickListener listener) {
             mName = name;
             mImageResourceId = imageResourceId;
             mOnClickListener = listener;
+            mPackageName = null;
+            mAppIcon = null;
         }
+        public CircleMenuItem(String name, Drawable appIcon, String packageName, OnClickListener listener) {
+            mName = name;
+            mImageResourceId = -1;
+            mOnClickListener = listener;
+            mPackageName = packageName;
+            mAppIcon = appIcon;
+        }
+
         public String mName;
         public int mImageResourceId;
         public OnClickListener mOnClickListener;
+        public Drawable mAppIcon;
+        public String mPackageName;
 
     }
     public interface Configuration {
@@ -31,19 +54,42 @@ public class CircleMenu extends AppScreen {
 
     public CircleMenu(Context owner, Configuration configuration) {
         super(owner);
+        mSpacer = new Paint();
+        mSpacer.setColor(Theme.color);
+        mSpacer.setAlpha(255);
+        mSpacer.setStrokeWidth(2);
+        mSpacer.setStyle(Paint.Style.STROKE);
+
         mConfiguration = configuration;
+        mScrollView = new ScrollView(owner);
+        mButtonGroup = new ViewGroup(owner) {
+            @Override
+            protected void onLayout(boolean changed, int l, int t, int r, int b) {
+
+            }
+        };
+
+        addView(mScrollView);
+        mScrollView.addView(mButtonGroup);
 
         for (CircleMenuItem item : mConfiguration.getItems()) {
             CircleButton toAdd = new CircleButton(owner, item.mName);
             toAdd.setTitlePosition(CircleButton.TitlePosition.BELOW);
-            toAdd.setImageResource(item.mImageResourceId);
+            if (item.mImageResourceId != -1 && item.mAppIcon == null) { // Resource id is one of our internal apps
+                toAdd.setImageResource(item.mImageResourceId);
+            } else if (item.mAppIcon != null) { // AppIcon is an actual Android installed app
+                toAdd.setAppIcon(item.mAppIcon);
+            }
+            if (item.mPackageName != null) {
+                toAdd.setPackageName(item.mPackageName);
+            }
             toAdd.onAnimationEnd();
             toAdd.setBitmapPad(0.25f);
             OnClickListener listener = item.mOnClickListener;
             if (listener != null) {
                 toAdd.setOnClickListener(listener);
             }
-            addView(toAdd);
+            mButtonGroup.addView(toAdd);
         }
         setBackgroundResource(R.drawable.background_pomegranate);
     }
@@ -63,13 +109,31 @@ public class CircleMenu extends AppScreen {
         int marginX = (width - radius * 3) / 6;
         int marginY = (height - itemHeight * 2) / 4;
 
+        int scrollHeight = 0;
+
         Log.i("RPW", changed + " " + l + " " + t + " " + r + " " + b);
-        for (int i = 0; i < getChildCount(); ++i) {
+        for (int i = 0; i < mButtonGroup.getChildCount(); ++i) {
             int x = i % 3;
             int y = i / 3;
             int left = x * (radius + (marginX << 1)) + marginX;
             int top = y * (itemHeight + (marginY << 1)) + marginY;
-            getChildAt(i).layout(left, top, left + radius, top + itemHeight);
+            mButtonGroup.getChildAt(i).layout(left, top, left + radius, top + itemHeight);
+            scrollHeight = top+itemHeight;
+        }
+
+        scrollHeight += itemHeight/3;
+
+        mScrollView.layout(0,0,width,height);
+
+        mButtonGroup.layout(0,0,width,scrollHeight);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        if (getResources().getConfiguration().orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) { // Portrait view
+            // Draw border line
+            canvas.drawLine(0, getHeight() - 1, getWidth(), getHeight() - 1, mSpacer);
         }
     }
 }

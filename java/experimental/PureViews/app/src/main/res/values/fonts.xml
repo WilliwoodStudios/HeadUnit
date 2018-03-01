@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="mediaButtonFont" parent="@android:style/TextAppearance.Medium">
-        <item name="android:textSize">15mm</item>
+        <item name="android:textSize">5sp</item>
         <item name="android:fontFamily">Droid-Sans</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>

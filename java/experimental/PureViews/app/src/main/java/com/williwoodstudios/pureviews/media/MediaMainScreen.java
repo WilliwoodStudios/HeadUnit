@@ -1,18 +1,26 @@
 package com.williwoodstudios.pureviews.media;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
+import android.media.session.MediaSession;
+import android.media.session.MediaController;
+import android.media.session.MediaSessionManager;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
+import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.KeyEvent;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.williwoodstudios.pureviews.AppScreen;
 import com.williwoodstudios.pureviews.circle.CircleButton;
 import com.williwoodstudios.pureviews.R;
-import com.williwoodstudios.pureviews.networking.NetworkService;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,8 +43,11 @@ public class MediaMainScreen extends AppScreen {
     private ImageView mAlbumArt;
 
     private CircleButton mMenuButton;
+    private CircleButton mMaxMinButton;
 
-    private List<DummySongList.Song> mSongList;
+    private MediaSessionManager mMediaSessionManager;
+    private MediaController mMediaController;
+
 
     public MediaMainScreen(Context context) {
         super(context);
@@ -46,6 +57,7 @@ public class MediaMainScreen extends AppScreen {
     public MediaMainScreen(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
+//test
     }
 
     public MediaMainScreen(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -57,15 +69,20 @@ public class MediaMainScreen extends AppScreen {
     private void init() {
         mHandler = new Handler();
 
-        mSongList = new DummySongList().getSongList();
+        // Create our session manager.  TODO: Attach callback to change in active sessions
+        mMediaSessionManager = (MediaSessionManager)getContext().getSystemService(Context.MEDIA_SESSION_SERVICE);
+        try {
+            List<MediaController> controllers = mMediaSessionManager.getActiveSessions(null);
+            if (controllers.size() > 0 ) {
+                mMediaController = controllers.get(0);
+            }
+        } catch (SecurityException exception) {
+            Log.w("Error:", "Failed to start media controller: " + exception.getMessage());
+        }
 
         mAlbumArt = makeImageView(-1);
         mAlbumArt.setScaleType(ImageView.ScaleType.CENTER_CROP);
         mAlbumArt.setAlpha(0.3f);
-
-        mRepeatLabel = makeTextView("Repeat Off");
-        mSourceLabel = makeTextView("Source");
-        mShuffleLabel = makeTextView("Shuffle Off");
 
         mPreviousButton = makeImageView(R.drawable.media_button_previous);
         mPlayPauseButton = makeImageView(R.drawable.media_button_play);
@@ -79,33 +96,13 @@ public class MediaMainScreen extends AppScreen {
         addView(mMenuButton);
         mMenuButton.setOnClickListener(mMenuOnClickListener);
 
+        mMaxMinButton = new CircleButton(getContext(),R.drawable.minimize);
+        addView(mMaxMinButton);
+        mMaxMinButton.setOnClickListener(mMinMaxOnClickListener);
+
         setBackgroundColor(0xff000000);
 
-        Collections.sort(mSongList);
-
-        setSong();
-
-        mCheckCommand.run();
-
     }
-
-    private Runnable mCheckCommand = new Runnable() {
-        public void run() {
-            Log.e("MediaMainScreen","Checking data");
-            Byte command = NetworkService.getNextCommand();
-            if (command != null) {
-                byte c = command.byteValue();
-                if (c=='p') {
-                    previous();
-                } else if (c=='n') {
-                    next();
-                } else if (c=='s') {
-                    playPause();
-                }
-            }
-            mHandler.postDelayed(this,100);
-        }
-    };
 
     private Handler mHandler;
 
@@ -114,8 +111,20 @@ public class MediaMainScreen extends AppScreen {
         public void onClick(View v) {
             Log.e("MainScreen","On click");
             if (isTopScreen()) {
-                pushScreen(new MenuScreen(getContext()));
+                Context context = getContext();
+                Intent intent = context.getPackageManager().getLaunchIntentForPackage("com.google.android.music");
+                context.startActivity(intent);
+                //pushScreen(new MenuScreen(getContext()));
             }
+        }
+    };
+
+    private OnClickListener mMinMaxOnClickListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Log.e("MainScreen","MinMax On click");
+            // TODO.. make the bottom media area be 25% of the height of the total screen
+            //setTop(height - (height/4));
         }
     };
 
@@ -158,10 +167,25 @@ public class MediaMainScreen extends AppScreen {
 
     private void playPause() {
         playing ^= true;
+
         if (playing) {
             mPlayPauseButton.setImageResource(R.drawable.media_button_pause);
         } else {
             mPlayPauseButton.setImageResource(R.drawable.media_button_play);
+        }
+
+        try {
+            long eventtime = android.os.SystemClock.uptimeMillis();
+
+            KeyEvent downEvent = new KeyEvent(eventtime, eventtime,
+                    KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
+            mMediaController.dispatchMediaButtonEvent(downEvent);
+
+            KeyEvent upEvent = new KeyEvent(eventtime, eventtime,
+                    KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
+            mMediaController.dispatchMediaButtonEvent(upEvent);
+        } catch (SecurityException exception) {
+            Log.w("Error:", "Failed to contact media controller: " + exception.getMessage());
         }
     }
 
@@ -176,37 +200,38 @@ public class MediaMainScreen extends AppScreen {
     private int mSongIndex = 0;
 
     public void next() {
-        ++mSongIndex;
-        while(mSongIndex >= mSongList.size()) {
-            --mSongIndex;
+        try {
+            long eventtime = android.os.SystemClock.uptimeMillis();
+
+            KeyEvent downEvent = new KeyEvent(eventtime, eventtime,
+                    KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0);
+            mMediaController.dispatchMediaButtonEvent(downEvent);
+
+            KeyEvent upEvent = new KeyEvent(eventtime, eventtime,
+                    KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0);
+            mMediaController.dispatchMediaButtonEvent(upEvent);
+        } catch (SecurityException exception) {
+            Log.w("Error:", "Failed to contact media controller: " + exception.getMessage());
         }
-        setSong();
     }
 
     public void previous() {
-        --mSongIndex;
-        while(mSongIndex < 0) {
-            ++mSongIndex;
+        try {
+            long eventtime = android.os.SystemClock.uptimeMillis();
+
+            KeyEvent downEvent = new KeyEvent(eventtime, eventtime,
+                    KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PREVIOUS, 0);
+            mMediaController.dispatchMediaButtonEvent(downEvent);
+
+            KeyEvent upEvent = new KeyEvent(eventtime, eventtime,
+                    KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PREVIOUS, 0);
+            mMediaController.dispatchMediaButtonEvent(upEvent);
+        } catch (SecurityException exception) {
+            Log.w("Error:", "Failed to contact media controller: " + exception.getMessage());
         }
-        setSong();
-    }
-
-    protected void setSong() {
-        DummySongList.Song current = mSongList.get(mSongIndex);
-        mArtistLabel.setText(current.mArtist);
-        mSongLabel.setText(current.mName);
-        mAlbumLabel.setText(current.mAlbum);
-        mAlbumArt.setImageResource(current.mAlbumArt);
-        updateSongLabels(getWidth(), getHeight());
     }
 
 
-//    public void setSong(String artist, String song, String album) {
-//        mArtistLabel.setText(artist);
-//        mSongLabel.setText(song);
-//        mAlbumLabel.setText(album);
-//        updateSongLabels(getWidth(),getHeight());
-//    }
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -220,23 +245,12 @@ public class MediaMainScreen extends AppScreen {
         int marginX = 20;
         int marginY = 20;
 
-        float textSize = height / 14f / 35; // 35 is from px size in web app.
+        float textSize = height / 14f / 35 / 4; // 35 is from px size in web app.
         float artistSize = textSize * 40;
         float songSize = textSize * 60;
         float albumSize = textSize * 30;
         float labelSize = textSize * 35;
 
-        mRepeatLabel.setTextSize(labelSize);
-        mRepeatLabel.measure(0, 0);
-        mRepeatLabel.layout(marginX, height - marginY - mRepeatLabel.getMeasuredHeight(), mRepeatLabel.getMeasuredWidth() + marginX, b);
-
-        mSourceLabel.setTextSize(labelSize);
-        mSourceLabel.measure(0, 0);
-        mSourceLabel.layout((width - mSourceLabel.getMeasuredWidth()) / 2, height - marginY - mSourceLabel.getMeasuredHeight(), width / 2 + mSourceLabel.getMeasuredWidth(), b);
-
-        mShuffleLabel.setTextSize(labelSize);
-        mShuffleLabel.measure(0, 0);
-        mShuffleLabel.layout(width - mShuffleLabel.getMeasuredWidth() - marginX, height - marginY - mShuffleLabel.getMeasuredHeight(), r, b);
 
         int buttonWidth = (int) (width * 0.15f);
 
@@ -258,13 +272,15 @@ public class MediaMainScreen extends AppScreen {
 
         updateSongLabels(width, height);
 
-        int menuSize = 55;
+        int menuSize = 150;
         int menuL = width - marginX - menuSize;
         int menuT = marginY;
         int menuR = menuL + menuSize;
         int menuB = menuT + menuSize;
 
         mMenuButton.layout(menuL, menuT, menuR, menuB);
+
+        mMaxMinButton.layout(marginX, menuT, marginX + menuSize, menuB);
 
         mAlbumArt.layout(0,0,width,height);
     }
@@ -273,7 +289,7 @@ public class MediaMainScreen extends AppScreen {
         if (width <=0 || height <= 0) {
             return;
         }
-        float textSize = height / 13f / 35; // 35 is from px size in web app.
+        float textSize = height / 13f / 35 / 2; // 35 is from px size in web app.
         float artistSize = textSize * 40;
         float songSize = textSize * 60;
         float albumSize = textSize * 30;
@@ -287,23 +303,34 @@ public class MediaMainScreen extends AppScreen {
         mAlbumLabel.measure(0,0);
 
         int y = height / 2;
-        y -= albumSize;
+        y -= mAlbumLabel.getHeight(); // albumSize;
 
         centre(mAlbumLabel,width, y);
 
-        y-= songSize;
+        y-= mSongLabel.getHeight();
         centre(mSongLabel,width, y);
 
-        y-= artistSize;
+        y-= mArtistLabel.getHeight();
         centre(mArtistLabel,width,y);
     }
 
     private void centre(View v, int width, int y) {
+        int workingWidth = v.getMeasuredWidth();
+
+        if (v.getMeasuredWidth() > width) {
+            if (v instanceof TextView) {
+                TextView t = (TextView) v;
+                do {
+                    t.setTextSize(TypedValue.COMPLEX_UNIT_PX , t.getTextSize()-0.5f);
+                    t.measure(0,0);
+                } while((workingWidth = t.getMeasuredWidth())>width);
+            }
+        }
         int t = y;
         int b = y + v.getMeasuredHeight();
 
-        int l = (width - v.getMeasuredWidth())/2;
-        int r = l + v.getMeasuredWidth();
+        int l = (width - workingWidth)/2;
+        int r = l + workingWidth;
 
         v.layout(l,t,r,b);
     }
