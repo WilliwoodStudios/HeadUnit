@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.media.AudioManager;
 import android.media.session.MediaSession;
 import android.media.session.MediaController;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 
 import com.williwoodstudios.pureviews.AppScreen;
 import com.williwoodstudios.pureviews.RemoteControlReceiver;
+import com.williwoodstudios.pureviews.Theme;
 import com.williwoodstudios.pureviews.circle.CircleButton;
 import com.williwoodstudios.pureviews.R;
 
@@ -46,13 +48,10 @@ public class MediaMainScreen extends AppScreen {
     private ImageView mNextButton;
     private ImageView mAlbumArt;
 
-    private CircleButton mMenuButton;
-    private CircleButton mMaxMinButton;
-
     private AudioManager mAudioManager;
     private RemoteControlReceiver mRemoteControlReceiver;
 
-
+    private Paint mSpacer;
 
     public MediaMainScreen(Context context) {
         super(context);
@@ -71,6 +70,11 @@ public class MediaMainScreen extends AppScreen {
 
 
     private void init() {
+        mSpacer = new Paint();
+        mSpacer.setColor(Theme.color);
+        mSpacer.setAlpha(255);
+        mSpacer.setStrokeWidth(2);
+        mSpacer.setStyle(Paint.Style.STROKE);
 
         mAlbumArt = makeImageView(-1);
         mAlbumArt.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -83,14 +87,6 @@ public class MediaMainScreen extends AppScreen {
         mArtistLabel = makeTextView("Artist");
         mSongLabel = makeTextView("Song");
         mAlbumLabel = makeTextView("Album");
-
-        mMenuButton = new CircleButton(getContext(),R.drawable.hamburger);
-        addView(mMenuButton);
-        mMenuButton.setOnClickListener(mMenuOnClickListener);
-
-        mMaxMinButton = new CircleButton(getContext(),R.drawable.minimize);
-        addView(mMaxMinButton);
-        mMaxMinButton.setOnClickListener(mMinMaxOnClickListener);
 
         setBackgroundColor(0xff000000);
 
@@ -132,28 +128,6 @@ public class MediaMainScreen extends AppScreen {
             mPlayPauseButton.setImageResource(R.drawable.media_button_play);
         }
     }
-
-    private OnClickListener mMenuOnClickListener = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            Log.v("MediaMainScreen","On click");
-            if (isTopScreen()) {
-                Context context = getContext();
-                Intent intent = context.getPackageManager().getLaunchIntentForPackage("com.google.android.music");
-                context.startActivity(intent);
-                //pushScreen(new MenuScreen(getContext()));
-            }
-        }
-    };
-
-    private OnClickListener mMinMaxOnClickListener = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            Log.v("MediaMainScreen","MinMax On click");
-            // TODO.. make the bottom media area be 25% of the height of the total screen
-            //setTop(height - (height/4));
-        }
-    };
 
     private ImageView makeImageView(final int resourceId) {
         ImageView toReturn = new ImageView(getContext()) {
@@ -255,6 +229,8 @@ public class MediaMainScreen extends AppScreen {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        // Draw border line
+        canvas.drawLine(0, 0, getWidth(), 0, mSpacer);
     }
 
     @Override
@@ -289,16 +265,6 @@ public class MediaMainScreen extends AppScreen {
 
         updateSongLabels(width, height);
 
-        int menuSize = 110;
-        int menuL = width - marginX - menuSize;
-        int menuT = marginY;
-        int menuR = menuL + menuSize;
-        int menuB = menuT + menuSize;
-
-        mMenuButton.layout(menuL, menuT, menuR, menuB);
-
-        mMaxMinButton.layout(marginX, menuT, marginX + menuSize, menuB);
-
         mAlbumArt.layout(0,0,width,height);
     }
 
@@ -306,6 +272,9 @@ public class MediaMainScreen extends AppScreen {
         if (width <=0 || height <= 0) {
             return;
         }
+
+        Log.v("MediaMainScreen","updateSongLabels width:" + width);
+
         float textSize = height / 13f / 35 / 2; // 35 is from px size in web app.
         float artistSize = textSize * 40;
         float songSize = textSize * 60;
@@ -319,9 +288,8 @@ public class MediaMainScreen extends AppScreen {
         mSongLabel.measure(0,0);
         mAlbumLabel.measure(0,0);
 
-        int y = height / 2;
+        int y = height / 3;
         y -= mAlbumLabel.getHeight(); // albumSize;
-
         centre(mAlbumLabel,width, y);
 
         y-= mSongLabel.getHeight();

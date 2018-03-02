@@ -23,7 +23,6 @@ public class CircleMenu extends AppScreen {
     private final Configuration mConfiguration;
     private final ScrollView mScrollView;
     private final ViewGroup mButtonGroup;
-    private final Paint mSpacer;
 
     public static class CircleMenuItem {
         public CircleMenuItem(String name, int imageResourceId, OnClickListener listener) {
@@ -54,11 +53,6 @@ public class CircleMenu extends AppScreen {
 
     public CircleMenu(Context owner, Configuration configuration) {
         super(owner);
-        mSpacer = new Paint();
-        mSpacer.setColor(Theme.color);
-        mSpacer.setAlpha(255);
-        mSpacer.setStrokeWidth(2);
-        mSpacer.setStyle(Paint.Style.STROKE);
 
         mConfiguration = configuration;
         mScrollView = new ScrollView(owner);
@@ -107,7 +101,7 @@ public class CircleMenu extends AppScreen {
         int itemHeight = (int) (radius * 1.3);
 
         int marginX = (width - radius * 3) / 6;
-        int marginY = (height - itemHeight * 2) / 4;
+        int marginY = (height - itemHeight * 2) / 20;
 
         int scrollHeight = 0;
 
@@ -131,9 +125,5 @@ public class CircleMenu extends AppScreen {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (getResources().getConfiguration().orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) { // Portrait view
-            // Draw border line
-            canvas.drawLine(0, getHeight() - 1, getWidth(), getHeight() - 1, mSpacer);
-        }
     }
 }

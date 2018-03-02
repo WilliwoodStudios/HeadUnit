@@ -177,8 +177,10 @@ public class BrainiacLayout extends AppSpace {
         } else { // This is portrait
             int navBarHeight = mDisplaySize.y / 10;
             mNavBar.layout(0, 0, mDisplaySize.x, navBarHeight);
-            mAppSpace.layout(0, navBarHeight, mDisplaySize.x, (mDisplaySize.y / 2) + navBarHeight);
-            mMediaAppSpace.layout(0, (mDisplaySize.y / 2) + navBarHeight, mDisplaySize.x, mDisplaySize.y );
+            int topHeight = (int)(mDisplaySize.y * 0.6);
+
+            mAppSpace.layout(0, navBarHeight, mDisplaySize.x, topHeight + navBarHeight);
+            mMediaAppSpace.layout(0, topHeight + navBarHeight, mDisplaySize.x, mDisplaySize.y );
         }
 
 
