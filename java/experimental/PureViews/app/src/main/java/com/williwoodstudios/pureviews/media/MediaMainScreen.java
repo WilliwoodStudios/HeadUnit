@@ -3,7 +3,9 @@ package com.williwoodstudios.pureviews.media;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Canvas;
+import android.media.AudioManager;
 import android.media.session.MediaSession;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
@@ -19,8 +21,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.williwoodstudios.pureviews.AppScreen;
+import com.williwoodstudios.pureviews.RemoteControlReceiver;
 import com.williwoodstudios.pureviews.circle.CircleButton;
 import com.williwoodstudios.pureviews.R;
+
 
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +33,7 @@ import java.util.List;
  * Created by robwilliams on 2015-11-09.
  */
 public class MediaMainScreen extends AppScreen {
-
+    private Boolean mPlaying;
     private TextView mRepeatLabel;
     private TextView mSourceLabel;
     private TextView mShuffleLabel;
@@ -45,8 +49,9 @@ public class MediaMainScreen extends AppScreen {
     private CircleButton mMenuButton;
     private CircleButton mMaxMinButton;
 
-    private MediaSessionManager mMediaSessionManager;
-    private MediaController mMediaController;
+    private AudioManager mAudioManager;
+    private RemoteControlReceiver mRemoteControlReceiver;
+
 
 
     public MediaMainScreen(Context context) {
@@ -57,7 +62,6 @@ public class MediaMainScreen extends AppScreen {
     public MediaMainScreen(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
-//test
     }
 
     public MediaMainScreen(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -67,18 +71,6 @@ public class MediaMainScreen extends AppScreen {
 
 
     private void init() {
-        mHandler = new Handler();
-
-        // Create our session manager.  TODO: Attach callback to change in active sessions
-        mMediaSessionManager = (MediaSessionManager)getContext().getSystemService(Context.MEDIA_SESSION_SERVICE);
-        try {
-            List<MediaController> controllers = mMediaSessionManager.getActiveSessions(null);
-            if (controllers.size() > 0 ) {
-                mMediaController = controllers.get(0);
-            }
-        } catch (SecurityException exception) {
-            Log.w("Error:", "Failed to start media controller: " + exception.getMessage());
-        }
 
         mAlbumArt = makeImageView(-1);
         mAlbumArt.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -102,14 +94,49 @@ public class MediaMainScreen extends AppScreen {
 
         setBackgroundColor(0xff000000);
 
+        mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+        if (!mAudioManager.isMusicActive()) {
+            Log.v("MediaMainScreen","Music Not Active");
+            mPlayPauseButton.setImageResource(R.drawable.media_button_play);
+            mPlaying = false;
+        } else {
+            Log.v("MediaMainScreen","Music IS Active");
+            mPlayPauseButton.setImageResource(R.drawable.media_button_pause);
+            mPlaying = true;
+        }
+        // Register our Receiver for Media events
+        mRemoteControlReceiver = new RemoteControlReceiver(this);
+        IntentFilter iF = new IntentFilter();
+        iF.addAction("com.android.music.metachanged");
+        iF.addAction("com.android.music.playstatechanged");
+        getContext().registerReceiver(mRemoteControlReceiver,iF);
     }
 
-    private Handler mHandler;
+    public void setArtist(String value) {
+        mArtistLabel.setText(value);
+    }
+
+    public void setAlbum(String value) {
+        mAlbumLabel.setText(value);
+    }
+
+    public void setTrack(String value) {
+        mSongLabel.setText(value);
+    }
+
+    public void setPlayState(Boolean value) {
+        mPlaying = value;
+        if (mPlaying) {
+            mPlayPauseButton.setImageResource(R.drawable.media_button_pause);
+        } else {
+            mPlayPauseButton.setImageResource(R.drawable.media_button_play);
+        }
+    }
 
     private OnClickListener mMenuOnClickListener = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            Log.e("MainScreen","On click");
+            Log.v("MediaMainScreen","On click");
             if (isTopScreen()) {
                 Context context = getContext();
                 Intent intent = context.getPackageManager().getLaunchIntentForPackage("com.google.android.music");
@@ -122,7 +149,7 @@ public class MediaMainScreen extends AppScreen {
     private OnClickListener mMinMaxOnClickListener = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            Log.e("MainScreen","MinMax On click");
+            Log.v("MediaMainScreen","MinMax On click");
             // TODO.. make the bottom media area be 25% of the height of the total screen
             //setTop(height - (height/4));
         }
@@ -166,24 +193,16 @@ public class MediaMainScreen extends AppScreen {
     };
 
     private void playPause() {
-        playing ^= true;
-
-        if (playing) {
-            mPlayPauseButton.setImageResource(R.drawable.media_button_pause);
-        } else {
-            mPlayPauseButton.setImageResource(R.drawable.media_button_play);
-        }
-
         try {
             long eventtime = android.os.SystemClock.uptimeMillis();
-
+            // Key Down emulation
             KeyEvent downEvent = new KeyEvent(eventtime, eventtime,
                     KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
-            mMediaController.dispatchMediaButtonEvent(downEvent);
-
+            mAudioManager.dispatchMediaKeyEvent(downEvent);
+            // Key Up emulation
             KeyEvent upEvent = new KeyEvent(eventtime, eventtime,
                     KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
-            mMediaController.dispatchMediaButtonEvent(upEvent);
+            mAudioManager.dispatchMediaKeyEvent(upEvent);
         } catch (SecurityException exception) {
             Log.w("Error:", "Failed to contact media controller: " + exception.getMessage());
         }
@@ -205,11 +224,11 @@ public class MediaMainScreen extends AppScreen {
 
             KeyEvent downEvent = new KeyEvent(eventtime, eventtime,
                     KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0);
-            mMediaController.dispatchMediaButtonEvent(downEvent);
+            mAudioManager.dispatchMediaKeyEvent(downEvent);
 
             KeyEvent upEvent = new KeyEvent(eventtime, eventtime,
                     KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0);
-            mMediaController.dispatchMediaButtonEvent(upEvent);
+            mAudioManager.dispatchMediaKeyEvent(upEvent);
         } catch (SecurityException exception) {
             Log.w("Error:", "Failed to contact media controller: " + exception.getMessage());
         }
@@ -221,11 +240,11 @@ public class MediaMainScreen extends AppScreen {
 
             KeyEvent downEvent = new KeyEvent(eventtime, eventtime,
                     KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PREVIOUS, 0);
-            mMediaController.dispatchMediaButtonEvent(downEvent);
+            mAudioManager.dispatchMediaKeyEvent(downEvent);
 
             KeyEvent upEvent = new KeyEvent(eventtime, eventtime,
                     KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PREVIOUS, 0);
-            mMediaController.dispatchMediaButtonEvent(upEvent);
+            mAudioManager.dispatchMediaKeyEvent(upEvent);
         } catch (SecurityException exception) {
             Log.w("Error:", "Failed to contact media controller: " + exception.getMessage());
         }
@@ -251,7 +270,6 @@ public class MediaMainScreen extends AppScreen {
         float albumSize = textSize * 30;
         float labelSize = textSize * 35;
 
-
         int buttonWidth = (int) (width * 0.15f);
 
         int buttonT = height / 2;
@@ -259,7 +277,6 @@ public class MediaMainScreen extends AppScreen {
 
         int previousL = width / 2 - 2 * buttonWidth - buttonWidth / 2;
         int previousR = previousL + buttonWidth;
-
         mPreviousButton.layout(previousL, buttonT, previousR, buttonB);
 
         int playPauseL = (width - buttonWidth) / 2;
@@ -272,7 +289,7 @@ public class MediaMainScreen extends AppScreen {
 
         updateSongLabels(width, height);
 
-        int menuSize = 150;
+        int menuSize = 110;
         int menuL = width - marginX - menuSize;
         int menuT = marginY;
         int menuR = menuL + menuSize;
