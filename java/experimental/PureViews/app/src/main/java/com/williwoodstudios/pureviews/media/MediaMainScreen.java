@@ -35,6 +35,10 @@ import java.util.List;
  * Created by robwilliams on 2015-11-09.
  */
 public class MediaMainScreen extends AppScreen {
+    private static String UNKNOWN_ARTIST = "Unknown Artist";
+    private static String UNKNOWN_ALBUM = "Unknown Album";
+    private static String UNKNOWN_TRACK = "Unknown Track";
+
     private Boolean mPlaying;
     private TextView mRepeatLabel;
     private TextView mSourceLabel;
@@ -68,6 +72,7 @@ public class MediaMainScreen extends AppScreen {
         init();
     }
 
+    public boolean showCircleMenuIcon() {return false;}
 
     private void init() {
         mSpacer = new Paint();
@@ -84,9 +89,9 @@ public class MediaMainScreen extends AppScreen {
         mPlayPauseButton = makeImageView(R.drawable.media_button_play);
         mNextButton = makeImageView(R.drawable.media_button_next);
 
-        mArtistLabel = makeTextView("Artist");
-        mSongLabel = makeTextView("Song");
-        mAlbumLabel = makeTextView("Album");
+        mArtistLabel = makeTextView(UNKNOWN_ARTIST);
+        mSongLabel = makeTextView(UNKNOWN_TRACK);
+        mAlbumLabel = makeTextView(UNKNOWN_ALBUM);
 
         setBackgroundColor(0xff000000);
 
@@ -109,15 +114,30 @@ public class MediaMainScreen extends AppScreen {
     }
 
     public void setArtist(String value) {
-        mArtistLabel.setText(value);
+        if (value == null) {
+            mArtistLabel.setText(UNKNOWN_ARTIST);
+        } else {
+            mArtistLabel.setText(value);
+        }
+        updateSongLabels();
     }
 
     public void setAlbum(String value) {
-        mAlbumLabel.setText(value);
+        if (value == null) {
+            mAlbumLabel.setText(UNKNOWN_ALBUM);
+        } else {
+            mAlbumLabel.setText(value);
+        }
+        updateSongLabels();
     }
 
     public void setTrack(String value) {
-        mSongLabel.setText(value);
+        if (value == null) {
+            mSongLabel.setText(UNKNOWN_TRACK);
+        } else {
+            mSongLabel.setText(value);
+        }
+        updateSongLabels();
     }
 
     public void setPlayState(Boolean value) {
@@ -237,14 +257,6 @@ public class MediaMainScreen extends AppScreen {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         int height = b - t;
         int width = r - l;
-        int marginX = 20;
-        int marginY = 20;
-
-        float textSize = height / 14f / 35 / 4; // 35 is from px size in web app.
-        float artistSize = textSize * 40;
-        float songSize = textSize * 60;
-        float albumSize = textSize * 30;
-        float labelSize = textSize * 35;
 
         int buttonWidth = (int) (width * 0.15f);
 
@@ -263,22 +275,24 @@ public class MediaMainScreen extends AppScreen {
         int nextR = nextL + buttonWidth;
         mNextButton.layout(nextL, buttonT, nextR, buttonB);
 
-        updateSongLabels(width, height);
+        updateSongLabels();
 
         mAlbumArt.layout(0,0,width,height);
     }
 
-    private void updateSongLabels(int width, int height) {
+    private void updateSongLabels() {
+        int width = this.getWidth();
+        int height = this.getHeight();
+
         if (width <=0 || height <= 0) {
             return;
         }
-
         Log.v("MediaMainScreen","updateSongLabels width:" + width);
 
-        float textSize = height / 13f / 35 / 2; // 35 is from px size in web app.
-        float artistSize = textSize * 40;
-        float songSize = textSize * 60;
-        float albumSize = textSize * 30;
+        float textSize = 2;
+        float songSize = textSize * 20;
+        float albumSize = textSize * 15;
+        float artistSize = textSize * 10;
 
         mArtistLabel.setTextSize(artistSize);
         mSongLabel.setTextSize(songSize);
@@ -289,14 +303,9 @@ public class MediaMainScreen extends AppScreen {
         mAlbumLabel.measure(0,0);
 
         int y = height / 3;
-        y -= mAlbumLabel.getHeight(); // albumSize;
-        centre(mAlbumLabel,width, y);
-
-        y-= mSongLabel.getHeight();
-        centre(mSongLabel,width, y);
-
-        y-= mArtistLabel.getHeight();
-        centre(mArtistLabel,width,y);
+        centre(mSongLabel,width, y - 90);
+        centre(mAlbumLabel,width, y - 45);
+        centre(mArtistLabel,width,y - 5);
     }
 
     private void centre(View v, int width, int y) {

@@ -5,6 +5,7 @@ package com.williwoodstudios.pureviews;
  */
 public class Theme {
     public static int color = 255 << 24 | 192 << 16 | 57 << 8 | 43;
+   // public static int color = 255 << 24 | 192 << 16 | 57 << 8 | 43;
 
 
     public static int CIRCLE_BUTTON_TEXT_SIZE = 25;

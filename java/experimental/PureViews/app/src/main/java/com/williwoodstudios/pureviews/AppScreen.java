@@ -34,6 +34,9 @@ public abstract class AppScreen extends ViewGroup {
         return false;
     }
 
+    // Whether or not this app should show an icon in the top circle menu
+    public boolean showCircleMenuIcon() {return true;}
+
     protected void onPushing() {
         // do nothing.
     }

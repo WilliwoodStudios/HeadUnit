@@ -241,7 +241,7 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
 
         // Draw Circles
         canvas.drawBitmap(mBitmapBlackCircle, mTopRect.left, mTopRect.top, null);
-        if (mActiveCircle > 0) {
+        if (mActiveCircle > 0 && mShowMiddleCircle == true) {
             canvas.drawBitmap(mBitmapBlackCircle, mMidRect.left, mMidRect.top, null);
         }
         canvas.drawBitmap(mBitmapBlackCircle, mBotRect.left, mBotRect.top, null);
@@ -251,7 +251,7 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
 
         // Draw borders
         canvas.drawBitmap(mBitmapOutlineCircle, mTopRect.left, mTopRect.top, null);
-        if (mActiveCircle > 0) {
+        if (mActiveCircle > 0 && mShowMiddleCircle == true) {
             canvas.drawBitmap(mBitmapOutlineCircle, mMidRect.left, mMidRect.top, null);
         }
         canvas.drawBitmap(mBitmapOutlineCircle, mBotRect.left, mBotRect.top, null);
@@ -277,9 +277,10 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
                 newActiveCircle = 0;
                 mScreenManager.popToFirstScreen();
             } else if (mMidRect.contains(x, y)) {
-                newActiveCircle = 1;
+                newActiveCircle = 0;
             } else if (mBotRect.contains(x, y)) {
                 newActiveCircle = 2;
+                // TODO: Launch the Settings Screen
             }
             if (newActiveCircle != mActiveCircle) {
                 mActiveCircle = newActiveCircle;
@@ -326,10 +327,14 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
             // Show the settings tab.
         }
 
+
         if (mActiveCircle != screen.getNavigationLevel()) {
-            int newActiveCircle = screen.getNavigationLevel();
-            mActiveCircle = newActiveCircle;
-            mAnimateSelection.start(mActiveRect, mActiveCircle == 0 ? mTopRect : mActiveCircle == 1 ? mMidRect : mBotRect, 350);
+            mShowMiddleCircle = screen.showCircleMenuIcon();
+            if (mShowMiddleCircle == true) {
+                int newActiveCircle = screen.getNavigationLevel();
+                mActiveCircle = newActiveCircle;
+                mAnimateSelection.start(mActiveRect, mActiveCircle == 0 ? mTopRect : mActiveCircle == 1 ? mMidRect : mBotRect, 350);
+            }
         }
     }
 }
