@@ -76,7 +76,7 @@ public class MediaMainScreen extends AppScreen {
 
     private void init() {
         mSpacer = new Paint();
-        mSpacer.setColor(Theme.color);
+        mSpacer.setColor(Theme.getColor());
         mSpacer.setAlpha(255);
         mSpacer.setStrokeWidth(2);
         mSpacer.setStyle(Paint.Style.STROKE);
@@ -111,6 +111,12 @@ public class MediaMainScreen extends AppScreen {
         iF.addAction("com.android.music.metachanged");
         iF.addAction("com.android.music.playstatechanged");
         getContext().registerReceiver(mRemoteControlReceiver,iF);
+    }
+
+    public void themeUpdated() {
+        // Do Nothing yet
+        mSpacer.setColor(Theme.getColor());
+        invalidate();
     }
 
     public void setArtist(String value) {

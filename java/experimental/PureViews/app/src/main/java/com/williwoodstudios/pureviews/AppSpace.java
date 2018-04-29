@@ -43,8 +43,10 @@ public class AppSpace extends ViewGroup implements ScreenManager {
 
     private List<AppScreen> mScreens = new ArrayList<>();
 
+
     public void popScreen(final AppScreen screen) {
         mScreens.remove(screen);
+        screen.onPopped();
         TranslateAnimation ta = new TranslateAnimation(0,getWidth(),0,0);
         ta.setDuration(250);
         ta.setAnimationListener(new Animation.AnimationListener() {

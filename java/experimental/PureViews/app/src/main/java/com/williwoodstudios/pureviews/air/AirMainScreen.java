@@ -58,6 +58,10 @@ public class AirMainScreen extends AppScreen {
         }
     }
 
+    public void themeUpdated() {
+        // Do Nothing yet
+    }
+
     private void init() {
         setBackgroundColor(0xff007f00);
         mPressureControl = new PressureControl(getContext(), this);

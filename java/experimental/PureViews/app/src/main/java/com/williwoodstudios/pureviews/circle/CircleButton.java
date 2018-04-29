@@ -13,13 +13,15 @@ import android.graphics.ColorMatrixColorFilter;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
+import com.williwoodstudios.pureviews.AppScreen;
 
 import com.williwoodstudios.pureviews.Theme;
+import com.williwoodstudios.pureviews.ThemeListener;
 
 /**
  * Created by robwilliams on 2015-10-18.
  */
-public class CircleButton extends ViewGroup {
+public class CircleButton extends ViewGroup implements ThemeListener {
     private static final String TAG = CircleButton.class.getName();
     private static int sCreationCount = 0;
     private final Paint mBorderPaint;
@@ -63,7 +65,7 @@ public class CircleButton extends ViewGroup {
 
         mPressedPaint = new Paint();
         mPressedPaint.setAntiAlias(true);
-        mPressedPaint.setColor(Theme.color);
+        mPressedPaint.setColor(Theme.getColor());
         mPressedPaint.setAlpha(255);
         mPressedPaint.setStyle(Paint.Style.FILL);
 
@@ -84,6 +86,10 @@ public class CircleButton extends ViewGroup {
         setClickable(true);
     }
 
+    public void themeUpdated() {
+        mPressedPaint.setColor(Theme.getColor());
+    }
+
     /**
      * These prefixes will be stripped from title names.
      */
@@ -91,7 +97,6 @@ public class CircleButton extends ViewGroup {
 
     public CircleButton(Context context, String title) {
         this(context);
-
         mTitle = title;
 
         String lower = title.toLowerCase();

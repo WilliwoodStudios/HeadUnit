@@ -115,7 +115,8 @@ public class PresetItemView extends ViewGroup {
     private void checkBackgroundColor() {
         int desiredColor;
         if (isSelected() || isPressed()) {
-            desiredColor = Theme.color;
+            //desiredColor = Theme.color; //TODO Need to update this
+            desiredColor = 0xff000000;
         } else {
             desiredColor = 0xff000000;
         }

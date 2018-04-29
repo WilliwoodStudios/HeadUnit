@@ -16,6 +16,7 @@ import com.williwoodstudios.pureviews.R;
 import com.williwoodstudios.pureviews.RectangleAnimation;
 import com.williwoodstudios.pureviews.ScreenManager;
 import com.williwoodstudios.pureviews.Theme;
+import com.williwoodstudios.pureviews.ThemeListener;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -23,7 +24,7 @@ import java.util.GregorianCalendar;
 /**
  * Created by robwilliams on 2015-10-18.
  */
-public class CircleNavigationBar extends View implements AppSpace.OnTopChangedListener {
+public class CircleNavigationBar extends View implements AppSpace.OnTopChangedListener, ThemeListener {
     private final Paint mSpacer;
     private final Handler mHandler;
     private final GregorianCalendar mCalendar;
@@ -56,18 +57,19 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
     public CircleNavigationBar(Context context, ScreenManager screenManager) {
         super(context);
         mScreenManager = screenManager;
+        Theme.subscribe(this);
 
         setBackgroundColor(0xff000000);
 
         mSpacer = new Paint();
-        mSpacer.setColor(Theme.color);
+        mSpacer.setColor(Theme.getColor());
         mSpacer.setAlpha(255);
         mSpacer.setStrokeWidth(2);
         mSpacer.setStyle(Paint.Style.STROKE);
 
         mTime = new Paint();
 //        mTime.setTextSize();
-        mTime.setColor(Theme.color);
+        mTime.setColor(Theme.getColor());
         mTime.setAlpha(255);
         mTime.setAntiAlias(true);
         mTime.setTextAlign(Paint.Align.CENTER);
@@ -87,7 +89,7 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
 
         mActiveCircleFill = new Paint();
         mActiveCircleFill.setAntiAlias(true);
-        mActiveCircleFill.setColor(Theme.color);
+        mActiveCircleFill.setColor(Theme.getColor());
         mActiveCircleFill.setAlpha(255);
         mActiveCircleFill.setStyle(Paint.Style.FILL);
 
@@ -266,6 +268,19 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
         }
     }
 
+    public void themeUpdated() {
+        mSpacer.setColor(Theme.getColor());
+        mTime.setColor(Theme.getColor());
+        mActiveCircleFill.setColor(Theme.getColor());
+
+        RectF sratch = new RectF();
+        Canvas canvas = new Canvas(mBitmapSelectedCircle);
+        sratch.set(1, 1, mBitmapSelectedCircle.getWidth() - 1, mBitmapSelectedCircle.getHeight() - 1);
+        canvas.drawArc(sratch, 0, 360, true, mActiveCircleFill);
+
+        invalidate();
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getActionMasked();
@@ -281,6 +296,7 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
             } else if (mBotRect.contains(x, y)) {
                 newActiveCircle = 2;
                 // TODO: Launch the Settings Screen
+                Theme.setColor(Theme.EMERALD);
             }
             if (newActiveCircle != mActiveCircle) {
                 mActiveCircle = newActiveCircle;

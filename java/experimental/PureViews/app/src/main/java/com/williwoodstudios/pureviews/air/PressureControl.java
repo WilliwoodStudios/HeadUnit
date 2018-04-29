@@ -131,7 +131,7 @@ public class PressureControl extends ViewGroup {
             Paint lines = new Paint();
             lines.setStyle(Paint.Style.STROKE);
             lines.setStrokeWidth(1);
-            lines.setColor(Theme.color);
+            lines.setColor(Theme.getColor());
             lines.setAlpha(255);
             lines.setPathEffect(new DashPathEffect(new float[]{2.5f, 2.5f}, 0));
 

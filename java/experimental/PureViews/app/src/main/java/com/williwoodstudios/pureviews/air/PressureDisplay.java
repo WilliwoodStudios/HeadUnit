@@ -165,7 +165,8 @@ public class PressureDisplay extends View {
         int color;
         int alpha = 255;
         if (!mTank && !isPressed()) {
-            color = Theme.color;
+            //color = Theme.color; // TODO need to update this
+            color = 0xffffff;
         } else {
             color = 0xffffff;
         }

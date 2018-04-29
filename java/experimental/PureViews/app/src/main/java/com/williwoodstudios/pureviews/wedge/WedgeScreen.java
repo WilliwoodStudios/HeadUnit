@@ -47,13 +47,17 @@ public class WedgeScreen extends AppScreen {
         return true;
     }
 
+    public void themeUpdated() {
+        // Do Nothing yet
+    }
+
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
     }
 
     @Override
     public void onDraw(Canvas canvas) {
-        mLinePaint.setColor(Theme.color);
+        mLinePaint.setColor(Theme.getColor());
         mLinePaint.setAlpha(255);
         mLinePaint.setStrokeWidth(max(getHeight() / 3, getWidth() / 3));
 

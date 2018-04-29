@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 /**
  * Created by robwilliams on 2015-11-09.
  */
-public abstract class AppScreen extends ViewGroup {
+public abstract class AppScreen extends ViewGroup implements ThemeListener {
 
     private ScreenManager mScreenManager;
 
@@ -37,13 +37,18 @@ public abstract class AppScreen extends ViewGroup {
     // Whether or not this app should show an icon in the top circle menu
     public boolean showCircleMenuIcon() {return true;}
 
+    public abstract void themeUpdated();
+
     protected void onPushing() {
-        // do nothing.
+        Theme.subscribe(this);
     }
 
     public void onPopped() {
-
+        Theme.unsubscribe(this);
     }
+
+
+
 
     public void pushScreen(AppScreen screen) {
         Log.e("AppScreen", "Pushing screen " + screen);

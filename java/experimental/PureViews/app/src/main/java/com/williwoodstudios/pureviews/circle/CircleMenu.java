@@ -11,6 +11,7 @@ import android.widget.ScrollView;
 import com.williwoodstudios.pureviews.AppScreen;
 import com.williwoodstudios.pureviews.R;
 import com.williwoodstudios.pureviews.Theme;
+import com.williwoodstudios.pureviews.ThemeListener;
 
 import java.util.List;
 
@@ -85,7 +86,21 @@ public class CircleMenu extends AppScreen {
             }
             mButtonGroup.addView(toAdd);
         }
-        setBackgroundResource(R.drawable.background_pomegranate);
+
+        setBackgroundResource(Theme.getBackgroundResource(getContext()));
+    }
+
+    public void themeUpdated() {
+        // Update background
+        setBackgroundResource(Theme.getBackgroundResource(getContext()));
+        // Update selection color of circle buttons
+        android.view.View view;
+        for (int i = 0; i < mButtonGroup.getChildCount(); i++) {
+            view = mButtonGroup.getChildAt(i);
+            if (view instanceof CircleButton) {
+                ((CircleButton) view).themeUpdated();
+            }
+        }
     }
 
     @Override
