@@ -114,7 +114,6 @@ public class MediaMainScreen extends AppScreen {
     }
 
     public void themeUpdated() {
-        // Do Nothing yet
         mSpacer.setColor(Theme.getColor());
         invalidate();
     }

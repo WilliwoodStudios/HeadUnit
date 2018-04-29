@@ -35,7 +35,7 @@ public class Theme {
     public static int ASBESTOS = 19;
     public static int CIRCLE_BUTTON_TEXT_SIZE = 25;
 
-    private static int[] mColors = {Color.parseColor("#1ABC9C"),
+    public static int[] colors = {Color.parseColor("#1ABC9C"),
             Color.parseColor("#16A085"),
             Color.parseColor("#2ECC71"),
             Color.parseColor("#27AE60"),
@@ -83,8 +83,9 @@ public class Theme {
 
 
     public static int getColor() {
-        return mColors[mIndex];
+        return colors[mIndex];
     }
+    public static int getIndex() {return mIndex;}
 
     public static int getBackgroundResource(Context context) {
         String name = mBackgrounds[mIndex];
@@ -93,7 +94,7 @@ public class Theme {
 
     public static void setColor(int index) {
         if (index < 0) return;
-        if (index > mColors.length - 1) return;
+        if (index > colors.length - 1) return;
         if (index == mIndex) return;
         mIndex = index;
         //Send signal to update UI by starting with the last added

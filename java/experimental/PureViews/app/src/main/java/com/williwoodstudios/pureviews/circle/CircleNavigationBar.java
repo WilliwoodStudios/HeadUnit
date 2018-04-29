@@ -17,6 +17,7 @@ import com.williwoodstudios.pureviews.RectangleAnimation;
 import com.williwoodstudios.pureviews.ScreenManager;
 import com.williwoodstudios.pureviews.Theme;
 import com.williwoodstudios.pureviews.ThemeListener;
+import com.williwoodstudios.pureviews.square.SquareMenu;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -296,7 +297,8 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
             } else if (mBotRect.contains(x, y)) {
                 newActiveCircle = 2;
                 // TODO: Launch the Settings Screen
-                Theme.setColor(Theme.EMERALD);
+               // Theme.setColor(Theme.EMERALD);
+                mScreenManager.pushScreen(new SquareMenu(getContext()));
             }
             if (newActiveCircle != mActiveCircle) {
                 mActiveCircle = newActiveCircle;
