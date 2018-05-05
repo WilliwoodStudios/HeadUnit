@@ -1,12 +1,15 @@
 package com.williwoodstudios.pureviews.square;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ScrollView;
+import android.app.Activity;
 
 import com.williwoodstudios.pureviews.AppScreen;
 import com.williwoodstudios.pureviews.R;
@@ -39,21 +42,39 @@ public class SquareMenu extends AppScreen implements ThemeListener {
             }
         };
 
+        mButtonGroup.setBackgroundColor(Color.BLACK);
+
         addView(mScrollView);
         mScrollView.addView(mButtonGroup);
 
         mOnClickListener = new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Theme.setColor(((SquareButton)v).getResourceIndex());
+                SquareButton button = (SquareButton)v;
+                ViewGroup group = button.getButtonGroup();
+                Theme.setColor(button.getResourceIndex());
+                button.setChecked(true);
+                // Update our stored preference
+                SharedPreferences prefs = ((Activity)getContext()).getPreferences(Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putInt(Theme.PREFERNCE_INDEX, button.getResourceIndex());
+                editor.commit();
+                // Uncheck the rest
+                for (int i = 0; i < group.getChildCount(); i++) {
+                    View view = group.getChildAt(i);
+                    if (view instanceof SquareButton) {
+                        if (view != button) {
+                            ((SquareButton)view).setChecked(false);
+                        }
+                    }
+                }
             }
         };
         // Loop through all our colors
         for (int i = 0; i < Theme.colors.length; i++) {
-            SquareButton toAdd = new SquareButton(owner);
-            toAdd.setResourceIndex(i);
+            SquareButton toAdd = new SquareButton(owner, i, mButtonGroup);
             if (i == Theme.getIndex()) {
-                toAdd.setImageResource(R.drawable.back_arrow); //TODO: Need to assign a checkmark to the selected color
+                toAdd.setChecked(true);
             }
             toAdd.onAnimationEnd();
             toAdd.setBitmapPad(0.25f);

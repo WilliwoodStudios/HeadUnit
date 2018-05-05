@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 
+import com.williwoodstudios.pureviews.R;
 import com.williwoodstudios.pureviews.Theme;
 
 /**
@@ -32,6 +33,7 @@ public class SquareButton extends ViewGroup {
     private float mBitmapPad = 0.1f;
     private boolean mIsActive = false;
     private int mWidth, mHeight;
+    private ViewGroup mButtonGroup;
 
     public SquareButton(Context context) {
         super(context);
@@ -55,9 +57,10 @@ public class SquareButton extends ViewGroup {
         setClickable(true);
     }
 
-    public SquareButton(Context context, int resourceId) {
+    public SquareButton(Context context, int resourceIndex,ViewGroup buttonGroup) {
         this(context);
-        setImageResource(resourceId);
+        mButtonGroup = buttonGroup;
+        setResourceIndex(resourceIndex);
     }
 
 
@@ -71,9 +74,19 @@ public class SquareButton extends ViewGroup {
         invalidate();
     }
 
+    public void setChecked(Boolean checked) {
+        if (checked == true) {
+            this.setImageResource(R.drawable.navigation_home);
+        } else {
+            this.setImageResource(-1);
+        }
+    }
+
     public int getResourceIndex() {
         return mResourceIndex;
     }
+
+    public ViewGroup getButtonGroup() {return mButtonGroup;}
 
     public void setResourceIndex(int index) {
         mResourceIndex = index;

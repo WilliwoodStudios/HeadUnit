@@ -12,7 +12,7 @@ import java.util.ArrayList;
  */
 public class Theme {
    // public static int color = 255 << 24 | 192 << 16 | 57 << 8 | 43;
-
+    public static String PREFERNCE_INDEX = "brainiac.theme.index";
     public static int TURQUOISE = 0;
     public static int GREEN_SEA = 1;
     public static int EMERALD = 2;

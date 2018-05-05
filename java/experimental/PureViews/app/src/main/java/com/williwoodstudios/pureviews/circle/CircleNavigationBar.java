@@ -5,10 +5,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.RectF;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.app.Activity;
 
 import com.williwoodstudios.pureviews.AppScreen;
 import com.williwoodstudios.pureviews.AppSpace;
@@ -52,6 +54,8 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
     private Bitmap mBitmapBlackCircle;
     private Bitmap mBitmapOutlineCircle;
     private Bitmap mBitmapSelectedCircle;
+
+    private SquareMenu mSquareMenu;
 
     private RectangleAnimation mAnimateSelection;
 
@@ -291,14 +295,22 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
             int newActiveCircle = mActiveCircle;
             if (mTopRect.contains(x, y)) {
                 newActiveCircle = 0;
-                mScreenManager.popToFirstScreen();
+                if (mSquareMenu != null) {
+                    mScreenManager.popScreen(mSquareMenu);
+                    mSquareMenu = null;
+                }
             } else if (mMidRect.contains(x, y)) {
                 newActiveCircle = 0;
             } else if (mBotRect.contains(x, y)) {
                 newActiveCircle = 2;
-                // TODO: Launch the Settings Screen
-               // Theme.setColor(Theme.EMERALD);
-                mScreenManager.pushScreen(new SquareMenu(getContext()));
+                Point displaySize = new Point();
+                ((Activity)getContext()).getWindowManager().getDefaultDisplay().getSize(displaySize);
+                int navBarHeight = displaySize.y / 10;
+                int topHeight = (int)(displaySize.y * 0.6);
+                mSquareMenu = new SquareMenu(getContext());
+                // Launch color picker
+                mScreenManager.pushScreen(mSquareMenu);
+                mSquareMenu.layout(0, navBarHeight, displaySize.x, topHeight + navBarHeight);
             }
             if (newActiveCircle != mActiveCircle) {
                 mActiveCircle = newActiveCircle;

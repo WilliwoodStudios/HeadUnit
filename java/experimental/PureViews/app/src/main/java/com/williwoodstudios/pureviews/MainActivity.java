@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
+import android.content.Context;
+import android.content.SharedPreferences;
 
 
 public class MainActivity extends Activity {
@@ -17,6 +19,10 @@ public class MainActivity extends Activity {
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        // Retrieve our color preference
+        SharedPreferences prefs = this.getPreferences(Context.MODE_PRIVATE);
+        int themeColor = prefs.getInt(Theme.PREFERNCE_INDEX, Theme.getIndex());
+        Theme.setColor(themeColor);
 
         setContentView(new BrainiacLayout(this));
 
