@@ -8,11 +8,15 @@ import android.view.WindowManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.williwoodstudios.pureviews.media.MediaService;
+
 
 public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        MediaService.init(this);
+
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);

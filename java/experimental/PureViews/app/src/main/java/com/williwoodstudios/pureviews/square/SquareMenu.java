@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,12 +11,9 @@ import android.widget.ScrollView;
 import android.app.Activity;
 
 import com.williwoodstudios.pureviews.AppScreen;
-import com.williwoodstudios.pureviews.R;
+import com.williwoodstudios.pureviews.control.ScrollViewThatIgnoresDoubleTouch;
 import com.williwoodstudios.pureviews.Theme;
 import com.williwoodstudios.pureviews.ThemeListener;
-import com.williwoodstudios.pureviews.square.SquareButton;
-
-import java.util.List;
 
 /**
  * Created by brcewane on 2018-04-29.
@@ -34,7 +30,7 @@ public class SquareMenu extends AppScreen implements ThemeListener {
     public SquareMenu(Context owner) {
         super(owner);
 
-        mScrollView = new ScrollView(owner);
+        mScrollView = new ScrollViewThatIgnoresDoubleTouch(owner);
         mButtonGroup = new ViewGroup(owner) {
             @Override
             protected void onLayout(boolean changed, int l, int t, int r, int b) {

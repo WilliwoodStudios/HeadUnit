@@ -182,11 +182,11 @@ public class MediaMainScreen extends AppScreen {
         @Override
         public void onClick(View v) {
             if (v == mPreviousButton) {
-                previous();
+                MediaService.previous();
             } else if (v== mPlayPauseButton) {
                 playPause();
             } else if (v==mNextButton) {
-                next();
+                MediaService.next();
             }
         }
     };
@@ -216,40 +216,6 @@ public class MediaMainScreen extends AppScreen {
     }
 
     private int mSongIndex = 0;
-
-    public void next() {
-        try {
-            long eventtime = android.os.SystemClock.uptimeMillis();
-
-            KeyEvent downEvent = new KeyEvent(eventtime, eventtime,
-                    KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0);
-            mAudioManager.dispatchMediaKeyEvent(downEvent);
-
-            KeyEvent upEvent = new KeyEvent(eventtime, eventtime,
-                    KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0);
-            mAudioManager.dispatchMediaKeyEvent(upEvent);
-        } catch (SecurityException exception) {
-            Log.w("Error:", "Failed to contact media controller: " + exception.getMessage());
-        }
-    }
-
-    public void previous() {
-        try {
-            long eventtime = android.os.SystemClock.uptimeMillis();
-
-            KeyEvent downEvent = new KeyEvent(eventtime, eventtime,
-                    KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PREVIOUS, 0);
-            mAudioManager.dispatchMediaKeyEvent(downEvent);
-
-            KeyEvent upEvent = new KeyEvent(eventtime, eventtime,
-                    KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PREVIOUS, 0);
-            mAudioManager.dispatchMediaKeyEvent(upEvent);
-        } catch (SecurityException exception) {
-            Log.w("Error:", "Failed to contact media controller: " + exception.getMessage());
-        }
-    }
-
-
 
     @Override
     protected void onDraw(Canvas canvas) {
