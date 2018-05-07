@@ -2,16 +2,14 @@ package com.williwoodstudios.pureviews.circle;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.ScrollView;
 
 import com.williwoodstudios.pureviews.AppScreen;
-import com.williwoodstudios.pureviews.R;
+import com.williwoodstudios.pureviews.control.ScrollViewThatIgnoresDoubleTouch;
 import com.williwoodstudios.pureviews.Theme;
-import com.williwoodstudios.pureviews.ThemeListener;
 
 import java.util.List;
 
@@ -56,7 +54,7 @@ public class CircleMenu extends AppScreen {
         super(owner);
 
         mConfiguration = configuration;
-        mScrollView = new ScrollView(owner);
+        mScrollView = new ScrollViewThatIgnoresDoubleTouch(owner);
         mButtonGroup = new ViewGroup(owner) {
             @Override
             protected void onLayout(boolean changed, int l, int t, int r, int b) {

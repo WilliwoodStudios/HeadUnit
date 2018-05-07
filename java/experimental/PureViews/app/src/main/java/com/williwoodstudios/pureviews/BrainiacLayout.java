@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Point;
+import android.media.AudioManager;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.content.pm.PackageManager;
@@ -17,20 +19,31 @@ import com.williwoodstudios.pureviews.circle.CircleButton;
 import com.williwoodstudios.pureviews.circle.CircleMenu;
 import com.williwoodstudios.pureviews.circle.CircleNavigationBar;
 import com.williwoodstudios.pureviews.media.MediaMainScreen;
+import com.williwoodstudios.pureviews.media.MediaService;
+import com.williwoodstudios.pureviews.volume.DoubleSwipeGestureHandler;
+import com.williwoodstudios.pureviews.volume.GestureCoordinator;
+import com.williwoodstudios.pureviews.volume.GestureHandler;
+import com.williwoodstudios.pureviews.volume.GestureListener;
+import com.williwoodstudios.pureviews.volume.VolumeView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 /**
  * Created by robwilliams on 2015-10-18.
  */
 public class BrainiacLayout extends AppSpace {
-
     private final CircleNavigationBar mNavBar;
     private final AppSpace mAppSpace;
     private final AppSpace mMediaAppSpace;
+    private final VolumeView mVolumeView;
+
     private Activity mActivity;
     private Point mDisplaySize = new Point();
+
+    private Vector<GestureHandler> mGestureHandlers;
+    private GestureHandler mActiveHandler;
 
     private CircleMenu.Configuration mMenuConfiguration = new CircleMenu.Configuration() {
         private ArrayList<CircleMenu.CircleMenuItem> mItems;
@@ -47,7 +60,7 @@ public class BrainiacLayout extends AppSpace {
                             R.drawable.core_media_player_img_icon_256x256
                             //R.drawable.core_datalogger_img_icon_256x256,
                             //R.drawable.core_suspension_img_icon_256x256,
-                           // R.drawable.core_dashboard_img_icon_256x256
+                            // R.drawable.core_dashboard_img_icon_256x256
                     };
                 } else {
                     names = new String[]{};
@@ -89,7 +102,7 @@ public class BrainiacLayout extends AppSpace {
                 OnClickListener mAppOnClickListener = new OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        CircleButton button = (CircleButton)view;
+                        CircleButton button = (CircleButton) view;
                         Context context = getContext();
                         Intent intent = context.getPackageManager().getLaunchIntentForPackage(button.getPackageName());
                         context.startActivity(intent);
@@ -128,12 +141,27 @@ public class BrainiacLayout extends AppSpace {
         super(activity);
         mActivity = activity;
 
+        mAudioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
+
+        mGestureHandlers = new Vector<>();
+
+        DoubleSwipeGestureHandler upDown = new DoubleSwipeGestureHandler.UpDownDoubleSwipeGestureHandler(this);
+        upDown.setGestureListener(mUpDownGestureListener);
+        upDown.setGestureCoordinator(mGestureCoordinator);
+        mGestureHandlers.add(upDown);
+
+        DoubleSwipeGestureHandler leftRight = new DoubleSwipeGestureHandler.LeftRightDoubleSwipeGestureHandler(this);
+        leftRight.setGestureListener(mLeftRightGestureListener);
+        leftRight.setGestureCoordinator(mGestureCoordinator);
+        mGestureHandlers.add(leftRight);
+
+        mVolumeView = new VolumeView(activity);
         mNavBar = new CircleNavigationBar(activity, this);
         mAppSpace = new AppSpace(activity);
         mAppSpace.setFullScreenManager(this);
         mAppSpace.setOnTopChangedListener(mNavBar);
         mMediaAppSpace = new AppSpace(activity);
-         // Only used in portrait
+        // Only used in portrait
         // Create our menu items
         mAppSpace.pushScreen(new CircleMenu(activity, mMenuConfiguration));
 
@@ -149,6 +177,8 @@ public class BrainiacLayout extends AppSpace {
             mMediaAppSpace.pushScreen(new MediaMainScreen(getContext()));
             addView(mMediaAppSpace);
         }
+
+        addView(mVolumeView);
     }
 
     public void pushScreen(AppScreen screen) {
@@ -160,6 +190,8 @@ public class BrainiacLayout extends AppSpace {
         fadeIn.setDuration(250);
         fadeIn.setFillAfter(true);
         screen.startAnimation(fadeIn);
+        removeView(mVolumeView);
+        addView(mVolumeView);
     }
 
     public void popScreen(AppScreen screen) {
@@ -177,13 +209,13 @@ public class BrainiacLayout extends AppSpace {
         } else { // This is portrait
             int navBarHeight = mDisplaySize.y / 10;
             mNavBar.layout(0, 0, mDisplaySize.x, navBarHeight);
-            int topHeight = (int)(mDisplaySize.y * 0.6);
+            int topHeight = (int) (mDisplaySize.y * 0.6);
 
             mAppSpace.layout(0, navBarHeight, mDisplaySize.x, topHeight + navBarHeight);
-            mMediaAppSpace.layout(0, topHeight + navBarHeight, mDisplaySize.x, mDisplaySize.y );
+            mMediaAppSpace.layout(0, topHeight + navBarHeight, mDisplaySize.x, mDisplaySize.y);
         }
 
-
+        mVolumeView.layout(0, 0, r, b);
 
        /* android.app.AlertDialog alertDialog = new android.app.AlertDialog.Builder(mActivity).create();
         alertDialog.setTitle("Alert");
@@ -202,4 +234,116 @@ public class BrainiacLayout extends AppSpace {
         mAppSpace.popToFirstScreen();
     }
 
+    private GestureListener mLeftRightGestureListener = new GestureListener() {
+        private boolean mIsForward;
+        private boolean mFarEnough;
+
+        @Override
+
+        public void onStart() {
+            mFarEnough = false;
+//            log.e("start");
+        }
+
+        @Override
+        public void onGestureChange(float delta) {
+            mIsForward = delta > 0;
+            if (Math.abs(delta) > 0.25) {
+                mFarEnough = true;
+            }
+        }
+
+        @Override
+        public void onEnd() {
+            if (mFarEnough) {
+                mVolumeView.setSkip(mIsForward);
+                if (mIsForward) {
+                    MediaService.next();
+                } else {
+                    MediaService.previous();
+                }
+            } else {
+                // not far enough to skip.
+            }
+        }
+    };
+    private AudioManager mAudioManager;
+    private GestureListener mUpDownGestureListener = new GestureListener() {
+        private int mInitialVolume;
+        private int mMaxVolume;
+        private int mTargetVolume = -1;
+
+        @Override
+        public void onStart() {
+            mInitialVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            mMaxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        }
+
+        @Override
+        public void onGestureChange(float delta) {
+            int targetVolume = mInitialVolume + (int) (delta * mMaxVolume);
+            if (targetVolume > mMaxVolume) {
+                targetVolume = mMaxVolume;
+            } else if (targetVolume < 0) {
+                targetVolume = 0;
+            }
+            if (mTargetVolume != targetVolume) {
+                mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVolume, 0);
+                mTargetVolume = targetVolume;
+            }
+            mVolumeView.setVolume(targetVolume, mMaxVolume);
+        }
+
+        @Override
+        public void onEnd() {
+        }
+    };
+
+    /**
+     * Monitor touch events - until we intercept them.
+     *
+     * @param ev
+     * @return
+     */
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        for (GestureHandler g : mGestureHandlers) {
+            if (g.onInterceptTouchEvent(ev)) {
+                mActiveHandler = g;
+                return true;
+            }
+        }
+        if (mActiveHandler != null) {
+            return true;
+        }
+        return super.onInterceptTouchEvent(ev);
+    }
+
+    private GestureCoordinator mGestureCoordinator = new GestureCoordinator() {
+        @Override
+        public void onGestureStart(GestureHandler gestureHandler) {
+            for (GestureHandler g : mGestureHandlers) {
+                if (g != gestureHandler)
+                    g.reset();
+            }
+        }
+    };
+
+    /**
+     * This one only happens after we've done the capture.
+     *
+     * @param ev
+     * @return
+     */
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        if (mActiveHandler != null) {
+            boolean toReturn = mActiveHandler.onTouchEvent(ev);
+            if (!toReturn) {
+                mActiveHandler = null;
+            }
+            return toReturn;
+        }
+        return false;
+    }
 }
