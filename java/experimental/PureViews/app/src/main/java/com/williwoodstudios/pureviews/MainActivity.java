@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.williwoodstudios.pureviews.media.MediaService;
+import com.williwoodstudios.pureviews.overlay.OverlayService;
 
 
 public class MainActivity extends Activity {
@@ -30,6 +31,7 @@ public class MainActivity extends Activity {
 
         setContentView(new BrainiacLayout(this));
 
+        startService(new Intent(this, OverlayService.class));
     }
 
     @Override
