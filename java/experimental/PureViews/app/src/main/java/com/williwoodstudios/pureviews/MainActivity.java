@@ -7,6 +7,9 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.app.WallpaperManager;
+import java.io.IOException;
+import java.io.InputStream;
 
 import com.williwoodstudios.pureviews.media.MediaService;
 import com.williwoodstudios.pureviews.overlay.OverlayService;
@@ -32,6 +35,15 @@ public class MainActivity extends Activity {
         setContentView(new BrainiacLayout(this));
 
         startService(new Intent(this, OverlayService.class));
+
+        WallpaperManager wpM = WallpaperManager.getInstance(getApplicationContext());
+        try {
+            //InputStream is = getResources().openRawResource(R.drawable.wallpaper);
+            wpM.setResource(R.raw.wallpaper);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
