@@ -14,7 +14,7 @@ import android.view.WindowManager;
 import com.williwoodstudios.pureviews.Theme;
 
 public class OverlayTargetView extends View {
-    static final int EDGE_WIDTH = 60;
+    static final int EDGE_WIDTH = 15;
     private static final String TAG = OverlayTargetView.class.getName();
     private final Paint mPaint;
     private final OverlayManager.OverlayType mType;
@@ -102,7 +102,7 @@ public class OverlayTargetView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         mPaint.setColor(Theme.getColor());
-        mPaint.setAlpha(mDown ? 255 : 64);
+        mPaint.setAlpha(mDown ? 255 : 0);
         mArcRect.top = 0;
         mArcRect.left = 0;
         mArcRect.right = getWidth();
