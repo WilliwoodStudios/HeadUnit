@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">Brainiac</string>
     <string name="action_settings">Settings</string>
+    <string name="overlay_notification_title">Brainiac Screen Navigation</string>
+    <string name="overlay_notification_enable">Enable on screen navigation buttons.</string>
+    <string name="overlay_notification_disable">Disable on screen navigation buttons.</string>
+    <string name="accessibility_service_label">Brainiac Screen Navigation</string>
+    <string name="accessibility_service_description">This service allows Brainiac\'s onscreen controls to act as navigation buttons for your device.</string>
+    <string name="accessibility_service_not_installed">Brainiac Screen Navigation - an accessibility service - is not enabled.\nPlease enable it in the settings app.\nYou cannot use screen navigation until it is enabled.</string>
 </resources>
