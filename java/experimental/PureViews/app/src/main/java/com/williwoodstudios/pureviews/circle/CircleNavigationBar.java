@@ -73,11 +73,10 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
         mSpacer.setStyle(Paint.Style.STROKE);
 
         mTime = new Paint();
-//        mTime.setTextSize();
         mTime.setColor(Theme.getColor());
         mTime.setAlpha(255);
         mTime.setAntiAlias(true);
-        mTime.setTextAlign(Paint.Align.CENTER);
+        mTime.setTextAlign(Paint.Align.LEFT);
 
         mCirclePaint = new Paint();
         mCirclePaint.setAntiAlias(true);
@@ -137,6 +136,9 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
         public void run() {
             mCalendar.setTimeInMillis(System.currentTimeMillis());
             int hour = mCalendar.get(Calendar.HOUR);
+            if (hour==0) {
+                hour = 12;
+            }
             int minute = mCalendar.get(Calendar.MINUTE);
 
             if (hour != mHour || minute != mMinute) {
@@ -223,12 +225,15 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        float textWidth = mTime.measureText(mDateString,0,mDateStringLength);
+
         if (getWidth() > getHeight()) { // Portrait view
             // Draw border line
             canvas.drawLine(0, getHeight() - 1,  getWidth(), getHeight() - 1, mSpacer);
 
             // Draw clock
-            canvas.drawText(mDateString, 0, mDateStringLength, getWidth() - mDateStringY - 5, getHeight()/2 + (mTime.getFontMetrics().top/2), mTime);
+            float clockLeft = getWidth() - textWidth - 5;
+            canvas.drawText(mDateString, 0, mDateStringLength, clockLeft, getHeight()/2 + (mTime.getFontMetrics().top/2), mTime);
 
             // Draw Line
             float midY = (mTopRect.top + mTopRect.bottom) / 2;
