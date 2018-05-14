@@ -7,34 +7,23 @@ import android.view.View;
 /**
  * Created by robwilliams on 15-09-09.
  */
-public abstract class DoubleSwipeGestureHandler implements GestureHandler {
+public class DoubleSwipeGestureHandler {
 
     /**
-     * State when we are waiting for our first touch.
+     * The view that is using this handler.
      */
-    private static final int WAITING_FOR_FIRST = 0;
-    /**
-     * State when we are waiting for our second touch.
-     */
-    private static final int WAITING_FOR_SECOND = 1;
-    /**
-     * State when we are waiting for the gesture to move far enough to believe its for us.
-     */
-    private static final int PROCESSING_MOTION = 2;
-    /**
-     * State when we are in the gesture.
-     */
-    private static final int IN_GESTURE = 3;
     protected final View mOwner;
-    protected GestureListener mGestureListener;
+
     /**
-     * Current working width.
+     * The active handler. We don't report lefright & updown at the same time.
      */
-    protected int mMinor;
+    protected GestureListener mActiveGestureListener = null;
+
     /**
-     * Current working height.
+     * Track if we care about the ongoing gesture anymore.
      */
-    protected int mMajor;
+    protected boolean mKeepTracking = false;
+
     /**
      * Keep the location of the start of the first touch.
      */
@@ -43,32 +32,45 @@ public abstract class DoubleSwipeGestureHandler implements GestureHandler {
      * Keep the location of the start of the second touch.
      */
     protected PointF secondTouch = new PointF(0, 0);
-    private GestureCoordinator mGestureCoordinator;
+
     /**
-     * Flags if a gesture has started.
+     * Listener for up down direction.
      */
-    private boolean mGestureStarted;
+    private GestureListener mUpDownGestureListener;
+
     /**
-     * Track the current state.
+     * Listener for left right direction.
      */
-    private int state = WAITING_FOR_FIRST;
+    private GestureListener mLeftRightGestureListener;
+
     /**
-     * How far do you have to move in X before we are too far.
+     * The observed with of the owning view.
      */
-    private int farMinor = 50;
+    private float mWidth;
+
     /**
-     * How far do you have to move in Y before we are far enough.
+     * The observed height of the owning view.
      */
-    private int farMajor = 100;
+    private float mHeight;
+
+    /**
+     * The axis that we care about tracking.
+     */
+    private Axis mActiveAxis;
+
+    /**
+     * The last value that we broadcast.
+     */
+    private float mLastGestureValue;
+
+    /**
+     * Create a double swipe gesture handler.
+     *
+     * @param owner The view who owns this handler. It is used to determine the current width and
+     *              height to care about.
+     */
     public DoubleSwipeGestureHandler(View owner) {
         mOwner = owner;
-    }
-
-    protected abstract boolean isUpDown();
-
-    @Override
-    public void setGestureCoordinator(GestureCoordinator coordinator) {
-        mGestureCoordinator = coordinator;
     }
 
     /**
@@ -90,208 +92,221 @@ public abstract class DoubleSwipeGestureHandler implements GestureHandler {
     private boolean isEnd(int action) {
         return action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL;
     }
-    /**
-     * The listener tracking the output of this gesture handler.
-     */
 
     /**
-     * Check if we have moved too far for this action to be a gesture.
+     * Currently capture as soon as the second touch is down.
+     * <p>
+     * This means that long term the handler would not work with controls that need pinch-to-zoom.
      *
-     * @param x0
-     * @param x1
-     * @return
+     * @param ev The motion event.
+     * @return true iff we should capture from now on.
      */
-    protected final boolean movedFar(float x0, float x1, float y0, float y1) {
-        float a0, a1;
-        if (isUpDown()) {
-            a0 = x0;
-            a1 = x1;
-        } else {
-            a0 = y0;
-            a1 = y1;
-        }
-        a0 = Math.abs(a0);
-        a1 = Math.abs(a1);
-        return a0 > farMinor || a1 > farMinor;
-    }
-
-    /**
-     * Check if we have moved enough to trigger the gesture.
-     *
-     * @param y0
-     * @param y1
-     * @return
-     */
-    protected final boolean movedEnough(float x0, float x1, float y0, float y1) {
-        float a0, a1;
-        if (isUpDown()) {
-            a0 = y0;
-            a1 = y1;
-        } else {
-            a0 = x0;
-            a1 = x1;
-        }
-        // Deliberately not making both positive - because we need them to both go in the same direction.
-        // ie: we're avoiding trapping pinches...
-        if (a0 < 0) {
-            a0 = -a0;
-            a1 = -a1;
-        }
-        return a0 > farMajor && a1 > farMajor;
-    }
-
-    /**
-     * Set the <em>single</em> gesture listener for this instance.
-     *
-     * @param listener The listener.
-     */
-    public void setGestureListener(GestureListener listener) {
-        mGestureListener = listener;
-    }
-
-    /**
-     * Remove the <em>single</em> gesture listener from this instance.
-     *
-     * @param listener The listener to remove. (No change if it doesn't match the current).
-     */
-    public void removeGestureListener(GestureListener listener) {
-        if (mGestureListener == listener) {
-            mGestureListener = null;
-        }
-    }
-
-    @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         int action = ev.getActionMasked();
         int index = ev.getActionIndex();
         ev.getActionIndex();
-        if (state == WAITING_FOR_FIRST) {
-            if (action == MotionEvent.ACTION_DOWN) {
-                firstTouch.set(ev.getX(index), ev.getY(index));
-                state = WAITING_FOR_SECOND;
-            }
-        } else if (state == WAITING_FOR_SECOND) {
-            if (action == MotionEvent.ACTION_POINTER_DOWN) {
-                secondTouch.set(ev.getX(index), ev.getY(index));
-                state = PROCESSING_MOTION;
-
-                // Calculate how far we should allow for this gesture.
-                setWidthHeight();
-
-                farMinor = mMinor / 5;
-                farMajor = mMajor / 10;
-
-            } else if (isEnd(action)) {
-                state = WAITING_FOR_FIRST;
-            }
-        } else if (state == PROCESSING_MOTION) {
-            if (isEnd(action) || isStart(action)) {
-                state = WAITING_FOR_FIRST;
-            } else {
-                float x0 = ev.getX(0);
-                float y0 = ev.getY(0);
-                float x1 = ev.getX(1);
-                float y1 = ev.getY(1);
-
-                float dx0 = x0 - firstTouch.x;
-                float dy0 = y0 - firstTouch.y;
-
-                float dx1 = x1 - secondTouch.x;
-                float dy1 = y1 - secondTouch.y;
-
-                if (movedFar(dx0, dx1, dy0, dy1)) {
-                    state = WAITING_FOR_FIRST;
-                } else if (movedEnough(dx0, dx1, dy0, dy1)) {
-                    state = IN_GESTURE;
-                }
-            }
-        } else if (state == IN_GESTURE) {
-            // The IN_GESTURE state should be handled in #onTouchEvent
-        } else {
-            // This means there's a state we don't know about...
+        if (action == MotionEvent.ACTION_DOWN) {
+            firstTouch.set(ev.getX(index), ev.getY(index));
+            return false;
         }
+        if (action == MotionEvent.ACTION_POINTER_DOWN) {
+            secondTouch.set(ev.getX(index), ev.getY(index));
+            setWidthHeight();
+            mKeepTracking = true;
+            mActiveGestureListener = null;
+            return true;
+        }
+        return false;
+    }
 
-        if (state == IN_GESTURE) {
-            if (mGestureListener != null) {
-                mGestureStarted = true;
-                mGestureCoordinator.onGestureStart(this);
-                mGestureListener.onStart();
+    /**
+     * Touch event handler.
+     *
+     * @param ev The touch event.
+     * @return true iff the event was processed.
+     */
+    public boolean onTouchEvent(MotionEvent ev) {
+        if (mKeepTracking) {
+            int action = ev.getActionMasked();
+
+            if (isEnd(action) || isStart(action) || ev.getPointerCount() != 2) {
+                if (mActiveGestureListener != null) {
+                    mActiveGestureListener.onEnd();
+                    mActiveGestureListener = null;
+                }
+                mKeepTracking = false;
+                return false;
+            } else {
+                handleMotion(ev);
             }
             return true;
         }
         return false;
     }
 
-    public void reset() {
-        state = WAITING_FOR_FIRST;
+    /**
+     * Find the quadrant the given point is in, compared to the origin.
+     *
+     * @param origin The origin (initial touch point)
+     * @param x      of the current touch point.
+     * @param y      of the current touch point.
+     * @return
+     */
+    final private Quadrant findQuadrant(PointF origin, float x, float y) {
+        float dx = x - origin.x;
+        float dy = y - origin.y;
+        float adx = Math.abs(dx);
+        float ady = Math.abs(dy);
+        if (dx > 0 && adx > ady) {
+            return Quadrant.EAST;
+        } else if (dx < 0 && adx > ady) {
+            return Quadrant.WEST;
+        } else if (dy < 0) {
+            return Quadrant.NORTH;
+        }
+        return Quadrant.SOUTH;
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent ev) {
-        int action = ev.getActionMasked();
+    /**
+     * Find the distance between the two given points. (pythagorean)
+     *
+     * @param point
+     * @param x
+     * @param y
+     * @return
+     */
+    final private float findDistance(PointF point, float x, float y) {
+        float x2 = point.x - x;
+        x2 *= x2;
+        float y2 = point.y - y;
+        y2 *= y2;
+        return (float) Math.sqrt(x2 + y2);
+    }
 
-        if (isEnd(action) || isStart(action) || ev.getPointerCount() != 2) {
-            if (mGestureListener != null && mGestureStarted) {
-                mGestureStarted = false;
-                mGestureListener.onEnd();
+    /**
+     * Find the average pythagorean distance between the two touch points in the event
+     * and the first/second tracked touch.
+     *
+     * @param ev
+     * @return
+     */
+    final private float averageDistance(MotionEvent ev) {
+        float delta = findDistance(firstTouch, ev.getX(0), ev.getY(0));
+        delta += findDistance(secondTouch, ev.getX(0), ev.getY(0));
+        return delta / 2;
+    }
+
+    /**
+     * Check if enough movement has happend in the given quadrant to initiate a gesture.
+     *
+     * @param delta
+     * @param quadrant
+     * @return
+     */
+    final private boolean isEnoughDistance(float delta, Quadrant quadrant) {
+        if (quadrant.getAxis() == Axis.Y) {
+            return delta > mHeight / 20;
+        }
+        return delta > mWidth / 20;
+    }
+
+    /**
+     * Get a motion delta based on the {@link #mActiveAxis} from the {@link #firstTouch} and {@link #secondTouch} and the two points in the MotionEvent.
+     *
+     * @param ev
+     * @return
+     */
+    final private float getDelta(MotionEvent ev) {
+        if (mActiveAxis == Axis.X) {
+            return (ev.getX(0) - firstTouch.x + ev.getX(1) - secondTouch.x) / 2 / mWidth;
+        }
+        return (ev.getY(0) - firstTouch.y + ev.getY(1) - secondTouch.y) / 2 / mHeight;
+    }
+
+    /**
+     * Handle motion.
+     *
+     * @param ev
+     */
+    final protected void handleMotion(MotionEvent ev) {
+        if (mActiveGestureListener == null) {
+            // We haven't decided which direction the user is gesturing yet.
+            Quadrant quadrantA = findQuadrant(firstTouch, ev.getX(0), ev.getY(0));
+            Quadrant quadrantB = findQuadrant(secondTouch, ev.getX(1), ev.getY(1));
+            if (quadrantA != quadrantB) {
+                return;
             }
-            state = WAITING_FOR_FIRST;
+            float delta = averageDistance(ev);
+            if (isEnoughDistance(delta, quadrantA)) {
+                mActiveAxis = quadrantA.getAxis();
+                mActiveGestureListener = mActiveAxis == Axis.X ? mLeftRightGestureListener : mUpDownGestureListener;
+                if (mActiveGestureListener == null) {
+                    // There was no listener for that axis - don't track anymore.
+                    mKeepTracking = false;
+                } else {
+                    mActiveGestureListener.onStart();
+                    mLastGestureValue = Float.NaN;
+                }
+            }
         } else {
-            handleDelta(ev);
-        }
-
-        return state != WAITING_FOR_FIRST;
-    }
-
-    final protected void handleDelta(MotionEvent ev) {
-        float a0, a1;
-        if (isUpDown()) {
-            a0 = ev.getY(0);
-            a1 = ev.getY(1);
-        } else {
-            a0 = ev.getX(0);
-            a1 = ev.getX(1);
-        }
-        boolean isUpDown = isUpDown();
-
-        float da0 = a0 - (isUpDown ? firstTouch.y : firstTouch.x);
-        float da1 = a1 - (isUpDown ? secondTouch.y : secondTouch.x);
-
-        float da = (da0 + da1) / 2;
-
-        if (mGestureListener != null) {
-            mGestureListener.onGestureChange(-da / mMajor);
+            // They are gesturing.
+            float delta = getDelta(ev);
+            int deltaInt = (int) (delta * 100);
+            delta = deltaInt / 100f;
+            if (delta != mLastGestureValue) {
+                mLastGestureValue = delta;
+                mActiveGestureListener.onGestureChange(delta);
+            }
         }
     }
 
+    /**
+     * Check the owner's width and height.
+     */
     protected void setWidthHeight() {
-        if (isUpDown()) {
-            mMinor = mOwner.getWidth();
-            mMajor = mOwner.getHeight();
-        } else {
-            mMinor = mOwner.getHeight();
-            mMajor = mOwner.getWidth();
-        }
+        mWidth = mOwner.getWidth();
+        mHeight = mOwner.getHeight();
     }
 
-    public static class UpDownDoubleSwipeGestureHandler extends DoubleSwipeGestureHandler {
-        public UpDownDoubleSwipeGestureHandler(View owner) {
-            super(owner);
-        }
-
-        protected boolean isUpDown() {
-            return true;
-        }
+    /**
+     * Set the up down (y axis) gesture listener.
+     *
+     * @param upDownGestureListener
+     */
+    public void setUpDownGestureListener(GestureListener upDownGestureListener) {
+        this.mUpDownGestureListener = upDownGestureListener;
     }
 
-    public static class LeftRightDoubleSwipeGestureHandler extends DoubleSwipeGestureHandler {
-        public LeftRightDoubleSwipeGestureHandler(View owner) {
-            super(owner);
+    /**
+     * Set the left right (x axis) gesture listener.
+     *
+     * @param leftRightGestureListener
+     */
+    public void setLeftRightGestureListener(GestureListener leftRightGestureListener) {
+        this.mLeftRightGestureListener = leftRightGestureListener;
+    }
+
+    /**
+     * Tracks which axis are we processing.
+     */
+    private enum Axis {
+        X, Y
+    }
+
+    /**
+     * Indicates a quadrant of pointer movement.
+     */
+    private enum Quadrant {
+        NORTH(Axis.Y), SOUTH(Axis.Y), EAST(Axis.X), WEST(Axis.X);
+
+        private final Axis mAxis;
+
+        Quadrant(Axis axis) {
+            mAxis = axis;
         }
 
-        protected boolean isUpDown() {
-            return false;
+        public Axis getAxis() {
+            return mAxis;
         }
-
     }
 }

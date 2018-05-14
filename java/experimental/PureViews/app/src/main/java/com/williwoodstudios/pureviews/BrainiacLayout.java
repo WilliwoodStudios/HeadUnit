@@ -21,14 +21,11 @@ import com.williwoodstudios.pureviews.circle.CircleNavigationBar;
 import com.williwoodstudios.pureviews.media.MediaMainScreen;
 import com.williwoodstudios.pureviews.media.MediaService;
 import com.williwoodstudios.pureviews.volume.DoubleSwipeGestureHandler;
-import com.williwoodstudios.pureviews.volume.GestureCoordinator;
-import com.williwoodstudios.pureviews.volume.GestureHandler;
 import com.williwoodstudios.pureviews.volume.GestureListener;
 import com.williwoodstudios.pureviews.volume.VolumeView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 /**
  * Created by robwilliams on 2015-10-18.
@@ -42,8 +39,7 @@ public class BrainiacLayout extends AppSpace {
     private Activity mActivity;
     private Point mDisplaySize = new Point();
 
-    private Vector<GestureHandler> mGestureHandlers;
-    private GestureHandler mActiveHandler;
+    private DoubleSwipeGestureHandler mGestureHandler;
 
     private CircleMenu.Configuration mMenuConfiguration = new CircleMenu.Configuration() {
         private ArrayList<CircleMenu.CircleMenuItem> mItems;
@@ -143,17 +139,10 @@ public class BrainiacLayout extends AppSpace {
 
         mAudioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
 
-        mGestureHandlers = new Vector<>();
+        mGestureHandler = new DoubleSwipeGestureHandler(this);
 
-        DoubleSwipeGestureHandler upDown = new DoubleSwipeGestureHandler.UpDownDoubleSwipeGestureHandler(this);
-        upDown.setGestureListener(mUpDownGestureListener);
-        upDown.setGestureCoordinator(mGestureCoordinator);
-        mGestureHandlers.add(upDown);
-
-        DoubleSwipeGestureHandler leftRight = new DoubleSwipeGestureHandler.LeftRightDoubleSwipeGestureHandler(this);
-        leftRight.setGestureListener(mLeftRightGestureListener);
-        leftRight.setGestureCoordinator(mGestureCoordinator);
-        mGestureHandlers.add(leftRight);
+        mGestureHandler.setUpDownGestureListener(mUpDownGestureListener);
+        mGestureHandler.setLeftRightGestureListener(mLeftRightGestureListener);
 
         mVolumeView = new VolumeView(activity);
         mNavBar = new CircleNavigationBar(activity, this);
@@ -216,17 +205,6 @@ public class BrainiacLayout extends AppSpace {
         }
 
         mVolumeView.layout(0, 0, r, b);
-
-       /* android.app.AlertDialog alertDialog = new android.app.AlertDialog.Builder(mActivity).create();
-        alertDialog.setTitle("Alert");
-        alertDialog.setMessage("X:"+mDisplaySize.x + ", Y:"+mDisplaySize.y);
-        alertDialog.setButton(android.app.AlertDialog.BUTTON_NEUTRAL, "OK",
-                new android.content.DialogInterface.OnClickListener() {
-                    public void onClick(android.content.DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-        alertDialog.show();*/
     }
 
     @Override
@@ -247,8 +225,8 @@ public class BrainiacLayout extends AppSpace {
 
         @Override
         public void onGestureChange(float delta) {
-            mIsForward = delta > 0;
-            if (Math.abs(delta) > 0.25) {
+            mIsForward = delta < 0;
+            if (Math.abs(delta) > 0.4) {
                 mFarEnough = true;
             }
         }
@@ -281,7 +259,7 @@ public class BrainiacLayout extends AppSpace {
 
         @Override
         public void onGestureChange(float delta) {
-            int targetVolume = mInitialVolume + (int) (delta * mMaxVolume);
+            int targetVolume = mInitialVolume + (int) (-delta * mMaxVolume);
             if (targetVolume > mMaxVolume) {
                 targetVolume = mMaxVolume;
             } else if (targetVolume < 0) {
@@ -307,27 +285,8 @@ public class BrainiacLayout extends AppSpace {
      */
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        for (GestureHandler g : mGestureHandlers) {
-            if (g.onInterceptTouchEvent(ev)) {
-                mActiveHandler = g;
-                return true;
-            }
-        }
-        if (mActiveHandler != null) {
-            return true;
-        }
-        return super.onInterceptTouchEvent(ev);
+        return mGestureHandler.onInterceptTouchEvent(ev);
     }
-
-    private GestureCoordinator mGestureCoordinator = new GestureCoordinator() {
-        @Override
-        public void onGestureStart(GestureHandler gestureHandler) {
-            for (GestureHandler g : mGestureHandlers) {
-                if (g != gestureHandler)
-                    g.reset();
-            }
-        }
-    };
 
     /**
      * This one only happens after we've done the capture.
@@ -337,13 +296,6 @@ public class BrainiacLayout extends AppSpace {
      */
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        if (mActiveHandler != null) {
-            boolean toReturn = mActiveHandler.onTouchEvent(ev);
-            if (!toReturn) {
-                mActiveHandler = null;
-            }
-            return toReturn;
-        }
-        return false;
+        return mGestureHandler.onTouchEvent(ev);
     }
 }
