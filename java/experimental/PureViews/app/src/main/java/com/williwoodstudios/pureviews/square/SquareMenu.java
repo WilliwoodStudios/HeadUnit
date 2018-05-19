@@ -121,4 +121,9 @@ public class SquareMenu extends AppScreen implements ThemeListener {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
     }
+
+    @Override
+    public boolean showCircleMenuIcon() {
+        return false;
+    }
 }
