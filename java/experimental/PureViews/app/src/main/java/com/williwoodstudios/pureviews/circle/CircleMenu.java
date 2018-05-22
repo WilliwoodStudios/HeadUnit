@@ -139,4 +139,9 @@ public class CircleMenu extends AppScreen {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
     }
+
+    @Override
+    public boolean showCircleMenuIcon() {
+        return false;
+    }
 }

@@ -8,4 +8,5 @@ public interface ScreenManager {
     void popScreen(AppScreen which);
     boolean isTopScreen(AppScreen which);
     void popToFirstScreen();
+    void pop();
 }

@@ -162,7 +162,6 @@ public class BrainiacLayout extends AppSpace {
         mActivity.getWindowManager().getDefaultDisplay().getSize(mDisplaySize);
         if (mDisplaySize.y > mDisplaySize.x) { // portrait
             mMediaAppSpace.setFullScreenManager(this);
-            mMediaAppSpace.setOnTopChangedListener(mNavBar);
             mMediaAppSpace.pushScreen(new MediaMainScreen(getContext()));
             addView(mMediaAppSpace);
         }
@@ -171,20 +170,11 @@ public class BrainiacLayout extends AppSpace {
     }
 
     public void pushScreen(AppScreen screen) {
-        addView(screen);
-        screen.pushing(this);
-        screen.layout(0, 0, getWidth(), getHeight());
-
-        AlphaAnimation fadeIn = new AlphaAnimation(0, 1);
-        fadeIn.setDuration(250);
-        fadeIn.setFillAfter(true);
-        screen.startAnimation(fadeIn);
-        removeView(mVolumeView);
-        addView(mVolumeView);
+        mAppSpace.pushScreen(screen);
     }
 
     public void popScreen(AppScreen screen) {
-        removeView(screen);
+        mAppSpace.popScreen(screen);
     }
 
     @Override
@@ -297,5 +287,9 @@ public class BrainiacLayout extends AppSpace {
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         return mGestureHandler.onTouchEvent(ev);
+    }
+
+    public void onBackPressed() {
+        mAppSpace.pop();
     }
 }

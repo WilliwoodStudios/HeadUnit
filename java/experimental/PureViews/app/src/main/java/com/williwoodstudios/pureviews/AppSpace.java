@@ -57,6 +57,7 @@ public class AppSpace extends ViewGroup implements ScreenManager {
             @Override
             public void onAnimationEnd(Animation animation) {
                 removeView(screen);
+                notifyTopChanged();
             }
 
             @Override
@@ -124,12 +125,14 @@ public class AppSpace extends ViewGroup implements ScreenManager {
 
     @Override
     public void popToFirstScreen() {
+        while(mScreens.size()>1) {
+            pop();
+        }
+    }
+
+    public void pop() {
         if (mScreens.size()>1) {
-            while (mScreens.size() > 1) {
-                removeView(mScreens.get(mScreens.size() - 1));
-                mScreens.remove(mScreens.size() - 1);
-            }
-            notifyTopChanged();
+            popScreen(mScreens.get(mScreens.size()-1));
         }
     }
 

@@ -49,13 +49,11 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
     private final Paint mBitmapPaint;
     private float mDateStringY;
     private int mActiveCircle = 0;
-    private boolean mShowMiddleCircle = true;
+    private boolean mShowMiddleCircle = false;
 
     private Bitmap mBitmapBlackCircle;
     private Bitmap mBitmapOutlineCircle;
     private Bitmap mBitmapSelectedCircle;
-
-    private SquareMenu mSquareMenu;
 
     private RectangleAnimation mAnimateSelection;
 
@@ -299,30 +297,28 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
             float y = event.getY();
             int newActiveCircle = mActiveCircle;
             if (mTopRect.contains(x, y)) {
-                newActiveCircle = 0;
-                if (mSquareMenu != null) {
-                    mScreenManager.popScreen(mSquareMenu);
-                    mSquareMenu = null;
+                if (mActiveCircle!=0) {
+                    newActiveCircle = 0;
+                    mScreenManager.popToFirstScreen();
                 }
-            } else if (mMidRect.contains(x, y)) {
+            } else if (mMidRect.contains(x, y) && mShowMiddleCircle) {
                 newActiveCircle = 0;
             } else if (mBotRect.contains(x, y)) {
-                newActiveCircle = 2;
-                Point displaySize = new Point();
-                ((Activity)getContext()).getWindowManager().getDefaultDisplay().getSize(displaySize);
-                int navBarHeight = displaySize.y / 10;
-                int topHeight = (int)(displaySize.y * 0.6);
-                mSquareMenu = new SquareMenu(getContext());
-                // Launch color picker
-                mScreenManager.pushScreen(mSquareMenu);
-                mSquareMenu.layout(0, navBarHeight, displaySize.x, topHeight + navBarHeight);
+                if (mActiveCircle!=2) {
+                    newActiveCircle = 2;
+                    mScreenManager.pushScreen(new SquareMenu(getContext()));
+                }
             }
-            if (newActiveCircle != mActiveCircle) {
-                mActiveCircle = newActiveCircle;
-                mAnimateSelection.start(mActiveRect, mActiveCircle == 0 ? mTopRect : mActiveCircle == 1 ? mMidRect : mBotRect, 350);
-            }
+            setActiveCircle(newActiveCircle);
         }
         return true;
+    }
+
+    private void setActiveCircle(int newActiveCircle) {
+        if (newActiveCircle != mActiveCircle) {
+            mActiveCircle = newActiveCircle;
+            mAnimateSelection.start(mActiveRect, mActiveCircle == 0 ? mTopRect : mActiveCircle == 1 ? mMidRect : mBotRect, 350);
+        }
     }
 
     private void freeMidBitmap() {
@@ -340,6 +336,7 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
         if (screen.getNavigationLevel() == 0) {
             // update the layout.
             freeMidBitmap();
+            setActiveCircle(0);
             invalidate();
         } else if (screen.getNavigationLevel() == 1) {
             int id = screen.getNavigationIconResourceID();
@@ -367,8 +364,7 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
             mShowMiddleCircle = screen.showCircleMenuIcon();
             if (mShowMiddleCircle == true) {
                 int newActiveCircle = screen.getNavigationLevel();
-                mActiveCircle = newActiveCircle;
-                mAnimateSelection.start(mActiveRect, mActiveCircle == 0 ? mTopRect : mActiveCircle == 1 ? mMidRect : mBotRect, 350);
+                setActiveCircle(newActiveCircle);
             }
         }
     }

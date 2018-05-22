@@ -16,6 +16,7 @@ import com.williwoodstudios.pureviews.overlay.OverlayService;
 
 
 public class MainActivity extends Activity {
+    private BrainiacLayout mBrainiacLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +33,7 @@ public class MainActivity extends Activity {
         int themeColor = prefs.getInt(Theme.PREFERNCE_INDEX, Theme.getIndex());
         Theme.setColor(themeColor);
 
-        setContentView(new BrainiacLayout(this));
+        setContentView(mBrainiacLayout = new BrainiacLayout(this));
 
         startService(new Intent(this, OverlayService.class));
 
@@ -44,6 +45,11 @@ public class MainActivity extends Activity {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        mBrainiacLayout.onBackPressed();
     }
 
     @Override

@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.animation.AlphaAnimation;
 
 import com.williwoodstudios.pureviews.Theme;
+import com.williwoodstudios.pureviews.ThemeListener;
 
 /**
  * Created by robwilliams on 15-09-09.
@@ -45,6 +46,14 @@ public class VolumeView extends View {
     private Runnable mHideComplete = new Runnable() {
         public void run() {
             mMode = null;
+            invalidate();
+        }
+    };
+
+    private ThemeListener mThemeListener = new ThemeListener() {
+        @Override
+        public void themeUpdated() {
+            checkThemeColor();
             invalidate();
         }
     };
@@ -137,6 +146,8 @@ public class VolumeView extends View {
         mHandler = new Handler();
 
         setAlpha(0);
+
+        Theme.subscribe(mThemeListener);
     }
 
     @Override
