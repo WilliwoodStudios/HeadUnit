@@ -307,6 +307,8 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
             } else if (mBotRect.contains(x, y)) {
                 if (mActiveCircle!=2) {
                     newActiveCircle = 2;
+                    // TODO: Need to deal with if one of our build in apps is displaying
+                    // Open settings screen
                     mScreenManager.pushScreen(new SquareMenu(getContext()));
                 }
             }

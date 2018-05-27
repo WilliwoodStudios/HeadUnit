@@ -16,6 +16,7 @@ import android.util.Log;
 import android.graphics.drawable.Drawable;
 
 import com.williwoodstudios.pureviews.air.AirMainScreen;
+import com.williwoodstudios.pureviews.relay.RelayMainScreen;
 import com.williwoodstudios.pureviews.circle.CircleButton;
 import com.williwoodstudios.pureviews.circle.CircleMenu;
 import com.williwoodstudios.pureviews.circle.CircleNavigationBar;
@@ -44,49 +45,73 @@ public class BrainiacLayout extends AppSpace {
 
     private DoubleSwipeGestureHandler mGestureHandler;
 
-    // I changed this to always be dynamic so that we pick up any add/removes of applications
+    private CircleMenu.Configuration mRelayConfiguration = new CircleMenu.Configuration() {
+        @Override
+        public List<CircleMenu.CircleMenuItem> getItems() {
+            ArrayList<CircleMenu.CircleMenuItem> items;
+            String[] names = new String[]{};
+            int[] ids = new int[]{};
+
+            // Load in our default Applications
+            names = new String[]{"Relay One", "Relay 2", "Relay 3", "Relay 4", "Relay 5", "Relay 6",
+            "Relay 7", "Relay 8"};
+            ids = new int[]{
+                    R.drawable.core_power,
+                    R.drawable.core_power,
+                    R.drawable.core_power,
+                    R.drawable.core_power,
+                    R.drawable.core_power,
+                    R.drawable.core_power,
+                    R.drawable.core_power,
+                    R.drawable.core_power};
+            OnClickListener[] mOnClickListeners = new OnClickListener[]{
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            };
+            // Load our Relays
+            items = new ArrayList<>();
+            for (int i = 0; i < names.length; ++i) {
+                items.add(new CircleMenu.CircleMenuItem(names[i], ids[i], mOnClickListeners[i]));
+            }
+            return items;
+        }
+    };
+
+    // Retrieves all of the menu items for the App Grid circle menu
     private CircleMenu.Configuration mMenuConfiguration = new CircleMenu.Configuration() {
         @Override
         public List<CircleMenu.CircleMenuItem> getItems() {
             ArrayList<CircleMenu.CircleMenuItem> items;
-            String[] names;
-            int[] ids;
-            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) { // Portrait view
-                //names = new String[]{"music", "data logger", "suspension", "dashboard"};
-                names = new String[]{"music"};
-                ids = new int[]{
-                        R.drawable.core_media_player_img_icon_256x256
-                        //R.drawable.core_datalogger_img_icon_256x256,
-                        //R.drawable.core_suspension_img_icon_256x256,
-                        // R.drawable.core_dashboard_img_icon_256x256
-                };
-            } else {
-                names = new String[]{};
-                ids = new int[]{};
-                /*names = new String[]{"data logger", "suspension", "dashboard"};
-                ids = new int[]{
-                        R.drawable.core_datalogger_img_icon_256x256,
-                        R.drawable.core_suspension_img_icon_256x256,
-                        R.drawable.core_dashboard_img_icon_256x256};*/
-            }
+            String[] names = new String[]{};
+            int[] ids = new int[]{};
+
+            // Load in our default Applications
+            names = new String[]{"Switches"/*, "Suspension"*/};
+            ids = new int[]{
+                    R.drawable.core_relays_img_icon_256x256/*,
+                    R.drawable.core_suspension_img_icon_256x256*/};
             OnClickListener[] mOnClickListeners = new OnClickListener[]{
                     new OnClickListener() {
                         @Override
 
 
                         public void onClick(View v) {
-                            mAppSpace.pushScreen(new MediaMainScreen(getContext()));
+                            // Configuration for the Relays
+                           mAppSpace.pushScreen(new RelayMainScreen(getContext(), mRelayConfiguration));
                         }
-                    },
-                    null,
+                    }/*,
                     new OnClickListener() {
                         @Override
-
-
                         public void onClick(View v) {
                             mAppSpace.pushScreen(new AirMainScreen(getContext()));
                         }
-                    }, null
+                    }*/
             };
 
             items = new ArrayList<>();
