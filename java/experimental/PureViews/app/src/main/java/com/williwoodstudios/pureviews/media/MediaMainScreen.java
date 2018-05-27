@@ -110,6 +110,10 @@ public class MediaMainScreen extends AppScreen {
         IntentFilter iF = new IntentFilter();
         iF.addAction("com.android.music.metachanged");
         iF.addAction("com.android.music.playstatechanged");
+        // Spotify specific intents
+        iF.addAction("com.spotify.music.metadatachanged");
+        iF.addAction("com.spotify.music.playbackstatechanged");
+        iF.addAction("com.spotify.music.queuechanged");
         getContext().registerReceiver(mRemoteControlReceiver,iF);
     }
 
