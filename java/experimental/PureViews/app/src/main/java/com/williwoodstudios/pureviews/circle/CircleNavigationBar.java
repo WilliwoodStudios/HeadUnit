@@ -307,10 +307,7 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
             } else if (mBotRect.contains(x, y)) {
                 if (mActiveCircle!=2) {
                     newActiveCircle = 2;
-                   // mScreenManager.pushScreen(new SquareMenu(getContext()));
-                   if (mScreenManager instanceof BrainiacLayout) {
-                       ((BrainiacLayout)mScreenManager).refreshAppGrid();
-                   }
+                    mScreenManager.pushScreen(new SquareMenu(getContext()));
                 }
             }
             setActiveCircle(newActiveCircle);
