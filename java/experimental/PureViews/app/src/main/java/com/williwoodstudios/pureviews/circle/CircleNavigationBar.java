@@ -14,6 +14,7 @@ import android.app.Activity;
 
 import com.williwoodstudios.pureviews.AppScreen;
 import com.williwoodstudios.pureviews.AppSpace;
+import com.williwoodstudios.pureviews.BrainiacLayout;
 import com.williwoodstudios.pureviews.R;
 import com.williwoodstudios.pureviews.RectangleAnimation;
 import com.williwoodstudios.pureviews.ScreenManager;
@@ -306,7 +307,10 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
             } else if (mBotRect.contains(x, y)) {
                 if (mActiveCircle!=2) {
                     newActiveCircle = 2;
-                    mScreenManager.pushScreen(new SquareMenu(getContext()));
+                   // mScreenManager.pushScreen(new SquareMenu(getContext()));
+                   if (mScreenManager instanceof BrainiacLayout) {
+                       ((BrainiacLayout)mScreenManager).refreshAppGrid();
+                   }
                 }
             }
             setActiveCircle(newActiveCircle);

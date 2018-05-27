@@ -22,6 +22,7 @@ public class CircleMenu extends AppScreen {
     private final Configuration mConfiguration;
     private final ScrollView mScrollView;
     private final ViewGroup mButtonGroup;
+    private final Context mContext;
 
     public static class CircleMenuItem {
         public CircleMenuItem(String name, int imageResourceId, OnClickListener listener) {
@@ -52,7 +53,7 @@ public class CircleMenu extends AppScreen {
 
     public CircleMenu(Context owner, Configuration configuration) {
         super(owner);
-
+        mContext = owner;
         mConfiguration = configuration;
         mScrollView = new ScrollViewThatIgnoresDoubleTouch(owner);
         mButtonGroup = new ViewGroup(owner) {
@@ -65,8 +66,23 @@ public class CircleMenu extends AppScreen {
         addView(mScrollView);
         mScrollView.addView(mButtonGroup);
 
+        refreshAppGrid();
+
+        setBackgroundResource(Theme.getBackgroundResource(getContext()));
+    }
+
+    public void refreshAppGrid() {
+        // First clear any existing items
+        android.view.View view;
+        for (int i = mButtonGroup.getChildCount() - 1; i >= 0 ; i--) {
+            view = mButtonGroup.getChildAt(i);
+            if (view instanceof CircleButton) {
+                mButtonGroup.removeView(view);
+            }
+        }
+        // Then load with the latest
         for (CircleMenuItem item : mConfiguration.getItems()) {
-            CircleButton toAdd = new CircleButton(owner, item.mName);
+            CircleButton toAdd = new CircleButton(mContext, item.mName);
             toAdd.setTitlePosition(CircleButton.TitlePosition.BELOW);
             if (item.mImageResourceId != -1 && item.mAppIcon == null) { // Resource id is one of our internal apps
                 toAdd.setImageResource(item.mImageResourceId);
@@ -84,8 +100,6 @@ public class CircleMenu extends AppScreen {
             }
             mButtonGroup.addView(toAdd);
         }
-
-        setBackgroundResource(Theme.getBackgroundResource(getContext()));
     }
 
     public void themeUpdated() {
