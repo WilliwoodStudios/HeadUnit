@@ -100,6 +100,8 @@ public class CircleMenu extends AppScreen {
             }
             mButtonGroup.addView(toAdd);
         }
+
+        redoLayout(getLeft(),getTop(),getRight(),getBottom());
     }
 
     public void themeUpdated() {
@@ -117,6 +119,10 @@ public class CircleMenu extends AppScreen {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        redoLayout(l, t, r, b);
+    }
+
+    private void redoLayout(int l, int t, int r, int b) {
         int width = r - l;
         int height = b - t;
 
@@ -132,7 +138,6 @@ public class CircleMenu extends AppScreen {
 
         int scrollHeight = 0;
 
-        Log.i("RPW", changed + " " + l + " " + t + " " + r + " " + b);
         for (int i = 0; i < mButtonGroup.getChildCount(); ++i) {
             int x = i % 3;
             int y = i / 3;
