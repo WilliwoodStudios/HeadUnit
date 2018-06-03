@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Point;
 import android.media.AudioManager;
@@ -26,6 +27,9 @@ import com.williwoodstudios.pureviews.volume.DoubleSwipeGestureHandler;
 import com.williwoodstudios.pureviews.volume.GestureListener;
 import com.williwoodstudios.pureviews.volume.VolumeView;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,39 +49,93 @@ public class BrainiacLayout extends AppSpace {
 
     private DoubleSwipeGestureHandler mGestureHandler;
 
+    // Handle Relay Long Clicks
+    private class RelayLongClickListener implements OnLongClickListener {
+        public boolean onLongClick(View view){
+            CircleButton button = (CircleButton) view;
+            Context context = getContext();
+            Log.d("BRAINIAC","Relay Long Click of relay #:" + button.getIndex());
+            return true;
+        }
+    }
+
     private CircleMenu.Configuration mRelayConfiguration = new CircleMenu.Configuration() {
         @Override
         public List<CircleMenu.CircleMenuItem> getItems() {
             ArrayList<CircleMenu.CircleMenuItem> items;
-            String[] names = new String[]{};
-            int[] ids = new int[]{};
-
-            // Load in our default Applications
-            names = new String[]{"Relay One", "Relay 2", "Relay 3", "Relay 4", "Relay 5", "Relay 6",
-            "Relay 7", "Relay 8"};
-            ids = new int[]{
-                    R.drawable.core_power,
-                    R.drawable.core_power,
-                    R.drawable.core_power,
-                    R.drawable.core_power,
-                    R.drawable.core_power,
-                    R.drawable.core_power,
-                    R.drawable.core_power,
-                    R.drawable.core_power};
-            OnClickListener[] mOnClickListeners = new OnClickListener[]{
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-            };
-            // Load our Relays
+            String relayJSON;
             items = new ArrayList<>();
-            for (int i = 0; i < names.length; ++i) {
-                items.add(new CircleMenu.CircleMenuItem(names[i], ids[i], mOnClickListeners[i]));
+            // Default set of relays to be stored
+            String DEFAULT_RELAYS = "{\n" +
+                    "    \"relays\": [\n" +
+                    "        {\n" +
+                    "            \"name\": \"Relay 1\",\n" +
+                    "            \"icon\": \"core_power\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "            \"name\": \"Relay 2\",\n" +
+                    "            \"icon\": \"core_suspension_img_icon_256x256\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "            \"name\": \"Relay 3\",\n" +
+                    "            \"icon\": \"core_power\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "            \"name\": \"Relay 4\",\n" +
+                    "            \"icon\": \"core_power\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "            \"name\": \"Relay 5\",\n" +
+                    "            \"icon\": \"core_power\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "            \"name\": \"Relay 6\",\n" +
+                    "            \"icon\": \"core_power\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "            \"name\": \"Relay 7\",\n" +
+                    "            \"icon\": \"core_power\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "            \"name\": \"Relay 8\",\n" +
+                    "            \"icon\": \"core_power\"\n" +
+                    "        }\n" +
+                    "    ]\n" +
+                    "}";
+            // Retrieve our relay preferences
+            SharedPreferences prefs = mActivity.getPreferences(Context.MODE_PRIVATE);
+            relayJSON = prefs.getString("brainiac.relays", DEFAULT_RELAYS);
+
+            try {
+                JSONObject JSON = new JSONObject(relayJSON);
+                int i;
+                // Retrieve all the relays
+                JSONArray relays = JSON.getJSONArray("relays");
+                if (relays.length() > 0) {
+                    int resourceId;
+                    // Generic OnClickListener to handle relay click
+                    OnClickListener mRelayOnClickListener = new OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            CircleButton button = (CircleButton) view;
+                            Context context = getContext();
+                            Log.d("BRAINIAC","Relay Tap Relay Index #:" + button.getIndex());
+                            //Intent intent = context.getPackageManager().getLaunchIntentForPackage(button.getPackageName());
+                            //context.startActivity(intent);
+                        }
+                    };
+                    // Generic OnLongClickListener to handle relay long press
+                    OnLongClickListener mRelayOnLongClickListener = new RelayLongClickListener();
+                    for (i = 0; i < relays.length(); i++) {
+                        JSONObject item = relays.getJSONObject(i);
+                        resourceId = getResources().getIdentifier(item.getString("icon"),"drawable", mActivity.getPackageName());
+                        CircleMenu.CircleMenuItem menuItem = new CircleMenu.CircleMenuItem(item.getString("name"), resourceId, mRelayOnClickListener, mRelayOnLongClickListener);
+                        menuItem.mIndex = i;
+                        items.add(menuItem);
+                    }
+                }
+            } catch (Exception e) {
+                Log.d("BRAINIAC", "JSON parsing :" + e.getMessage());
             }
             return items;
         }
@@ -113,14 +171,11 @@ public class BrainiacLayout extends AppSpace {
                         }
                     }*/
             };
-
             items = new ArrayList<>();
-
             // Load our default apps
             for (int i = 0; i < names.length; ++i) {
-                items.add(new CircleMenu.CircleMenuItem(names[i], ids[i], mOnClickListeners[i]));
+                items.add(new CircleMenu.CircleMenuItem(names[i], ids[i], mOnClickListeners[i], null));
             }
-
             // Generic OnClickListener to launch app
             OnClickListener mAppOnClickListener = new OnClickListener() {
                 @Override
@@ -140,7 +195,6 @@ public class BrainiacLayout extends AppSpace {
             int stringId;
             Drawable icon;
             List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-
             for (ApplicationInfo packageInfo : packages) {
                 launchActivity = pm.getLaunchIntentForPackage(packageInfo.packageName);
                 packageName = packageInfo.packageName;
@@ -151,7 +205,7 @@ public class BrainiacLayout extends AppSpace {
                 Log.d("BRAINIAC", "Launch Activity :" + appName);
                 icon = getContext().getPackageManager().getApplicationIcon(packageInfo);
                 if (launchActivity != null) {
-                    items.add(new CircleMenu.CircleMenuItem(appName, icon, packageName, mAppOnClickListener));
+                    items.add(new CircleMenu.CircleMenuItem(appName, icon, packageName, mAppOnClickListener, null));
                 }
             }
             return items;
@@ -162,7 +216,6 @@ public class BrainiacLayout extends AppSpace {
         super(activity);
         mActivity = activity;
         mAudioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
-
         // Gesture handler
         mGestureHandler = new DoubleSwipeGestureHandler(this);
         mGestureHandler.setUpDownGestureListener(mUpDownGestureListener);
@@ -198,7 +251,7 @@ public class BrainiacLayout extends AppSpace {
     }
 
     public void refreshAppGrid() {
-        mAppGrid.refreshAppGrid();
+        mAppGrid.refreshMenu();
     }
 
     public void pushScreen(AppScreen screen) {

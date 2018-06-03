@@ -40,8 +40,9 @@ public class CircleButton extends ViewGroup implements ThemeListener {
     private TitlePosition mTitlePosition = TitlePosition.BELOW;
     private String mTitle;
     private String mTitleToShow;
-    private boolean mIsActive = false;
+    private boolean mMaintainsState = false;
     private int mWidth, mHeight;
+    private int mIndex = -1;
 
     public CircleButton(Context context) {
         super(context);
@@ -84,6 +85,7 @@ public class CircleButton extends ViewGroup implements ThemeListener {
         mRect = new RectF(3, 3, 200, 200);
 
         setClickable(true);
+        setLongClickable(true);
     }
 
     public void themeUpdated() {
@@ -114,6 +116,22 @@ public class CircleButton extends ViewGroup implements ThemeListener {
         this(context);
 
         setImageResource(resourceId);
+    }
+
+    public boolean getMaintainsState() {
+        return mMaintainsState;
+    }
+
+    public void setMaintainsState(boolean value) {
+        mMaintainsState = value;
+    }
+
+    public void setIndex(int value) {
+        mIndex = value;
+    }
+
+    public int getIndex(){
+        return mIndex;
     }
 
     public void setNormalColor(int color) {

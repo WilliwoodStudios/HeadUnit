@@ -25,19 +25,21 @@ public class CircleMenu extends AppScreen {
     private final Context mContext;
 
     public static class CircleMenuItem {
-        public CircleMenuItem(String name, int imageResourceId, OnClickListener listener) {
+        public CircleMenuItem(String name, int imageResourceId, OnClickListener listener, OnLongClickListener longClickListener) {
             mName = name;
             mImageResourceId = imageResourceId;
             mOnClickListener = listener;
             mPackageName = null;
             mAppIcon = null;
+            mOnLongClickListener = longClickListener;
         }
-        public CircleMenuItem(String name, Drawable appIcon, String packageName, OnClickListener listener) {
+        public CircleMenuItem(String name, Drawable appIcon, String packageName, OnClickListener listener, OnLongClickListener longClickListener) {
             mName = name;
             mImageResourceId = -1;
             mOnClickListener = listener;
             mPackageName = packageName;
             mAppIcon = appIcon;
+            mOnLongClickListener = longClickListener;
         }
 
         public String mName;
@@ -45,7 +47,8 @@ public class CircleMenu extends AppScreen {
         public OnClickListener mOnClickListener;
         public Drawable mAppIcon;
         public String mPackageName;
-
+        public OnLongClickListener mOnLongClickListener;
+        public int mIndex = -1;
     }
     public interface Configuration {
         List<CircleMenuItem> getItems();
@@ -66,12 +69,12 @@ public class CircleMenu extends AppScreen {
         addView(mScrollView);
         mScrollView.addView(mButtonGroup);
 
-        refreshAppGrid();
+        refreshMenu();
 
         setBackgroundResource(Theme.getBackgroundResource(getContext()));
     }
 
-    public void refreshAppGrid() {
+    public void refreshMenu() {
         // First clear any existing items
         android.view.View view;
         for (int i = mButtonGroup.getChildCount() - 1; i >= 0 ; i--) {
@@ -83,6 +86,7 @@ public class CircleMenu extends AppScreen {
         // Then load with the latest
         for (CircleMenuItem item : mConfiguration.getItems()) {
             CircleButton toAdd = new CircleButton(mContext, item.mName);
+            toAdd.setIndex(item.mIndex);
             toAdd.setTitlePosition(CircleButton.TitlePosition.BELOW);
             if (item.mImageResourceId != -1 && item.mAppIcon == null) { // Resource id is one of our internal apps
                 toAdd.setImageResource(item.mImageResourceId);
@@ -94,10 +98,15 @@ public class CircleMenu extends AppScreen {
             }
             toAdd.onAnimationEnd();
             toAdd.setBitmapPad(0.25f);
-            OnClickListener listener = item.mOnClickListener;
-            if (listener != null) {
-                toAdd.setOnClickListener(listener);
+            OnClickListener clickListener = item.mOnClickListener;
+            if (clickListener != null) {
+                toAdd.setOnClickListener(clickListener);
             }
+            OnLongClickListener longClickListener = item.mOnLongClickListener;
+            if (longClickListener != null) {
+                toAdd.setOnLongClickListener(longClickListener);
+            }
+           // toAdd.setLon
             mButtonGroup.addView(toAdd);
         }
 
