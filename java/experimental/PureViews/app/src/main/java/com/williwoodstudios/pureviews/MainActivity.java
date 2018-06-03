@@ -13,10 +13,12 @@ import java.io.InputStream;
 
 import com.williwoodstudios.pureviews.media.MediaService;
 import com.williwoodstudios.pureviews.overlay.OverlayService;
+import com.williwoodstudios.pureviews.relay.RelayController;
 
 
 public class MainActivity extends Activity {
     private BrainiacLayout mBrainiacLayout;
+    private RelayController mRelayController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +47,9 @@ public class MainActivity extends Activity {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
+        // Initialize our Relay Controller
+        mRelayController = new RelayController(this);
     }
 
     @Override
@@ -56,4 +61,6 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
     }
+
+    public RelayController getRelayController() {return mRelayController;}
 }

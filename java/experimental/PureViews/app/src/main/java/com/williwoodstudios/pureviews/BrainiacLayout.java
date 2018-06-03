@@ -26,6 +26,7 @@ import com.williwoodstudios.pureviews.media.MediaService;
 import com.williwoodstudios.pureviews.volume.DoubleSwipeGestureHandler;
 import com.williwoodstudios.pureviews.volume.GestureListener;
 import com.williwoodstudios.pureviews.volume.VolumeView;
+import com.williwoodstudios.pureviews.relay.RelayController;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -51,15 +52,20 @@ public class BrainiacLayout extends AppSpace {
 
     // Handle Relay Long Clicks
     private class RelayLongClickListener implements OnLongClickListener {
+        private MainActivity mMainActivity;
+        public RelayLongClickListener(MainActivity activity) {
+            super();
+            mMainActivity = activity;
+        }
         public boolean onLongClick(View view){
             CircleButton button = (CircleButton) view;
             Context context = getContext();
-
+            RelayController relayController = ((MainActivity)mMainActivity).getRelayController();
             boolean selectedState = button.getSelectedState();
             if (selectedState) { // Currently selected
-                Log.d("BRAINIAC","Turn off relay #:" + button.getIndex());
+                Log.d("BRAINIAC","Turn off relay #:" + button.getIndex() + " from a possible " + relayController.getRelays().size() + " relays");
             } else {
-                Log.d("BRAINIAC","Turn on relay #:" + button.getIndex());
+                Log.d("BRAINIAC","Turn on relay #:" + button.getIndex() + " from a possible " + relayController.getRelays().size() + " relays");
             }
             button.setSelectedState(!selectedState);
             return true;
@@ -69,81 +75,29 @@ public class BrainiacLayout extends AppSpace {
     private CircleMenu.Configuration mRelayConfiguration = new CircleMenu.Configuration() {
         @Override
         public List<CircleMenu.CircleMenuItem> getItems() {
-            ArrayList<CircleMenu.CircleMenuItem> items;
-            String relayJSON;
-            items = new ArrayList<>();
-            // Default set of relays to be stored
-            String DEFAULT_RELAYS = "{\n" +
-                    "    \"relays\": [\n" +
-                    "        {\n" +
-                    "            \"name\": \"Relay 1\",\n" +
-                    "            \"icon\": \"core_power\"\n" +
-                    "        },\n" +
-                    "        {\n" +
-                    "            \"name\": \"Relay 2\",\n" +
-                    "            \"icon\": \"core_suspension_img_icon_256x256\"\n" +
-                    "        },\n" +
-                    "        {\n" +
-                    "            \"name\": \"Relay 3\",\n" +
-                    "            \"icon\": \"core_power\"\n" +
-                    "        },\n" +
-                    "        {\n" +
-                    "            \"name\": \"Relay 4\",\n" +
-                    "            \"icon\": \"core_power\"\n" +
-                    "        },\n" +
-                    "        {\n" +
-                    "            \"name\": \"Relay 5\",\n" +
-                    "            \"icon\": \"core_power\"\n" +
-                    "        },\n" +
-                    "        {\n" +
-                    "            \"name\": \"Relay 6\",\n" +
-                    "            \"icon\": \"core_power\"\n" +
-                    "        },\n" +
-                    "        {\n" +
-                    "            \"name\": \"Relay 7\",\n" +
-                    "            \"icon\": \"core_power\"\n" +
-                    "        },\n" +
-                    "        {\n" +
-                    "            \"name\": \"Relay 8\",\n" +
-                    "            \"icon\": \"core_power\"\n" +
-                    "        }\n" +
-                    "    ]\n" +
-                    "}";
-            // Retrieve our relay preferences
-            SharedPreferences prefs = mActivity.getPreferences(Context.MODE_PRIVATE);
-            relayJSON = prefs.getString("brainiac.relays", DEFAULT_RELAYS);
-
-            try {
-                JSONObject JSON = new JSONObject(relayJSON);
-                int i;
-                // Retrieve all the relays
-                JSONArray relays = JSON.getJSONArray("relays");
-                if (relays.length() > 0) {
-                    int resourceId;
-                    // Generic OnClickListener to handle relay click
-                    OnClickListener mRelayOnClickListener = new OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            CircleButton button = (CircleButton) view;
-                            Context context = getContext();
-                            Log.d("BRAINIAC","Relay Tap Relay Index #:" + button.getIndex());
-                            //Intent intent = context.getPackageManager().getLaunchIntentForPackage(button.getPackageName());
-                            //context.startActivity(intent);
-                        }
-                    };
-                    // Generic OnLongClickListener to handle relay long press
-                    OnLongClickListener mRelayOnLongClickListener = new RelayLongClickListener();
-                    for (i = 0; i < relays.length(); i++) {
-                        JSONObject item = relays.getJSONObject(i);
-                        resourceId = getResources().getIdentifier(item.getString("icon"),"drawable", mActivity.getPackageName());
-                        CircleMenu.CircleMenuItem menuItem = new CircleMenu.CircleMenuItem(item.getString("name"), resourceId, mRelayOnClickListener, mRelayOnLongClickListener);
-                        menuItem.mIndex = i;
-                        menuItem.mMaintainState = true;
-                        items.add(menuItem);
-                    }
+            ArrayList<CircleMenu.CircleMenuItem> items = new ArrayList<>();
+            // Generic OnClickListener to handle relay click
+            OnClickListener mRelayOnClickListener = new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    CircleButton button = (CircleButton) view;
+                    Context context = getContext();
+                    RelayController controller = ((MainActivity)mActivity).getRelayController();
+                    Log.d("BRAINIAC","Relay Tap Relay Index #:" + button.getIndex() + " from a possible " + controller.getRelays().size() + " relays");
+                    //Intent intent = context.getPackageManager().getLaunchIntentForPackage(button.getPackageName());
+                    //context.startActivity(intent);
                 }
-            } catch (Exception e) {
-                Log.d("BRAINIAC", "JSON parsing :" + e.getMessage());
+            };
+            // Generic OnLongClickListener to handle relay long press
+            OnLongClickListener mRelayOnLongClickListener = new RelayLongClickListener((MainActivity)mActivity);
+            RelayController relayController = ((MainActivity)mActivity).getRelayController();
+            ArrayList<RelayController.Relay> relays = relayController.getRelays();
+            for (int i = 0; i < relays.size(); i++) {
+                RelayController.Relay item = relays.get(i);
+                CircleMenu.CircleMenuItem menuItem = new CircleMenu.CircleMenuItem(item.getLabel(), item.getResourceId(), mRelayOnClickListener, mRelayOnLongClickListener);
+                menuItem.mIndex = i;
+                menuItem.mMaintainState = true;
+                items.add(menuItem);
             }
             return items;
         }
