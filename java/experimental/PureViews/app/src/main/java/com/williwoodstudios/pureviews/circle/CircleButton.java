@@ -41,6 +41,7 @@ public class CircleButton extends ViewGroup implements ThemeListener {
     private String mTitle;
     private String mTitleToShow;
     private boolean mMaintainsState = false;
+    private boolean mSelectedState = false;
     private int mWidth, mHeight;
     private int mIndex = -1;
 
@@ -116,6 +117,15 @@ public class CircleButton extends ViewGroup implements ThemeListener {
         this(context);
 
         setImageResource(resourceId);
+    }
+
+    public boolean getSelectedState() {
+        return mSelectedState;
+    }
+
+    public void setSelectedState(boolean value) {
+        mSelectedState = value;
+        invalidate();
     }
 
     public boolean getMaintainsState() {
@@ -212,14 +222,21 @@ public class CircleButton extends ViewGroup implements ThemeListener {
     @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
-
-        canvas.drawArc(mRect, 0, 360, true, isPressed() ? mPressedPaint : mBlackPaint);
+        Paint highlightPaint = mBlackPaint;
+        // Determine if we are supposed to be drawing the menu in a highlighted state
+        if (mMaintainsState) {
+            highlightPaint = getSelectedState() ? mPressedPaint : mBlackPaint;
+        } else if (isPressed()) {
+            highlightPaint = mPressedPaint;
+        }
+        // Draw our circles
+        canvas.drawArc(mRect, 0, 360, true, highlightPaint);
         canvas.drawArc(mRect, 0, 360, false, mBorderPaint);
-
+        // Draw the Icon
         if (mBitmap != null) {
             canvas.drawBitmap(mBitmap, null, mBitmapRect, mBitmapPaint);
         }
-
+        // Draw the title
         if (mTitle != null) {
             float left = mTitleRect.width() / 2 - mTitleWidth / 2 + mTitleRect.left;
             canvas.drawText(mTitleToShow, left, mTitleRect.bottom - mTitleRect.height() / 4, mTitlePaint);

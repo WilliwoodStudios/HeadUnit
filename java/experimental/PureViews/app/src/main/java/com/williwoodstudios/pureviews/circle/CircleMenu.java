@@ -49,6 +49,7 @@ public class CircleMenu extends AppScreen {
         public String mPackageName;
         public OnLongClickListener mOnLongClickListener;
         public int mIndex = -1;
+        public boolean mMaintainState = false;
     }
     public interface Configuration {
         List<CircleMenuItem> getItems();
@@ -87,6 +88,7 @@ public class CircleMenu extends AppScreen {
         for (CircleMenuItem item : mConfiguration.getItems()) {
             CircleButton toAdd = new CircleButton(mContext, item.mName);
             toAdd.setIndex(item.mIndex);
+            toAdd.setMaintainsState(item.mMaintainState);
             toAdd.setTitlePosition(CircleButton.TitlePosition.BELOW);
             if (item.mImageResourceId != -1 && item.mAppIcon == null) { // Resource id is one of our internal apps
                 toAdd.setImageResource(item.mImageResourceId);

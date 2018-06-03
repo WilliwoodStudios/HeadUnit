@@ -54,7 +54,14 @@ public class BrainiacLayout extends AppSpace {
         public boolean onLongClick(View view){
             CircleButton button = (CircleButton) view;
             Context context = getContext();
-            Log.d("BRAINIAC","Relay Long Click of relay #:" + button.getIndex());
+
+            boolean selectedState = button.getSelectedState();
+            if (selectedState) { // Currently selected
+                Log.d("BRAINIAC","Turn off relay #:" + button.getIndex());
+            } else {
+                Log.d("BRAINIAC","Turn on relay #:" + button.getIndex());
+            }
+            button.setSelectedState(!selectedState);
             return true;
         }
     }
@@ -131,6 +138,7 @@ public class BrainiacLayout extends AppSpace {
                         resourceId = getResources().getIdentifier(item.getString("icon"),"drawable", mActivity.getPackageName());
                         CircleMenu.CircleMenuItem menuItem = new CircleMenu.CircleMenuItem(item.getString("name"), resourceId, mRelayOnClickListener, mRelayOnLongClickListener);
                         menuItem.mIndex = i;
+                        menuItem.mMaintainState = true;
                         items.add(menuItem);
                     }
                 }
