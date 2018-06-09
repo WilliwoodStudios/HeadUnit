@@ -1,15 +1,11 @@
-package com.williwoodstudios.pureviews.square;
+package com.williwoodstudios.pureviews.settings;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
@@ -21,8 +17,8 @@ import com.williwoodstudios.pureviews.Theme;
  * Created by brcewane on 2018-04-29.
  */
 
-public class SquareButton extends ViewGroup {
-    private static final String TAG = SquareButton.class.getName();
+public class ColorSettingsItem extends ViewGroup {
+    private static final String TAG = ColorSettingsItem.class.getName();
     private static int sCreationCount = 0;
     private final Paint mBackgroundPaint;
     private final Paint mBitmapPaint;
@@ -35,7 +31,7 @@ public class SquareButton extends ViewGroup {
     private int mWidth, mHeight;
     private ViewGroup mButtonGroup;
 
-    public SquareButton(Context context) {
+    public ColorSettingsItem(Context context) {
         super(context);
 
         ++sCreationCount;
@@ -57,7 +53,7 @@ public class SquareButton extends ViewGroup {
         setClickable(true);
     }
 
-    public SquareButton(Context context, int resourceIndex,ViewGroup buttonGroup) {
+    public ColorSettingsItem(Context context, int resourceIndex, ViewGroup buttonGroup) {
         this(context);
         mButtonGroup = buttonGroup;
         setResourceIndex(resourceIndex);

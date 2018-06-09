@@ -1,4 +1,4 @@
-package com.williwoodstudios.pureviews.square;
+package com.williwoodstudios.pureviews.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,7 +19,7 @@ import com.williwoodstudios.pureviews.ThemeListener;
  * Created by brcewane on 2018-04-29.
  */
 
-public class SquareMenu extends AppScreen implements ThemeListener {
+public class ColorSettingsMenu extends AppScreen implements ThemeListener {
 
     private final ScrollView mScrollView;
     private final ViewGroup mButtonGroup;
@@ -27,7 +27,7 @@ public class SquareMenu extends AppScreen implements ThemeListener {
     private OnClickListener mOnClickListener;
 
 
-    public SquareMenu(Context owner) {
+    public ColorSettingsMenu(Context owner) {
         super(owner);
 
         mScrollView = new ScrollViewThatIgnoresDoubleTouch(owner);
@@ -46,7 +46,7 @@ public class SquareMenu extends AppScreen implements ThemeListener {
         mOnClickListener = new OnClickListener() {
             @Override
             public void onClick(View v) {
-                SquareButton button = (SquareButton)v;
+                ColorSettingsItem button = (ColorSettingsItem)v;
                 ViewGroup group = button.getButtonGroup();
                 Theme.setColor(button.getResourceIndex());
                 button.setChecked(true);
@@ -58,9 +58,9 @@ public class SquareMenu extends AppScreen implements ThemeListener {
                 // Uncheck the rest
                 for (int i = 0; i < group.getChildCount(); i++) {
                     View view = group.getChildAt(i);
-                    if (view instanceof SquareButton) {
+                    if (view instanceof ColorSettingsItem) {
                         if (view != button) {
-                            ((SquareButton)view).setChecked(false);
+                            ((ColorSettingsItem)view).setChecked(false);
                         }
                     }
                 }
@@ -68,7 +68,7 @@ public class SquareMenu extends AppScreen implements ThemeListener {
         };
         // Loop through all our colors
         for (int i = 0; i < Theme.colors.length; i++) {
-            SquareButton toAdd = new SquareButton(owner, i, mButtonGroup);
+            ColorSettingsItem toAdd = new ColorSettingsItem(owner, i, mButtonGroup);
             if (i == Theme.getIndex()) {
                 toAdd.setChecked(true);
             }

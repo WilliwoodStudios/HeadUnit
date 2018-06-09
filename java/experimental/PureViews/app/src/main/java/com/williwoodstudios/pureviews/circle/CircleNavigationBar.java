@@ -5,22 +5,20 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.graphics.RectF;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
-import android.app.Activity;
 
 import com.williwoodstudios.pureviews.AppScreen;
 import com.williwoodstudios.pureviews.AppSpace;
-import com.williwoodstudios.pureviews.BrainiacLayout;
 import com.williwoodstudios.pureviews.R;
 import com.williwoodstudios.pureviews.RectangleAnimation;
 import com.williwoodstudios.pureviews.ScreenManager;
 import com.williwoodstudios.pureviews.Theme;
 import com.williwoodstudios.pureviews.ThemeListener;
-import com.williwoodstudios.pureviews.square.SquareMenu;
+import com.williwoodstudios.pureviews.settings.SettingsMenu;
+
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -309,7 +307,7 @@ public class CircleNavigationBar extends View implements AppSpace.OnTopChangedLi
                     newActiveCircle = 2;
                     // TODO: Need to deal with if one of our build in apps is displaying
                     // Open settings screen
-                    mScreenManager.pushScreen(new SquareMenu(getContext()));
+                    mScreenManager.pushScreen(new SettingsMenu(getContext(), mScreenManager));
                 }
             }
             setActiveCircle(newActiveCircle);

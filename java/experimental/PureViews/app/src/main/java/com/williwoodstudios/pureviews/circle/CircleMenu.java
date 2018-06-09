@@ -66,12 +66,10 @@ public class CircleMenu extends AppScreen {
 
             }
         };
-
+        // Add our views
         addView(mScrollView);
         mScrollView.addView(mButtonGroup);
-
         refreshMenu();
-
         setBackgroundResource(Theme.getBackgroundResource(getContext()));
     }
 
@@ -111,7 +109,6 @@ public class CircleMenu extends AppScreen {
            // toAdd.setLon
             mButtonGroup.addView(toAdd);
         }
-
         redoLayout(getLeft(),getTop(),getRight(),getBottom());
     }
 
