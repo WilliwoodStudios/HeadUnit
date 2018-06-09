@@ -31,6 +31,7 @@ public class CircleButton extends ViewGroup implements ThemeListener {
     private final RectF mRect;
     private final RectF mBitmapRect = new RectF();
     private final RectF mTitleRect = new RectF();
+    private CircleMenu mCircleMenu;
     //    private final Paint mText;
     private Paint mPressedPaint;
     private Bitmap mBitmap;
@@ -128,6 +129,12 @@ public class CircleButton extends ViewGroup implements ThemeListener {
         invalidate();
     }
 
+    public void setmCircleMenu(CircleMenu value){
+        mCircleMenu = value;
+    }
+
+    public CircleMenu getmCircleMenu() {return mCircleMenu;}
+
     public boolean getMaintainsState() {
         return mMaintainsState;
     }
@@ -224,10 +231,12 @@ public class CircleButton extends ViewGroup implements ThemeListener {
         super.dispatchDraw(canvas);
         Paint highlightPaint = mBlackPaint;
         // Determine if we are supposed to be drawing the menu in a highlighted state
-        if (mMaintainsState) {
-            highlightPaint = getSelectedState() ? mPressedPaint : mBlackPaint;
-        } else if (isPressed()) {
+        if (isPressed()) {
             highlightPaint = mPressedPaint;
+        } else if (mMaintainsState && getSelectedState()) {
+            highlightPaint = mPressedPaint;
+        } else {
+            highlightPaint = mBlackPaint;
         }
         // Draw our circles
         canvas.drawArc(mRect, 0, 360, true, highlightPaint);

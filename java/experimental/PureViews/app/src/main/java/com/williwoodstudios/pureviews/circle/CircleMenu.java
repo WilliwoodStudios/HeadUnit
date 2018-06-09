@@ -85,6 +85,7 @@ public class CircleMenu extends AppScreen {
         // Then load with the latest
         for (CircleMenuItem item : mConfiguration.getItems()) {
             CircleButton toAdd = new CircleButton(mContext, item.mName);
+            toAdd.setmCircleMenu(this);
             toAdd.setIndex(item.mIndex);
             toAdd.setMaintainsState(item.mMaintainState);
             toAdd.setTitlePosition(CircleButton.TitlePosition.BELOW);

@@ -62,6 +62,8 @@ public class BrainiacLayout extends AppSpace {
             Context context = getContext();
             RelayController relayController = ((MainActivity)mMainActivity).getRelayController();
             boolean selectedState = button.getSelectedState();
+            RelayMainScreen relayScreen = (RelayMainScreen)button.getmCircleMenu();
+            relayScreen.flashScreen();
             if (selectedState) { // Currently selected
                 Log.d("BRAINIAC","Turn off relay #:" + button.getIndex() + " from a possible " + relayController.getRelays().size() + " relays");
             } else {

@@ -26,7 +26,7 @@ public class RelayController {
             "        },\n" +
             "        {\n" +
             "            \"name\": \"Relay 2\",\n" +
-            "            \"icon\": \"core_suspension_img_icon_256x256\"\n" +
+            "            \"icon\": \"core_power\"\n" +
             "        },\n" +
             "        {\n" +
             "            \"name\": \"Relay 3\",\n" +
